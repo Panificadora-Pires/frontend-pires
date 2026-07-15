@@ -1,0 +1,77 @@
+/* ============================================================
+   Pires Panificadora — Design Tokens
+   Extraído do Figma de login. Usar essas variáveis em vez de
+   cores/tamanhos "soltos" em qualquer componente novo.
+   ============================================================ */
+
+:root {
+  /* --- Cores base --- */
+  --pp-bg-dark: #241509;
+  --pp-bg-dark-soft: #2E1B0D;
+  --pp-bg-card: #331F10;
+  --pp-bg-input: #2A1810;
+
+  --pp-gold: #E0A83E;
+  --pp-gold-hover: #C8922E;
+  --pp-gold-soft: rgba(224, 168, 62, 0.14);
+
+  --pp-cream: #F3E9D8;
+  --pp-cream-dim: #C9BBA6;
+  --pp-cream-faint: #8C7C68;
+
+  --pp-border: rgba(224, 168, 62, 0.28);
+  --pp-border-soft: rgba(243, 233, 216, 0.14);
+
+  --pp-error: #E0605A;
+  --pp-error-bg: rgba(224, 96, 90, 0.1);
+
+  --pp-success: #6FA36F;
+
+  /* --- Tipografia --- */
+  --pp-font-display: 'Fraunces', Georgia, serif;
+  --pp-font-body: 'Work Sans', system-ui, sans-serif;
+
+  /* --- Raio e sombra --- */
+  --pp-radius-sm: 8px;
+  --pp-radius-md: 12px;
+  --pp-radius-lg: 20px;
+  --pp-shadow-card: 0 20px 50px rgba(0, 0, 0, 0.35);
+
+  /* --- Espaçamento --- */
+  --pp-space-1: 4px;
+  --pp-space-2: 8px;
+  --pp-space-3: 12px;
+  --pp-space-4: 16px;
+  --pp-space-5: 24px;
+  --pp-space-6: 32px;
+  --pp-space-7: 48px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--pp-bg-dark);
+  color: var(--pp-cream);
+  font-family: var(--pp-font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+a { color: inherit; }
+button { font-family: inherit; }
+
+:focus-visible {
+  outline: 2.5px solid var(--pp-gold);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
