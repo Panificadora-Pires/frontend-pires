@@ -2,13 +2,21 @@
   <div class="login">
     <!-- ===== Painel do formulário ===== -->
     <section class="login__panel">
+      
+      <!-- Watermark sutil no fundo -->
+      <div class="login__watermark" aria-hidden="true">
+        <Croissant :size="400" />
+      </div>
+
       <div class="login__content">
+        
+        <!-- Logo Real -->
         <div class="login__brand">
-          <Coffee :size="26" class="login__brand-icon" />
-          <div class="login__brand-text">
-            <strong>Pires</strong>
-            <span>Panificadora</span>
-          </div>
+          <img 
+            src="/logo.png" 
+            alt="Logo Pires Panificadora" 
+            class="login__logo" 
+          />
         </div>
 
         <h1 class="login__title">
@@ -40,7 +48,9 @@
             @blur="validarSenha"
           />
 
-          <RouterLink to="/cadastro" class="login__forgot">Esqueceu sua senha?</RouterLink>
+          <div class="login__forgot-wrapper">
+            <RouterLink to="/cadastro" class="login__forgot">Esqueceu sua senha?</RouterLink>
+          </div>
 
           <BaseButton
             type="submit"
@@ -55,36 +65,36 @@
 
         <div class="login__divider"><span>ou</span></div>
 
-        <BaseButton variant="ghost" block :icon="UserPlus" @click="router.push('/cadastro')">
+        <BaseButton 
+          variant="ghost" 
+          block 
+          :icon="UserPlus" 
+          @click="router.push('/cadastro')"
+        >
           Criar nova conta
         </BaseButton>
 
-        <p class="login__secure"><ShieldCheck :size="14" /> Acesso seguro e protegido</p>
-
-        <!-- promo secundário, só aparece no mobile (no desktop a foto já cumpre esse papel) -->
-        <div class="login__promo login__promo--mobile">
-          <div>
-            <strong>Produtos fresquinhos todos os dias!</strong>
-            <p>Qualidade e sabor que você já conhece e confia.</p>
-          </div>
-          <div class="login__dots">
-            <span /><span class="is-active" /><span />
-          </div>
+        <div class="login__secure">
+          <ShieldCheck :size="14" /> Acesso seguro e protegido
         </div>
       </div>
     </section>
 
-    <!-- ===== Painel da foto (some no mobile) ===== -->
+    <!-- ===== Painel da foto ===== -->
     <aside class="login__photo" aria-hidden="true">
-      <div class="login__promo login__promo--desktop">
-        <div class="login__promo-icon"><Croissant :size="20" /></div>
-        <div>
+      <div class="login__photo-overlay"></div>
+      <div class="login__photo-vignette"></div>
+      
+      <div class="login__promo">
+        <div class="login__promo-icon"><Croissant :size="24" /></div>
+        <div class="login__promo-text">
           <strong>Reserve seu lanche antes do intervalo</strong>
           <p>Evite filas e garanta seus produtos favoritos.</p>
         </div>
       </div>
-      <div class="login__dots login__dots--desktop">
-        <span class="is-active" /><span />
+      
+      <div class="login__dots">
+        <span class="is-active" /><span /><span />
       </div>
     </aside>
   </div>
@@ -93,7 +103,7 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { Coffee, Mail, Lock, LogIn, UserPlus, ShieldCheck, Croissant } from 'lucide-vue-next'
+import { Mail, Lock, ShieldCheck, Croissant, LogIn, UserPlus } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -139,95 +149,108 @@ async function handleSubmit() {
 .login {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: minmax(360px, 480px) 1fr;
+  /* Coluna esquerda ligeiramente maior para equilibrar o formulário */
+  grid-template-columns: 1.15fr 1fr; 
 }
 
 /* ===== painel do formulário ===== */
 .login__panel {
-  background: var(--pp-bg-dark);
+  background: var(--pp-gradient-left);
   display: flex;
   align-items: center;
-  padding: var(--pp-space-6) var(--pp-space-6);
+  justify-content: center;
+  padding: var(--pp-space-6) var(--pp-space-5);
   position: relative;
-  overflow-y: auto;
+  overflow: hidden;
+}
+
+.login__watermark {
+  position: absolute;
+  bottom: -10%;
+  right: -5%;
+  color: var(--pp-cream);
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 0;
+  transform: rotate(-15deg);
 }
 
 .login__content {
   width: 100%;
-  max-width: 380px;
-  margin: 0 auto;
+  max-width: 440px;
+  position: relative;
+  z-index: 1;
 }
 
+/* Logo */
 .login__brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: var(--pp-space-6);
+  margin-bottom: var(--pp-space-5); 
 }
 
-.login__brand-icon {
-  color: var(--pp-gold);
+.login__logo {
+  width: 180px; 
+  height: auto;
+  object-fit: contain;
+  transition: transform 250ms ease;
 }
 
-.login__brand-text strong {
-  font-family: var(--pp-font-display);
-  font-size: 22px;
-  color: var(--pp-cream);
-  font-weight: 600;
-  margin-right: 6px;
+.login__logo:hover {
+  transform: scale(1.02);
 }
 
-.login__brand-text span {
-  font-family: var(--pp-font-display);
-  font-size: 13px;
-  color: var(--pp-cream-dim);
-  letter-spacing: 0.04em;
-}
-
+/* Tipografia H1 */
 .login__title {
-  font-family: var(--pp-font-display);
-  font-size: 26px;
-  font-weight: 600;
+  font-family: var(--pp-font-body);
+  font-size: 48px;
+  font-weight: 700;
   color: var(--pp-cream);
-  line-height: 1.25;
-  margin: 0 0 10px;
+  line-height: 1.2;
+  margin: 0 0 var(--pp-space-3);
 }
 
 .login__title-gold {
   color: var(--pp-gold);
 }
 
+/* Subtítulo */
 .login__subtitle {
   color: var(--pp-cream-dim);
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.5;
-  margin: 0 0 var(--pp-space-6);
+  margin: 0 0 var(--pp-space-5);
 }
 
 .login__form {
-  margin-bottom: 4px;
+  margin-bottom: 0;
+}
+
+/* Link esqueceu senha */
+.login__forgot-wrapper {
+  text-align: right;
+  margin-top: 6px; 
+  margin-bottom: var(--pp-space-4);
 }
 
 .login__forgot {
-  display: block;
-  text-align: right;
-  font-size: 12.5px;
+  font-size: 13px;
   color: var(--pp-gold);
-  text-decoration: none;
-  margin: -6px 0 var(--pp-space-5);
+  transition: all 250ms ease;
 }
 
 .login__forgot:hover {
+  color: var(--pp-cream);
   text-decoration: underline;
 }
 
+/* Divisor */
 .login__divider {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   color: var(--pp-cream-faint);
-  font-size: 12px;
-  margin: var(--pp-space-5) 0;
+  font-size: 13px;
+  margin: var(--pp-space-4) 0;
+  opacity: 0.6;
 }
 
 .login__divider::before,
@@ -238,6 +261,7 @@ async function handleSubmit() {
   background: var(--pp-border-soft);
 }
 
+/* Texto seguro */
 .login__secure {
   display: flex;
   align-items: center;
@@ -245,55 +269,63 @@ async function handleSubmit() {
   gap: 6px;
   color: var(--pp-cream-faint);
   font-size: 12px;
-  margin: var(--pp-space-5) 0 0;
+  margin-top: var(--pp-space-4);
+  opacity: 0.5;
 }
 
 /* ===== painel da foto ===== */
 .login__photo {
   position: relative;
-  background: url('/src/assets/background-image.png') center/cover no-repeat;
-  display: flex;
-  align-items: flex-end;
-  padding: var(--pp-space-6);
+  background: url('/background-image.png') center/cover no-repeat;
+  background-color: var(--pp-bg-dark-soft);
 }
 
-.login__photo::before {
-  content: '';
+/* Overlay escuro e saturação */
+.login__photo-overlay {
   position: absolute;
   inset: 0;
+  background: rgba(0, 0, 0, 0.1); 
+  mix-blend-mode: multiply;
+  filter: contrast(1.1) saturate(1.1);
 }
 
-/* promo card compartilhado (desktop overlay / mobile inline) */
+/* Vinheta nas bordas */
+.login__photo-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, transparent 50%, rgba(0, 0, 0, 0.4) 100%);
+  pointer-events: none;
+}
+
+/* Card com Glassmorphism */
 .login__promo {
-  position: relative;
-  background: rgba(36, 21, 9, 0.82);
-  backdrop-filter: blur(6px);
-  border: 1px solid var(--pp-border);
-  border-radius: var(--pp-radius-md);
+  position: absolute;
+  bottom: var(--pp-space-5);
+  left: var(--pp-space-5);
+  right: var(--pp-space-5);
+  background: rgba(36, 21, 9, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(224, 168, 62, 0.25);
+  border-radius: var(--pp-radius-card);
   padding: var(--pp-space-4);
   display: flex;
   gap: var(--pp-space-3);
-  align-items: flex-start;
+  align-items: center;
+  box-shadow: var(--pp-shadow-elevation);
+  transition: transform 250ms ease, box-shadow 250ms ease;
+  z-index: 2;
 }
 
-.login__promo strong {
-  display: block;
-  color: var(--pp-cream);
-  font-size: 14px;
-  margin-bottom: 4px;
-}
-
-.login__promo p {
-  color: var(--pp-cream-dim);
-  font-size: 12.5px;
-  margin: 0;
-  line-height: 1.4;
+.login__promo:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
 }
 
 .login__promo-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   background: var(--pp-gold-soft);
   color: var(--pp-gold);
   display: flex;
@@ -302,58 +334,73 @@ async function handleSubmit() {
   flex-shrink: 0;
 }
 
-.login__promo--desktop {
-  width: 100%;
-  max-width: 320px;
+.login__promo-text strong {
+  display: block;
+  color: var(--pp-cream);
+  font-family: var(--pp-font-body);
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
 }
 
-.login__promo--mobile {
-  display: none;
-  margin-top: var(--pp-space-6);
-  background: linear-gradient(135deg, #4a2f16, #2c1a0c);
+.login__promo-text p {
+  color: var(--pp-cream-dim);
+  font-size: 14px;
+  margin: 0;
+  line-height: 1.4;
 }
 
+/* Indicadores do Carrossel */
 .login__dots {
-  display: flex;
-  gap: 5px;
-  margin-top: var(--pp-space-3);
-}
-
-.login__dots--desktop {
   position: absolute;
-  bottom: var(--pp-space-4);
-  left: var(--pp-space-6);
+  bottom: var(--pp-space-2);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 2;
 }
 
 .login__dots span {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--pp-border-soft);
+  background: rgba(243, 233, 216, 0.3);
+  transition: all 250ms ease;
 }
 
 .login__dots span.is-active {
   background: var(--pp-gold);
-  width: 16px;
+  width: 18px;
   border-radius: 3px;
 }
 
-/* ===== responsivo ===== */
-@media (max-width: 900px) {
+/* ===== RESPONSIVIDADE ===== */
+@media (max-width: 1200px) {
+  .login__title { font-size: 42px; }
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .login {
+    grid-template-columns: 0.9fr 1.1fr;
+  }
+  .login__title { font-size: 36px; }
+  .login__promo { padding: var(--pp-space-3); }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
   .login {
     grid-template-columns: 1fr;
   }
-
   .login__photo {
     display: none;
   }
-
   .login__panel {
-    padding: var(--pp-space-6) var(--pp-space-5);
+    padding: var(--pp-space-5) var(--pp-space-3);
   }
-
-  .login__promo--mobile {
-    display: flex;
-  }
+  .login__title { font-size: 32px; }
+  .login__logo { width: 140px; }
 }
 </style>
