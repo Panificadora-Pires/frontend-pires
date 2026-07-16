@@ -3,7 +3,7 @@
     <label v-if="label" :for="id" class="pp-field__label">{{ label }}</label>
 
     <div class="pp-field__control" :class="{ 'pp-field__control--error': error }">
-      <component :is="icon" v-if="icon" class="pp-field__icon" :size="18" />
+      <component :is="icon" v-if="icon" class="pp-field__icon" :size="20" />
 
       <input
         :id="id"
@@ -23,11 +23,13 @@
         :aria-label="mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'"
         @click="mostrarSenha = !mostrarSenha"
       >
-        <component :is="mostrarSenha ? EyeOff : Eye" :size="18" />
+        <component :is="mostrarSenha ? EyeOff : Eye" :size="20" />
       </button>
     </div>
 
-    <p v-if="error" class="pp-field__error">{{ error }}</p>
+    <transition name="slide-fade">
+      <p v-if="error" class="pp-field__error">{{ error }}</p>
+    </transition>
   </div>
 </template>
 
@@ -57,15 +59,16 @@ const tipoReal = computed(() => {
 
 <style scoped>
 .pp-field {
-  margin-bottom: var(--pp-space-4);
+  margin-bottom: var(--pp-space-2);
 }
 
 .pp-field__label {
   display: block;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
-  color: var(--pp-cream);
-  margin-bottom: var(--pp-space-2);
+  color: var(--pp-cream-dim);
+  margin-bottom: 6px; /* Aproximado ao input */
+  letter-spacing: 0.01em;
 }
 
 .pp-field__control {
@@ -73,23 +76,35 @@ const tipoReal = computed(() => {
   align-items: center;
   gap: var(--pp-space-2);
   background: var(--pp-bg-input);
-  border: 1.5px solid var(--pp-border);
-  border-radius: var(--pp-radius-sm);
+  border: 1.5px solid var(--pp-border-input); /* Borda menos avermelhada */
+  border-radius: var(--pp-radius-input);
   padding: 0 var(--pp-space-3);
-  transition: border-color 0.15s;
+  height: 52px; /* Altura exata */
+  transition: all 250ms ease;
+}
+
+.pp-field__control:hover {
+  border-color: var(--pp-cream-faint);
 }
 
 .pp-field__control:focus-within {
   border-color: var(--pp-gold);
+  box-shadow: 0 0 0 3px var(--pp-gold-soft);
 }
 
 .pp-field__control--error {
   border-color: var(--pp-error);
+  box-shadow: 0 0 0 3px var(--pp-error-bg);
 }
 
 .pp-field__icon {
   color: var(--pp-cream-faint);
   flex-shrink: 0;
+  transition: color 250ms ease;
+}
+
+.pp-field__control:focus-within .pp-field__icon {
+  color: var(--pp-gold);
 }
 
 .pp-field__input {
@@ -99,13 +114,15 @@ const tipoReal = computed(() => {
   outline: none;
   color: var(--pp-cream);
   font-family: var(--pp-font-body);
-  font-size: 14px;
-  padding: 12px 0;
+  font-size: 16px;
+  padding: 0;
   min-width: 0;
+  font-weight: 400;
 }
 
 .pp-field__input::placeholder {
   color: var(--pp-cream-faint);
+  opacity: 0.8;
 }
 
 .pp-field__toggle {
@@ -117,6 +134,7 @@ const tipoReal = computed(() => {
   align-items: center;
   padding: 4px;
   flex-shrink: 0;
+  transition: color 250ms ease;
 }
 
 .pp-field__toggle:hover {
@@ -125,7 +143,26 @@ const tipoReal = computed(() => {
 
 .pp-field__error {
   color: var(--pp-error);
-  font-size: 12.5px;
+  font-size: 12px;
   margin: 6px 2px 0;
+  font-weight: 500;
+}
+
+.slide-fade-enter-active { transition: all 250ms ease-out; }
+.slide-fade-leave-active { transition: all 250ms ease-in; }
+.slide-fade-enter-from { transform: translateY(-4px); opacity: 0; }
+.slide-fade-leave-to { transform: translateY(4px); opacity: 0; }
+.pp-field__input:-webkit-autofill,
+.pp-field__input:-webkit-autofill:hover,
+.pp-field__input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--pp-cream);
+  -webkit-box-shadow: 0 0 0 1000px var(--pp-bg-input) inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.pp-field__input:autofill {
+  -webkit-text-fill-color: var(--pp-cream);
+  box-shadow: 0 0 0 1000px var(--pp-bg-input) inset !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 </style>
