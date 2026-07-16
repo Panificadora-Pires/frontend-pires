@@ -30,12 +30,3 @@ src/
   services/api.js            → client axios com JWT (renovação automática de token)
   router/                    → rotas e guards de autenticação
 ```
-
-## Contas de teste
-
-Use as credenciais do `seed_dados` do backend:
-
-| Papel | E-mail | Senha |
-|---|---|---|
-| Administração | admin@cantina.ifc.edu.br | senha123 |
-| Aluno | joao@aluno.ifc.edu.br | senha123 |
