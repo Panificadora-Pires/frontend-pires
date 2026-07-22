@@ -1,6 +1,6 @@
 <template>
   <div class="login">
-    <!-- ===== Painel do formulário ===== -->
+    <!-- ===== Painel do formulário (50%) ===== -->
     <section class="login__panel">
       
       <!-- Watermark sutil no fundo -->
@@ -80,30 +80,43 @@
       </div>
     </section>
 
-    <!-- ===== Painel da foto ===== -->
+    <!-- ===== Painel da foto (50%) ===== -->
     <aside class="login__photo" aria-hidden="true">
       <div class="login__photo-overlay"></div>
       <div class="login__photo-vignette"></div>
       
-      <div class="login__promo">
-        <div class="login__promo-icon"><Croissant :size="24" /></div>
-        <div class="login__promo-text">
-          <strong>Reserve seu lanche antes do intervalo</strong>
-          <p>Evite filas e garanta seus produtos favoritos.</p>
-        </div>
+      <!-- Carrossel de Promoções -->
+      <div class="login__carousel">
+        <transition name="fade-slide" mode="out-in">
+          <div class="login__promo" :key="currentSlide.id">
+            <div class="login__promo-icon">
+              <component :is="currentSlide.icon" :size="24" />
+            </div>
+            <div class="login__promo-text">
+              <strong>{{ currentSlide.title }}</strong>
+              <p>{{ currentSlide.desc }}</p>
+            </div>
+          </div>
+        </transition>
       </div>
       
+      <!-- Indicadores do Carrossel -->
       <div class="login__dots">
-        <span class="is-active" /><span /><span />
+        <span 
+          v-for="(slide, index) in slides" 
+          :key="slide.id" 
+          :class="{ 'is-active': currentSlideIndex === index }"
+          @click="goToSlide(index)"
+        ></span>
       </div>
     </aside>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Mail, Lock, ShieldCheck, Croissant, LogIn, UserPlus } from 'lucide-vue-next'
+import { Mail, Lock, ShieldCheck, Croissant, Coffee, Cookie, LogIn, UserPlus } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -115,6 +128,40 @@ const email = ref('')
 const senha = ref('')
 const erros = reactive({ email: '', senha: '' })
 
+// --- Lógica do Carrossel ---
+const slides = ref([
+  { id: 1, icon: Croissant, title: 'Reserve seu lanche antes do intervalo', desc: 'Evite filas e garanta seus produtos favoritos.' },
+  { id: 2, icon: Coffee, title: 'Café fresquinho todos os dias', desc: 'Aqueça seu dia com o melhor café da escola.' },
+  { id: 3, icon: Cookie, title: 'Promoções exclusivas para alunos', desc: 'Peça pelo app e ganhe descontos especiais.' }
+])
+
+const currentSlideIndex = ref(0)
+const currentSlide = computed(() => slides.value[currentSlideIndex.value])
+
+let carouselInterval = null
+
+const startCarousel = () => {
+  carouselInterval = setInterval(() => {
+    currentSlideIndex.value = (currentSlideIndex.value + 1) % slides.value.length
+  }, 4000) // Troca a cada 4 segundos
+}
+
+const goToSlide = (index) => {
+  currentSlideIndex.value = index
+  // Reinicia o timer ao clicar manualmente
+  clearInterval(carouselInterval)
+  startCarousel()
+}
+
+onMounted(() => {
+  startCarousel()
+})
+
+onUnmounted(() => {
+  clearInterval(carouselInterval)
+})
+
+// --- Lógica de Autenticação ---
 const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function validarEmail() {
@@ -149,8 +196,8 @@ async function handleSubmit() {
 .login {
   min-height: 100vh;
   display: grid;
-  /* Coluna esquerda ligeiramente maior para equilibrar o formulário */
-  grid-template-columns: 1.15fr 1fr; 
+  /* AJUSTE 1: Metade exata da tela para cada painel (50/50) */
+  grid-template-columns: 1fr 1fr; 
 }
 
 /* ===== painel do formulário ===== */
@@ -177,12 +224,11 @@ async function handleSubmit() {
 
 .login__content {
   width: 100%;
-  max-width: 440px;
+  max-width: 420px; /* Ligeiramente reduzido para caber confortável nos 50% */
   position: relative;
   z-index: 1;
 }
 
-/* Logo */
 .login__brand {
   margin-bottom: var(--pp-space-5); 
 }
@@ -198,7 +244,6 @@ async function handleSubmit() {
   transform: scale(1.02);
 }
 
-/* Tipografia H1 */
 .login__title {
   font-family: var(--pp-font-body);
   font-size: 48px;
@@ -212,7 +257,6 @@ async function handleSubmit() {
   color: var(--pp-gold);
 }
 
-/* Subtítulo */
 .login__subtitle {
   color: var(--pp-cream-dim);
   font-size: 16px;
@@ -224,7 +268,6 @@ async function handleSubmit() {
   margin-bottom: 0;
 }
 
-/* Link esqueceu senha */
 .login__forgot-wrapper {
   text-align: right;
   margin-top: 6px; 
@@ -242,7 +285,6 @@ async function handleSubmit() {
   text-decoration: underline;
 }
 
-/* Divisor */
 .login__divider {
   display: flex;
   align-items: center;
@@ -261,7 +303,6 @@ async function handleSubmit() {
   background: var(--pp-border-soft);
 }
 
-/* Texto seguro */
 .login__secure {
   display: flex;
   align-items: center;
@@ -278,9 +319,11 @@ async function handleSubmit() {
   position: relative;
   background: url('/background-image.png') center/cover no-repeat;
   background-color: var(--pp-bg-dark-soft);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
 }
 
-/* Overlay escuro e saturação */
 .login__photo-overlay {
   position: absolute;
   inset: 0;
@@ -289,7 +332,6 @@ async function handleSubmit() {
   filter: contrast(1.1) saturate(1.1);
 }
 
-/* Vinheta nas bordas */
 .login__photo-vignette {
   position: absolute;
   inset: 0;
@@ -297,13 +339,16 @@ async function handleSubmit() {
   pointer-events: none;
 }
 
-/* Card com Glassmorphism */
+/* ===== Carrossel e Card ===== */
+.login__carousel {
+  position: relative;
+  z-index: 2;
+  padding: 0 var(--pp-space-5);
+  margin-bottom: var(--pp-space-4);
+}
+
 .login__promo {
-  position: absolute;
-  bottom: var(--pp-space-5);
-  left: var(--pp-space-5);
-  right: var(--pp-space-5);
-  background: rgba(36, 21, 9, 0.65);
+  background: rgba(36, 21, 9, 0.75);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(224, 168, 62, 0.25);
@@ -313,13 +358,11 @@ async function handleSubmit() {
   gap: var(--pp-space-3);
   align-items: center;
   box-shadow: var(--pp-shadow-elevation);
-  transition: transform 250ms ease, box-shadow 250ms ease;
-  z-index: 2;
+  cursor: pointer;
 }
 
 .login__promo:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+  border-color: var(--pp-gold);
 }
 
 .login__promo-icon {
@@ -350,29 +393,45 @@ async function handleSubmit() {
   line-height: 1.4;
 }
 
-/* Indicadores do Carrossel */
+/* Indicadores do Carrossel (Bolinhas) */
 .login__dots {
-  position: absolute;
-  bottom: var(--pp-space-2);
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 6px;
+  position: relative;
   z-index: 2;
+  display: flex;
+  justify-content: center; /* Centralizado como no modelo */
+  gap: 8px;
+  padding-bottom: var(--pp-space-5);
 }
 
 .login__dots span {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: rgba(243, 233, 216, 0.3);
-  transition: all 250ms ease;
+  transition: all 300ms ease;
+  cursor: pointer;
 }
 
 .login__dots span.is-active {
   background: var(--pp-gold);
-  width: 18px;
-  border-radius: 3px;
+  width: 24px;
+  border-radius: 4px;
+}
+
+/* Transição do Carrossel */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.4s ease;
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateX(-20px);
 }
 
 /* ===== RESPONSIVIDADE ===== */
@@ -380,16 +439,10 @@ async function handleSubmit() {
   .login__title { font-size: 42px; }
 }
 
-/* Tablet */
 @media (max-width: 1024px) {
-  .login {
-    grid-template-columns: 0.9fr 1.1fr;
-  }
   .login__title { font-size: 36px; }
-  .login__promo { padding: var(--pp-space-3); }
 }
 
-/* Mobile */
 @media (max-width: 768px) {
   .login {
     grid-template-columns: 1fr;
