@@ -10,7 +10,7 @@
   --pp-bg-dark-soft: #2E1B0D;
   --pp-bg-card: #331F10;
   --pp-bg-input: #2A1810;
-  
+
   --pp-gradient-left: linear-gradient(180deg, #241108 0%, #32190C 100%);
   --pp-gradient-gold: linear-gradient(135deg, #E0A83E 0%, #C8922E 100%);
 
@@ -52,6 +52,22 @@
   --pp-space-4: 24px;
   --pp-space-5: 32px;
   --pp-space-6: 48px;
+}
+
+:root {
+  --pp-bg-page: #F6F3EF;
+  --pp-surface-card: #FFFFFF;
+  --pp-surface-border: rgba(43, 43, 43, 0.08);
+
+  --pp-text-dark: #2B2B2B;
+  --pp-text-dark-soft: #6B645C;
+  --pp-text-secondary: #A0A0A0;
+
+  --pp-warning: #E0A83E;
+  --pp-warning-bg: rgba(224, 168, 62, 0.14);
+  --pp-success-bg: rgba(111, 163, 111, 0.12);
+
+  --pp-radius-full: 999px;
 }
 
 * {

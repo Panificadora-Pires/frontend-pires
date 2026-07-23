@@ -33,24 +33,6 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async register(name, email, password) {
-      this.carregando = true
-      this.erro = null
-
-      try {
-        // 1. Cria a conta no backend
-        await api.post('/registro/', { name, email, password })
-        
-        // 2. Faz login automaticamente após o sucesso
-        return await this.login(email, password)
-      } catch (erro) {
-        this.erro = mensagemDeErro(erro)
-        return false
-      } finally {
-        this.carregando = false
-      }
-    },
-
     async buscarUsuarioLogado() {
       const { data } = await api.get('/usuarios/me/')
       this.usuario = data
@@ -78,24 +60,11 @@ export const useAuthStore = defineStore('auth', {
 })
 
 function mensagemDeErro(erro) {
-  if (!erro.response) {
-    return 'Não foi possível conectar ao servidor.'
-  }
-
-  // Erro de validação do Django (e-mail já existe, senha curta, etc)
-  if (erro.response.status === 400) {
-    const data = erro.response.data
-    // DRF retorna um dict de erros, pegamos o primeiro
-    const firstKey = Object.keys(data)[0]
-    if (firstKey) {
-      return data[firstKey][0] || 'Dados inválidos.'
-    }
-    return 'Dados inválidos.'
-  }
-
-  if (erro.response.status === 401) {
+  if (erro.response?.status === 401) {
     return 'E-mail ou senha incorretos.'
   }
-
-  return 'Algo deu errado. Tente novamente.'
+  if (!erro.response) {
+    return 'Não foi possível conectar ao servidor. Tente novamente.'
+  }
+  return 'Algo deu errado. Tente novamente em instantes.'
 }
