@@ -11,7 +11,7 @@ const routes = [
   {
     path: '/cadastro',
     name: 'cadastro',
-    component: () => import('@/views/EmConstrucaoView.vue'),
+    component: () => import('@/views/auth/RegisterView.vue'),
     meta: { publica: true },
   },
   {
