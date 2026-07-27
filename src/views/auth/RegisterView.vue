@@ -1,37 +1,29 @@
 <template>
     <div class="login">
-        <!-- ===== Painel do formulário ===== -->
         <section class="login__panel">
             <div class="login__watermark" aria-hidden="true">
                 <Croissant :size="400" />
             </div>
-
             <div class="login__content">
-                <div class="login__brand">
-                    <img src="/logo.png" alt="Logo Pires Panificadora" class="login__logo" />
-                </div>
-
-                <h1 class="login__title">
-                    Crie sua conta na <span class="login__title-gold">Pires Panificadora</span>
+                <div class="login__brand"><img src="/logo.png" alt="Logo" class="login__logo" /></div>
+                <h1 class="login__title">Crie sua conta na <span class="login__title-gold">Pires Panificadora</span>
                 </h1>
-                <p class="login__subtitle">
-                    Faça cadastro para acessar o sistema de pedidos da nossa cantina.
-                </p>
+                <p class="login__subtitle">Faça cadastro para acessar o sistema de pedidos.</p>
 
                 <form class="login__form" @submit.prevent="handleRegister" novalidate>
-                    <BaseInput v-model="form.name" label="Nome Completo" placeholder="Digite seu nome" :icon="User"
-                        :error="errors.name" />
-                    <BaseInput v-model="form.email" label="E-mail" type="email" placeholder="seu@email.com" :icon="Mail"
-                        :error="errors.email" />
-                    <BaseInput v-model="form.password" label="Senha" type="password" placeholder="Mínimo 6 caracteres"
-                        :icon="Lock" :error="errors.password" />
-                    <BaseInput v-model="form.passwordConfirm" label="Confirmar Senha" type="password"
-                        placeholder="Repita a senha" :icon="Lock" :error="errors.passwordConfirm" />
-
+                    <BaseInput v-model="form.name" label="Nome Completo" :icon="User" :error="errors.name" />
+                    <BaseInput v-model="form.email" label="E-mail" type="email" :icon="Mail" :error="errors.email" />
+                    <BaseInput v-model="form.password" label="Senha" type="password" :icon="Lock"
+                        :error="errors.password" />
+                    <BaseInput v-model="form.passwordConfirm" label="Confirmar Senha" type="password" :icon="Lock"
+                        :error="errors.passwordConfirm" />
                     <BaseButton type="submit" block :icon="UserPlus" :loading="auth.carregando"
-                        loading-text="Criando conta...">
-                        Criar conta
-                    </BaseButton>
+                        loading-text="Criando conta...">Criar conta</BaseButton>
+
+                    <div class="login__divider"><span>ou</span></div>
+
+                    <!-- Botão do Google -->
+                    <GoogleLogin :callback="handleGoogleLogin" popup-type="TOKEN" class="google-btn-wrapper" />
                 </form>
 
                 <div class="login__footer">
@@ -40,19 +32,17 @@
                 </div>
             </div>
         </section>
-
-        <!-- ===== Painel da foto ===== -->
         <aside class="login__photo" aria-hidden="true">
             <div class="login__photo-overlay"></div>
-            <div class="login__photo-vignette"></div>
         </aside>
     </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { User, Mail, Lock, UserPlus, Croissant } from 'lucide-vue-next'
+import GoogleLogin from 'vue3-google-login'
 import { useAuthStore } from '@/stores/auth'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -60,51 +50,38 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 const router = useRouter()
 const auth = useAuthStore()
 
-const form = reactive({
-    name: '',
-    email: '',
-    password: '',
-    passwordConfirm: ''
-})
+const form = reactive({ name: '', email: '', password: '', passwordConfirm: '' })
+const errors = reactive({ name: '', email: '', password: '', passwordConfirm: '' })
 
-const errors = reactive({
-    name: '',
-    email: '',
-    password: '',
-    passwordConfirm: ''
-})
-
-const clearErrors = () => {
-    errors.name = ''
-    errors.email = ''
-    errors.password = ''
-    errors.passwordConfirm = ''
-}
+const clearErrors = () => { Object.keys(errors).forEach(k => errors[k] = '') }
 
 const validate = () => {
     clearErrors()
-    let isValid = true
-
-    if (!form.name) { errors.name = 'Informe seu nome.'; isValid = false }
-    if (!form.email) { errors.email = 'Informe seu e-mail.'; isValid = false }
-    if (!form.password || form.password.length < 6) { errors.password = 'A senha deve ter no mínimo 6 caracteres.'; isValid = false }
-    if (form.password !== form.passwordConfirm) { errors.passwordConfirm = 'As senhas não coincidem.'; isValid = false }
-
-    return isValid
+    let valid = true
+    if (!form.name) { errors.name = 'Informe seu nome.'; valid = false }
+    if (!form.email) { errors.email = 'Informe seu e-mail.'; valid = false }
+    if (!form.password || form.password.length < 6) { errors.password = 'Mínimo 6 caracteres.'; valid = false }
+    if (form.password !== form.passwordConfirm) { errors.passwordConfirm = 'Senhas não coincidem.'; valid = false }
+    return valid
 }
 
 const handleRegister = async () => {
     if (!validate()) return
+    const sucesso = await auth.register({
+        name: form.name, email: form.email, password: form.password
+    })
+    if (sucesso) router.push('/')
+}
 
-    const sucesso = await auth.register(form.name, form.email, form.password)
-    if (sucesso) {
-        router.push('/')
-    }
+const handleGoogleLogin = async (response) => {
+    // response.credential contém o token JWT do Google
+    const sucesso = await auth.loginWithGoogle(response.credential)
+    if (sucesso) router.push('/')
 }
 </script>
 
 <style scoped>
-/* Reutiliza exatamente o mesmo CSS premium do LoginView */
+/* Reutiliza o CSS premium do LoginView */
 .login {
     min-height: 100vh;
     display: grid;
@@ -165,7 +142,6 @@ const handleRegister = async () => {
 .login__subtitle {
     color: var(--pp-cream-dim);
     font-size: 16px;
-    line-height: 1.5;
     margin: 0 0 var(--pp-space-5);
 }
 
@@ -173,7 +149,24 @@ const handleRegister = async () => {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    /* Gap menor porque o BaseInput já tem margin */
+}
+
+.login__divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: var(--pp-cream-faint);
+    font-size: 13px;
+    margin: var(--pp-space-4) 0;
+    opacity: 0.6;
+}
+
+.login__divider::before,
+.login__divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--pp-border-soft);
 }
 
 .login__footer {
@@ -186,32 +179,24 @@ const handleRegister = async () => {
 .login__link {
     color: var(--pp-gold);
     font-weight: 600;
-    transition: color 250ms;
 }
 
-.login__link:hover {
-    color: var(--pp-cream);
-}
-
-/* Painel da Foto */
 .login__photo {
     position: relative;
     background: url('/background-image.png') center/cover no-repeat;
-    background-color: var(--pp-bg-dark-soft);
 }
 
 .login__photo-overlay {
     position: absolute;
     inset: 0;
     background: rgba(0, 0, 0, 0.1);
-    mix-blend-mode: multiply;
-    filter: contrast(1.1) saturate(1.1);
 }
 
-.login__photo-vignette {
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle, transparent 50%, rgba(0, 0, 0, 0.4) 100%);
+/* Estilo do wrapper do Google para ficar premium */
+.google-btn-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
 }
 
 @media (max-width: 768px) {

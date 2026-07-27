@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import api from "@/services/api";
+import { authService } from "@/services/auth.service.js";
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
@@ -17,12 +17,10 @@ export const useAuthStore = defineStore("auth", {
     async login(email, password) {
       this.carregando = true;
       this.erro = null;
-
       try {
-        const { data } = await api.post("/token/", { email, password });
+        const { data } = await authService.login({ email, password });
         localStorage.setItem("pp_access_token", data.access);
         localStorage.setItem("pp_refresh_token", data.refresh);
-
         await this.buscarUsuarioLogado();
         return true;
       } catch (erro) {
@@ -33,16 +31,46 @@ export const useAuthStore = defineStore("auth", {
       }
     },
 
-    async register(name, email, password) {
+    async register(userData) {
       this.carregando = true;
       this.erro = null;
-
       try {
-        // 1. Cria a conta no backend
-        await api.post("/registro/", { name, email, password });
+        await authService.register(userData);
+        // Auto-login após cadastro
+        return await this.login(userData.email, userData.password);
+      } catch (erro) {
+        this.erro = mensagemDeErro(erro);
+        return false;
+      } finally {
+        this.carregando = false;
+      }
+    },
 
-        // 2. Faz login automaticamente após o sucesso
-        return await this.login(email, password);
+    async loginWithGoogle(credential) {
+      this.carregando = true;
+      this.erro = null;
+      try {
+        const { data } = await authService.googleLogin(credential);
+        // O nosso backend customizado retorna access/refresh direto!
+        localStorage.setItem("pp_access_token", data.access);
+        localStorage.setItem("pp_refresh_token", data.refresh);
+        this.usuario = data.user;
+        return true;
+      } catch (erro) {
+        this.erro = "Falha ao logar com Google.";
+        return false;
+      } finally {
+        this.carregando = false;
+      }
+    },
+
+    async adminInviteRegister(data) {
+      this.carregando = true;
+      this.erro = null;
+      try {
+        await authService.adminRegister(data);
+        // Auto-login após cadastro admin
+        return await this.login(data.email, data.password);
       } catch (erro) {
         this.erro = mensagemDeErro(erro);
         return false;
@@ -52,14 +80,13 @@ export const useAuthStore = defineStore("auth", {
     },
 
     async buscarUsuarioLogado() {
-      const { data } = await api.get("/usuarios/me/");
+      const { data } = await authService.getProfile();
       this.usuario = data;
     },
 
     async restaurarSessao() {
       const token = localStorage.getItem("pp_access_token");
       if (!token) return false;
-
       try {
         await this.buscarUsuarioLogado();
         return true;
@@ -78,24 +105,7 @@ export const useAuthStore = defineStore("auth", {
 });
 
 function mensagemDeErro(erro) {
-  if (!erro.response) {
-    return "Não foi possível conectar ao servidor.";
-  }
-
-  // Erro de validação do Django (e-mail já existe, senha curta, etc)
-  if (erro.response.status === 400) {
-    const data = erro.response.data;
-    // DRF retorna um dict de erros, pegamos o primeiro
-    const firstKey = Object.keys(data)[0];
-    if (firstKey) {
-      return data[firstKey][0] || "Dados inválidos.";
-    }
-    return "Dados inválidos.";
-  }
-
-  if (erro.response.status === 401) {
-    return "E-mail ou senha incorretos.";
-  }
-
+  if (erro.response?.status === 401) return "E-mail ou senha incorretos.";
+  if (!erro.response) return "Não foi possível conectar ao servidor.";
   return "Algo deu errado. Tente novamente.";
 }
