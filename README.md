@@ -23,10 +23,12 @@ npm run preview   # pra testar o build localmente
 
 ```
 src/
-  assets/styles/tokens.css   → cores, tipografia, espaçamento (design tokens do Figma)
-  components/ui/             → componentes reutilizáveis (BaseInput, BaseButton, ...)
-  views/                     → uma tela por arquivo
-  stores/                    → estado global (Pinia) — auth.js por enquanto
-  services/api.js            → client axios com JWT (renovação automática de token)
-  router/                    → rotas e guards de autenticação
+  assets/styles/theme.css     → design tokens (cores, tipografia, espaçamento, raio, sombra, duração)
+  assets/styles/animations.css → keyframes e classes de animação compartilhadas
+  assets/images/               → logo e fotos
+  components/ui/               → design system (BaseButton, BaseInput, BaseCard, BaseDivider, BaseLogo, BaseIcon, BaseSpinner, BaseAlert)
+  views/                       → uma tela por arquivo
+  stores/                      → estado global (Pinia) — auth.js por enquanto
+  services/api.js              → client axios com JWT (renovação automática de token)
+  router/                      → rotas e guards de autenticação
 ```

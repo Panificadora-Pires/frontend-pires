@@ -1,19 +1,23 @@
 /* ============================================================
-   Pires Panificadora — Design Tokens
-   Extraído do Figma de login. Usar essas variáveis em vez de
-   cores/tamanhos "soltos" em qualquer componente novo.
+   Pires Panificadora — Design Tokens (Premium Scale)
    ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
   /* --- Cores base --- */
-  --pp-bg-dark: #241509;
+  --pp-bg-dark: #241108;
   --pp-bg-dark-soft: #2E1B0D;
   --pp-bg-card: #331F10;
   --pp-bg-input: #2A1810;
 
+  --pp-gradient-left: linear-gradient(180deg, #241108 0%, #32190C 100%);
+  --pp-gradient-gold: linear-gradient(135deg, #E0A83E 0%, #C8922E 100%);
+
   --pp-gold: #E0A83E;
   --pp-gold-hover: #C8922E;
   --pp-gold-soft: rgba(224, 168, 62, 0.14);
+  --pp-gold-focus: rgba(224, 168, 62, 0.4);
 
   --pp-cream: #F3E9D8;
   --pp-cream-dim: #C9BBA6;
@@ -21,30 +25,49 @@
 
   --pp-border: rgba(224, 168, 62, 0.28);
   --pp-border-soft: rgba(243, 233, 216, 0.14);
+  --pp-border-input: rgba(243, 233, 216, 0.16);
 
   --pp-error: #E0605A;
   --pp-error-bg: rgba(224, 96, 90, 0.1);
 
   --pp-success: #6FA36F;
 
-  /* --- Tipografia --- */
-  --pp-font-display: 'Fraunces', Georgia, serif;
-  --pp-font-body: 'Work Sans', system-ui, sans-serif;
+  /* --- Tipografia (Apenas Inter) --- */
+  --pp-font-body: 'Inter', system-ui, -apple-system, sans-serif;
 
-  /* --- Raio e sombra --- */
+  /* --- Raio de Borda --- */
+  --pp-radius-input: 12px;
+  --pp-radius-btn: 12px;
+  --pp-radius-card: 18px;
   --pp-radius-sm: 8px;
-  --pp-radius-md: 12px;
-  --pp-radius-lg: 20px;
-  --pp-shadow-card: 0 20px 50px rgba(0, 0, 0, 0.35);
 
-  /* --- Espaçamento --- */
-  --pp-space-1: 4px;
-  --pp-space-2: 8px;
-  --pp-space-3: 12px;
-  --pp-space-4: 16px;
-  --pp-space-5: 24px;
-  --pp-space-6: 32px;
-  --pp-space-7: 48px;
+  /* --- Sombras --- */
+  --pp-shadow-soft: 0 12px 32px rgba(0, 0, 0, 0.18);
+  --pp-shadow-elevation: 0 8px 24px rgba(0, 0, 0, 0.25);
+
+  /* --- Espaçamento (Escala Consistente) --- */
+  --pp-space-1: 8px;
+  --pp-space-2: 12px;
+  --pp-space-3: 16px;
+  --pp-space-4: 24px;
+  --pp-space-5: 32px;
+  --pp-space-6: 48px;
+}
+
+:root {
+  --pp-bg-page: #F6F3EF;
+  --pp-surface-card: #FFFFFF;
+  --pp-surface-border: rgba(43, 43, 43, 0.08);
+
+  --pp-text-dark: #2B2B2B;
+  --pp-text-dark-soft: #6B645C;
+  --pp-text-secondary: #A0A0A0;
+
+  --pp-warning: #E0A83E;
+  --pp-warning-bg: rgba(224, 168, 62, 0.14);
+  --pp-success-bg: rgba(111, 163, 111, 0.12);
+
+  --pp-radius-full: 999px;
 }
 
 * {
@@ -58,13 +81,14 @@ html, body {
   color: var(--pp-cream);
   font-family: var(--pp-font-body);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #app {
   min-height: 100vh;
 }
 
-a { color: inherit; }
+a { color: inherit; text-decoration: none; }
 button { font-family: inherit; }
 
 :focus-visible {
