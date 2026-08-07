@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+
 import { useAuthStore } from '@/stores/auth'
 
 const routes = [
@@ -6,16 +7,33 @@ const routes = [
     path: '/login',
     name: 'login',
     component: () => import('@/views/auth/LoginView.vue'),
-    meta: { publica: true },
+    meta: { publica: true, somenteVisitante: true },
   },
   {
     path: '/cadastro',
     name: 'cadastro',
     component: () => import('@/views/auth/RegisterView.vue'),
-    meta: { publica: true },
+    meta: { publica: true, somenteVisitante: true },
+  },
+  {
+    path: '/confirmar-email',
+    name: 'confirmar-email',
+    component: () => import('@/views/auth/VerifyAccountView.vue'),
+    meta: { publica: true, somenteVisitante: true },
+  },
+  {
+    path: '/recuperar-senha',
+    name: 'recuperar-senha',
+    component: () => import('@/views/auth/ForgotPasswordView.vue'),
+    meta: { publica: true, somenteVisitante: true },
+  },
+  {
+    path: '/redefinir-senha',
+    name: 'redefinir-senha',
+    component: () => import('@/views/auth/ResetPasswordView.vue'),
+    meta: { publica: true, somenteVisitante: true },
   },
 
-  // ---- Área do aluno (layout com sidebar/topbar/bottom nav) ----
   {
     path: '/',
     component: () => import('@/components/layout/StudentLayout.vue'),
@@ -40,33 +58,44 @@ const routes = [
   },
   {
     path: '/:pathMatch(.*)*',
-    redirect: '/login',
+    redirect: '/',
   },
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+  scrollBehavior: () => ({ top: 0 }),
 })
 
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
 
-  if ((to.meta.requerAuth || to.meta.publica) && !auth.autenticado) {
+  if (
+    !auth.sessaoInicializada &&
+    (to.meta.requerAuth || to.meta.somenteVisitante)
+  ) {
     await auth.restaurarSessao()
   }
 
   if (to.meta.requerAuth && !auth.autenticado) {
-    return { name: 'login' }
+    return {
+      name: 'login',
+      query: {
+        redirect: to.fullPath !== '/' ? to.fullPath : undefined,
+      },
+    }
   }
 
   if (to.meta.requerAdmin && !auth.isAdmin) {
     return { name: 'home' }
   }
 
-  if (to.meta.publica && to.name !== 'cadastro' && auth.autenticado) {
+  if (to.meta.somenteVisitante && auth.autenticado) {
     return { name: auth.isAdmin ? 'admin-dashboard' : 'home' }
   }
+
+  return true
 })
 
 export default router
