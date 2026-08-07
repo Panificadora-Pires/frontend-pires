@@ -1,115 +1,103 @@
 <template>
   <button
+    :type="type"
     class="pp-btn"
     :class="[`pp-btn--${variant}`, { 'pp-btn--block': block }]"
     :disabled="loading || disabled"
+    :aria-busy="loading"
     v-bind="$attrs"
   >
     <template v-if="loading">
       <span class="pp-btn__spinner" aria-hidden="true" />
       <span>{{ loadingText }}</span>
     </template>
+
     <template v-else>
-      <component :is="icon" v-if="icon" :size="18" class="pp-btn__icon" />
+      <component :is="icon" v-if="icon" :size="18" class="pp-btn__icon" aria-hidden="true" />
       <slot />
     </template>
   </button>
 </template>
 
 <script setup>
+defineOptions({ inheritAttrs: false })
+
 defineProps({
-  variant: { type: String, default: 'primary' }, // primary | ghost
+  type: { type: String, default: 'button' },
+  variant: { type: String, default: 'primary' },
   block: { type: Boolean, default: false },
   loading: { type: Boolean, default: false },
   loadingText: { type: String, default: 'Carregando...' },
   disabled: { type: Boolean, default: false },
-  icon: { type: [Object, Function], default: null }, // <-- PROP ADICIONADA DE VOLTA
+  icon: { type: [Object, Function], default: null },
 })
 </script>
 
 <style scoped>
 .pp-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  border-radius: var(--pp-radius-btn);
-  font-weight: 600;
-  font-size: 16px;
-  padding: 0 24px;
-  height: 52px; 
+  gap: 9px;
+  min-height: 50px;
+  padding: 0 22px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.005em;
   cursor: pointer;
-  border: 1.5px solid transparent;
-  transition: all 250ms ease;
-  font-family: var(--pp-font-body);
-  letter-spacing: 0.01em;
-  position: relative;
-  overflow: hidden;
+  transition: transform 180ms ease, filter 180ms ease, box-shadow 180ms ease, background 180ms ease;
 }
 
 .pp-btn--block {
   width: 100%;
 }
 
-.pp-btn:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-.pp-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.7;
-  transform: none;
-  box-shadow: none;
-}
-
 .pp-btn--primary {
-  background: var(--pp-gradient-gold);
-  color: var(--pp-bg-dark);
-  box-shadow: var(--pp-shadow-soft);
+  background: linear-gradient(90deg, #ffbd3c 0%, #ffc84e 100%);
+  color: #2a150b;
+  box-shadow: 0 8px 22px rgba(224, 168, 62, 0.18);
 }
 
 .pp-btn--primary:hover:not(:disabled) {
-  filter: brightness(1.1);
-  transform: translateY(-2px); 
-  box-shadow: var(--pp-shadow-elevation);
+  filter: brightness(1.04);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(224, 168, 62, 0.24);
 }
 
 .pp-btn--ghost {
-  background: transparent;
+  border-color: var(--pp-gold);
+  background: rgba(31, 14, 5, 0.12);
   color: var(--pp-cream);
-  border-color: var(--pp-gold); 
-  border-width: 1px;
 }
 
 .pp-btn--ghost:hover:not(:disabled) {
-  background: var(--pp-gold); 
-  color: var(--pp-bg-dark);
-  border-color: var(--pp-gold);
-  transform: translateY(-2px);
+  background: var(--pp-gold-soft);
 }
 
-/* Classe do ícone para garantir alinhamento perfeito */
+.pp-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.99);
+}
+
+.pp-btn:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+
 .pp-btn__icon {
-  flex-shrink: 0;
-  transition: transform 250ms ease;
-}
-
-.pp-btn:hover .pp-btn__icon {
-  transform: translateX(2px); /* Leve animação no ícone ao hover */
+  flex: 0 0 auto;
 }
 
 .pp-btn__spinner {
-  width: 16px;
-  height: 16px;
+  width: 17px;
+  height: 17px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
   border-radius: 50%;
-  border: 2px solid rgba(36, 21, 9, 0.3);
-  border-top-color: var(--pp-bg-dark);
-  animation: pp-spin 0.7s linear infinite;
-}
-
-.pp-btn--ghost .pp-btn__spinner {
-  border-color: rgba(243, 233, 216, 0.3);
-  border-top-color: var(--pp-cream);
+  animation: pp-spin 650ms linear infinite;
 }
 
 @keyframes pp-spin {

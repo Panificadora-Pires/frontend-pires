@@ -1,230 +1,244 @@
 <template>
-    <div class="login">
-        <!-- ===== Painel do formulário ===== -->
-        <section class="login__panel">
-            <div class="login__watermark" aria-hidden="true">
-                <Croissant :size="400" />
-            </div>
+  <AuthLayout wide :back-to="{ name: 'login' }" back-label="Voltar para o login">
+    <template #heading>
+      <h1>Crie sua conta na <span>Pires Panificadora</span></h1>
+      <p>É rápido, fácil e permite que você reserve seus produtos favoritos.</p>
+    </template>
 
-            <div class="login__content">
-                <div class="login__brand">
-                    <img src="/logo.png" alt="Logo Pires Panificadora" class="login__logo" />
-                </div>
-
-                <h1 class="login__title">
-                    Crie sua conta na <span class="login__title-gold">Pires Panificadora</span>
-                </h1>
-                <p class="login__subtitle">
-                    Faça cadastro para acessar o sistema de pedidos da nossa cantina.
-                </p>
-
-                <form class="login__form" @submit.prevent="handleRegister" novalidate>
-                    <BaseInput v-model="form.name" label="Nome Completo" placeholder="Digite seu nome" :icon="User"
-                        :error="errors.name" />
-                    <BaseInput v-model="form.email" label="E-mail" type="email" placeholder="seu@email.com" :icon="Mail"
-                        :error="errors.email" />
-                    <BaseInput v-model="form.password" label="Senha" type="password" placeholder="Mínimo 6 caracteres"
-                        :icon="Lock" :error="errors.password" />
-                    <BaseInput v-model="form.passwordConfirm" label="Confirmar Senha" type="password"
-                        placeholder="Repita a senha" :icon="Lock" :error="errors.passwordConfirm" />
-
-                    <BaseButton type="submit" block :icon="UserPlus" :loading="auth.carregando"
-                        loading-text="Criando conta...">
-                        Criar conta
-                    </BaseButton>
-                </form>
-
-                <div class="login__footer">
-                    <p>Já tem uma conta? <router-link :to="{ name: 'login' }" class="login__link">Faça
-                            login</router-link></p>
-                </div>
-            </div>
-        </section>
-
-        <!-- ===== Painel da foto ===== -->
-        <aside class="login__photo" aria-hidden="true">
-            <div class="login__photo-overlay"></div>
-            <div class="login__photo-vignette"></div>
-        </aside>
+    <div v-if="erroGeral" class="auth-alert auth-alert--error" role="alert">
+      {{ erroGeral }}
     </div>
+
+    <form class="auth-form" novalidate @submit.prevent="handleRegister">
+      <div class="auth-form__grid">
+        <BaseInput
+          :model-value="form.name"
+          label="Nome completo"
+          placeholder="Digite seu nome completo"
+          :icon="User"
+          :error="erros.name"
+          autocomplete="name"
+          name="name"
+          @update:model-value="form.name = $event"
+          @blur="validarNome"
+        />
+
+        <BaseInput
+          :model-value="form.email"
+          label="E-mail"
+          type="email"
+          placeholder="Digite seu e-mail"
+          :icon="Mail"
+          :error="erros.email"
+          autocomplete="email"
+          inputmode="email"
+          name="email"
+          @update:model-value="form.email = $event"
+          @blur="validarEmail"
+        />
+
+        <BaseInput
+          :model-value="form.phone"
+          label="Telefone"
+          type="tel"
+          placeholder="(47) 99999-9999"
+          :icon="Phone"
+          :error="erros.phone"
+          autocomplete="tel"
+          inputmode="tel"
+          maxlength="15"
+          name="phone"
+          @update:model-value="form.phone = formatarTelefone($event)"
+          @blur="validarTelefone"
+        />
+
+        <BaseInput
+          :model-value="form.password"
+          label="Senha"
+          type="password"
+          placeholder="Crie uma senha"
+          :icon="Lock"
+          :error="erros.password"
+          autocomplete="new-password"
+          name="password"
+          @update:model-value="form.password = $event"
+          @blur="validarSenha"
+        />
+
+        <div class="auth-form__full">
+          <BaseInput
+            :model-value="form.passwordConfirm"
+            label="Confirmar senha"
+            type="password"
+            placeholder="Confirme sua senha"
+            :icon="Lock"
+            :error="erros.passwordConfirm"
+            autocomplete="new-password"
+            name="password-confirm"
+            @update:model-value="form.passwordConfirm = $event"
+            @blur="validarConfirmacao"
+          />
+        </div>
+      </div>
+
+      <label class="auth-checkbox">
+        <input v-model="form.acceptedTerms" type="checkbox" />
+        <span>
+          Aceito os <strong>Termos de Uso</strong> e a <strong>Política de Privacidade</strong>.
+        </span>
+      </label>
+      <p v-if="erros.acceptedTerms" class="auth-inline-error" role="alert">
+        {{ erros.acceptedTerms }}
+      </p>
+
+      <BaseButton
+        type="submit"
+        block
+        :icon="UserPlus"
+        :loading="auth.carregando"
+        loading-text="Criando conta..."
+      >
+        Criar conta
+      </BaseButton>
+    </form>
+
+    <div class="auth-divider"><span>ou</span></div>
+
+    <GoogleAuthButton
+      :loading="auth.carregando"
+      @credential="handleGoogleCredential"
+      @error="erroGeral = $event"
+    />
+
+    <p class="auth-footer">
+      Já tem uma conta?
+      <RouterLink :to="{ name: 'login' }" class="auth-link">Fazer login</RouterLink>
+    </p>
+  </AuthLayout>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { reactive, ref } from 'vue'
+import { Lock, Mail, Phone, User, UserPlus } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
-import { User, Mail, Lock, UserPlus, Croissant } from 'lucide-vue-next'
-import { useAuthStore } from '@/stores/auth'
-import BaseInput from '@/components/ui/BaseInput.vue'
-import BaseButton from '@/components/ui/BaseButton.vue'
 
-const router = useRouter()
+import GoogleAuthButton from '@/components/auth/GoogleAuthButton.vue'
+import AuthLayout from '@/components/layout/AuthLayout.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import { useAuthStore } from '@/stores/auth'
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 const auth = useAuthStore()
+const router = useRouter()
 
 const form = reactive({
-    name: '',
-    email: '',
-    password: '',
-    passwordConfirm: ''
+  name: '',
+  email: '',
+  phone: '',
+  password: '',
+  passwordConfirm: '',
+  acceptedTerms: false,
 })
 
-const errors = reactive({
-    name: '',
-    email: '',
-    password: '',
-    passwordConfirm: ''
+const erros = reactive({
+  name: '',
+  email: '',
+  phone: '',
+  password: '',
+  passwordConfirm: '',
+  acceptedTerms: '',
 })
 
-const clearErrors = () => {
-    errors.name = ''
-    errors.email = ''
-    errors.password = ''
-    errors.passwordConfirm = ''
+const erroGeral = ref('')
+
+function validarNome() {
+  erros.name = form.name.trim().length >= 2 ? '' : 'Informe seu nome completo.'
 }
 
-const validate = () => {
-    clearErrors()
-    let isValid = true
-
-    if (!form.name) { errors.name = 'Informe seu nome.'; isValid = false }
-    if (!form.email) { errors.email = 'Informe seu e-mail.'; isValid = false }
-    if (!form.password || form.password.length < 6) { errors.password = 'A senha deve ter no mínimo 6 caracteres.'; isValid = false }
-    if (form.password !== form.passwordConfirm) { errors.passwordConfirm = 'As senhas não coincidem.'; isValid = false }
-
-    return isValid
+function validarEmail() {
+  const email = form.email.trim()
+  erros.email = EMAIL_REGEX.test(email) ? '' : 'Informe um e-mail válido.'
 }
 
-const handleRegister = async () => {
-    if (!validate()) return
+function validarTelefone() {
+  const digits = form.phone.replace(/\D/g, '')
+  erros.phone = [10, 11].includes(digits.length) ? '' : 'Informe um telefone válido com DDD.'
+}
 
-    const sucesso = await auth.register(form.name, form.email, form.password)
-    if (sucesso) {
-        router.push('/')
+function validarSenha() {
+  erros.password = form.password.length >= 8 ? '' : 'A senha precisa ter pelo menos 8 caracteres.'
+}
+
+function validarConfirmacao() {
+  erros.passwordConfirm =
+    form.passwordConfirm && form.passwordConfirm === form.password
+      ? ''
+      : 'As senhas não coincidem.'
+}
+
+function validarFormulario() {
+  validarNome()
+  validarEmail()
+  validarTelefone()
+  validarSenha()
+  validarConfirmacao()
+  erros.acceptedTerms = form.acceptedTerms ? '' : 'Você precisa aceitar os termos para continuar.'
+
+  return !Object.values(erros).some(Boolean)
+}
+
+async function handleRegister() {
+  erroGeral.value = ''
+
+  if (!validarFormulario()) return
+
+  const resultado = await auth.register({
+    name: form.name,
+    email: form.email,
+    phone: form.phone,
+    password: form.password,
+  })
+
+  if (!resultado.ok) {
+    erroGeral.value = resultado.erro
+    aplicarErrosBackend(resultado.campos)
+    return
+  }
+
+  await router.push({ name: 'confirmar-email' })
+}
+
+async function handleGoogleCredential(credential) {
+  erroGeral.value = ''
+  const resultado = await auth.loginWithGoogle(credential)
+
+  if (!resultado.ok) {
+    erroGeral.value = resultado.erro
+    return
+  }
+
+  await router.replace({ name: auth.isAdmin ? 'admin-dashboard' : 'home' })
+}
+
+function aplicarErrosBackend(campos) {
+  for (const campo of Object.keys(erros)) {
+    if (campos[campo]) {
+      erros[campo] = campos[campo]
     }
+  }
+}
+
+function formatarTelefone(valor) {
+  const digits = String(valor || '').replace(/\D/g, '').slice(0, 11)
+
+  if (digits.length <= 2) return digits
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`
+  if (digits.length <= 10) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`
+  }
+
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
 }
 </script>
-
-<style scoped>
-/* Reutiliza exatamente o mesmo CSS premium do LoginView */
-.login {
-    min-height: 100vh;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-}
-
-.login__panel {
-    background: var(--pp-gradient-left);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--pp-space-6) var(--pp-space-5);
-    position: relative;
-    overflow: hidden;
-}
-
-.login__watermark {
-    position: absolute;
-    bottom: -10%;
-    right: -5%;
-    color: var(--pp-cream);
-    opacity: 0.03;
-    pointer-events: none;
-    z-index: 0;
-    transform: rotate(-15deg);
-}
-
-.login__content {
-    width: 100%;
-    max-width: 420px;
-    position: relative;
-    z-index: 1;
-}
-
-.login__brand {
-    margin-bottom: var(--pp-space-5);
-}
-
-.login__logo {
-    width: 180px;
-    height: auto;
-    object-fit: contain;
-}
-
-.login__title {
-    font-family: var(--pp-font-body);
-    font-size: 36px;
-    font-weight: 700;
-    color: var(--pp-cream);
-    line-height: 1.2;
-    margin: 0 0 var(--pp-space-3);
-}
-
-.login__title-gold {
-    color: var(--pp-gold);
-}
-
-.login__subtitle {
-    color: var(--pp-cream-dim);
-    font-size: 16px;
-    line-height: 1.5;
-    margin: 0 0 var(--pp-space-5);
-}
-
-.login__form {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    /* Gap menor porque o BaseInput já tem margin */
-}
-
-.login__footer {
-    text-align: center;
-    margin-top: var(--pp-space-5);
-    color: var(--pp-cream-dim);
-    font-size: 14px;
-}
-
-.login__link {
-    color: var(--pp-gold);
-    font-weight: 600;
-    transition: color 250ms;
-}
-
-.login__link:hover {
-    color: var(--pp-cream);
-}
-
-/* Painel da Foto */
-.login__photo {
-    position: relative;
-    background: url('/background-image.png') center/cover no-repeat;
-    background-color: var(--pp-bg-dark-soft);
-}
-
-.login__photo-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.1);
-    mix-blend-mode: multiply;
-    filter: contrast(1.1) saturate(1.1);
-}
-
-.login__photo-vignette {
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle, transparent 50%, rgba(0, 0, 0, 0.4) 100%);
-}
-
-@media (max-width: 768px) {
-    .login {
-        grid-template-columns: 1fr;
-    }
-
-    .login__photo {
-        display: none;
-    }
-
-    .login__title {
-        font-size: 28px;
-    }
-}
-</style>
