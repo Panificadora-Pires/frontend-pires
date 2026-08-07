@@ -27,13 +27,24 @@
         <RouterLink :to="{ name: 'cardapio' }" class="student-layout__promo-btn">Saiba mais</RouterLink>
       </div>
 
-      <RouterLink :to="{ name: 'perfil' }" class="student-layout__user">
-        <span class="student-layout__avatar">{{ iniciais }}</span>
-        <div class="student-layout__user-info">
-          <strong>{{ auth.usuario?.name || 'Aluno' }}</strong>
-          <span>Aluno · IFC</span>
-        </div>
-      </RouterLink>
+      <div class="student-layout__user-card">
+        <RouterLink :to="{ name: 'perfil' }" class="student-layout__user">
+          <span class="student-layout__avatar">{{ iniciais }}</span>
+          <div class="student-layout__user-info">
+            <strong>{{ auth.usuario?.name || 'Aluno' }}</strong>
+            <span>{{ auth.isAdmin ? 'Administração' : 'Aluno · IFC' }}</span>
+          </div>
+        </RouterLink>
+        <button
+          type="button"
+          class="student-layout__logout"
+          aria-label="Sair da conta"
+          title="Sair da conta"
+          @click="handleLogout"
+        >
+          <LogOut :size="18" />
+        </button>
+      </div>
     </aside>
 
     <!-- ===== Header (mobile) ===== -->
@@ -73,6 +84,10 @@
               <span v-if="item.badge" class="student-layout__badge">{{ item.badge }}</span>
             </RouterLink>
           </nav>
+          <button type="button" class="student-layout__drawer-logout" @click="handleLogout">
+            <LogOut :size="19" />
+            <span>Sair da conta</span>
+          </button>
         </aside>
       </div>
     </Transition>
@@ -103,6 +118,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   Home,
   LayoutGrid,
@@ -114,6 +130,7 @@ import {
   User,
   Menu,
   ShoppingBag,
+  LogOut,
 } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
@@ -121,6 +138,7 @@ import api from '@/services/api'
 
 const auth = useAuthStore()
 const cart = useCartStore()
+const router = useRouter()
 
 const menuAberto = ref(false)
 const notifCount = ref(0)
@@ -154,6 +172,12 @@ const bottomNavItems = computed(() => [
   { name: 'pedidos', label: 'Pedidos', icon: ClipboardList },
   { name: 'perfil', label: 'Perfil', icon: User },
 ])
+
+async function handleLogout() {
+  menuAberto.value = false
+  await auth.logout()
+  await router.replace({ name: 'login' })
+}
 
 async function buscarNotificacoesNaoLidas() {
   try {
@@ -301,6 +325,38 @@ onMounted(() => {
   font-weight: 700;
   padding: 9px;
   border-radius: var(--pp-radius-btn);
+}
+
+.student-layout__user-card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid rgba(224, 168, 62, 0.2);
+  border-radius: var(--pp-radius-btn);
+}
+
+.student-layout__user-card .student-layout__user {
+  flex: 1;
+  min-width: 0;
+}
+
+.student-layout__logout {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--pp-cream-faint);
+  cursor: pointer;
+}
+
+.student-layout__logout:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--pp-gold);
 }
 
 .student-layout__user {
@@ -460,6 +516,21 @@ onMounted(() => {
   .student-layout__drawer-logo {
     height: 40px;
     margin-bottom: var(--pp-space-4);
+  }
+
+  .student-layout__drawer-logout {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    padding: 11px 12px;
+    border: 1px solid var(--pp-border-soft);
+    border-radius: var(--pp-radius-btn);
+    background: transparent;
+    color: var(--pp-cream-dim);
+    font: inherit;
+    font-size: 13px;
   }
 
   .student-layout__main {
