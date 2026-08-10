@@ -1,5 +1,10 @@
 <template>
-  <AuthLayout wide :back-to="{ name: 'login' }" back-label="Voltar para o login">
+  <AuthLayout
+    wide
+    promo-mode="register"
+    :back-to="{ name: 'login' }"
+    back-label="Voltar para o login"
+  >
     <template #heading>
       <h1>Crie sua conta na <span>Pires Panificadora</span></h1>
       <p>É rápido, fácil e permite que você reserve seus produtos favoritos.</p>
@@ -9,7 +14,7 @@
       {{ erroGeral }}
     </div>
 
-    <form class="auth-form" novalidate @submit.prevent="handleRegister">
+    <form class="auth-form auth-form--register" novalidate @submit.prevent="handleRegister">
       <div class="auth-form__grid">
         <BaseInput
           :model-value="form.name"
