@@ -1,158 +1,330 @@
 <template>
   <div class="home">
-    <!-- ===== Cabeçalho: saudação + busca + ações ===== -->
     <header class="home__header">
-      <div class="home__greeting">
-        <h1>Bom dia, {{ primeiroNome }}! 👋</h1>
-        <p>Que tal reservar algo delicioso para o intervalo?</p>
+      <div class="home__greeting-row">
+        <div class="home__greeting">
+          <h1>{{ saudacao }}, {{ primeiroNome }}!</h1>
+          <p>Que tal reservar algo delicioso para o intervalo?</p>
+        </div>
+
+        <RouterLink :to="{ name: 'perfil' }" class="home__mobile-avatar" aria-label="Abrir perfil">
+          {{ iniciais }}
+        </RouterLink>
       </div>
 
-      <div class="home__search">
-        <Search :size="18" />
-        <input v-model="busca" type="search" placeholder="Buscar produtos, categorias..." aria-label="Buscar produtos" />
-      </div>
+      <label class="home__search">
+        <Search :size="19" aria-hidden="true" />
+        <input
+          v-model="busca"
+          type="search"
+          placeholder="Buscar produtos, categorias..."
+          aria-label="Buscar produtos e categorias"
+        />
+      </label>
 
       <div class="home__actions">
         <RouterLink :to="{ name: 'notificacoes' }" class="home__icon-btn" aria-label="Notificações">
-          <Bell :size="19" />
-          <span v-if="notifCount" class="home__badge">{{ notifCount }}</span>
+          <Bell :size="20" />
+          <span v-if="notifCount" class="home__badge">{{ limitarBadge(notifCount) }}</span>
         </RouterLink>
+
         <RouterLink :to="{ name: 'carrinho' }" class="home__icon-btn" aria-label="Carrinho">
-          <ShoppingCart :size="19" />
-          <span v-if="cart.totalItens" class="home__badge">{{ cart.totalItens }}</span>
+          <ShoppingCart :size="20" />
+          <span v-if="cart.totalItens" class="home__badge">{{ limitarBadge(cart.totalItens) }}</span>
         </RouterLink>
-        <RouterLink :to="{ name: 'perfil' }" class="home__avatar" aria-label="Perfil">
+
+        <RouterLink :to="{ name: 'perfil' }" class="home__avatar" aria-label="Abrir perfil">
           {{ iniciais }}
         </RouterLink>
       </div>
     </header>
 
-    <!-- ===== Categorias ===== -->
-    <div class="home__chips">
+    <nav class="home__categories" aria-label="Categorias do cardápio">
       <button
-        class="home__chip"
+        type="button"
+        class="home__category"
         :class="{ 'is-active': categoriaAtiva === null }"
-        @click="categoriaAtiva = null"
+        @click="selecionarCategoria(null)"
       >
-        Todos
+        <LayoutGrid :size="18" aria-hidden="true" />
+        <span>Todos</span>
       </button>
+
       <button
         v-for="categoria in categorias"
         :key="categoria.id"
-        class="home__chip"
+        type="button"
+        class="home__category"
         :class="{ 'is-active': categoriaAtiva === categoria.id }"
-        @click="categoriaAtiva = categoria.id"
+        @click="selecionarCategoria(categoria.id)"
       >
-        {{ categoria.nome }}
+        <component :is="iconeParaCategoria(categoria.slug || categoria.nome)" :size="18" aria-hidden="true" />
+        <span>{{ categoria.nome }}</span>
       </button>
-    </div>
+    </nav>
 
-    <!-- ===== Banner / carrossel de promoção em destaque ===== -->
-    <section v-if="promosAtivas.length" class="home__hero">
-      <Transition name="hero-fade" mode="out-in">
-        <div class="home__hero-card" :key="promoDestaque.id">
-          <div class="home__hero-text">
-            <span class="home__hero-tag">🔥 Promoção do dia</span>
-            <h2>{{ promoDestaque.produto_nome }}</h2>
-            <p>Aproveite antes que acabe o estoque!</p>
-            <div class="home__hero-price">
-              <span class="home__hero-price-old">{{ formatarPreco(promoDestaque.precoOriginal) }}</span>
-              {{ formatarPreco(promoDestaque.preco_promocional) }}
+    <section class="home__hero" aria-label="Destaque do dia">
+      <div v-if="carregandoPromos || carregandoProdutos" class="home__hero-card home__skeleton" aria-hidden="true" />
+
+      <template v-else-if="promoDestaque">
+        <Transition name="hero-fade" mode="out-in">
+          <article :key="promoDestaque.id" class="home__hero-card">
+            <div class="home__hero-content">
+              <span class="home__hero-tag">
+                <Flame :size="14" aria-hidden="true" />
+                Promoção do dia
+              </span>
+
+              <h2>{{ promoDestaque.produto_nome }}</h2>
+              <p>Preço especial por tempo limitado.</p>
+
+              <div class="home__hero-price">
+                <span
+                  v-if="promoDestaque.precoOriginal > Number(promoDestaque.preco_promocional)"
+                  class="home__hero-price-old"
+                >
+                  {{ formatarPreco(promoDestaque.precoOriginal) }}
+                </span>
+                <strong>{{ formatarPreco(promoDestaque.preco_promocional) }}</strong>
+              </div>
+
+              <RouterLink :to="{ name: 'cardapio' }" class="home__hero-btn">
+                Reservar agora
+                <ChevronRight :size="17" aria-hidden="true" />
+              </RouterLink>
             </div>
-            <RouterLink :to="{ name: 'cardapio' }" class="home__hero-btn">
-              Reservar agora <ChevronRight :size="16" />
-            </RouterLink>
-          </div>
-          <div class="home__hero-image">
-            <component :is="iconeParaCategoria(promoDestaque.categoriaNome)" :size="72" />
-          </div>
-        </div>
-      </Transition>
 
-      <div v-if="promosAtivas.length > 1" class="home__dots">
-        <span
-          v-for="(p, i) in promosAtivas"
-          :key="p.id"
-          :class="{ 'is-active': i === promoIndex }"
-          @click="promoIndex = i"
-        />
-      </div>
+            <div class="home__hero-media">
+              <img
+                v-if="imagemDisponivel(promoDestaque.produto)"
+                :src="imagemProduto(promoDestaque.produto)"
+                :alt="promoDestaque.produto_nome"
+                fetchpriority="high"
+                @error="registrarErroImagem(promoDestaque.produto?.id)"
+              />
+              <div v-else class="home__hero-fallback" aria-hidden="true">
+                <component :is="iconeParaCategoria(promoDestaque.categoriaNome)" :size="84" />
+              </div>
+            </div>
+          </article>
+        </Transition>
+
+        <div v-if="promosAtivas.length > 1" class="home__dots" aria-label="Selecionar promoção">
+          <button
+            v-for="(promo, index) in promosAtivas"
+            :key="promo.id"
+            type="button"
+            :class="{ 'is-active': index === promoIndex }"
+            :aria-label="`Mostrar promoção ${index + 1}`"
+            :aria-current="index === promoIndex ? 'true' : undefined"
+            @click="promoIndex = index"
+          />
+        </div>
+      </template>
+
+      <article v-else class="home__hero-card home__hero-card--institutional">
+        <div class="home__hero-content">
+          <span class="home__hero-tag">
+            <ShoppingBag :size="14" aria-hidden="true" />
+            Pires Panificadora
+          </span>
+          <h2>Seu intervalo, sem fila.</h2>
+          <p>Escolha seus produtos com antecedência e retire no balcão.</p>
+          <RouterLink :to="{ name: 'cardapio' }" class="home__hero-btn">
+            Ver cardápio
+            <ChevronRight :size="17" aria-hidden="true" />
+          </RouterLink>
+        </div>
+        <div class="home__hero-fallback home__hero-fallback--standalone" aria-hidden="true">
+          <ShoppingBag :size="82" />
+        </div>
+      </article>
     </section>
 
-    <!-- ===== Destaques ===== -->
-    <section class="home__section">
+    <section class="home__section" aria-labelledby="titulo-destaques">
       <div class="home__section-head">
-        <h3>Destaques para você</h3>
-        <RouterLink :to="{ name: 'cardapio' }">Ver todos <ChevronRight :size="15" /></RouterLink>
+        <div>
+          <h2 id="titulo-destaques">{{ tituloDestaques }}</h2>
+          <p v-if="temFiltroAtivo">Resultados com base nos filtros selecionados.</p>
+        </div>
+        <RouterLink :to="{ name: 'cardapio' }">
+          Ver todos
+          <ChevronRight :size="16" aria-hidden="true" />
+        </RouterLink>
       </div>
 
-      <p v-if="carregandoProdutos" class="home__loading">Carregando cardápio...</p>
-      <p v-else-if="!destaques.length" class="home__empty">Nenhum destaque no momento.</p>
+      <div v-if="carregandoProdutos" class="home__product-row" aria-label="Carregando produtos">
+        <div v-for="index in 5" :key="index" class="home__product-card home__product-card--skeleton home__skeleton" />
+      </div>
+
+      <div v-else-if="erroProdutos" class="home__state home__state--error" role="alert">
+        <CircleAlert :size="24" aria-hidden="true" />
+        <div>
+          <strong>Não foi possível carregar o cardápio.</strong>
+          <p>Verifique sua conexão e tente novamente.</p>
+        </div>
+        <button type="button" @click="carregarProdutos">Tentar novamente</button>
+      </div>
+
+      <div v-else-if="!destaques.length" class="home__state">
+        <SearchX :size="25" aria-hidden="true" />
+        <div>
+          <strong>Nenhum produto encontrado.</strong>
+          <p>Tente mudar a busca ou selecionar outra categoria.</p>
+        </div>
+      </div>
 
       <div v-else class="home__product-row">
         <article v-for="produto in destaques" :key="produto.id" class="home__product-card">
           <button
+            type="button"
             class="home__fav-btn"
             :class="{ 'is-active': favoritos.has(produto.id) }"
-            :aria-label="favoritos.has(produto.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'"
+            :aria-label="favoritos.has(produto.id) ? `Remover ${produto.nome} dos favoritos` : `Favoritar ${produto.nome}`"
             @click="alternarFavorito(produto.id)"
           >
-            <Heart :size="16" :fill="favoritos.has(produto.id) ? 'currentColor' : 'none'" />
+            <Heart :size="18" :fill="favoritos.has(produto.id) ? 'currentColor' : 'none'" />
           </button>
 
           <div class="home__product-image">
-            <img v-if="produto.imagem" :src="produto.imagem" :alt="produto.nome" />
-            <component :is="iconeParaCategoria(produto.categoria_nome)" v-else :size="34" />
+            <img
+              v-if="imagemDisponivel(produto)"
+              :src="imagemProduto(produto)"
+              :alt="produto.nome"
+              loading="lazy"
+              @error="registrarErroImagem(produto.id)"
+            />
+            <div v-else class="home__product-fallback" aria-hidden="true">
+              <component :is="iconeParaCategoria(produto.categoria_nome)" :size="42" />
+            </div>
+
+            <span v-if="produto.em_promocao" class="home__product-promo">Oferta</span>
           </div>
 
-          <h4>{{ produto.nome }}</h4>
-          <p>{{ produto.categoria_nome }}</p>
+          <div class="home__product-body">
+            <h3>{{ produto.nome }}</h3>
+            <p>{{ produto.categoria_nome || 'Produto' }}</p>
+          </div>
 
           <div class="home__product-footer">
-            <span class="home__product-price">{{ formatarPreco(produto.preco_atual) }}</span>
-            <button class="home__add-btn" aria-label="Adicionar ao carrinho" @click="cart.adicionar(produto)">
-              <Plus :size="16" />
+            <div class="home__product-prices">
+              <span v-if="produto.em_promocao" class="home__product-price-old">{{ formatarPreco(produto.preco) }}</span>
+              <strong>{{ formatarPreco(produto.preco_atual) }}</strong>
+            </div>
+
+            <button
+              type="button"
+              class="home__add-btn"
+              :aria-label="`Adicionar ${produto.nome} ao carrinho`"
+              @click="adicionarAoCarrinho(produto)"
+            >
+              <Plus :size="19" />
             </button>
           </div>
         </article>
       </div>
     </section>
 
-    <!-- ===== Promoções especiais ===== -->
-    <section class="home__section">
+    <section class="home__section home__section--promos" aria-labelledby="titulo-promocoes">
       <div class="home__section-head">
-        <h3>Promoções especiais</h3>
-        <RouterLink :to="{ name: 'promocoes' }">Ver todas <ChevronRight :size="15" /></RouterLink>
+        <div>
+          <h2 id="titulo-promocoes">Promoções especiais</h2>
+        </div>
+        <RouterLink :to="{ name: 'promocoes' }">
+          Ver todas
+          <ChevronRight :size="16" aria-hidden="true" />
+        </RouterLink>
       </div>
 
-      <p v-if="carregandoPromos" class="home__loading">Carregando promoções...</p>
-      <p v-else-if="!promosAtivas.length" class="home__empty">Nenhuma promoção ativa no momento.</p>
+      <div v-if="carregandoPromos || carregandoProdutos" class="home__promo-row" aria-label="Carregando promoções">
+        <div v-for="index in 3" :key="index" class="home__promo-card home__skeleton" />
+      </div>
+
+      <div v-else-if="erroPromos" class="home__state home__state--compact">
+        <Tag :size="23" aria-hidden="true" />
+        <div>
+          <strong>As promoções não puderam ser carregadas.</strong>
+          <p>O restante do cardápio continua disponível.</p>
+        </div>
+      </div>
+
+      <div v-else-if="!promosAtivas.length" class="home__state home__state--compact">
+        <Tag :size="23" aria-hidden="true" />
+        <div>
+          <strong>Nenhuma promoção ativa agora.</strong>
+          <p>Quando houver uma oferta vigente, ela aparecerá aqui.</p>
+        </div>
+      </div>
 
       <div v-else class="home__promo-row">
-        <article v-for="promo in promosAtivas" :key="promo.id" class="home__promo-card">
-          <span class="home__promo-discount">-{{ promo.desconto }}%</span>
-          <div class="home__promo-image">
-            <component :is="iconeParaCategoria(promo.categoriaNome)" :size="34" />
-          </div>
-          <div class="home__promo-info">
-            <strong>{{ promo.produto_nome }}</strong>
-            <div class="home__promo-price">
-              <span class="home__promo-price-old">{{ formatarPreco(promo.precoOriginal) }}</span>
-              {{ formatarPreco(promo.preco_promocional) }}
+        <article v-for="promo in promocoesVisiveis" :key="promo.id" class="home__promo-card">
+          <div class="home__promo-copy">
+            <span class="home__promo-category">{{ promo.categoriaNome || 'Oferta' }}</span>
+            <h3>{{ promo.produto_nome }}</h3>
+
+            <div class="home__promo-prices">
+              <strong>{{ formatarPreco(promo.preco_promocional) }}</strong>
+              <span v-if="promo.precoOriginal > Number(promo.preco_promocional)">
+                {{ formatarPreco(promo.precoOriginal) }}
+              </span>
             </div>
           </div>
+
+          <div class="home__promo-media">
+            <img
+              v-if="imagemDisponivel(promo.produto)"
+              :src="imagemProduto(promo.produto)"
+              :alt="promo.produto_nome"
+              loading="lazy"
+              @error="registrarErroImagem(promo.produto?.id)"
+            />
+            <component v-else :is="iconeParaCategoria(promo.categoriaNome)" :size="48" aria-hidden="true" />
+          </div>
+
+          <span v-if="promo.desconto > 0" class="home__promo-discount">-{{ promo.desconto }}%</span>
         </article>
       </div>
     </section>
+
+    <Transition name="toast">
+      <div v-if="toast" class="home__toast" role="status" aria-live="polite">
+        <Check :size="18" aria-hidden="true" />
+        {{ toast }}
+      </div>
+    </Transition>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { Search, Bell, ShoppingCart, Heart, Plus, ChevronRight, Croissant, Cookie, Coffee, Sandwich, Package } from 'lucide-vue-next'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import {
+  Bell,
+  Check,
+  ChevronRight,
+  CircleAlert,
+  Coffee,
+  Cookie,
+  Croissant,
+  Flame,
+  Heart,
+  LayoutGrid,
+  Package,
+  Plus,
+  Search,
+  SearchX,
+  Sandwich,
+  ShoppingBag,
+  ShoppingCart,
+  Tag,
+} from 'lucide-vue-next'
+
+import api from '@/services/api'
+import catalogService, {
+  promocaoEstaAtiva,
+  resolverUrlMidia,
+} from '@/services/catalog.service'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
-import api from '@/services/api'
 
 const auth = useAuthStore()
 const cart = useCartStore()
@@ -164,20 +336,32 @@ const produtos = ref([])
 const promocoes = ref([])
 const notifCount = ref(0)
 const favoritos = ref(new Set())
+const imagensComErro = ref(new Set())
 
 const carregandoProdutos = ref(true)
 const carregandoPromos = ref(true)
+const erroProdutos = ref(false)
+const erroPromos = ref(false)
 
 const promoIndex = ref(0)
+const toast = ref('')
 let intervaloPromo = null
+let timeoutToast = null
 
-const primeiroNome = computed(() => (auth.usuario?.name || 'Aluno').split(' ')[0])
+const primeiroNome = computed(() => (auth.usuario?.name || 'Aluno').trim().split(/\s+/)[0] || 'Aluno')
+
+const saudacao = computed(() => {
+  const hora = new Date().getHours()
+  if (hora < 12) return 'Bom dia'
+  if (hora < 18) return 'Boa tarde'
+  return 'Boa noite'
+})
 
 const iniciais = computed(() => {
   const nome = auth.usuario?.name || ''
   return (
     nome
-      .split(' ')
+      .split(/\s+/)
       .filter(Boolean)
       .slice(0, 2)
       .map((parte) => parte[0]?.toUpperCase())
@@ -186,74 +370,179 @@ const iniciais = computed(() => {
 })
 
 const ICONES_POR_CATEGORIA = {
+  salgado: Croissant,
   salgados: Croissant,
+  pao: Croissant,
+  paes: Croissant,
+  doce: Cookie,
   doces: Cookie,
+  bebida: Coffee,
   bebidas: Coffee,
-  combos: Sandwich,
+  lanche: Sandwich,
+  lanches: Sandwich,
+  combo: ShoppingBag,
+  combos: ShoppingBag,
 }
 
-function iconeParaCategoria(nomeCategoria) {
-  const chave = (nomeCategoria || '').toLowerCase()
-  return ICONES_POR_CATEGORIA[chave] || Package
+function chaveCategoria(valor) {
+  return String(valor || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
+function iconeParaCategoria(valor) {
+  return ICONES_POR_CATEGORIA[chaveCategoria(valor)] || Package
 }
 
 function formatarPreco(valor) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(valor || 0))
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(Number(valor || 0))
+}
+
+function limitarBadge(valor) {
+  const numero = Number(valor || 0)
+  return numero > 99 ? '99+' : numero
+}
+
+function selecionarCategoria(id) {
+  categoriaAtiva.value = id
+}
+
+function imagemProduto(produto) {
+  return resolverUrlMidia(produto?.imagem)
+}
+
+function imagemDisponivel(produto) {
+  return Boolean(produto?.imagem && !imagensComErro.value.has(produto?.id))
+}
+
+function registrarErroImagem(produtoId) {
+  if (!produtoId) return
+  imagensComErro.value.add(produtoId)
+  imagensComErro.value = new Set(imagensComErro.value)
+}
+
+function chaveFavoritos() {
+  return `pp_favoritos_${auth.usuario?.id || 'anonimo'}`
+}
+
+function carregarFavoritosLocais() {
+  try {
+    const ids = JSON.parse(localStorage.getItem(chaveFavoritos()) || '[]')
+    favoritos.value = new Set(Array.isArray(ids) ? ids : [])
+  } catch {
+    favoritos.value = new Set()
+  }
+}
+
+function salvarFavoritosLocais() {
+  localStorage.setItem(chaveFavoritos(), JSON.stringify([...favoritos.value]))
 }
 
 function alternarFavorito(produtoId) {
-  if (favoritos.value.has(produtoId)) {
-    favoritos.value.delete(produtoId)
+  const novaLista = new Set(favoritos.value)
+
+  if (novaLista.has(produtoId)) {
+    novaLista.delete(produtoId)
   } else {
-    favoritos.value.add(produtoId)
+    novaLista.add(produtoId)
   }
-  // Nota: ainda não existe endpoint de favoritos no backend — fica só local por enquanto.
-  favoritos.value = new Set(favoritos.value)
+
+  favoritos.value = novaLista
+  salvarFavoritosLocais()
 }
+
+function adicionarAoCarrinho(produto) {
+  cart.adicionar(produto)
+  mostrarToast(`${produto.nome} adicionado ao carrinho.`)
+}
+
+function mostrarToast(mensagem) {
+  toast.value = mensagem
+  window.clearTimeout(timeoutToast)
+  timeoutToast = window.setTimeout(() => {
+    toast.value = ''
+  }, 2200)
+}
+
+const temFiltroAtivo = computed(() => Boolean(categoriaAtiva.value || busca.value.trim()))
 
 const produtosFiltrados = computed(() => {
   let lista = produtos.value
+
   if (categoriaAtiva.value) {
-    lista = lista.filter((p) => p.categoria === categoriaAtiva.value)
+    lista = lista.filter((produto) => produto.categoria === categoriaAtiva.value)
   }
-  if (busca.value.trim()) {
-    const termo = busca.value.trim().toLowerCase()
-    lista = lista.filter((p) => p.nome.toLowerCase().includes(termo))
+
+  const termo = busca.value.trim().toLocaleLowerCase('pt-BR')
+  if (termo) {
+    lista = lista.filter((produto) => {
+      const texto = `${produto.nome || ''} ${produto.categoria_nome || ''}`.toLocaleLowerCase('pt-BR')
+      return texto.includes(termo)
+    })
   }
+
   return lista
 })
 
-const destaques = computed(() => produtosFiltrados.value.filter((p) => p.destaque).slice(0, 6))
+const destaques = computed(() => {
+  const lista = produtosFiltrados.value
 
-// junta a promoção com os dados do produto (preço original, categoria) pra exibir desconto
+  if (temFiltroAtivo.value) {
+    return lista.slice(0, 6)
+  }
+
+  const marcados = lista.filter((produto) => produto.destaque)
+  const restantes = lista.filter((produto) => !produto.destaque)
+  return [...marcados, ...restantes].slice(0, 5)
+})
+
+const tituloDestaques = computed(() => (temFiltroAtivo.value ? 'Produtos encontrados' : 'Destaques para você'))
+
 const promosAtivas = computed(() => {
-  const mapaProdutos = new Map(produtos.value.map((p) => [p.id, p]))
-  const hoje = new Date().toISOString().slice(0, 10)
+  const mapaProdutos = new Map(produtos.value.map((produto) => [produto.id, produto]))
 
   return promocoes.value
-    .filter((promo) => promo.data_inicio <= hoje && promo.data_fim >= hoje)
+    .filter((promo) => promocaoEstaAtiva(promo))
     .map((promo) => {
       const produto = mapaProdutos.get(promo.produto)
-      const precoOriginal = Number(produto?.preco ?? promo.preco_promocional)
-      const desconto = precoOriginal
-        ? Math.round(((precoOriginal - Number(promo.preco_promocional)) / precoOriginal) * 100)
+      const precoPromocional = Number(promo.preco_promocional || 0)
+      const precoOriginal = Number(produto?.preco ?? precoPromocional)
+      const desconto = precoOriginal > 0 && precoOriginal > precoPromocional
+        ? Math.round(((precoOriginal - precoPromocional) / precoOriginal) * 100)
         : 0
 
       return {
         ...promo,
+        produto,
         precoOriginal,
         desconto,
-        categoriaNome: produto?.categoria_nome,
+        categoriaNome: produto?.categoria_nome || '',
       }
     })
 })
 
-const promoDestaque = computed(() => promosAtivas.value[promoIndex.value] || promosAtivas.value[0])
+const promoDestaque = computed(() => promosAtivas.value[promoIndex.value] || promosAtivas.value[0] || null)
+const promocoesVisiveis = computed(() => promosAtivas.value.slice(0, 3))
+
+watch(
+  () => promosAtivas.value.length,
+  (quantidade) => {
+    if (!quantidade) {
+      promoIndex.value = 0
+    } else if (promoIndex.value >= quantidade) {
+      promoIndex.value = 0
+    }
+  },
+)
 
 async function carregarCategorias() {
   try {
-    const { data } = await api.get('/categorias/', { params: { ativa: true } })
-    categorias.value = data.results ?? data
+    categorias.value = await catalogService.listarCategoriasAtivas()
   } catch {
     categorias.value = []
   }
@@ -261,11 +550,13 @@ async function carregarCategorias() {
 
 async function carregarProdutos() {
   carregandoProdutos.value = true
+  erroProdutos.value = false
+
   try {
-    const { data } = await api.get('/produtos/', { params: { ativo: true } })
-    produtos.value = data.results ?? data
+    produtos.value = await catalogService.listarProdutosAtivos()
   } catch {
     produtos.value = []
+    erroProdutos.value = true
   } finally {
     carregandoProdutos.value = false
   }
@@ -273,11 +564,13 @@ async function carregarProdutos() {
 
 async function carregarPromocoes() {
   carregandoPromos.value = true
+  erroPromos.value = false
+
   try {
-    const { data } = await api.get('/promocoes/')
-    promocoes.value = data.results ?? data
+    promocoes.value = await catalogService.listarPromocoes()
   } catch {
     promocoes.value = []
+    erroPromos.value = true
   } finally {
     carregandoPromos.value = false
   }
@@ -285,474 +578,1091 @@ async function carregarPromocoes() {
 
 async function carregarNotificacoes() {
   try {
-    const { data } = await api.get('/notificacoes/', { params: { lida: false } })
+    const { data } = await api.get('/notificacoes/', {
+      params: { lida: false, page_size: 1 },
+    })
     notifCount.value = data.count ?? data.results?.length ?? 0
   } catch {
     notifCount.value = 0
   }
 }
 
-onMounted(async () => {
-  await Promise.all([carregarCategorias(), carregarProdutos(), carregarPromocoes(), carregarNotificacoes()])
-
-  intervaloPromo = setInterval(() => {
+function iniciarCarrossel() {
+  window.clearInterval(intervaloPromo)
+  intervaloPromo = window.setInterval(() => {
     if (promosAtivas.value.length > 1) {
       promoIndex.value = (promoIndex.value + 1) % promosAtivas.value.length
     }
-  }, 5000)
+  }, 6500)
+}
+
+onMounted(() => {
+  carregarFavoritosLocais()
+  Promise.allSettled([
+    carregarCategorias(),
+    carregarProdutos(),
+    carregarPromocoes(),
+    carregarNotificacoes(),
+  ])
+  iniciarCarrossel()
+})
+
+onBeforeUnmount(() => {
+  window.clearInterval(intervaloPromo)
+  window.clearTimeout(timeoutToast)
 })
 </script>
 
 <style scoped>
 .home {
-  max-width: 1200px;
+  width: min(100%, 1380px);
   margin: 0 auto;
+  color: var(--pp-text-dark);
 }
 
-/* ===== Cabeçalho ===== */
 .home__header {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(250px, auto) minmax(300px, 1fr) auto;
   align-items: center;
-  gap: var(--pp-space-4);
-  margin-bottom: var(--pp-space-4);
-  flex-wrap: wrap;
+  gap: clamp(16px, 2vw, 28px);
+  margin-bottom: 24px;
 }
 
-.home__greeting {
-  flex: 0 0 auto;
+.home__greeting-row {
+  min-width: 0;
 }
 
 .home__greeting h1 {
-  font-size: 24px;
-  font-weight: 700;
   margin: 0;
-  color: var(--pp-text-dark);
+  font-size: clamp(22px, 1.8vw, 28px);
+  line-height: 1.15;
+  letter-spacing: -0.035em;
+  color: #201a16;
 }
 
 .home__greeting p {
-  font-size: 13.5px;
+  margin: 5px 0 0;
   color: var(--pp-text-dark-soft);
-  margin: 2px 0 0;
+  font-size: 13.5px;
+}
+
+.home__mobile-avatar {
+  display: none;
 }
 
 .home__search {
-  flex: 1;
-  min-width: 220px;
+  min-height: 46px;
   display: flex;
   align-items: center;
-  gap: var(--pp-space-1);
-  background: var(--pp-surface-card);
-  border: 1.5px solid var(--pp-surface-border);
-  border-radius: var(--pp-radius-full);
-  padding: 11px var(--pp-space-3);
-  color: var(--pp-text-dark-soft);
+  gap: 10px;
+  padding: 0 16px;
+  color: #716a64;
+  background: #fff;
+  border: 1px solid rgba(36, 17, 8, 0.09);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(38, 26, 18, 0.035);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.home__search:focus-within {
+  border-color: rgba(224, 168, 62, 0.7);
+  box-shadow: 0 0 0 4px rgba(224, 168, 62, 0.12);
 }
 
 .home__search input {
+  min-width: 0;
   flex: 1;
-  border: none;
-  outline: none;
+  border: 0;
+  outline: 0;
   background: transparent;
-  font-size: 13.5px;
-  font-family: var(--pp-font-body);
   color: var(--pp-text-dark);
+  font: inherit;
+  font-size: 13.5px;
+}
+
+.home__search input::placeholder {
+  color: #8b8580;
 }
 
 .home__actions {
   display: flex;
   align-items: center;
-  gap: var(--pp-space-1);
-  flex: 0 0 auto;
+  gap: 10px;
 }
 
-.home__icon-btn {
+.home__icon-btn,
+.home__avatar {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
   position: relative;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--pp-radius-full);
-  background: var(--pp-surface-card);
-  border: 1.5px solid var(--pp-surface-border);
-  color: var(--pp-text-dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(36, 17, 8, 0.08);
+  border-radius: 50%;
+  background: #fff;
+  color: #2d2824;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.home__icon-btn:hover,
+.home__avatar:hover {
+  transform: translateY(-1px);
+  border-color: rgba(224, 168, 62, 0.45);
+  box-shadow: 0 7px 18px rgba(38, 26, 18, 0.08);
+}
+
+.home__avatar {
+  background: #fff5df;
+  color: #a76c08;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .home__badge {
   position: absolute;
   top: -4px;
-  right: -4px;
-  background: var(--pp-gold);
-  color: var(--pp-bg-dark);
-  font-size: 10px;
-  font-weight: 700;
-  min-width: 17px;
-  height: 17px;
-  border-radius: var(--pp-radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  right: -3px;
+  min-width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
   padding: 0 4px;
   border: 2px solid var(--pp-bg-page);
+  border-radius: 99px;
+  background: #e7a42d;
+  color: #241108;
+  font-size: 9px;
+  font-weight: 800;
 }
 
-.home__avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--pp-radius-full);
-  background: var(--pp-gold-soft);
-  color: var(--pp-gold-hover);
+.home__categories {
   display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 1px 1px 3px;
+  margin-bottom: 22px;
+  scrollbar-width: none;
+}
+
+.home__categories::-webkit-scrollbar {
+  display: none;
+}
+
+.home__category {
+  min-width: 88px;
+  min-height: 42px;
+  flex: 0 0 auto;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 13px;
-}
-
-/* ===== Chips de categoria ===== */
-.home__chips {
-  display: flex;
-  gap: var(--pp-space-1);
-  overflow-x: auto;
-  margin-bottom: var(--pp-space-4);
-  padding-bottom: 2px;
-}
-
-.home__chip {
-  flex: 0 0 auto;
-  background: var(--pp-surface-card);
-  border: 1.5px solid var(--pp-surface-border);
-  color: var(--pp-text-dark-soft);
+  gap: 8px;
+  padding: 0 18px;
+  border: 1px solid rgba(36, 17, 8, 0.08);
+  border-radius: 12px;
+  background: #fff;
+  color: #544e49;
+  font: inherit;
   font-size: 13px;
   font-weight: 600;
-  padding: 9px 18px;
-  border-radius: var(--pp-radius-full);
-  transition: background 180ms ease, color 180ms ease;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease, border-color 160ms ease;
 }
 
-.home__chip.is-active {
-  background: var(--pp-text-dark);
-  border-color: var(--pp-text-dark);
+.home__category svg {
+  display: none;
+}
+
+.home__category:hover {
+  transform: translateY(-1px);
+  border-color: rgba(224, 168, 62, 0.35);
+}
+
+.home__category.is-active {
+  border-color: #2a211b;
+  background: #2a211b;
   color: #fff;
 }
 
-/* ===== Hero / carrossel ===== */
 .home__hero {
-  margin-bottom: var(--pp-space-5);
+  margin-bottom: 30px;
 }
 
 .home__hero-card {
-  background: var(--pp-gradient-left, var(--pp-bg-dark));
-  border-radius: var(--pp-radius-card);
-  padding: var(--pp-space-5);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--pp-space-4);
-  min-height: 200px;
+  position: relative;
+  min-height: 306px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(360px, 0.9fr) minmax(420px, 1.25fr);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(224, 168, 62, 0.13), transparent 34%),
+    linear-gradient(120deg, #241108 0%, #35180b 58%, #1e0d06 100%);
+  box-shadow: 0 16px 42px rgba(53, 31, 16, 0.11);
   color: var(--pp-cream);
 }
 
+.home__hero-card--institutional {
+  grid-template-columns: 1fr 0.55fr;
+}
+
+.home__hero-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(28px, 3vw, 44px);
+}
+
 .home__hero-tag {
-  display: inline-block;
-  background: var(--pp-gold-soft);
-  color: var(--pp-gold);
-  font-size: 11.5px;
-  font-weight: 700;
-  padding: 5px 12px;
-  border-radius: var(--pp-radius-full);
-  margin-bottom: var(--pp-space-2);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(224, 168, 62, 0.16);
+  border-radius: 8px;
+  background: rgba(224, 168, 62, 0.12);
+  color: #f2b43f;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
-.home__hero-text h2 {
-  font-size: 26px;
-  font-weight: 700;
-  margin: 0 0 6px;
+.home__hero-content h2 {
+  max-width: 470px;
+  margin: 0;
+  color: #fff8ed;
+  font-family: var(--pp-font-display);
+  font-size: clamp(30px, 3vw, 43px);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
 }
 
-.home__hero-text p {
-  font-size: 13.5px;
-  color: var(--pp-cream-dim);
-  margin: 0 0 var(--pp-space-2);
+.home__hero-content p {
+  max-width: 430px;
+  margin: 10px 0 15px;
+  color: #d9cbb8;
+  font-size: 15px;
+  line-height: 1.55;
 }
 
 .home__hero-price {
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--pp-gold);
-  margin-bottom: var(--pp-space-3);
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.home__hero-price strong {
+  color: #f1ad2c;
+  font-size: clamp(29px, 3vw, 40px);
+  line-height: 1;
 }
 
 .home__hero-price-old {
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--pp-cream-faint);
+  color: #9b8775;
+  font-size: 14px;
   text-decoration: line-through;
 }
 
 .home__hero-btn {
+  min-height: 46px;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: var(--pp-gradient-gold, var(--pp-gold));
-  color: var(--pp-bg-dark);
-  font-weight: 700;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 22px;
+  border-radius: 10px;
+  background: linear-gradient(100deg, #f3af2f, #ffc44d);
+  color: #2b1709;
   font-size: 13.5px;
-  padding: 12px 20px;
-  border-radius: var(--pp-radius-btn);
+  font-weight: 800;
+  box-shadow: 0 8px 24px rgba(224, 168, 62, 0.16);
+  transition: transform 160ms ease, filter 160ms ease;
 }
 
-.home__hero-image {
-  flex-shrink: 0;
-  width: 120px;
-  height: 120px;
-  border-radius: var(--pp-radius-card);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--pp-gold);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.home__hero-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+
+.home__hero-media {
+  position: relative;
+  min-width: 0;
+  min-height: 306px;
+  overflow: hidden;
+}
+
+.home__hero-media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #30150a 0%, rgba(48, 21, 10, 0.45) 18%, rgba(48, 21, 10, 0.04) 52%);
+  pointer-events: none;
+}
+
+.home__hero-media img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+}
+
+.home__hero-fallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 60% 45%, rgba(224, 168, 62, 0.2), transparent 34%),
+    rgba(255, 255, 255, 0.025);
+  color: #d99a29;
+}
+
+.home__hero-fallback--standalone {
+  min-height: 306px;
 }
 
 .home__dots {
+  min-height: 26px;
   display: flex;
+  align-items: flex-end;
   justify-content: center;
-  gap: 6px;
-  margin-top: var(--pp-space-2);
+  gap: 7px;
 }
 
-.home__dots span {
-  width: 7px;
-  height: 7px;
-  border-radius: var(--pp-radius-full);
-  background: var(--pp-surface-border);
+.home__dots button {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 99px;
+  background: #dcd6cf;
   cursor: pointer;
-  transition: all 200ms ease;
+  transition: width 180ms ease, background 180ms ease;
 }
 
-.home__dots span.is-active {
-  background: var(--pp-gold);
-  width: 20px;
+.home__dots button.is-active {
+  width: 22px;
+  background: #dfa333;
 }
 
-.hero-fade-enter-active,
-.hero-fade-leave-active {
-  transition: opacity 300ms ease;
-}
-.hero-fade-enter-from,
-.hero-fade-leave-to {
-  opacity: 0;
-}
-
-/* ===== Seções (destaques / promoções) ===== */
 .home__section {
-  margin-bottom: var(--pp-space-5);
+  margin-bottom: 34px;
 }
 
 .home__section-head {
   display: flex;
+  align-items: flex-end;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--pp-space-3);
+  gap: 18px;
+  margin-bottom: 15px;
 }
 
-.home__section-head h3 {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--pp-text-dark);
+.home__section-head h2 {
   margin: 0;
+  color: #221d19;
+  font-size: 19px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
-.home__section-head a {
-  display: flex;
+.home__section-head p {
+  margin: 4px 0 0;
+  color: #8b847d;
+  font-size: 11.5px;
+}
+
+.home__section-head > a {
+  flex: 0 0 auto;
+  display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
+  color: #bd7b0c;
   font-size: 12.5px;
-  font-weight: 600;
-  color: var(--pp-gold-hover);
+  font-weight: 700;
 }
 
-.home__loading,
-.home__empty {
-  color: var(--pp-text-dark-soft);
-  font-size: 13.5px;
-}
-
-/* ===== Cards de produto ===== */
 .home__product-row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: var(--pp-space-3);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
 }
 
 .home__product-card {
+  min-width: 0;
   position: relative;
-  background: var(--pp-surface-card);
-  border: 1px solid var(--pp-surface-border);
-  border-radius: var(--pp-radius-card);
-  padding: var(--pp-space-2);
-}
-
-.home__fav-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 30px;
-  height: 30px;
-  border-radius: var(--pp-radius-full);
-  background: rgba(255, 255, 255, 0.9);
-  border: none;
-  color: var(--pp-text-dark-soft);
+  overflow: hidden;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
+  flex-direction: column;
+  padding: 10px;
+  border: 1px solid rgba(36, 17, 8, 0.075);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 26px rgba(45, 31, 20, 0.045);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
 
-.home__fav-btn.is-active {
-  color: var(--pp-error);
+.home__product-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(224, 168, 62, 0.26);
+  box-shadow: 0 14px 30px rgba(45, 31, 20, 0.09);
+}
+
+.home__product-card--skeleton {
+  min-height: 250px;
 }
 
 .home__product-image {
-  height: 100px;
-  border-radius: var(--pp-radius-btn);
-  background: var(--pp-bg-page);
-  color: var(--pp-gold-hover);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: relative;
+  height: 146px;
   overflow: hidden;
-  margin-bottom: var(--pp-space-2);
+  border-radius: 12px;
+  background: #f5f1ec;
 }
 
 .home__product-image img {
   width: 100%;
   height: 100%;
+  display: block;
   object-fit: cover;
+  transition: transform 240ms ease;
 }
 
-.home__product-card h4 {
+.home__product-card:hover .home__product-image img {
+  transform: scale(1.025);
+}
+
+.home__product-fallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #d69a2d;
+  background:
+    radial-gradient(circle at center, rgba(224, 168, 62, 0.12), transparent 45%),
+    #f5f1ec;
+}
+
+.home__product-promo {
+  position: absolute;
+  left: 9px;
+  bottom: 9px;
+  padding: 4px 7px;
+  border-radius: 7px;
+  background: rgba(45, 24, 11, 0.88);
+  color: #ffc14a;
+  font-size: 9.5px;
+  font-weight: 800;
+  backdrop-filter: blur(5px);
+}
+
+.home__fav-btn {
+  position: absolute;
+  top: 17px;
+  right: 17px;
+  z-index: 3;
+  width: 31px;
+  height: 31px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(36, 17, 8, 0.07);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.93);
+  color: #6f6964;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(34, 23, 17, 0.06);
+}
+
+.home__fav-btn.is-active {
+  color: #cf594d;
+}
+
+.home__product-body {
+  min-height: 58px;
+  padding: 11px 2px 4px;
+}
+
+.home__product-body h3 {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: #29241f;
   font-size: 13.5px;
-  font-weight: 700;
-  color: var(--pp-text-dark);
-  margin: 0 0 2px;
+  font-weight: 750;
+  line-height: 1.3;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
-.home__product-card p {
-  font-size: 11.5px;
-  color: var(--pp-text-secondary);
-  margin: 0 0 var(--pp-space-2);
+.home__product-body p {
+  margin: 4px 0 0;
+  color: #96908a;
+  font-size: 11px;
 }
 
 .home__product-footer {
+  min-height: 42px;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
+  gap: 8px;
+  padding: 2px 2px 1px;
 }
 
-.home__product-price {
+.home__product-prices {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.home__product-prices strong {
+  color: #29241f;
   font-size: 14px;
-  font-weight: 700;
-  color: var(--pp-text-dark);
+}
+
+.home__product-price-old {
+  color: #a29b94;
+  font-size: 10.5px;
+  text-decoration: line-through;
 }
 
 .home__add-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: var(--pp-radius-full);
-  background: var(--pp-gradient-gold, var(--pp-gold));
-  color: var(--pp-bg-dark);
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #e0a83e, #f3b839);
+  color: #2c1b0e;
+  cursor: pointer;
+  transition: transform 150ms ease, filter 150ms ease;
 }
 
-/* ===== Cards de promoção ===== */
+.home__add-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
 .home__promo-row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: var(--pp-space-3);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
 }
 
 .home__promo-card {
+  min-height: 154px;
   position: relative;
-  display: flex;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 42%;
   align-items: center;
-  gap: var(--pp-space-2);
-  background: var(--pp-gradient-left, var(--pp-bg-dark));
-  color: var(--pp-cream);
-  border-radius: var(--pp-radius-card);
-  padding: var(--pp-space-3);
+  padding: 20px;
+  border: 1px solid rgba(110, 71, 35, 0.11);
+  border-radius: 16px;
+  background: linear-gradient(130deg, #fff6e9, #f1dfc5);
+  box-shadow: 0 9px 24px rgba(66, 42, 24, 0.05);
+}
+
+.home__promo-card:nth-child(2) {
+  background: linear-gradient(130deg, #fff9ef, #f7e8cc);
+}
+
+.home__promo-card:nth-child(3) {
+  background: linear-gradient(130deg, #2c1409, #4a1f0d);
+  color: #fff2df;
+}
+
+.home__promo-copy {
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+}
+
+.home__promo-category {
+  display: block;
+  margin-bottom: 5px;
+  color: #bd5b31;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.home__promo-card:nth-child(3) .home__promo-category {
+  color: #f1b23d;
+}
+
+.home__promo-copy h3 {
+  margin: 0 0 14px;
+  color: #33251c;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.home__promo-card:nth-child(3) .home__promo-copy h3 {
+  color: #fff2df;
+}
+
+.home__promo-prices {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.home__promo-prices strong {
+  color: #2e2118;
+  font-size: 18px;
+}
+
+.home__promo-card:nth-child(3) .home__promo-prices strong {
+  color: #fff4e1;
+}
+
+.home__promo-prices span {
+  color: #8f8177;
+  font-size: 11px;
+  text-decoration: line-through;
+}
+
+.home__promo-media {
+  min-width: 0;
+  align-self: stretch;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: #c9891c;
+}
+
+.home__promo-media img {
+  width: 100%;
+  height: 100%;
+  max-height: 130px;
+  display: block;
+  object-fit: cover;
+  border-radius: 12px;
 }
 
 .home__promo-discount {
   position: absolute;
-  top: var(--pp-space-2);
-  right: var(--pp-space-2);
-  background: var(--pp-error);
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  padding: 6px 9px;
+  border-radius: 9px;
+  background: #c84d2c;
   color: #fff;
   font-size: 11px;
-  font-weight: 700;
-  padding: 3px 9px;
-  border-radius: var(--pp-radius-full);
+  font-weight: 800;
 }
 
-.home__promo-image {
-  width: 56px;
-  height: 56px;
-  border-radius: var(--pp-radius-btn);
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--pp-gold);
+.home__state {
+  min-height: 112px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  gap: 12px;
+  padding: 18px;
+  border: 1px dashed rgba(36, 17, 8, 0.15);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.45);
+  color: #756e68;
 }
 
-.home__promo-info strong {
+.home__state strong {
   display: block;
-  font-size: 13.5px;
-  margin-bottom: 4px;
+  color: #403934;
+  font-size: 13px;
 }
 
-.home__promo-price {
-  color: var(--pp-gold);
-  font-weight: 700;
-  font-size: 15px;
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.home__promo-price-old {
-  color: var(--pp-cream-faint);
+.home__state p {
+  margin: 3px 0 0;
   font-size: 12px;
-  font-weight: 500;
-  text-decoration: line-through;
 }
 
-/* ===== Responsivo ===== */
-@media (max-width: 640px) {
-  .home__header {
-    flex-direction: column;
-    align-items: stretch;
-  }
+.home__state button {
+  margin-left: auto;
+  padding: 8px 12px;
+  border: 1px solid rgba(224, 168, 62, 0.4);
+  border-radius: 9px;
+  background: #fff8ea;
+  color: #8f5d08;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
 
-  .home__actions {
-    display: none; /* já existe no header mobile do StudentLayout */
+.home__state--compact {
+  min-height: 92px;
+}
+
+.home__skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #e9e4de;
+}
+
+.home__skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  animation: home-shimmer 1.35s infinite;
+}
+
+.home__toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #2d1a0e;
+  color: #fff2df;
+  font-size: 12.5px;
+  font-weight: 650;
+  box-shadow: 0 12px 35px rgba(27, 15, 8, 0.22);
+}
+
+.hero-fade-enter-active,
+.hero-fade-leave-active,
+.toast-enter-active,
+.toast-leave-active {
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.hero-fade-enter-from,
+.hero-fade-leave-to {
+  opacity: 0;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+@keyframes home-shimmer {
+  to { transform: translateX(100%); }
+}
+
+@media (max-width: 1220px) {
+  .home__header {
+    grid-template-columns: minmax(230px, auto) minmax(260px, 1fr) auto;
   }
 
   .home__hero-card {
+    grid-template-columns: minmax(320px, 0.95fr) 1.05fr;
+  }
+
+  .home__product-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .home__product-row > :nth-child(5) {
+    display: none;
+  }
+}
+
+@media (max-width: 1024px) {
+  .home {
+    width: 100%;
+  }
+
+  .home__header {
+    grid-template-columns: minmax(240px, auto) 1fr;
+  }
+
+  .home__actions {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .home__header {
+    display: flex;
     flex-direction: column;
-    text-align: center;
+    align-items: stretch;
+    gap: 15px;
+    margin-bottom: 18px;
+  }
+
+  .home__greeting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .home__greeting h1 {
+    font-size: 21px;
+  }
+
+  .home__greeting p {
+    max-width: 260px;
+    font-size: 11.5px;
+    line-height: 1.45;
+  }
+
+  .home__mobile-avatar {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #efe5d8;
+    color: #9a650d;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .home__search {
+    min-height: 45px;
+    border-radius: 12px;
+  }
+
+  .home__categories {
+    gap: 6px;
+    margin: 0 -16px 16px;
+    padding: 0 16px 5px;
+  }
+
+  .home__category {
+    min-width: 66px;
+    min-height: 55px;
+    flex-direction: column;
+    gap: 5px;
+    padding: 6px 10px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: #433d38;
+    font-size: 9.5px;
+  }
+
+  .home__category svg {
+    display: block;
+  }
+
+  .home__category:hover {
+    transform: none;
+  }
+
+  .home__category.is-active {
+    border-color: #df9d29;
+    background: transparent;
+    color: #b8750b;
+  }
+
+  .home__hero {
+    margin-bottom: 25px;
+  }
+
+  .home__hero-card,
+  .home__hero-card--institutional {
+    min-height: 268px;
+    grid-template-columns: 1fr 42%;
+    border-radius: 14px;
+  }
+
+  .home__hero-content {
+    padding: 21px 10px 21px 18px;
+  }
+
+  .home__hero-tag {
+    margin-bottom: 9px;
+    padding: 5px 7px;
+    font-size: 8.5px;
+  }
+
+  .home__hero-content h2 {
+    font-family: var(--pp-font-body);
+    font-size: clamp(21px, 7vw, 29px);
+    line-height: 1.08;
+  }
+
+  .home__hero-content p {
+    margin: 7px 0 10px;
+    font-size: 10.5px;
+    line-height: 1.45;
   }
 
   .home__hero-price {
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 13px;
+  }
+
+  .home__hero-price strong {
+    font-size: 27px;
+  }
+
+  .home__hero-price-old {
+    font-size: 10px;
+  }
+
+  .home__hero-btn {
+    min-height: 38px;
+    padding: 0 13px;
+    border-radius: 8px;
+    font-size: 10.5px;
+  }
+
+  .home__hero-media,
+  .home__hero-fallback--standalone {
+    min-height: 268px;
+  }
+
+  .home__hero-media::after {
+    background: linear-gradient(90deg, #30150a 0%, rgba(48, 21, 10, 0.4) 20%, transparent 70%);
+  }
+
+  .home__section {
+    margin-bottom: 28px;
+  }
+
+  .home__section-head {
+    margin-bottom: 12px;
+  }
+
+  .home__section-head h2 {
+    font-size: 14px;
+  }
+
+  .home__section-head p {
+    display: none;
+  }
+
+  .home__section-head > a {
+    font-size: 10px;
+  }
+
+  .home__product-row {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    margin: 0 -16px;
+    padding: 0 16px 5px;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .home__product-row::-webkit-scrollbar,
+  .home__promo-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .home__product-row > :nth-child(5) {
+    display: flex;
+  }
+
+  .home__product-card {
+    width: 145px;
+    flex: 0 0 145px;
+    scroll-snap-align: start;
+    padding: 8px;
+    border-radius: 13px;
+  }
+
+  .home__product-card--skeleton {
+    min-height: 220px;
+  }
+
+  .home__product-image {
+    height: 112px;
+    border-radius: 10px;
+  }
+
+  .home__fav-btn {
+    top: 13px;
+    right: 13px;
+    width: 27px;
+    height: 27px;
+  }
+
+  .home__product-body {
+    min-height: 54px;
+    padding-top: 9px;
+  }
+
+  .home__product-body h3 {
+    font-size: 11.5px;
+  }
+
+  .home__product-body p {
+    font-size: 9.5px;
+  }
+
+  .home__product-prices strong {
+    font-size: 12px;
+  }
+
+  .home__add-btn {
+    width: 29px;
+    height: 29px;
+  }
+
+  .home__promo-row {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    margin: 0 -16px;
+    padding: 0 16px 5px;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .home__promo-card {
+    width: 280px;
+    min-height: 132px;
+    flex: 0 0 280px;
+    scroll-snap-align: start;
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .home__promo-copy h3 {
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+
+  .home__promo-prices strong {
+    font-size: 15px;
+  }
+
+  .home__toast {
+    left: 16px;
+    right: 16px;
+    bottom: 82px;
     justify-content: center;
+  }
+}
+
+@media (max-width: 420px) {
+  .home__hero-card,
+  .home__hero-card--institutional {
+    min-height: 248px;
+    grid-template-columns: 58% 42%;
+  }
+
+  .home__hero-media,
+  .home__hero-fallback--standalone {
+    min-height: 248px;
   }
 }
 </style>
