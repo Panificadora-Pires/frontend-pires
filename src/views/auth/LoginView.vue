@@ -13,7 +13,7 @@
       {{ erroGeral }}
     </div>
 
-    <form class="auth-form" novalidate @submit.prevent="handleSubmit">
+    <form class="auth-form auth-form--login" novalidate @submit.prevent="handleSubmit">
       <BaseInput
         v-model="form.email"
         label="E-mail"
@@ -39,19 +39,23 @@
         @blur="validarSenha"
       />
 
-      <div class="auth-row-between">
-        <RouterLink :to="{ name: 'confirmar-email' }" class="auth-small auth-link">
-          Conta não confirmada?
-        </RouterLink>
-        <RouterLink :to="{ name: 'recuperar-senha' }" class="auth-link auth-small">
+      <div class="auth-login-help">
+        <RouterLink :to="{ name: 'recuperar-senha' }" class="auth-link auth-login-help__forgot">
           Esqueceu sua senha?
         </RouterLink>
       </div>
 
+      <RouterLink
+        v-if="mostrarLinkConfirmacao"
+        :to="{ name: 'confirmar-email' }"
+        class="auth-link auth-small auth-login-unverified"
+      >
+        Conta ainda não confirmada? Confirmar agora
+      </RouterLink>
+
       <BaseButton
         type="submit"
         block
-        :icon="LogIn"
         :loading="auth.carregando"
         loading-text="Entrando..."
       >
@@ -59,22 +63,26 @@
       </BaseButton>
     </form>
 
-    <div class="auth-divider"><span>ou</span></div>
+    <div class="auth-google-login">
+      <GoogleAuthButton
+        :loading="auth.carregando"
+        @credential="handleGoogleCredential"
+        @error="erroGeral = $event"
+      />
+    </div>
 
-    <GoogleAuthButton
-      :loading="auth.carregando"
-      @credential="handleGoogleCredential"
-      @error="erroGeral = $event"
-    />
+    <div class="auth-divider auth-divider--plain" aria-hidden="true" />
 
-    <div class="auth-divider"><span>ou</span></div>
-
-    <BaseButton variant="ghost" block :icon="UserPlus" @click="router.push({ name: 'cadastro' })">
-      Criar nova conta
-    </BaseButton>
+    <p class="auth-footer auth-footer--login">
+      Não tem uma conta?
+      <RouterLink :to="{ name: 'cadastro' }" class="auth-link auth-create-link">
+        Criar conta
+        <ChevronRight :size="16" />
+      </RouterLink>
+    </p>
 
     <div class="auth-secure">
-      <ShieldCheck :size="15" />
+      <ShieldCheck :size="20" />
       <span>Acesso seguro e protegido</span>
     </div>
   </AuthLayout>
@@ -82,7 +90,7 @@
 
 <script setup>
 import { computed, reactive, ref } from 'vue'
-import { Lock, LogIn, Mail, ShieldCheck, UserPlus } from 'lucide-vue-next'
+import { ChevronRight, Lock, Mail, ShieldCheck } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
 
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton.vue'
@@ -116,6 +124,10 @@ const mensagemStatus = computed(() => {
 
   return ''
 })
+
+const mostrarLinkConfirmacao = computed(() =>
+  /confirm|ativ|verific/i.test(erroGeral.value || ''),
+)
 
 function validarEmail() {
   const email = form.email.trim()
