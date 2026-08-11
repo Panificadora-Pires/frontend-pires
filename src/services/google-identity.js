@@ -47,7 +47,7 @@ export async function disableGoogleAutoSelect() {
     const google = await waitForGoogleIdentity()
     google.accounts.id.disableAutoSelect()
   } catch {
-    // Logout local não deve falhar caso o script do Google esteja indisponível.
+    // O logout local não deve falhar caso o GIS esteja indisponível.
   }
 }
 
@@ -56,26 +56,25 @@ async function initializeGoogleIdentity(clientId) {
 
   if (initializedClientId && initializedClientId !== clientId) {
     throw new Error(
-      'O Google Identity Services já foi inicializado com outro Client ID. Reinicie a página.'
+      'O Google Identity Services já foi inicializado com outro Client ID. Reinicie a página.',
     )
   }
 
   if (!initializedClientId) {
-  google.accounts.id.initialize({
-    client_id: clientId,
+    google.accounts.id.initialize({
+      client_id: clientId,
+      callback: (response) => {
+        activeCredentialHandler?.(response)
+      },
+      auto_select: false,
+      ux_mode: 'popup',
+      // Mantém o seletor de contas hospedado pelo Google em vez do modal
+      // nativo do Chrome/FedCM.
+      use_fedcm_for_button: false,
+    })
 
-    callback: (response) => {
-      activeCredentialHandler?.(response)
-    },
-
-    auto_select: false,
-
-    use_fedcm_for_button: true,
-    button_auto_select: false,
-  })
-
-  initializedClientId = clientId
-}
+    initializedClientId = clientId
+  }
 
   return google
 }
@@ -91,7 +90,6 @@ function waitForGoogleIdentity() {
 
   googleReadyPromise = new Promise((resolve, reject) => {
     const startedAt = Date.now()
-
     const existingScript = document.querySelector(`script[src="${GOOGLE_SCRIPT_SRC}"]`)
 
     if (!existingScript) {
@@ -99,7 +97,9 @@ function waitForGoogleIdentity() {
       script.src = GOOGLE_SCRIPT_SRC
       script.async = true
       script.defer = true
-      script.onerror = () => reject(new Error('Não foi possível carregar o Google Identity Services.'))
+      script.onerror = () => {
+        reject(new Error('Não foi possível carregar o Google Identity Services.'))
+      }
       document.head.appendChild(script)
     }
 
