@@ -8,7 +8,13 @@
         </div>
 
         <RouterLink :to="{ name: 'perfil' }" class="home__mobile-avatar" aria-label="Abrir perfil">
-          {{ iniciais }}
+          <img
+            v-if="avatarDisponivel"
+            :src="auth.usuario.avatar"
+            :alt="`Foto de ${auth.usuario?.name || 'usuário'}`"
+            @error="avatarComErro = true"
+          />
+          <template v-else>{{ iniciais }}</template>
         </RouterLink>
       </div>
 
@@ -34,7 +40,13 @@
         </RouterLink>
 
         <RouterLink :to="{ name: 'perfil' }" class="home__avatar" aria-label="Abrir perfil">
-          {{ iniciais }}
+          <img
+            v-if="avatarDisponivel"
+            :src="auth.usuario.avatar"
+            :alt="`Foto de ${auth.usuario?.name || 'usuário'}`"
+            @error="avatarComErro = true"
+          />
+          <template v-else>{{ iniciais }}</template>
         </RouterLink>
       </div>
     </header>
@@ -337,6 +349,7 @@ const promocoes = ref([])
 const notifCount = ref(0)
 const favoritos = ref(new Set())
 const imagensComErro = ref(new Set())
+const avatarComErro = ref(false)
 
 const carregandoProdutos = ref(true)
 const carregandoPromos = ref(true)
@@ -349,6 +362,15 @@ let intervaloPromo = null
 let timeoutToast = null
 
 const primeiroNome = computed(() => (auth.usuario?.name || 'Aluno').trim().split(/\s+/)[0] || 'Aluno')
+
+const avatarDisponivel = computed(() => Boolean(auth.usuario?.avatar) && !avatarComErro.value)
+
+watch(
+  () => auth.usuario?.avatar,
+  () => {
+    avatarComErro.value = false
+  },
+)
 
 const saudacao = computed(() => {
   const hora = new Date().getHours()
@@ -717,6 +739,15 @@ onBeforeUnmount(() => {
   color: #a76c08;
   font-size: 12px;
   font-weight: 800;
+}
+
+.home__avatar img,
+.home__mobile-avatar img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+  object-fit: cover;
 }
 
 .home__badge {

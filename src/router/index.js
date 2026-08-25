@@ -46,7 +46,7 @@ const routes = [
       { path: 'pedidos', name: 'pedidos', component: () => import('@/views/EmConstrucaoView.vue') },
       { path: 'favoritos', name: 'favoritos', component: () => import('@/views/EmConstrucaoView.vue') },
       { path: 'notificacoes', name: 'notificacoes', component: () => import('@/views/EmConstrucaoView.vue') },
-      { path: 'perfil', name: 'perfil', component: () => import('@/views/EmConstrucaoView.vue') },
+      { path: 'perfil', name: 'perfil', component: () => import('@/views/student/ProfileView.vue') },
     ],
   },
 

@@ -36,6 +36,8 @@ export const authService = {
 
   getProfile: () => api.get('/usuarios/me/'),
 
+  updateProfile: (data) => api.patch('/usuarios/me/', data),
+
   adminInviteRegister: (data) =>
     api.post('/admin-cadastro/', data, publicRequest),
 }
