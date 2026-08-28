@@ -82,6 +82,10 @@ const catalogService = {
     return buscarTodasPaginas('/produtos/', { ativo: true })
   },
 
+  obterProduto(produtoId) {
+    return api.get(`/produtos/${produtoId}/`).then(({ data }) => data)
+  },
+
   listarPromocoes() {
     return buscarTodasPaginas('/promocoes/')
   },

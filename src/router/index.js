@@ -40,7 +40,7 @@ const routes = [
     meta: { requerAuth: true },
     children: [
       { path: '', name: 'home', component: () => import('@/views/student/HomeView.vue') },
-      { path: 'cardapio', name: 'cardapio', component: () => import('@/views/EmConstrucaoView.vue') },
+      { path: 'cardapio', name: 'cardapio', component: () => import('@/views/student/CardapioView.vue') },
       { path: 'promocoes', name: 'promocoes', component: () => import('@/views/EmConstrucaoView.vue') },
       { path: 'carrinho', name: 'carrinho', component: () => import('@/views/EmConstrucaoView.vue') },
       { path: 'pedidos', name: 'pedidos', component: () => import('@/views/EmConstrucaoView.vue') },

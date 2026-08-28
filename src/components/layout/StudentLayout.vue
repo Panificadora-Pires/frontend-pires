@@ -11,7 +11,7 @@
           :key="item.name"
           :to="{ name: item.name }"
           class="student-layout__nav-item"
-          active-class="is-active"
+          exact-active-class="is-active"
         >
           <component :is="item.icon" :size="20" aria-hidden="true" />
           <span>{{ item.label }}</span>
@@ -92,7 +92,7 @@
               :key="item.name"
               :to="{ name: item.name }"
               class="student-layout__nav-item"
-              active-class="is-active"
+              exact-active-class="is-active"
               @click="menuAberto = false"
             >
               <component :is="item.icon" :size="20" aria-hidden="true" />
@@ -119,7 +119,7 @@
         :key="item.name"
         :to="{ name: item.name }"
         class="student-layout__bottom-item"
-        active-class="is-active"
+        exact-active-class="is-active"
       >
         <span class="student-layout__bottom-icon-wrap">
           <component :is="item.icon" :size="20" aria-hidden="true" />
