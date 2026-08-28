@@ -28,7 +28,15 @@
 
       <div class="student-layout__user-card">
         <RouterLink :to="{ name: 'perfil' }" class="student-layout__user">
-          <span class="student-layout__avatar">{{ iniciais }}</span>
+          <span class="student-layout__avatar">
+            <img
+              v-if="avatarDisponivel"
+              :src="auth.usuario.avatar"
+              :alt="`Foto de ${auth.usuario?.name || 'usuário'}`"
+              @error="avatarComErro = true"
+            />
+            <template v-else>{{ iniciais }}</template>
+          </span>
           <div class="student-layout__user-info">
             <strong>{{ auth.usuario?.name || 'Aluno' }}</strong>
             <span>{{ auth.isAdmin ? 'Administração' : 'Aluno · IFC' }}</span>
@@ -126,7 +134,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   Bell,
@@ -155,6 +163,16 @@ const router = useRouter()
 const menuAberto = ref(false)
 const notifCount = ref(0)
 const promoCount = ref(0)
+const avatarComErro = ref(false)
+
+const avatarDisponivel = computed(() => Boolean(auth.usuario?.avatar) && !avatarComErro.value)
+
+watch(
+  () => auth.usuario?.avatar,
+  () => {
+    avatarComErro.value = false
+  },
+)
 
 const iniciais = computed(() => {
   const nome = auth.usuario?.name || ''
@@ -392,6 +410,14 @@ onMounted(() => {
   color: #e7a837;
   font-size: 11px;
   font-weight: 800;
+}
+
+.student-layout__avatar img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+  object-fit: cover;
 }
 
 .student-layout__user-info {

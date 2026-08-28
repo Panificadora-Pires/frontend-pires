@@ -184,6 +184,14 @@ export const useAuthStore = defineStore('auth', {
       return data
     },
 
+    async atualizarPerfil(payload) {
+      return this._executar(async () => {
+        const { data } = await authService.updateProfile(payload)
+        this.usuario = data
+        return data
+      })
+    },
+
     async restaurarSessao() {
       if (this.sessaoInicializada) {
         return this.autenticado
