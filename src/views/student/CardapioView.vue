@@ -128,7 +128,8 @@
           v-for="produto in produtosFiltrados"
           :key="produto.id"
           :produto="produto"
-          :favorito="favoritos.has(produto.id)"
+          :favorito="favorites.tem(produto.id)"
+          :favoritando="favorites.estaProcessando(produto.id)"
           :adicionando="produtoAdicionando === produto.id"
           @open="abrirProduto"
           @favorite="alternarFavorito"
@@ -142,7 +143,8 @@
       :produto="produtoDetalhado"
       :loading="carregandoDetalhe"
       :adding="adicionandoModal"
-      :favorito="Boolean(produtoDetalhado && favoritos.has(produtoDetalhado.id))"
+      :favorito="Boolean(produtoDetalhado && favorites.tem(produtoDetalhado.id))"
+      :favoritando="Boolean(produtoDetalhado && favorites.estaProcessando(produtoDetalhado.id))"
       @close="fecharModal"
       @favorite="alternarFavorito"
       @add="adicionarDoModal"
@@ -177,11 +179,11 @@ import {
 import ProductCard from '@/components/catalog/ProductCard.vue'
 import ProductDetailsModal from '@/components/catalog/ProductDetailsModal.vue'
 import catalogService from '@/services/catalog.service'
-import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
+import { useFavoritesStore } from '@/stores/favorites'
 
-const auth = useAuthStore()
 const cart = useCartStore()
+const favorites = useFavoritesStore()
 
 const categorias = ref([])
 const produtos = ref([])
@@ -189,7 +191,6 @@ const busca = ref('')
 const categoriaAtiva = ref(null)
 const filtroRapido = ref('todos')
 const ordenacao = ref('relevancia')
-const favoritos = ref(new Set())
 const detalhesCache = new Map()
 
 const carregando = ref(true)
@@ -281,32 +282,21 @@ function limitarBadge(valor) {
   return numero > 99 ? '99+' : numero
 }
 
-function chaveFavoritos() {
-  return `pp_favoritos_${auth.usuario?.id || 'anonimo'}`
-}
-
-function carregarFavoritos() {
-  try {
-    const ids = JSON.parse(localStorage.getItem(chaveFavoritos()) || '[]')
-    favoritos.value = new Set(Array.isArray(ids) ? ids : [])
-  } catch {
-    favoritos.value = new Set()
-  }
-}
-
-function salvarFavoritos() {
-  localStorage.setItem(chaveFavoritos(), JSON.stringify([...favoritos.value]))
-}
-
-function alternarFavorito(produto) {
+async function alternarFavorito(produto) {
   if (!produto?.id) return
 
-  const novaLista = new Set(favoritos.value)
-  if (novaLista.has(produto.id)) novaLista.delete(produto.id)
-  else novaLista.add(produto.id)
+  const estavaFavoritado = favorites.tem(produto.id)
 
-  favoritos.value = novaLista
-  salvarFavoritos()
+  try {
+    await favorites.alternar(produto)
+    mostrarToast(
+      estavaFavoritado
+        ? `${produto.nome} removido dos favoritos.`
+        : `${produto.nome} adicionado aos favoritos.`,
+    )
+  } catch {
+    mostrarToast('Não foi possível atualizar seus favoritos.')
+  }
 }
 
 async function carregarDados() {
@@ -424,7 +414,7 @@ function mostrarToast(mensagem) {
 }
 
 onMounted(() => {
-  carregarFavoritos()
+  favorites.carregar().catch(() => {})
   carregarDados()
 })
 

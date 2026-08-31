@@ -31,7 +31,7 @@
       <div class="home__actions">
         <RouterLink :to="{ name: 'notificacoes' }" class="home__icon-btn" aria-label="Notificações">
           <Bell :size="20" />
-          <span v-if="notifCount" class="home__badge">{{ limitarBadge(notifCount) }}</span>
+          <span v-if="notifications.naoLidas" class="home__badge">{{ limitarBadge(notifications.naoLidas) }}</span>
         </RouterLink>
 
         <RouterLink :to="{ name: 'carrinho' }" class="home__icon-btn" aria-label="Carrinho">
@@ -191,11 +191,11 @@
           <button
             type="button"
             class="home__fav-btn"
-            :class="{ 'is-active': favoritos.has(produto.id) }"
-            :aria-label="favoritos.has(produto.id) ? `Remover ${produto.nome} dos favoritos` : `Favoritar ${produto.nome}`"
-            @click="alternarFavorito(produto.id)"
+            :class="{ 'is-active': favorites.tem(produto.id) }"
+            :aria-label="favorites.tem(produto.id) ? `Remover ${produto.nome} dos favoritos` : `Favoritar ${produto.nome}`"
+            @click="alternarFavorito(produto)"
           >
-            <Heart :size="18" :fill="favoritos.has(produto.id) ? 'currentColor' : 'none'" />
+            <Heart :size="18" :fill="favorites.tem(produto.id) ? 'currentColor' : 'none'" />
           </button>
 
           <div class="home__product-image">
@@ -330,24 +330,25 @@ import {
   Tag,
 } from 'lucide-vue-next'
 
-import api from '@/services/api'
 import catalogService, {
   promocaoEstaAtiva,
   resolverUrlMidia,
 } from '@/services/catalog.service'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
+import { useFavoritesStore } from '@/stores/favorites'
+import { useNotificationsStore } from '@/stores/notifications'
 
 const auth = useAuthStore()
 const cart = useCartStore()
+const favorites = useFavoritesStore()
+const notifications = useNotificationsStore()
 
 const busca = ref('')
 const categoriaAtiva = ref(null)
 const categorias = ref([])
 const produtos = ref([])
 const promocoes = ref([])
-const notifCount = ref(0)
-const favoritos = ref(new Set())
 const imagensComErro = ref(new Set())
 const avatarComErro = ref(false)
 
@@ -448,34 +449,21 @@ function registrarErroImagem(produtoId) {
   imagensComErro.value = new Set(imagensComErro.value)
 }
 
-function chaveFavoritos() {
-  return `pp_favoritos_${auth.usuario?.id || 'anonimo'}`
-}
+async function alternarFavorito(produto) {
+  if (!produto?.id) return
 
-function carregarFavoritosLocais() {
+  const estavaFavoritado = favorites.tem(produto.id)
+
   try {
-    const ids = JSON.parse(localStorage.getItem(chaveFavoritos()) || '[]')
-    favoritos.value = new Set(Array.isArray(ids) ? ids : [])
+    await favorites.alternar(produto)
+    mostrarToast(
+      estavaFavoritado
+        ? `${produto.nome} removido dos favoritos.`
+        : `${produto.nome} adicionado aos favoritos.`,
+    )
   } catch {
-    favoritos.value = new Set()
+    mostrarToast('Não foi possível atualizar seus favoritos.')
   }
-}
-
-function salvarFavoritosLocais() {
-  localStorage.setItem(chaveFavoritos(), JSON.stringify([...favoritos.value]))
-}
-
-function alternarFavorito(produtoId) {
-  const novaLista = new Set(favoritos.value)
-
-  if (novaLista.has(produtoId)) {
-    novaLista.delete(produtoId)
-  } else {
-    novaLista.add(produtoId)
-  }
-
-  favoritos.value = novaLista
-  salvarFavoritosLocais()
 }
 
 function adicionarAoCarrinho(produto) {
@@ -598,16 +586,6 @@ async function carregarPromocoes() {
   }
 }
 
-async function carregarNotificacoes() {
-  try {
-    const { data } = await api.get('/notificacoes/', {
-      params: { lida: false, page_size: 1 },
-    })
-    notifCount.value = data.count ?? data.results?.length ?? 0
-  } catch {
-    notifCount.value = 0
-  }
-}
 
 function iniciarCarrossel() {
   window.clearInterval(intervaloPromo)
@@ -619,12 +597,15 @@ function iniciarCarrossel() {
 }
 
 onMounted(() => {
-  carregarFavoritosLocais()
+  favorites.carregar().catch(() => {})
+  notifications.carregar({
+    force: !notifications.inicializado,
+  }).catch(() => {})
+
   Promise.allSettled([
     carregarCategorias(),
     carregarProdutos(),
     carregarPromocoes(),
-    carregarNotificacoes(),
   ])
   iniciarCarrossel()
 })

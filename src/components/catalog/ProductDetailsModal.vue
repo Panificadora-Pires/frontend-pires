@@ -32,11 +32,17 @@
                 <button
                   type="button"
                   class="product-modal__favorite"
-                  :class="{ 'is-active': favorito }"
+                  :class="{ 'is-active': favorito, 'is-loading': favoritando }"
+                  :disabled="favoritando"
                   :aria-label="favorito ? 'Remover dos favoritos' : 'Adicionar aos favoritos'"
                   @click="$emit('favorite', produto)"
                 >
-                  <Heart :size="19" :fill="favorito ? 'currentColor' : 'none'" />
+                  <LoaderCircle
+                    v-if="favoritando"
+                    :size="18"
+                    class="product-modal__spinner"
+                  />
+                  <Heart v-else :size="19" :fill="favorito ? 'currentColor' : 'none'" />
                 </button>
               </div>
 
@@ -141,6 +147,7 @@ const props = defineProps({
   loading: { type: Boolean, default: false },
   adding: { type: Boolean, default: false },
   favorito: { type: Boolean, default: false },
+  favoritando: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['close', 'favorite', 'add'])

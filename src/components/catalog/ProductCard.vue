@@ -21,11 +21,18 @@
     <button
       type="button"
       class="product-card__favorite"
-      :class="{ 'is-active': favorito }"
+      :class="{ 'is-active': favorito, 'is-loading': favoritando }"
+      :disabled="favoritando"
       :aria-label="favorito ? `Remover ${produto.nome} dos favoritos` : `Favoritar ${produto.nome}`"
       @click="$emit('favorite', produto)"
     >
-      <Heart :size="18" :fill="favorito ? 'currentColor' : 'none'" />
+      <LoaderCircle
+        v-if="favoritando"
+        :size="17"
+        class="product-card__spinner"
+        aria-hidden="true"
+      />
+      <Heart v-else :size="18" :fill="favorito ? 'currentColor' : 'none'" />
     </button>
 
     <button type="button" class="product-card__copy" @click="$emit('open', produto)">
@@ -64,6 +71,7 @@ import ProductImage from '@/components/catalog/ProductImage.vue'
 defineProps({
   produto: { type: Object, required: true },
   favorito: { type: Boolean, default: false },
+  favoritando: { type: Boolean, default: false },
   adicionando: { type: Boolean, default: false },
 })
 
@@ -161,6 +169,14 @@ function formatarPreco(valor) {
 .product-card__favorite.is-active {
   color: #b96834;
   background: #fff7ef;
+}
+
+.product-card__favorite:disabled {
+  cursor: wait;
+}
+
+.product-card__favorite.is-loading {
+  color: #b27a23;
 }
 
 .product-card__copy {
