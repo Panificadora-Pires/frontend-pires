@@ -11,7 +11,7 @@
           :key="item.name"
           :to="{ name: item.name }"
           class="student-layout__nav-item"
-          active-class="is-active"
+          exact-active-class="is-active"
         >
           <component :is="item.icon" :size="20" aria-hidden="true" />
           <span>{{ item.label }}</span>
@@ -67,7 +67,7 @@
       <div class="student-layout__mobile-actions">
         <RouterLink :to="{ name: 'notificacoes' }" class="student-layout__icon-btn" aria-label="Notificações">
           <Bell :size="19" />
-          <span v-if="notifCount" class="student-layout__badge-dot">{{ limitarBadge(notifCount) }}</span>
+          <span v-if="notifications.naoLidas" class="student-layout__badge-dot">{{ limitarBadge(notifications.naoLidas) }}</span>
         </RouterLink>
         <RouterLink :to="{ name: 'carrinho' }" class="student-layout__icon-btn" aria-label="Carrinho">
           <ShoppingCart :size="19" />
@@ -92,7 +92,7 @@
               :key="item.name"
               :to="{ name: item.name }"
               class="student-layout__nav-item"
-              active-class="is-active"
+              exact-active-class="is-active"
               @click="menuAberto = false"
             >
               <component :is="item.icon" :size="20" aria-hidden="true" />
@@ -119,7 +119,7 @@
         :key="item.name"
         :to="{ name: item.name }"
         class="student-layout__bottom-item"
-        active-class="is-active"
+        exact-active-class="is-active"
       >
         <span class="student-layout__bottom-icon-wrap">
           <component :is="item.icon" :size="20" aria-hidden="true" />
@@ -134,7 +134,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   Bell,
@@ -151,17 +151,17 @@ import {
   X,
 } from 'lucide-vue-next'
 
-import api from '@/services/api'
 import catalogService, { promocaoEstaAtiva } from '@/services/catalog.service'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
+import { useNotificationsStore } from '@/stores/notifications'
 
 const auth = useAuthStore()
 const cart = useCartStore()
+const notifications = useNotificationsStore()
 const router = useRouter()
 
 const menuAberto = ref(false)
-const notifCount = ref(0)
 const promoCount = ref(0)
 const avatarComErro = ref(false)
 
@@ -193,7 +193,7 @@ const navItems = computed(() => [
   { name: 'carrinho', label: 'Meu Carrinho', icon: ShoppingCart, badge: cart.totalItens || null },
   { name: 'pedidos', label: 'Meus Pedidos', icon: ClipboardList },
   { name: 'favoritos', label: 'Favoritos', icon: Heart },
-  { name: 'notificacoes', label: 'Notificações', icon: Bell, badge: notifCount.value || null },
+  { name: 'notificacoes', label: 'Notificações', icon: Bell, badge: notifications.naoLidas || null },
   { name: 'perfil', label: 'Perfil', icon: User },
 ])
 
@@ -216,16 +216,6 @@ async function handleLogout() {
   await router.replace({ name: 'login' })
 }
 
-async function buscarNotificacoesNaoLidas() {
-  try {
-    const { data } = await api.get('/notificacoes/', {
-      params: { lida: false, page_size: 1 },
-    })
-    notifCount.value = data.count ?? data.results?.length ?? 0
-  } catch {
-    notifCount.value = 0
-  }
-}
 
 async function buscarPromocoesAtivas() {
   try {
@@ -237,10 +227,12 @@ async function buscarPromocoesAtivas() {
 }
 
 onMounted(() => {
-  Promise.allSettled([
-    buscarNotificacoesNaoLidas(),
-    buscarPromocoesAtivas(),
-  ])
+  notifications.iniciarPolling()
+  buscarPromocoesAtivas()
+})
+
+onBeforeUnmount(() => {
+  notifications.pararPolling()
 })
 </script>
 
