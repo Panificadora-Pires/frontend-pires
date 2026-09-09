@@ -41,9 +41,9 @@ const routes = [
     children: [
       { path: '', name: 'home', component: () => import('@/views/student/HomeView.vue') },
       { path: 'cardapio', name: 'cardapio', component: () => import('@/views/student/CardapioView.vue') },
-      { path: 'promocoes', name: 'promocoes', component: () => import('@/views/EmConstrucaoView.vue') },
-      { path: 'carrinho', name: 'carrinho', component: () => import('@/views/EmConstrucaoView.vue') },
-      { path: 'pedidos', name: 'pedidos', component: () => import('@/views/EmConstrucaoView.vue') },
+      { path: 'promocoes', name: 'promocoes', component: () => import('@/views/student/PromocoesView.vue') },
+      { path: 'carrinho', name: 'carrinho', component: () => import('@/views/student/CarrinhoView.vue') },
+      { path: 'pedidos', name: 'pedidos', component: () => import('@/views/student/PedidosView.vue') },
       { path: 'favoritos', name: 'favoritos', component: () => import('@/views/student/FavoritosView.vue') },
       { path: 'notificacoes', name: 'notificacoes', component: () => import('@/views/student/NotificacoesView.vue') },
       { path: 'perfil', name: 'perfil', component: () => import('@/views/student/ProfileView.vue') },
