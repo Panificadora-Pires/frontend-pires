@@ -45,6 +45,12 @@ async function listar(params = {}) {
   return acumulado
 }
 
+async function criar(itensCriacao) {
+  return api.post('/pedidos/', {
+    itens_criacao: itensCriacao,
+  })
+}
+
 async function obter(id) {
   return api.get(`/pedidos/${id}/`)
 }
@@ -55,6 +61,7 @@ async function obterQRCode(id) {
 
 export default {
   listar,
+  criar,
   obter,
   obterQRCode,
 }

@@ -100,10 +100,14 @@
                 <strong>{{ formatarPreco(promoDestaque.preco_promocional) }}</strong>
               </div>
 
-              <RouterLink :to="{ name: 'cardapio' }" class="home__hero-btn">
-                Reservar agora
+              <button
+                type="button"
+                class="home__hero-btn"
+                @click="abrirProduto(promoDestaque.produto)"
+              >
+                Ver detalhes
                 <ChevronRight :size="17" aria-hidden="true" />
-              </RouterLink>
+              </button>
             </div>
 
             <div class="home__hero-media">
@@ -198,25 +202,32 @@
             <Heart :size="18" :fill="favorites.tem(produto.id) ? 'currentColor' : 'none'" />
           </button>
 
-          <div class="home__product-image">
-            <img
-              v-if="imagemDisponivel(produto)"
-              :src="imagemProduto(produto)"
-              :alt="produto.nome"
-              loading="lazy"
-              @error="registrarErroImagem(produto.id)"
-            />
-            <div v-else class="home__product-fallback" aria-hidden="true">
-              <component :is="iconeParaCategoria(produto.categoria_nome)" :size="42" />
+          <button
+            type="button"
+            class="home__product-open"
+            :aria-label="`Ver detalhes de ${produto.nome}`"
+            @click="abrirProduto(produto)"
+          >
+            <div class="home__product-image">
+              <img
+                v-if="imagemDisponivel(produto)"
+                :src="imagemProduto(produto)"
+                :alt="produto.nome"
+                loading="lazy"
+                @error="registrarErroImagem(produto.id)"
+              />
+              <div v-else class="home__product-fallback" aria-hidden="true">
+                <component :is="iconeParaCategoria(produto.categoria_nome)" :size="42" />
+              </div>
+
+              <span v-if="produto.em_promocao" class="home__product-promo">Oferta</span>
             </div>
 
-            <span v-if="produto.em_promocao" class="home__product-promo">Oferta</span>
-          </div>
-
-          <div class="home__product-body">
-            <h3>{{ produto.nome }}</h3>
-            <p>{{ produto.categoria_nome || 'Produto' }}</p>
-          </div>
+            <div class="home__product-body">
+              <h3>{{ produto.nome }}</h3>
+              <p>{{ produto.categoria_nome || 'Produto' }}</p>
+            </div>
+          </button>
 
           <div class="home__product-footer">
             <div class="home__product-prices">
@@ -227,10 +238,16 @@
             <button
               type="button"
               class="home__add-btn"
+              :disabled="produtoAdicionando === produto.id"
               :aria-label="`Adicionar ${produto.nome} ao carrinho`"
               @click="adicionarAoCarrinho(produto)"
             >
-              <Plus :size="19" />
+              <LoaderCircle
+                v-if="produtoAdicionando === produto.id"
+                :size="18"
+                class="home__add-spinner"
+              />
+              <Plus v-else :size="19" />
             </button>
           </div>
         </article>
@@ -269,7 +286,17 @@
       </div>
 
       <div v-else class="home__promo-row">
-        <article v-for="promo in promocoesVisiveis" :key="promo.id" class="home__promo-card">
+        <article
+          v-for="promo in promocoesVisiveis"
+          :key="promo.id"
+          class="home__promo-card"
+          role="button"
+          tabindex="0"
+          :aria-label="`Ver detalhes de ${promo.produto_nome}`"
+          @click="abrirProduto(promo.produto)"
+          @keydown.enter="abrirProduto(promo.produto)"
+          @keydown.space.prevent="abrirProduto(promo.produto)"
+        >
           <div class="home__promo-copy">
             <span class="home__promo-category">{{ promo.categoriaNome || 'Oferta' }}</span>
             <h3>{{ promo.produto_nome }}</h3>
@@ -298,6 +325,18 @@
       </div>
     </section>
 
+    <ProductDetailsModal
+      :open="modalAberto"
+      :produto="produtoDetalhado"
+      :loading="carregandoDetalhe"
+      :adding="adicionandoModal"
+      :favorito="Boolean(produtoDetalhado && favorites.tem(produtoDetalhado.id))"
+      :favoritando="Boolean(produtoDetalhado && favorites.estaProcessando(produtoDetalhado.id))"
+      @close="fecharModal"
+      @favorite="alternarFavorito"
+      @add="adicionarDoModal"
+    />
+
     <Transition name="toast">
       <div v-if="toast" class="home__toast" role="status" aria-live="polite">
         <Check :size="18" aria-hidden="true" />
@@ -320,6 +359,7 @@ import {
   Flame,
   Heart,
   LayoutGrid,
+  LoaderCircle,
   Package,
   Plus,
   Search,
@@ -330,6 +370,7 @@ import {
   Tag,
 } from 'lucide-vue-next'
 
+import ProductDetailsModal from '@/components/catalog/ProductDetailsModal.vue'
 import catalogService, {
   promocaoEstaAtiva,
   resolverUrlMidia,
@@ -356,6 +397,12 @@ const carregandoProdutos = ref(true)
 const carregandoPromos = ref(true)
 const erroProdutos = ref(false)
 const erroPromos = ref(false)
+const modalAberto = ref(false)
+const carregandoDetalhe = ref(false)
+const produtoDetalhado = ref(null)
+const produtoAdicionando = ref(null)
+const adicionandoModal = ref(false)
+const detalhesCache = new Map()
 
 const promoIndex = ref(0)
 const toast = ref('')
@@ -466,9 +513,84 @@ async function alternarFavorito(produto) {
   }
 }
 
-function adicionarAoCarrinho(produto) {
-  cart.adicionar(produto)
-  mostrarToast(`${produto.nome} adicionado ao carrinho.`)
+async function obterDetalhes(produto) {
+  if (!produto?.id) return null
+  if (detalhesCache.has(produto.id)) return detalhesCache.get(produto.id)
+
+  const detalhe = await catalogService.obterProduto(produto.id)
+  detalhesCache.set(produto.id, detalhe)
+  return detalhe
+}
+
+async function abrirProduto(produto) {
+  if (!produto?.id) return
+
+  modalAberto.value = true
+  carregandoDetalhe.value = true
+  produtoDetalhado.value = null
+
+  try {
+    produtoDetalhado.value = await obterDetalhes(produto)
+  } catch {
+    produtoDetalhado.value = null
+  } finally {
+    carregandoDetalhe.value = false
+  }
+}
+
+function fecharModal() {
+  modalAberto.value = false
+  produtoDetalhado.value = null
+}
+
+async function adicionarAoCarrinho(produto) {
+  if (!produto?.id || produtoAdicionando.value) return
+  produtoAdicionando.value = produto.id
+
+  try {
+    const detalhe = await obterDetalhes(produto)
+    const estoque = Number(detalhe?.estoque ?? 0)
+
+    if (estoque <= 0) {
+      mostrarToast(`${produto.nome} está sem estoque no momento.`)
+      return
+    }
+
+    const itemAtual = cart.itens.find((item) => item.produto.id === produto.id)
+    if ((itemAtual?.quantidade || 0) >= estoque) {
+      mostrarToast(`Você já adicionou todo o estoque disponível de ${produto.nome}.`)
+      return
+    }
+
+    cart.adicionar({ ...produto, ...detalhe }, 1)
+    mostrarToast(`${produto.nome} adicionado ao carrinho.`)
+  } catch {
+    mostrarToast('Não foi possível verificar a disponibilidade do produto.')
+  } finally {
+    produtoAdicionando.value = null
+  }
+}
+
+async function adicionarDoModal({ produto, quantidade }) {
+  if (!produto || adicionandoModal.value) return
+  adicionandoModal.value = true
+
+  try {
+    const estoque = Number(produto.estoque || 0)
+    const itemAtual = cart.itens.find((item) => item.produto.id === produto.id)
+    const novaQuantidade = (itemAtual?.quantidade || 0) + quantidade
+
+    if (novaQuantidade > estoque) {
+      mostrarToast(`Há somente ${estoque} ${estoque === 1 ? 'unidade disponível' : 'unidades disponíveis'}.`)
+      return
+    }
+
+    cart.adicionar(produto, quantidade)
+    mostrarToast(`${produto.nome} adicionado ao carrinho.`)
+    fecharModal()
+  } finally {
+    adicionandoModal.value = false
+  }
 }
 
 function mostrarToast(mensagem) {
@@ -518,6 +640,7 @@ const promosAtivas = computed(() => {
 
   return promocoes.value
     .filter((promo) => promocaoEstaAtiva(promo))
+    .filter((promo) => mapaProdutos.has(promo.produto))
     .map((promo) => {
       const produto = mapaProdutos.get(promo.produto)
       const precoPromocional = Number(promo.preco_promocional || 0)
@@ -888,11 +1011,14 @@ onBeforeUnmount(() => {
   justify-content: center;
   gap: 8px;
   padding: 0 22px;
+  border: 0;
   border-radius: 10px;
   background: linear-gradient(100deg, #f3af2f, #ffc44d);
   color: #2b1709;
+  font: inherit;
   font-size: 13.5px;
   font-weight: 800;
+  cursor: pointer;
   box-shadow: 0 8px 24px rgba(224, 168, 62, 0.16);
   transition: transform 160ms ease, filter 160ms ease;
 }
@@ -1030,6 +1156,17 @@ onBeforeUnmount(() => {
   min-height: 250px;
 }
 
+.home__product-open {
+  width: 100%;
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
 .home__product-image {
   position: relative;
   height: 146px;
@@ -1161,9 +1298,22 @@ onBeforeUnmount(() => {
   transition: transform 150ms ease, filter 150ms ease;
 }
 
-.home__add-btn:hover {
+.home__add-btn:hover:not(:disabled) {
   transform: translateY(-1px);
   filter: brightness(1.05);
+}
+
+.home__add-btn:disabled {
+  opacity: 0.68;
+  cursor: wait;
+}
+
+.home__add-spinner {
+  animation: home-add-spin 700ms linear infinite;
+}
+
+@keyframes home-add-spin {
+  to { transform: rotate(360deg); }
 }
 
 .home__promo-row {
@@ -1184,6 +1334,15 @@ onBeforeUnmount(() => {
   border-radius: 16px;
   background: linear-gradient(130deg, #fff6e9, #f1dfc5);
   box-shadow: 0 9px 24px rgba(66, 42, 24, 0.05);
+}
+
+.home__promo-card[role='button'] {
+  cursor: pointer;
+}
+
+.home__promo-card[role='button']:focus-visible {
+  outline: 2.5px solid var(--pp-gold);
+  outline-offset: 2px;
 }
 
 .home__promo-card:nth-child(2) {
