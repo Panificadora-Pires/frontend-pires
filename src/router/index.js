@@ -43,6 +43,7 @@ const routes = [
       { path: 'cardapio', name: 'cardapio', component: () => import('@/views/student/CardapioView.vue') },
       { path: 'promocoes', name: 'promocoes', component: () => import('@/views/student/PromocoesView.vue') },
       { path: 'carrinho', name: 'carrinho', component: () => import('@/views/student/CarrinhoView.vue') },
+      { path: 'checkout', name: 'checkout', component: () => import('@/views/student/CheckoutView.vue') },
       { path: 'pedidos', name: 'pedidos', component: () => import('@/views/student/PedidosView.vue') },
       { path: 'favoritos', name: 'favoritos', component: () => import('@/views/student/FavoritosView.vue') },
       { path: 'notificacoes', name: 'notificacoes', component: () => import('@/views/student/NotificacoesView.vue') },

@@ -4,7 +4,7 @@
       <div>
         <span class="cart-page__eyebrow">Seu pedido</span>
         <h1>Meu carrinho</h1>
-        <p>Revise os produtos, ajuste as quantidades e confirme sua reserva.</p>
+        <p>Revise os produtos, ajuste as quantidades e siga para escolher o pagamento.</p>
       </div>
 
       <RouterLink :to="{ name: 'cardapio' }" class="cart-page__continue">
@@ -13,40 +13,7 @@
       </RouterLink>
     </header>
 
-    <section v-if="pedidoCriado" class="cart-page__success" aria-live="polite">
-      <span class="cart-page__success-icon">
-        <CircleCheckBig :size="34" />
-      </span>
-      <span class="cart-page__eyebrow">Pedido confirmado</span>
-      <h2>Pedido #{{ pedidoCriado.id }} criado com sucesso</h2>
-      <p>
-        A Pires Panificadora recebeu sua reserva. Acompanhe o status em Meus Pedidos;
-        quando estiver pronto, o QR Code de retirada ficará disponível.
-      </p>
-
-      <div class="cart-page__success-summary">
-        <div>
-          <span>Status inicial</span>
-          <strong>{{ pedidoCriado.status_display || 'Pendente' }}</strong>
-        </div>
-        <div>
-          <span>Total</span>
-          <strong>{{ formatarPreco(pedidoCriado.total) }}</strong>
-        </div>
-      </div>
-
-      <div class="cart-page__success-actions">
-        <RouterLink :to="{ name: 'pedidos' }" class="cart-page__primary-link">
-          Acompanhar pedido
-          <ArrowRight :size="17" />
-        </RouterLink>
-        <RouterLink :to="{ name: 'cardapio' }" class="cart-page__secondary-link">
-          Voltar ao cardápio
-        </RouterLink>
-      </div>
-    </section>
-
-    <section v-else-if="cart.vazio" class="cart-page__empty">
+    <section v-if="cart.vazio" class="cart-page__empty">
       <span class="cart-page__empty-icon"><ShoppingCart :size="31" /></span>
       <h2>Seu carrinho está vazio</h2>
       <p>Adicione produtos do cardápio para montar sua reserva.</p>
@@ -180,7 +147,7 @@
 
         <div class="cart-summary__notice">
           <Clock3 :size="17" />
-          <p>Após confirmar, acompanhe o preparo em <strong>Meus Pedidos</strong>.</p>
+          <p>Na próxima etapa você escolhe Pix, cartão ou dinheiro na retirada.</p>
         </div>
 
         <div v-if="erroFinalizar" class="cart-summary__error" role="alert">
@@ -196,11 +163,11 @@
         >
           <LoaderCircle v-if="finalizando" :size="19" class="cart-page__spinner" />
           <ShoppingBag v-else :size="19" />
-          {{ finalizando ? 'Confirmando pedido...' : 'Confirmar pedido' }}
+          {{ finalizando ? 'Verificando carrinho...' : 'Ir para pagamento' }}
         </button>
 
         <p class="cart-summary__footnote">
-          Os preços e o estoque são conferidos novamente antes da criação do pedido.
+          Os preços e o estoque são conferidos antes de abrir o checkout seguro.
         </p>
       </aside>
     </div>
@@ -216,6 +183,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   ArrowLeft,
   ArrowRight,
@@ -235,17 +203,16 @@ import {
 
 import ProductImage from '@/components/catalog/ProductImage.vue'
 import catalogService from '@/services/catalog.service'
-import orderService from '@/services/order.service'
 import { useCartStore } from '@/stores/cart'
 
 const cart = useCartStore()
+const router = useRouter()
 
 const estoques = ref({})
 const ativos = ref({})
 const sincronizando = ref(false)
 const finalizando = ref(false)
 const erroFinalizar = ref('')
-const pedidoCriado = ref(null)
 const toast = ref('')
 let toastTimer = null
 
@@ -384,24 +351,13 @@ async function finalizarPedido() {
     await sincronizarCarrinho({ silencioso: true })
 
     if (temProblemas.value) {
-      erroFinalizar.value = 'Revise os itens destacados antes de confirmar o pedido.'
+      erroFinalizar.value = 'Revise os itens destacados antes de continuar.'
       return
     }
 
-    const itensCriacao = cart.itens.map((item) => ({
-      produto: item.produto.id,
-      quantidade: item.quantidade,
-    }))
-
-    const { data } = await orderService.criar(itensCriacao)
-    pedidoCriado.value = data
-    cart.limpar()
-    estoques.value = {}
-    ativos.value = {}
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    await router.push({ name: 'checkout' })
   } catch (error) {
     erroFinalizar.value = mensagemErroPedido(error)
-    await sincronizarCarrinho({ silencioso: true }).catch(() => {})
   } finally {
     finalizando.value = false
   }
