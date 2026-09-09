@@ -37,12 +37,13 @@ const routes = [
   {
     path: '/',
     component: () => import('@/components/layout/StudentLayout.vue'),
-    meta: { requerAuth: true },
+    meta: { requerAuth: true, requerAluno: true },
     children: [
       { path: '', name: 'home', component: () => import('@/views/student/HomeView.vue') },
       { path: 'cardapio', name: 'cardapio', component: () => import('@/views/student/CardapioView.vue') },
       { path: 'promocoes', name: 'promocoes', component: () => import('@/views/student/PromocoesView.vue') },
       { path: 'carrinho', name: 'carrinho', component: () => import('@/views/student/CarrinhoView.vue') },
+      { path: 'checkout', name: 'checkout', component: () => import('@/views/student/CheckoutView.vue') },
       { path: 'pedidos', name: 'pedidos', component: () => import('@/views/student/PedidosView.vue') },
       { path: 'favoritos', name: 'favoritos', component: () => import('@/views/student/FavoritosView.vue') },
       { path: 'notificacoes', name: 'notificacoes', component: () => import('@/views/student/NotificacoesView.vue') },
@@ -52,10 +53,22 @@ const routes = [
 
   {
     path: '/admin',
-    name: 'admin-dashboard',
-    component: () => import('@/views/EmConstrucaoView.vue'),
+    component: () => import('@/components/layout/AdminLayout.vue'),
     meta: { requerAuth: true, requerAdmin: true },
+    children: [
+      { path: '', name: 'admin-dashboard', component: () => import('@/views/admin/AdminDashboardView.vue') },
+      { path: 'pedidos', name: 'admin-pedidos', component: () => import('@/views/admin/AdminPedidosView.vue') },
+      { path: 'pedidos/:id', name: 'admin-pedido-detalhes', component: () => import('@/views/admin/AdminPedidoDetalhesView.vue') },
+      { path: 'produtos', name: 'admin-produtos', component: () => import('@/views/admin/AdminProdutosView.vue') },
+      { path: 'produtos/novo', name: 'admin-produto-novo', component: () => import('@/views/admin/AdminProdutoFormView.vue') },
+      { path: 'produtos/:id/editar', name: 'admin-produto-editar', component: () => import('@/views/admin/AdminProdutoFormView.vue') },
+      { path: 'categorias', name: 'admin-categorias', component: () => import('@/views/admin/AdminCategoriasView.vue') },
+      { path: 'promocoes', name: 'admin-promocoes', component: () => import('@/views/admin/AdminPromocoesView.vue') },
+      { path: 'relatorios', name: 'admin-relatorios', component: () => import('@/views/admin/AdminRelatoriosView.vue') },
+      { path: 'usuarios', name: 'admin-usuarios', component: () => import('@/views/admin/AdminUsuariosView.vue') },
+    ],
   },
+
   {
     path: '/:pathMatch(.*)*',
     redirect: '/',
@@ -89,6 +102,10 @@ router.beforeEach(async (to) => {
 
   if (to.meta.requerAdmin && !auth.isAdmin) {
     return { name: 'home' }
+  }
+
+  if (to.meta.requerAluno && auth.isAdmin) {
+    return { name: 'admin-dashboard' }
   }
 
   if (to.meta.somenteVisitante && auth.autenticado) {
