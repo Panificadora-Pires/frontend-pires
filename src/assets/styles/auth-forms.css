@@ -103,7 +103,7 @@
 
 .auth-divider::before,
 .auth-divider::after {
-  content: '';
+  content: "";
   flex: 1;
   height: 1px;
   background: rgba(243, 233, 216, 0.18);

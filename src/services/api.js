@@ -1,79 +1,79 @@
-import axios from 'axios'
+import axios from "axios";
 
-export const ACCESS_TOKEN_KEY = 'pp_access_token'
-export const REFRESH_TOKEN_KEY = 'pp_refresh_token'
+export const ACCESS_TOKEN_KEY = "pp_access_token";
+export const REFRESH_TOKEN_KEY = "pp_refresh_token";
 
 const API_BASE_URL = (
   import.meta.env.VITE_API_URL ||
   (import.meta.env.PROD
-    ? 'https://backend-pires.class.fabricadesoftware.ifc.edu.br/api'
-    : 'http://127.0.0.1:8000/api')
-).replace(/\/+$/, '')
+    ? "https://backend-pires.class.fabricadesoftware.ifc.edu.br/api"
+    : "http://127.0.0.1:8000/api")
+).replace(/\/+$/, "");
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15_000,
   headers: {
-    Accept: 'application/json',
+    Accept: "application/json",
   },
-})
+});
 
 export function getAccessToken() {
-  return localStorage.getItem(ACCESS_TOKEN_KEY)
+  return localStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
 export function getRefreshToken() {
-  return localStorage.getItem(REFRESH_TOKEN_KEY)
+  return localStorage.getItem(REFRESH_TOKEN_KEY);
 }
 
 export function persistTokens({ access, refresh }) {
   if (access) {
-    localStorage.setItem(ACCESS_TOKEN_KEY, access)
+    localStorage.setItem(ACCESS_TOKEN_KEY, access);
   }
 
   if (refresh) {
-    localStorage.setItem(REFRESH_TOKEN_KEY, refresh)
+    localStorage.setItem(REFRESH_TOKEN_KEY, refresh);
   }
 }
 
 export function clearTokens() {
-  localStorage.removeItem(ACCESS_TOKEN_KEY)
-  localStorage.removeItem(REFRESH_TOKEN_KEY)
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
 }
 
 api.interceptors.request.use((config) => {
-  const accessToken = getAccessToken()
+  const accessToken = getAccessToken();
 
   if (accessToken && !config.skipAuthHeader) {
-    config.headers = config.headers ?? {}
-    config.headers.Authorization = `Bearer ${accessToken}`
+    config.headers = config.headers ?? {};
+    config.headers.Authorization = `Bearer ${accessToken}`;
   }
 
-  return config
-})
+  return config;
+});
 
-let refreshPromise = null
+let refreshPromise = null;
 
 api.interceptors.response.use(
   (response) => response,
 
   async (error) => {
-    const originalRequest = error.config
-    const refreshToken = getRefreshToken()
+    const originalRequest = error.config;
+    const refreshToken = getRefreshToken();
 
     const shouldRefresh = Boolean(
       originalRequest &&
-        error.response?.status === 401 &&
-        !originalRequest.skipAuthRefresh &&
-        !originalRequest._authRetry &&
-        refreshToken,
-    )
+      error.response?.status === 401 &&
+      !originalRequest.skipAuthRefresh &&
+      !originalRequest._authRetry &&
+      refreshToken,
+    );
 
     if (!shouldRefresh) {
-      return Promise.reject(error)
+      return Promise.reject(error);
     }
 
-    originalRequest._authRetry = true
+    originalRequest._authRetry = true;
 
     try {
       refreshPromise ??= axios.post(
@@ -84,49 +84,49 @@ api.interceptors.response.use(
         {
           timeout: 15_000,
           headers: {
-            Accept: 'application/json',
+            Accept: "application/json",
           },
         },
-      )
+      );
 
-      const { data } = await refreshPromise
+      const { data } = await refreshPromise;
 
       // O backend usa rotação de refresh token.
       // Se vier um refresh novo, substitui imediatamente o anterior.
       persistTokens({
         access: data.access,
         refresh: data.refresh || refreshToken,
-      })
+      });
 
-      originalRequest.headers = originalRequest.headers ?? {}
-      originalRequest.headers.Authorization = `Bearer ${data.access}`
+      originalRequest.headers = originalRequest.headers ?? {};
+      originalRequest.headers.Authorization = `Bearer ${data.access}`;
 
-      return api(originalRequest)
+      return api(originalRequest);
     } catch (refreshError) {
-      clearTokens()
-      redirectToLoginAfterExpiredSession()
+      clearTokens();
+      redirectToLoginAfterExpiredSession();
 
-      return Promise.reject(refreshError)
+      return Promise.reject(refreshError);
     } finally {
-      refreshPromise = null
+      refreshPromise = null;
     }
   },
-)
+);
 
 function redirectToLoginAfterExpiredSession() {
-  if (typeof window === 'undefined') return
+  if (typeof window === "undefined") return;
 
   const publicAuthPaths = new Set([
-    '/login',
-    '/cadastro',
-    '/confirmar-email',
-    '/recuperar-senha',
-    '/redefinir-senha',
-  ])
+    "/login",
+    "/cadastro",
+    "/confirmar-email",
+    "/recuperar-senha",
+    "/redefinir-senha",
+  ]);
 
   if (!publicAuthPaths.has(window.location.pathname)) {
-    window.location.replace('/login?motivo=sessao-expirada')
+    window.location.replace("/login?motivo=sessao-expirada");
   }
 }
 
-export default api
+export default api;

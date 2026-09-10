@@ -1,5 +1,8 @@
 <template>
-  <article class="order-card" :class="`order-card--${pedido.status || 'neutro'}`">
+  <article
+    class="order-card"
+    :class="`order-card--${pedido.status || 'neutro'}`"
+  >
     <header class="order-card__header">
       <div class="order-card__identity">
         <span class="order-card__icon">
@@ -51,7 +54,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed } from "vue";
 import {
   BadgeCheck,
   CalendarDays,
@@ -61,76 +64,218 @@ import {
   Package,
   PackageCheck,
   QrCode,
-} from 'lucide-vue-next'
+} from "lucide-vue-next";
 
-import OrderItemsPreview from '@/components/orders/OrderItemsPreview.vue'
-import OrderStatusBadge from '@/components/orders/OrderStatusBadge.vue'
+import OrderItemsPreview from "@/components/orders/OrderItemsPreview.vue";
+import OrderStatusBadge from "@/components/orders/OrderStatusBadge.vue";
 
 const props = defineProps({
   pedido: {
     type: Object,
     required: true,
   },
-})
+});
 
-const emit = defineEmits(['ver-qrcode'])
+const emit = defineEmits(["ver-qrcode"]);
 
 function abrirQRCode() {
-  emit('ver-qrcode', props.pedido)
+  emit("ver-qrcode", props.pedido);
 }
 
 const statusInfo = computed(() => {
   const mapa = {
     pendente: {
       icon: Clock3,
-      texto: 'Seu pedido foi recebido e aguarda confirmação.',
+      texto: "Seu pedido foi recebido e aguarda confirmação.",
     },
     confirmado: {
       icon: BadgeCheck,
-      texto: 'A panificadora confirmou seu pedido.',
+      texto: "A panificadora confirmou seu pedido.",
     },
     pronto: {
       icon: PackageCheck,
-      texto: 'Seu pedido está pronto para retirada no balcão.',
+      texto: "Seu pedido está pronto para retirada no balcão.",
     },
     retirado: {
       icon: CircleCheckBig,
-      texto: 'Pedido retirado com sucesso.',
+      texto: "Pedido retirado com sucesso.",
     },
     cancelado: {
       icon: CircleX,
-      texto: 'Este pedido foi cancelado.',
+      texto: "Este pedido foi cancelado.",
     },
-  }
+  };
 
-  return mapa[props.pedido.status] || {
-    icon: Clock3,
-    texto: 'Acompanhe aqui as atualizações do seu pedido.',
-  }
-})
+  return (
+    mapa[props.pedido.status] || {
+      icon: Clock3,
+      texto: "Acompanhe aqui as atualizações do seu pedido.",
+    }
+  );
+});
 
 function formatarData(valor) {
-  const data = new Date(valor)
-  if (Number.isNaN(data.getTime())) return 'Data indisponível'
+  const data = new Date(valor);
+  if (Number.isNaN(data.getTime())) return "Data indisponível";
 
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(data)
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(data);
 }
 
 function formatarMoeda(valor) {
-  const numero = Number(valor || 0)
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(Number.isFinite(numero) ? numero : 0)
+  const numero = Number(valor || 0);
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(Number.isFinite(numero) ? numero : 0);
 }
 </script>
 
 <style scoped>
-.order-card{position:relative;overflow:hidden;border:1px solid var(--student-border);border-radius:10px;background:#fff;transition:border-color .15s ease}.order-card:hover{border-color:#d6cbbf}.order-card--pronto{border-left:3px solid #719055}.order-card__header{min-height:58px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:11px 15px;border-bottom:1px solid var(--student-border)}.order-card__identity{min-width:0;display:flex;align-items:center;gap:10px}.order-card__icon{width:34px;height:34px;display:grid;place-items:center;flex:0 0 auto;border-radius:7px;background:#f2eee8;color:#76572b}.order-card--pronto .order-card__icon{background:#eef5e9;color:#5d7a47}.order-card__identity>div{min-width:0}.order-card__identity strong{display:block;font-size:12px}.order-card__identity span:not(.order-card__icon){display:block;margin-top:2px;color:var(--student-muted);font-size:9px}.order-card__body{padding:5px 15px}.order-card__footer{min-height:58px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 15px;border-top:1px solid var(--student-border);background:#fcfbf9}.order-card__status-copy{display:flex;align-items:flex-start;gap:6px;color:var(--student-muted);font-size:9px;line-height:1.45}.order-card__status-copy svg{flex:0 0 auto;margin-top:1px;color:#8a8178}.order-card--pronto .order-card__status-copy{color:#547045}.order-card__footer-actions{display:flex;align-items:center;gap:12px;margin-left:auto}.order-card__qr-button{min-height:34px;display:flex;align-items:center;gap:6px;padding:0 10px;border:1px solid #78945f;border-radius:7px;background:#f5faf2;color:#4f6d3d;font-size:9px;font-weight:700;cursor:pointer}.order-card__qr-button:hover{background:#eef7e9}.order-card__total{text-align:right}.order-card__total span{display:block;color:var(--student-muted);font-size:8px}.order-card__total strong{font-size:14px}@media(max-width:620px){.order-card__header{align-items:flex-start}.order-card__footer{align-items:flex-start;flex-direction:column}.order-card__footer-actions{width:100%;margin-left:0;justify-content:space-between}.order-card__qr-button{flex:1;justify-content:center}.order-card__total{text-align:right;margin-left:auto}}
+.order-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--student-border);
+  border-radius: 10px;
+  background: #fff;
+  transition: border-color 0.15s ease;
+}
+.order-card:hover {
+  border-color: #d6cbbf;
+}
+.order-card--pronto {
+  border-left: 3px solid #719055;
+}
+.order-card__header {
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 11px 15px;
+  border-bottom: 1px solid var(--student-border);
+}
+.order-card__identity {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.order-card__icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 7px;
+  background: #f2eee8;
+  color: #76572b;
+}
+.order-card--pronto .order-card__icon {
+  background: #eef5e9;
+  color: #5d7a47;
+}
+.order-card__identity > div {
+  min-width: 0;
+}
+.order-card__identity strong {
+  display: block;
+  font-size: 12px;
+}
+.order-card__identity span:not(.order-card__icon) {
+  display: block;
+  margin-top: 2px;
+  color: var(--student-muted);
+  font-size: 9px;
+}
+.order-card__body {
+  padding: 5px 15px;
+}
+.order-card__footer {
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 15px;
+  border-top: 1px solid var(--student-border);
+  background: #fcfbf9;
+}
+.order-card__status-copy {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--student-muted);
+  font-size: 9px;
+  line-height: 1.45;
+}
+.order-card__status-copy svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: #8a8178;
+}
+.order-card--pronto .order-card__status-copy {
+  color: #547045;
+}
+.order-card__footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+.order-card__qr-button {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 1px solid #78945f;
+  border-radius: 7px;
+  background: #f5faf2;
+  color: #4f6d3d;
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.order-card__qr-button:hover {
+  background: #eef7e9;
+}
+.order-card__total {
+  text-align: right;
+}
+.order-card__total span {
+  display: block;
+  color: var(--student-muted);
+  font-size: 8px;
+}
+.order-card__total strong {
+  font-size: 14px;
+}
+@media (max-width: 620px) {
+  .order-card__header {
+    align-items: flex-start;
+  }
+  .order-card__footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .order-card__footer-actions {
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+  }
+  .order-card__qr-button {
+    flex: 1;
+    justify-content: center;
+  }
+  .order-card__total {
+    text-align: right;
+    margin-left: auto;
+  }
+}
 </style>

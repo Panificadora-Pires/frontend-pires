@@ -1,53 +1,53 @@
-import api from '@/services/api'
+import api from "@/services/api";
 
-const PAGE_SIZE = 100
-const MAX_PAGES = 20
+const PAGE_SIZE = 100;
+const MAX_PAGES = 20;
 
 function normalizarColecao(data) {
-  if (Array.isArray(data)) return data
-  if (Array.isArray(data?.results)) return data.results
-  return []
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.results)) return data.results;
+  return [];
 }
 
 async function listarTodos(params = {}) {
-  const itens = []
+  const itens = [];
 
   for (let page = 1; page <= MAX_PAGES; page += 1) {
-    const { data } = await api.get('/notificacoes/', {
+    const { data } = await api.get("/notificacoes/", {
       params: {
         ...params,
         page,
         page_size: PAGE_SIZE,
       },
-    })
+    });
 
-    const pagina = normalizarColecao(data)
-    itens.push(...pagina)
+    const pagina = normalizarColecao(data);
+    itens.push(...pagina);
 
-    if (Array.isArray(data)) break
+    if (Array.isArray(data)) break;
 
-    const totalPages = Number(data?.total_pages)
+    const totalPages = Number(data?.total_pages);
     if (Number.isFinite(totalPages) && totalPages > 0) {
-      if (page >= totalPages) break
-      continue
+      if (page >= totalPages) break;
+      continue;
     }
 
-    if (!data?.next || pagina.length === 0) break
+    if (!data?.next || pagina.length === 0) break;
   }
 
-  return itens
+  return itens;
 }
 
 const notificationService = {
   listar: listarTodos,
 
   marcarLida(id) {
-    return api.patch(`/notificacoes/${id}/marcar_lida/`)
+    return api.patch(`/notificacoes/${id}/marcar_lida/`);
   },
 
   marcarTodasLidas() {
-    return api.post('/notificacoes/marcar_todas_lidas/')
+    return api.post("/notificacoes/marcar_todas_lidas/");
   },
-}
+};
 
-export default notificationService
+export default notificationService;

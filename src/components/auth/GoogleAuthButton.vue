@@ -7,7 +7,11 @@
     <div v-else class="google-auth__button" :class="{ 'is-loading': loading }">
       <div ref="buttonHost" class="google-auth__host" />
 
-      <div v-if="loading" class="google-auth__loading" aria-label="Entrando com Google">
+      <div
+        v-if="loading"
+        class="google-auth__loading"
+        aria-label="Entrando com Google"
+      >
         <span class="google-auth__spinner" />
       </div>
     </div>
@@ -19,54 +23,59 @@
 </template>
 
 <script setup>
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 
 import {
   clearGoogleCredentialHandler,
   renderGoogleButton,
-} from '@/services/google-identity'
+} from "@/services/google-identity";
 
 const props = defineProps({
   loading: { type: Boolean, default: false },
-})
+});
 
-const emit = defineEmits(['credential', 'error'])
+const emit = defineEmits(["credential", "error"]);
 
-const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() || ''
-const container = ref(null)
-const buttonHost = ref(null)
-const erroLocal = ref('')
+const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() || "";
+const container = ref(null);
+const buttonHost = ref(null);
+const erroLocal = ref("");
 
-let resizeObserver = null
-let lastRenderedWidth = 0
-let renderSequence = 0
+let resizeObserver = null;
+let lastRenderedWidth = 0;
+let renderSequence = 0;
 
 function handleCredential(response) {
-  erroLocal.value = ''
+  erroLocal.value = "";
 
   if (!response?.credential) {
-    handleError('O Google não retornou uma credencial de autenticação.')
-    return
+    handleError("O Google não retornou uma credencial de autenticação.");
+    return;
   }
 
-  emit('credential', response.credential)
+  emit("credential", response.credential);
 }
 
-function handleError(message = 'Não foi possível carregar o login com Google.') {
-  erroLocal.value = message
-  emit('error', message)
+function handleError(
+  message = "Não foi possível carregar o login com Google.",
+) {
+  erroLocal.value = message;
+  emit("error", message);
 }
 
 async function renderizarBotao({ force = false } = {}) {
-  if (!clientId || !container.value || !buttonHost.value) return
+  if (!clientId || !container.value || !buttonHost.value) return;
 
-  const width = Math.max(220, Math.min(400, Math.floor(container.value.clientWidth)))
+  const width = Math.max(
+    220,
+    Math.min(400, Math.floor(container.value.clientWidth)),
+  );
 
   if (!force && Math.abs(width - lastRenderedWidth) < 8) {
-    return
+    return;
   }
 
-  const sequence = ++renderSequence
+  const sequence = ++renderSequence;
 
   try {
     await renderGoogleButton({
@@ -74,36 +83,36 @@ async function renderizarBotao({ force = false } = {}) {
       clientId,
       onCredential: handleCredential,
       width,
-    })
+    });
 
     if (sequence === renderSequence) {
-      lastRenderedWidth = width
-      erroLocal.value = ''
+      lastRenderedWidth = width;
+      erroLocal.value = "";
     }
   } catch (error) {
     if (sequence === renderSequence) {
-      handleError(error instanceof Error ? error.message : undefined)
+      handleError(error instanceof Error ? error.message : undefined);
     }
   }
 }
 
 onMounted(async () => {
-  await nextTick()
-  await renderizarBotao({ force: true })
+  await nextTick();
+  await renderizarBotao({ force: true });
 
-  if ('ResizeObserver' in window && container.value) {
+  if ("ResizeObserver" in window && container.value) {
     resizeObserver = new ResizeObserver(() => {
-      void renderizarBotao()
-    })
-    resizeObserver.observe(container.value)
+      void renderizarBotao();
+    });
+    resizeObserver.observe(container.value);
   }
-})
+});
 
 onBeforeUnmount(() => {
-  renderSequence += 1
-  resizeObserver?.disconnect()
-  clearGoogleCredentialHandler(handleCredential)
-})
+  renderSequence += 1;
+  resizeObserver?.disconnect();
+  clearGoogleCredentialHandler(handleCredential);
+});
 </script>
 
 <style scoped>
@@ -168,6 +177,8 @@ onBeforeUnmount(() => {
 }
 
 @keyframes google-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

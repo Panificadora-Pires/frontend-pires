@@ -1,10 +1,7 @@
 <template>
   <div
     class="auth-layout"
-    :class="[
-      { 'auth-layout--wide': wide },
-      `auth-layout--promo-${promoMode}`,
-    ]"
+    :class="[{ 'auth-layout--wide': wide }, `auth-layout--promo-${promoMode}`]"
   >
     <section class="auth-layout__panel">
       <div class="auth-layout__watermark" aria-hidden="true">
@@ -39,7 +36,10 @@
       </div>
     </section>
 
-    <aside class="auth-layout__photo" aria-label="Destaques da Pires Panificadora">
+    <aside
+      class="auth-layout__photo"
+      aria-label="Destaques da Pires Panificadora"
+    >
       <div class="auth-layout__photo-overlay" aria-hidden="true" />
       <div class="auth-layout__photo-vignette" aria-hidden="true" />
 
@@ -51,7 +51,9 @@
             class="auth-layout__offer-card"
           >
             <div class="auth-layout__offer-copy">
-              <span class="auth-layout__offer-tag"><Flame :size="14" aria-hidden="true" /> Promoção do dia</span>
+              <span class="auth-layout__offer-tag"
+                ><Flame :size="14" aria-hidden="true" /> Promoção do dia</span
+              >
               <strong>{{ slideAtual.title }}</strong>
               <p>{{ slideAtual.description }}</p>
 
@@ -102,7 +104,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import {
   ArrowLeft,
   ChevronRight,
@@ -112,118 +114,120 @@ import {
   Flame,
   ShoppingBag,
   Wheat,
-} from 'lucide-vue-next'
+} from "lucide-vue-next";
 
 const props = defineProps({
   wide: { type: Boolean, default: false },
   backTo: { type: [String, Object], default: null },
-  backLabel: { type: String, default: 'Voltar' },
+  backLabel: { type: String, default: "Voltar" },
   promoMode: {
     type: String,
-    default: 'generic',
-    validator: (value) => ['generic', 'login', 'register'].includes(value),
+    default: "generic",
+    validator: (value) => ["generic", "login", "register"].includes(value),
   },
-})
+});
 
 const genericSlides = [
   {
     id: 1,
     icon: ShoppingBag,
-    title: 'Reserve seu lanche antes do intervalo',
-    description: 'Evite filas e garanta seus produtos favoritos.',
+    title: "Reserve seu lanche antes do intervalo",
+    description: "Evite filas e garanta seus produtos favoritos.",
   },
   {
     id: 2,
     icon: Croissant,
-    title: 'Produtos fresquinhos todos os dias',
-    description: 'Feitos com carinho para tornar seu intervalo ainda melhor.',
+    title: "Produtos fresquinhos todos os dias",
+    description: "Feitos com carinho para tornar seu intervalo ainda melhor.",
   },
   {
     id: 3,
     icon: Coffee,
-    title: 'Praticidade para o seu dia',
-    description: 'Faça seu pedido com antecedência e retire no balcão.',
+    title: "Praticidade para o seu dia",
+    description: "Faça seu pedido com antecedência e retire no balcão.",
   },
-]
+];
 
 const loginSlides = [
   {
     id: 1,
     icon: ShoppingBag,
-    title: 'Pastel + Coca-Cola',
-    description: 'A combinação perfeita para seu intervalo!',
-    price: '12,90',
+    title: "Pastel + Coca-Cola",
+    description: "A combinação perfeita para seu intervalo!",
+    price: "12,90",
   },
   {
     id: 2,
     icon: Croissant,
-    title: 'Combo do intervalo',
-    description: 'Reserve antes do sinal e evite filas na cantina.',
-    price: '10,90',
+    title: "Combo do intervalo",
+    description: "Reserve antes do sinal e evite filas na cantina.",
+    price: "10,90",
   },
   {
     id: 3,
     icon: Coffee,
-    title: 'Café + doce',
-    description: 'Uma pausa rápida e gostosa para continuar o dia.',
-    price: '8,50',
+    title: "Café + doce",
+    description: "Uma pausa rápida e gostosa para continuar o dia.",
+    price: "8,50",
   },
-]
+];
 
 const registerSlides = [
   {
     id: 1,
     icon: Croissant,
-    title: 'Produtos fresquinhos todos os dias',
-    description: 'Feitos com carinho para tornar seu intervalo ainda melhor.',
+    title: "Produtos fresquinhos todos os dias",
+    description: "Feitos com carinho para tornar seu intervalo ainda melhor.",
   },
   {
     id: 2,
     icon: ShoppingBag,
-    title: 'Reserve antes do intervalo',
-    description: 'Evite filas e garanta seus produtos favoritos.',
+    title: "Reserve antes do intervalo",
+    description: "Evite filas e garanta seus produtos favoritos.",
   },
   {
     id: 3,
     icon: Cookie,
-    title: 'Promoções para alunos',
-    description: 'Acompanhe as ofertas disponíveis direto pelo sistema.',
+    title: "Promoções para alunos",
+    description: "Acompanhe as ofertas disponíveis direto pelo sistema.",
   },
-]
+];
 
 const slidesAtivos = computed(() => {
-  if (props.promoMode === 'login') return loginSlides
-  if (props.promoMode === 'register') return registerSlides
-  return genericSlides
-})
+  if (props.promoMode === "login") return loginSlides;
+  if (props.promoMode === "register") return registerSlides;
+  return genericSlides;
+});
 
-const slideIndex = ref(0)
-const slideAtual = computed(() => slidesAtivos.value[slideIndex.value] || slidesAtivos.value[0])
-let intervalId = null
+const slideIndex = ref(0);
+const slideAtual = computed(
+  () => slidesAtivos.value[slideIndex.value] || slidesAtivos.value[0],
+);
+let intervalId = null;
 
 function iniciarCarousel() {
-  window.clearInterval(intervalId)
+  window.clearInterval(intervalId);
 
   intervalId = window.setInterval(() => {
-    slideIndex.value = (slideIndex.value + 1) % slidesAtivos.value.length
-  }, 5000)
+    slideIndex.value = (slideIndex.value + 1) % slidesAtivos.value.length;
+  }, 5000);
 }
 
 function selecionarSlide(index) {
-  slideIndex.value = index
-  iniciarCarousel()
+  slideIndex.value = index;
+  iniciarCarousel();
 }
 
 watch(
   () => props.promoMode,
   () => {
-    slideIndex.value = 0
-    iniciarCarousel()
+    slideIndex.value = 0;
+    iniciarCarousel();
   },
-)
+);
 
-onMounted(iniciarCarousel)
-onBeforeUnmount(() => window.clearInterval(intervalId))
+onMounted(iniciarCarousel);
+onBeforeUnmount(() => window.clearInterval(intervalId));
 </script>
 
 <style scoped>
@@ -249,7 +253,11 @@ onBeforeUnmount(() => window.clearInterval(intervalId))
   overflow: hidden;
   padding: clamp(48px, 6.2vh, 66px) clamp(48px, 8.7vw, 134px) 54px;
   background:
-    radial-gradient(circle at 77% 31%, rgba(224, 168, 62, 0.055), transparent 29%),
+    radial-gradient(
+      circle at 77% 31%,
+      rgba(224, 168, 62, 0.055),
+      transparent 29%
+    ),
     linear-gradient(180deg, #1c0d04 0%, #2d1406 100%);
 }
 
@@ -369,7 +377,7 @@ onBeforeUnmount(() => window.clearInterval(intervalId))
   min-width: 0;
   min-height: 100dvh;
   overflow: hidden;
-  background: url('/background-image.png') center / cover no-repeat;
+  background: url("/background-image.png") center / cover no-repeat;
 }
 
 .auth-layout__photo-overlay,
@@ -385,8 +393,17 @@ onBeforeUnmount(() => window.clearInterval(intervalId))
 
 .auth-layout__photo-vignette {
   background:
-    linear-gradient(180deg, rgba(17, 8, 3, 0.04) 0%, transparent 42%, rgba(17, 8, 3, 0.34) 100%),
-    radial-gradient(circle at center, transparent 50%, rgba(22, 9, 3, 0.18) 100%);
+    linear-gradient(
+      180deg,
+      rgba(17, 8, 3, 0.04) 0%,
+      transparent 42%,
+      rgba(17, 8, 3, 0.34) 100%
+    ),
+    radial-gradient(
+      circle at center,
+      transparent 50%,
+      rgba(22, 9, 3, 0.18) 100%
+    );
 }
 
 .auth-layout__carousel {
@@ -531,8 +548,12 @@ onBeforeUnmount(() => window.clearInterval(intervalId))
   place-items: center;
   justify-self: end;
   border-radius: 50%;
-  background:
-    radial-gradient(circle, rgba(224, 168, 62, 0.22), rgba(224, 168, 62, 0.04) 64%, transparent 65%);
+  background: radial-gradient(
+    circle,
+    rgba(224, 168, 62, 0.22),
+    rgba(224, 168, 62, 0.04) 64%,
+    transparent 65%
+  );
   color: var(--pp-gold);
 }
 
@@ -551,7 +572,9 @@ onBeforeUnmount(() => window.clearInterval(intervalId))
   border-radius: 99px;
   background: rgba(243, 233, 216, 0.34);
   cursor: pointer;
-  transition: width 180ms ease, background 180ms ease;
+  transition:
+    width 180ms ease,
+    background 180ms ease;
 }
 
 .auth-layout__dots button.is-active {
@@ -561,7 +584,9 @@ onBeforeUnmount(() => window.clearInterval(intervalId))
 
 .auth-card-enter-active,
 .auth-card-leave-active {
-  transition: opacity 220ms ease, transform 220ms ease;
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease;
 }
 
 .auth-card-enter-from {

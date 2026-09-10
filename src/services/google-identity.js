@@ -1,9 +1,9 @@
-const GOOGLE_SCRIPT_SRC = 'https://accounts.google.com/gsi/client'
-const GOOGLE_LOAD_TIMEOUT_MS = 10_000
+const GOOGLE_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
+const GOOGLE_LOAD_TIMEOUT_MS = 10_000;
 
-let googleReadyPromise = null
-let initializedClientId = null
-let activeCredentialHandler = null
+let googleReadyPromise = null;
+let initializedClientId = null;
+let activeCredentialHandler = null;
 
 export async function renderGoogleButton({
   element,
@@ -12,113 +12,119 @@ export async function renderGoogleButton({
   width = 320,
 }) {
   if (!element) {
-    throw new Error('Elemento do botão Google não encontrado.')
+    throw new Error("Elemento do botão Google não encontrado.");
   }
 
   if (!clientId) {
-    throw new Error('VITE_GOOGLE_CLIENT_ID não foi configurado.')
+    throw new Error("VITE_GOOGLE_CLIENT_ID não foi configurado.");
   }
 
-  activeCredentialHandler = onCredential
-  const google = await initializeGoogleIdentity(clientId)
+  activeCredentialHandler = onCredential;
+  const google = await initializeGoogleIdentity(clientId);
 
-  element.replaceChildren()
+  element.replaceChildren();
 
   google.accounts.id.renderButton(element, {
-    type: 'standard',
-    theme: 'outline',
-    size: 'large',
-    text: 'continue_with',
-    shape: 'rectangular',
-    logo_alignment: 'center',
+    type: "standard",
+    theme: "outline",
+    size: "large",
+    text: "continue_with",
+    shape: "rectangular",
+    logo_alignment: "center",
     width: Math.max(220, Math.min(400, Math.round(width))),
-    locale: 'pt-BR',
-  })
+    locale: "pt-BR",
+  });
 }
 
 export function clearGoogleCredentialHandler(handler) {
   if (!handler || activeCredentialHandler === handler) {
-    activeCredentialHandler = null
+    activeCredentialHandler = null;
   }
 }
 
 export async function disableGoogleAutoSelect() {
   try {
-    const google = await waitForGoogleIdentity()
-    google.accounts.id.disableAutoSelect()
+    const google = await waitForGoogleIdentity();
+    google.accounts.id.disableAutoSelect();
   } catch {
     // O logout local não deve falhar caso o GIS esteja indisponível.
   }
 }
 
 async function initializeGoogleIdentity(clientId) {
-  const google = await waitForGoogleIdentity()
+  const google = await waitForGoogleIdentity();
 
   if (initializedClientId && initializedClientId !== clientId) {
     throw new Error(
-      'O Google Identity Services já foi inicializado com outro Client ID. Reinicie a página.',
-    )
+      "O Google Identity Services já foi inicializado com outro Client ID. Reinicie a página.",
+    );
   }
 
   if (!initializedClientId) {
     google.accounts.id.initialize({
       client_id: clientId,
       callback: (response) => {
-        activeCredentialHandler?.(response)
+        activeCredentialHandler?.(response);
       },
       auto_select: false,
-      ux_mode: 'popup',
+      ux_mode: "popup",
       // Mantém o seletor de contas hospedado pelo Google em vez do modal
       // nativo do Chrome/FedCM.
       use_fedcm_for_button: false,
-    })
+    });
 
-    initializedClientId = clientId
+    initializedClientId = clientId;
   }
 
-  return google
+  return google;
 }
 
 function waitForGoogleIdentity() {
   if (window.google?.accounts?.id) {
-    return Promise.resolve(window.google)
+    return Promise.resolve(window.google);
   }
 
   if (googleReadyPromise) {
-    return googleReadyPromise
+    return googleReadyPromise;
   }
 
   googleReadyPromise = new Promise((resolve, reject) => {
-    const startedAt = Date.now()
-    const existingScript = document.querySelector(`script[src="${GOOGLE_SCRIPT_SRC}"]`)
+    const startedAt = Date.now();
+    const existingScript = document.querySelector(
+      `script[src="${GOOGLE_SCRIPT_SRC}"]`,
+    );
 
     if (!existingScript) {
-      const script = document.createElement('script')
-      script.src = GOOGLE_SCRIPT_SRC
-      script.async = true
-      script.defer = true
+      const script = document.createElement("script");
+      script.src = GOOGLE_SCRIPT_SRC;
+      script.async = true;
+      script.defer = true;
       script.onerror = () => {
-        reject(new Error('Não foi possível carregar o Google Identity Services.'))
-      }
-      document.head.appendChild(script)
+        reject(
+          new Error("Não foi possível carregar o Google Identity Services."),
+        );
+      };
+      document.head.appendChild(script);
     }
 
     const interval = window.setInterval(() => {
       if (window.google?.accounts?.id) {
-        window.clearInterval(interval)
-        resolve(window.google)
-        return
+        window.clearInterval(interval);
+        resolve(window.google);
+        return;
       }
 
       if (Date.now() - startedAt >= GOOGLE_LOAD_TIMEOUT_MS) {
-        window.clearInterval(interval)
-        reject(new Error('Tempo esgotado ao carregar o Google Identity Services.'))
+        window.clearInterval(interval);
+        reject(
+          new Error("Tempo esgotado ao carregar o Google Identity Services."),
+        );
       }
-    }, 50)
+    }, 50);
   }).catch((error) => {
-    googleReadyPromise = null
-    throw error
-  })
+    googleReadyPromise = null;
+    throw error;
+  });
 
-  return googleReadyPromise
+  return googleReadyPromise;
 }

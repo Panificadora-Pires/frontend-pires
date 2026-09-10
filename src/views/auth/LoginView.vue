@@ -5,7 +5,11 @@
       <p>Faça login para acessar o sistema de pedidos da nossa cantina.</p>
     </template>
 
-    <div v-if="mensagemStatus" class="auth-alert auth-alert--success" role="status">
+    <div
+      v-if="mensagemStatus"
+      class="auth-alert auth-alert--success"
+      role="status"
+    >
       {{ mensagemStatus }}
     </div>
 
@@ -13,7 +17,11 @@
       {{ erroGeral }}
     </div>
 
-    <form class="auth-form auth-form--login" novalidate @submit.prevent="handleSubmit">
+    <form
+      class="auth-form auth-form--login"
+      novalidate
+      @submit.prevent="handleSubmit"
+    >
       <BaseInput
         v-model="form.email"
         label="E-mail"
@@ -40,7 +48,10 @@
       />
 
       <div class="auth-login-help">
-        <RouterLink :to="{ name: 'recuperar-senha' }" class="auth-link auth-login-help__forgot">
+        <RouterLink
+          :to="{ name: 'recuperar-senha' }"
+          class="auth-link auth-login-help__forgot"
+        >
           Esqueceu sua senha?
         </RouterLink>
       </div>
@@ -89,100 +100,101 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from 'vue'
-import { ChevronRight, Lock, Mail, ShieldCheck } from 'lucide-vue-next'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, reactive, ref } from "vue";
+import { ChevronRight, Lock, Mail, ShieldCheck } from "lucide-vue-next";
+import { useRoute, useRouter } from "vue-router";
 
-import GoogleAuthButton from '@/components/auth/GoogleAuthButton.vue'
-import AuthLayout from '@/components/layout/AuthLayout.vue'
-import BaseButton from '@/components/ui/BaseButton.vue'
-import BaseInput from '@/components/ui/BaseInput.vue'
-import { useAuthStore } from '@/stores/auth'
+import GoogleAuthButton from "@/components/auth/GoogleAuthButton.vue";
+import AuthLayout from "@/components/layout/AuthLayout.vue";
+import BaseButton from "@/components/ui/BaseButton.vue";
+import BaseInput from "@/components/ui/BaseInput.vue";
+import { useAuthStore } from "@/stores/auth";
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const auth = useAuthStore()
-const route = useRoute()
-const router = useRouter()
+const auth = useAuthStore();
+const route = useRoute();
+const router = useRouter();
 
-const form = reactive({ email: '', password: '' })
-const erros = reactive({ email: '', password: '' })
-const erroGeral = ref('')
+const form = reactive({ email: "", password: "" });
+const erros = reactive({ email: "", password: "" });
+const erroGeral = ref("");
 
 const mensagemStatus = computed(() => {
-  if (route.query.ativada === '1') {
-    return 'E-mail confirmado com sucesso. Agora você já pode entrar.'
+  if (route.query.ativada === "1") {
+    return "E-mail confirmado com sucesso. Agora você já pode entrar.";
   }
 
-  if (route.query.senhaRedefinida === '1') {
-    return 'Senha redefinida com sucesso. Entre com sua nova senha.'
+  if (route.query.senhaRedefinida === "1") {
+    return "Senha redefinida com sucesso. Entre com sua nova senha.";
   }
 
-  if (route.query.motivo === 'sessao-expirada') {
-    return 'Sua sessão expirou. Entre novamente para continuar.'
+  if (route.query.motivo === "sessao-expirada") {
+    return "Sua sessão expirou. Entre novamente para continuar.";
   }
 
-  return ''
-})
+  return "";
+});
 
 const mostrarLinkConfirmacao = computed(() =>
-  /confirm|ativ|verific/i.test(erroGeral.value || ''),
-)
+  /confirm|ativ|verific/i.test(erroGeral.value || ""),
+);
 
 function validarEmail() {
-  const email = form.email.trim()
+  const email = form.email.trim();
 
   if (!email) {
-    erros.email = 'Informe seu e-mail.'
+    erros.email = "Informe seu e-mail.";
   } else if (!EMAIL_REGEX.test(email)) {
-    erros.email = 'Informe um e-mail válido.'
+    erros.email = "Informe um e-mail válido.";
   } else {
-    erros.email = ''
+    erros.email = "";
   }
 }
 
 function validarSenha() {
-  erros.password = form.password ? '' : 'Informe sua senha.'
+  erros.password = form.password ? "" : "Informe sua senha.";
 }
 
 async function handleSubmit() {
-  erroGeral.value = ''
-  validarEmail()
-  validarSenha()
+  erroGeral.value = "";
+  validarEmail();
+  validarSenha();
 
-  if (erros.email || erros.password) return
+  if (erros.email || erros.password) return;
 
-  const resultado = await auth.login(form.email, form.password)
+  const resultado = await auth.login(form.email, form.password);
 
   if (!resultado.ok) {
-    erroGeral.value = resultado.erro
-    Object.assign(erros, resultado.campos)
-    return
+    erroGeral.value = resultado.erro;
+    Object.assign(erros, resultado.campos);
+    return;
   }
 
-  await redirecionarAposLogin()
+  await redirecionarAposLogin();
 }
 
 async function handleGoogleCredential(credential) {
-  erroGeral.value = ''
-  const resultado = await auth.loginWithGoogle(credential)
+  erroGeral.value = "";
+  const resultado = await auth.loginWithGoogle(credential);
 
   if (!resultado.ok) {
-    erroGeral.value = resultado.erro
-    return
+    erroGeral.value = resultado.erro;
+    return;
   }
 
-  await redirecionarAposLogin()
+  await redirecionarAposLogin();
 }
 
 async function redirecionarAposLogin() {
-  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : ''
+  const redirect =
+    typeof route.query.redirect === "string" ? route.query.redirect : "";
 
-  if (redirect.startsWith('/') && !redirect.startsWith('//')) {
-    await router.replace(redirect)
-    return
+  if (redirect.startsWith("/") && !redirect.startsWith("//")) {
+    await router.replace(redirect);
+    return;
   }
 
-  await router.replace({ name: auth.isAdmin ? 'admin-dashboard' : 'home' })
+  await router.replace({ name: auth.isAdmin ? "admin-dashboard" : "home" });
 }
 </script>
