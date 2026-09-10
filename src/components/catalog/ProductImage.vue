@@ -83,58 +83,5 @@ const iconeCategoria = computed(() => {
 </script>
 
 <style scoped>
-.catalog-product-image {
-  position: relative;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 72% 24%, rgba(224, 168, 62, 0.12), transparent 34%),
-    #f5f1ec;
-}
-
-.catalog-product-image--card {
-  width: 100%;
-  aspect-ratio: 1.2 / 1;
-  border-radius: 14px;
-}
-
-.catalog-product-image--compact {
-  width: 68px;
-  height: 68px;
-  flex: 0 0 auto;
-  border-radius: 12px;
-}
-
-.catalog-product-image--modal {
-  width: 100%;
-  min-height: 300px;
-  height: 100%;
-}
-
-.catalog-product-image img {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-}
-
-.catalog-product-image__fallback {
-  width: 100%;
-  height: 100%;
-  min-height: inherit;
-  display: grid;
-  place-items: center;
-  color: #d69828;
-}
-
-@media (max-width: 680px) {
-  .catalog-product-image--card {
-    aspect-ratio: 1 / 0.92;
-    border-radius: 12px;
-  }
-
-  .catalog-product-image--modal {
-    min-height: 220px;
-    height: 220px;
-  }
-}
+.catalog-product-image{position:relative;overflow:hidden;background:#f0ece7;color:#b09268}.catalog-product-image--card{aspect-ratio:1.18/1}.catalog-product-image--compact{width:82px;height:82px;flex:0 0 82px;border-radius:8px}.catalog-product-image--modal{height:100%;min-height:430px}.catalog-product-image img{width:100%;height:100%;display:block;object-fit:cover}.catalog-product-image__fallback{width:100%;height:100%;display:grid;place-items:center;background:#f0ece7;color:#b09268}@media(max-width:700px){.catalog-product-image--card{aspect-ratio:1.08/1}.catalog-product-image--modal{min-height:230px;height:230px}}
 </style>

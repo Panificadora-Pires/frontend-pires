@@ -1,0 +1,40 @@
+:root {
+  --student-bg: #f5f3f0;
+  --student-surface: #ffffff;
+  --student-surface-soft: #faf9f7;
+  --student-border: #e5e0da;
+  --student-border-strong: #d7d0c8;
+  --student-text: #28231f;
+  --student-muted: #756e67;
+  --student-muted-2: #9a938c;
+  --student-accent: #b8791f;
+  --student-accent-hover: #965f14;
+  --student-accent-soft: #fbf2df;
+  --student-danger: #b94a45;
+  --student-danger-soft: #fff1ef;
+  --student-success: #4f7a55;
+  --student-success-soft: #edf5ee;
+  --student-warning: #9a6b23;
+  --student-sidebar: #211710;
+  --student-sidebar-soft: #2b1d14;
+  --student-radius: 10px;
+  --student-radius-sm: 7px;
+  --student-shadow: 0 8px 24px rgba(47, 38, 31, 0.06);
+}
+.student-layout { background: var(--student-bg); color: var(--student-text); }
+.student-layout *, .student-layout *::before, .student-layout *::after { box-sizing: border-box; }
+.student-layout :is(h1,h2,h3,h4,p) { margin-top: 0; }
+.student-layout :is(h1,h2,h3,h4) { color: var(--student-text); font-family: var(--pp-font-body); letter-spacing: -0.02em; }
+.student-layout button, .student-layout input, .student-layout select, .student-layout textarea { font: inherit; }
+.student-layout button, .student-layout a { -webkit-tap-highlight-color: transparent; }
+.student-layout ::selection { background: rgba(184,121,31,.2); }
+.student-layout ::-webkit-scrollbar { width: 9px; height: 9px; }
+.student-layout ::-webkit-scrollbar-thumb { background: #cbc4bc; border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+.student-layout ::-webkit-scrollbar-track { background: transparent; }
+.student-page-header { display:flex; justify-content:space-between; align-items:flex-end; gap:24px; margin-bottom:24px; }
+.student-page-header h1 { margin:0; font-size:30px; line-height:1.15; font-weight:700; }
+.student-page-header p { margin:7px 0 0; max-width:620px; color:var(--student-muted); font-size:14px; line-height:1.55; }
+@media (max-width: 760px) {
+  .student-page-header { align-items:flex-start; flex-direction:column; gap:14px; margin-bottom:18px; }
+  .student-page-header h1 { font-size:25px; }
+}

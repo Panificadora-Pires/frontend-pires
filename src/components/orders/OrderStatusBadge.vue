@@ -69,53 +69,5 @@ const config = computed(() => {
 </script>
 
 <style scoped>
-.order-status {
-  min-height: 30px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 10px;
-  border: 1px solid transparent;
-  border-radius: var(--pp-radius-full);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.015em;
-  white-space: nowrap;
-}
-
-.order-status--pendente {
-  border-color: rgba(224, 168, 62, 0.2);
-  background: #fff6e5;
-  color: #a86a0d;
-}
-
-.order-status--confirmado {
-  border-color: rgba(70, 117, 169, 0.14);
-  background: #eef5fb;
-  color: #456f9f;
-}
-
-.order-status--pronto {
-  border-color: rgba(111, 163, 111, 0.18);
-  background: #edf7ec;
-  color: #527e50;
-}
-
-.order-status--retirado {
-  border-color: rgba(82, 126, 80, 0.16);
-  background: #f1f6f0;
-  color: #5a7658;
-}
-
-.order-status--cancelado {
-  border-color: rgba(224, 96, 90, 0.16);
-  background: #fff0ef;
-  color: #b24f4a;
-}
-
-.order-status--neutro {
-  border-color: rgba(43, 43, 43, 0.08);
-  background: #f4f1ee;
-  color: #6f6862;
-}
+.order-status{display:inline-flex;align-items:center;justify-content:center;min-height:24px;padding:0 8px;border-radius:6px;border:1px solid transparent;font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}.order-status--pendente{background:#fff7e8;border-color:#ead7b0;color:#835f20}.order-status--confirmado{background:#eef3f8;border-color:#cfdae5;color:#506b82}.order-status--pronto{background:#edf5e9;border-color:#cadcc1;color:#547341}.order-status--retirado{background:#f2f2f2;border-color:#dfdfdf;color:#5f5f5f}.order-status--cancelado{background:#fff0ef;border-color:#ebcfcc;color:#984843}.order-status--neutro{background:#f2f0ed;border-color:#e0dcd7;color:#716960}
 </style>

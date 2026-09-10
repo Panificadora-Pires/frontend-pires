@@ -135,36 +135,5 @@ onBeforeUnmount(async () => {
 </script>
 
 <style scoped>
-.mp-brick__loading,
-.mp-brick__error {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  min-height: 54px;
-  padding: 13px 15px;
-  border-radius: 12px;
-  font-size: 12px;
-}
-
-.mp-brick__loading {
-  background: #f8f5f1;
-  color: #786f67;
-}
-
-.mp-brick__error {
-  background: #fff1ef;
-  color: #99493f;
-}
-
-.mp-brick__spinner {
-  animation: mp-spin 700ms linear infinite;
-}
-
-.mp-brick__container {
-  min-height: 180px;
-}
-
-@keyframes mp-spin {
-  to { transform: rotate(360deg); }
-}
+.mp-brick{min-width:0}.mp-brick__loading,.mp-brick__error{min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:22px;border:1px solid var(--student-border);border-radius:8px;background:#faf8f5;color:var(--student-muted);text-align:center;font-size:10px}.mp-brick__error{background:var(--student-danger-soft);color:var(--student-danger)}.mp-brick__spinner{animation:mp-spin .7s linear infinite}.mp-brick__container{min-width:0;padding:2px 0}@keyframes mp-spin{to{transform:rotate(360deg)}}
 </style>
