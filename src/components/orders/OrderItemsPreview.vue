@@ -45,52 +45,5 @@ function formatarMoeda(valor) {
 </script>
 
 <style scoped>
-.order-items-preview {
-  display: grid;
-  gap: 9px;
-}
-
-.order-items-preview__item {
-  min-width: 0;
-  display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 8px;
-  color: #655d56;
-  font-size: 12px;
-}
-
-.order-items-preview__quantity {
-  color: #b17a26;
-  font-weight: 800;
-}
-
-.order-items-preview__name {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.order-items-preview__subtotal {
-  color: #81776e;
-  font-size: 11px;
-  font-weight: 650;
-}
-
-.order-items-preview__more {
-  margin-top: 1px;
-  color: #a09992;
-  font-size: 10px;
-  font-weight: 650;
-}
-
-@media (max-width: 560px) {
-  .order-items-preview__item {
-    grid-template-columns: 30px minmax(0, 1fr);
-  }
-
-  .order-items-preview__subtotal {
-    display: none;
-  }
-}
+.order-items-preview{display:grid}.order-items-preview__item{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:9px;min-height:36px;border-bottom:1px solid #f0ece7;font-size:10px}.order-items-preview__item:last-child{border-bottom:0}.order-items-preview__quantity{color:var(--student-muted);font-size:9px}.order-items-preview__name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b443e}.order-items-preview__subtotal{color:var(--student-text);font-weight:650}.order-items-preview__more{padding:8px 0;color:var(--student-muted);font-size:9px}
 </style>
