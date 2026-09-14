@@ -55,34 +55,34 @@
 </template>
 
 <script setup>
-import { computed, ref, useId } from 'vue'
-import { Eye, EyeOff } from 'lucide-vue-next'
+import { computed, ref, useId } from "vue";
+import { Eye, EyeOff } from "lucide-vue-next";
 
-defineOptions({ inheritAttrs: false })
+defineOptions({ inheritAttrs: false });
 
 const props = defineProps({
-  modelValue: { type: String, default: '' },
-  label: { type: String, default: '' },
-  type: { type: String, default: 'text' },
-  placeholder: { type: String, default: '' },
+  modelValue: { type: String, default: "" },
+  label: { type: String, default: "" },
+  type: { type: String, default: "text" },
+  placeholder: { type: String, default: "" },
   icon: { type: [Object, Function], default: null },
-  error: { type: String, default: '' },
-  autocomplete: { type: String, default: 'off' },
-  id: { type: String, default: '' },
+  error: { type: String, default: "" },
+  autocomplete: { type: String, default: "off" },
+  id: { type: String, default: "" },
   disabled: { type: Boolean, default: false },
-})
+});
 
-defineEmits(['update:modelValue', 'blur'])
+defineEmits(["update:modelValue", "blur"]);
 
-const generatedId = useId()
-const mostrarSenha = ref(false)
+const generatedId = useId();
+const mostrarSenha = ref(false);
 
-const fieldId = computed(() => props.id || `pp-field-${generatedId}`)
-const errorId = computed(() => `${fieldId.value}-error`)
+const fieldId = computed(() => props.id || `pp-field-${generatedId}`);
+const errorId = computed(() => `${fieldId.value}-error`);
 const tipoReal = computed(() => {
-  if (props.type !== 'password') return props.type
-  return mostrarSenha.value ? 'text' : 'password'
-})
+  if (props.type !== "password") return props.type;
+  return mostrarSenha.value ? "text" : "password";
+});
 </script>
 
 <style scoped>
@@ -107,7 +107,10 @@ const tipoReal = computed(() => {
   border: 1px solid rgba(243, 233, 216, 0.28);
   border-radius: 8px;
   background: rgba(26, 12, 5, 0.24);
-  transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
 }
 
 .pp-field__control:hover:not(.pp-field__control--disabled) {
@@ -175,7 +178,9 @@ const tipoReal = computed(() => {
 
 .slide-fade-enter-active,
 .slide-fade-leave-active {
-  transition: opacity 160ms ease, transform 160ms ease;
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
 }
 
 .slide-fade-enter-from,

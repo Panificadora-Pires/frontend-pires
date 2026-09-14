@@ -4,22 +4,32 @@
       <div>
         <span class="profile-page__eyebrow">Minha conta</span>
         <h1>Meu perfil</h1>
-        <p>Atualize seus dados pessoais e personalize como você aparece na Pires.</p>
+        <p>Atualize seus dados pessoais e as configurações da sua conta.</p>
       </div>
 
-      <div class="profile-page__status" :class="{ 'is-verified': auth.usuario?.email_verified }">
+      <div
+        class="profile-page__status"
+        :class="{ 'is-verified': auth.usuario?.email_verified }"
+      >
         <BadgeCheck v-if="auth.usuario?.email_verified" :size="18" />
         <CircleAlert v-else :size="18" />
-        <span>{{ auth.usuario?.email_verified ? 'Conta verificada' : 'E-mail não verificado' }}</span>
+        <span>{{
+          auth.usuario?.email_verified
+            ? "Conta verificada"
+            : "E-mail não verificado"
+        }}</span>
       </div>
     </header>
 
     <div class="profile-page__grid">
-      <section class="profile-card profile-card--identity" aria-labelledby="perfil-identidade">
+      <section
+        class="profile-card profile-card--identity"
+        aria-labelledby="perfil-identidade"
+      >
         <div class="profile-card__head">
           <div>
             <span class="profile-card__kicker">Foto e identidade</span>
-            <h2 id="perfil-identidade">Como você aparece</h2>
+            <h2 id="perfil-identidade">Foto de perfil</h2>
           </div>
         </div>
 
@@ -45,13 +55,17 @@
           </div>
 
           <div class="profile-avatar-editor__content">
-            <strong>{{ auth.usuario?.name || 'Aluno' }}</strong>
-            <span>{{ auth.usuario?.email || 'E-mail não informado' }}</span>
+            <strong>{{ auth.usuario?.name || "Aluno" }}</strong>
+            <span>{{ auth.usuario?.email || "E-mail não informado" }}</span>
 
             <div class="profile-avatar-editor__actions">
-              <button type="button" class="profile-link-btn" @click="abrirSeletorFoto">
+              <button
+                type="button"
+                class="profile-link-btn"
+                @click="abrirSeletorFoto"
+              >
                 <Upload :size="16" />
-                {{ avatarExibido ? 'Trocar foto' : 'Adicionar foto' }}
+                {{ avatarExibido ? "Trocar foto" : "Adicionar foto" }}
               </button>
 
               <button
@@ -82,46 +96,80 @@
         </p>
       </section>
 
-      <section class="profile-card profile-card--security" aria-labelledby="perfil-seguranca">
+      <section
+        class="profile-card profile-card--security"
+        aria-labelledby="perfil-seguranca"
+      >
         <div class="profile-card__head">
           <div>
             <span class="profile-card__kicker">Segurança</span>
-            <h2 id="perfil-seguranca">Sua conta</h2>
+            <h2 id="perfil-seguranca">Segurança da conta</h2>
           </div>
           <ShieldCheck :size="22" />
         </div>
 
         <div class="profile-security-list">
           <div class="profile-security-item">
-            <span class="profile-security-item__icon"><MailCheck :size="19" /></span>
+            <span class="profile-security-item__icon"
+              ><MailCheck :size="19"
+            /></span>
             <div>
               <strong>E-mail</strong>
-              <span>{{ auth.usuario?.email_verified ? 'Verificado' : 'Pendente de verificação' }}</span>
+              <span>{{
+                auth.usuario?.email_verified
+                  ? "Verificado"
+                  : "Pendente de verificação"
+              }}</span>
             </div>
-            <span class="profile-security-item__state" :class="{ 'is-positive': auth.usuario?.email_verified }">
-              {{ auth.usuario?.email_verified ? 'Ativo' : 'Pendente' }}
+            <span
+              class="profile-security-item__state"
+              :class="{ 'is-positive': auth.usuario?.email_verified }"
+            >
+              {{ auth.usuario?.email_verified ? "Ativo" : "Pendente" }}
             </span>
           </div>
 
           <div class="profile-security-item">
-            <span class="profile-security-item__icon"><Chrome :size="19" /></span>
+            <span class="profile-security-item__icon"
+              ><Chrome :size="19"
+            /></span>
             <div>
               <strong>Conta Google</strong>
-              <span>{{ auth.usuario?.google_connected ? 'Conectada ao login social' : 'Não vinculada' }}</span>
+              <span>{{
+                auth.usuario?.google_connected
+                  ? "Conectada ao login social"
+                  : "Não vinculada"
+              }}</span>
             </div>
-            <span class="profile-security-item__state" :class="{ 'is-positive': auth.usuario?.google_connected }">
-              {{ auth.usuario?.google_connected ? 'Conectada' : 'Opcional' }}
+            <span
+              class="profile-security-item__state"
+              :class="{ 'is-positive': auth.usuario?.google_connected }"
+            >
+              {{ auth.usuario?.google_connected ? "Conectada" : "Opcional" }}
             </span>
           </div>
 
           <div class="profile-security-item">
-            <span class="profile-security-item__icon"><KeyRound :size="19" /></span>
+            <span class="profile-security-item__icon"
+              ><KeyRound :size="19"
+            /></span>
             <div>
               <strong>Senha</strong>
-              <span>{{ auth.usuario?.has_usable_password ? 'Senha local configurada' : 'Acesso somente por provedor externo' }}</span>
+              <span>{{
+                auth.usuario?.has_usable_password
+                  ? "Senha local configurada"
+                  : "Acesso somente por provedor externo"
+              }}</span>
             </div>
-            <span class="profile-security-item__state" :class="{ 'is-positive': auth.usuario?.has_usable_password }">
-              {{ auth.usuario?.has_usable_password ? 'Configurada' : 'Não definida' }}
+            <span
+              class="profile-security-item__state"
+              :class="{ 'is-positive': auth.usuario?.has_usable_password }"
+            >
+              {{
+                auth.usuario?.has_usable_password
+                  ? "Configurada"
+                  : "Não definida"
+              }}
             </span>
           </div>
         </div>
@@ -129,12 +177,16 @@
         <div class="profile-security-note">
           <LockKeyhole :size="18" />
           <p>
-            Seu e-mail não pode ser alterado diretamente nesta tela. Assim, uma mudança de endereço nunca ignora a verificação da conta.
+            Seu e-mail não pode ser alterado diretamente nesta tela. Assim, uma
+            mudança de endereço nunca ignora a verificação da conta.
           </p>
         </div>
       </section>
 
-      <section class="profile-card profile-card--form" aria-labelledby="perfil-dados">
+      <section
+        class="profile-card profile-card--form"
+        aria-labelledby="perfil-dados"
+      >
         <div class="profile-card__head profile-card__head--form">
           <div>
             <span class="profile-card__kicker">Informações pessoais</span>
@@ -150,7 +202,10 @@
         <form class="profile-form" @submit.prevent="salvarPerfil">
           <div class="profile-form__field profile-form__field--wide">
             <label for="profile-name">Nome completo</label>
-            <div class="profile-form__control" :class="{ 'has-error': erros.name }">
+            <div
+              class="profile-form__control"
+              :class="{ 'has-error': erros.name }"
+            >
               <UserRound :size="18" />
               <input
                 id="profile-name"
@@ -162,12 +217,17 @@
                 @input="limparErro('name')"
               />
             </div>
-            <p v-if="erros.name" class="profile-field-error" role="alert">{{ erros.name }}</p>
+            <p v-if="erros.name" class="profile-field-error" role="alert">
+              {{ erros.name }}
+            </p>
           </div>
 
           <div class="profile-form__field">
             <label for="profile-phone">Telefone</label>
-            <div class="profile-form__control" :class="{ 'has-error': erros.phone }">
+            <div
+              class="profile-form__control"
+              :class="{ 'has-error': erros.phone }"
+            >
               <Phone :size="18" />
               <input
                 id="profile-phone"
@@ -180,17 +240,27 @@
                 @input="atualizarTelefone"
               />
             </div>
-            <p v-if="erros.phone" class="profile-field-error" role="alert">{{ erros.phone }}</p>
+            <p v-if="erros.phone" class="profile-field-error" role="alert">
+              {{ erros.phone }}
+            </p>
           </div>
 
           <div class="profile-form__field">
             <label for="profile-email">E-mail</label>
             <div class="profile-form__control profile-form__control--readonly">
               <Mail :size="18" />
-              <input id="profile-email" :value="auth.usuario?.email || ''" type="email" readonly />
+              <input
+                id="profile-email"
+                :value="auth.usuario?.email || ''"
+                type="email"
+                readonly
+              />
               <Lock :size="15" class="profile-form__lock" />
             </div>
-            <span class="profile-form__hint">O e-mail exige um fluxo próprio de verificação para ser alterado.</span>
+            <span class="profile-form__hint"
+              >O e-mail exige um fluxo próprio de verificação para ser
+              alterado.</span
+            >
           </div>
 
           <div class="profile-form__actions">
@@ -210,13 +280,16 @@
             >
               <LoaderCircle v-if="salvando" :size="18" class="profile-spin" />
               <Save v-else :size="18" />
-              {{ salvando ? 'Salvando...' : 'Salvar alterações' }}
+              {{ salvando ? "Salvando..." : "Salvar alterações" }}
             </button>
           </div>
         </form>
       </section>
 
-      <aside class="profile-card profile-card--summary" aria-labelledby="perfil-resumo">
+      <aside
+        class="profile-card profile-card--summary"
+        aria-labelledby="perfil-resumo"
+      >
         <div class="profile-card__head">
           <div>
             <span class="profile-card__kicker">Resumo</span>
@@ -227,7 +300,7 @@
         <dl class="profile-summary-list">
           <div>
             <dt>Tipo de conta</dt>
-            <dd>{{ auth.isAdmin ? 'Administração' : 'Aluno' }}</dd>
+            <dd>{{ auth.isAdmin ? "Administração" : "Aluno" }}</dd>
           </div>
           <div>
             <dt>Último acesso</dt>
@@ -242,15 +315,20 @@
         <div class="profile-summary-callout">
           <Sparkles :size="20" />
           <div>
-            <strong>Perfil sincronizado</strong>
-            <p>Depois de salvar, sua foto e seu nome são atualizados imediatamente em toda a interface.</p>
+            <strong>Atualização do perfil</strong>
+            <p>As alterações salvas serão usadas em toda a sua conta.</p>
           </div>
         </div>
       </aside>
     </div>
 
     <Transition name="profile-toast">
-      <div v-if="mensagem" class="profile-toast" :class="`profile-toast--${mensagem.tipo}`" role="status">
+      <div
+        v-if="mensagem"
+        class="profile-toast"
+        :class="`profile-toast--${mensagem.tipo}`"
+        role="status"
+      >
         <CheckCircle2 v-if="mensagem.tipo === 'success'" :size="19" />
         <CircleAlert v-else :size="19" />
         <span>{{ mensagem.texto }}</span>
@@ -260,7 +338,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from "vue";
 import {
   BadgeCheck,
   Camera,
@@ -281,924 +359,682 @@ import {
   Trash2,
   Upload,
   UserRound,
-} from 'lucide-vue-next'
+} from "lucide-vue-next";
 
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from "@/stores/auth";
 
-const MAX_AVATAR_BYTES = 3 * 1024 * 1024
-const ALLOWED_AVATAR_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
+const MAX_AVATAR_BYTES = 3 * 1024 * 1024;
+const ALLOWED_AVATAR_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
-const auth = useAuthStore()
-const avatarInput = ref(null)
-const avatarFile = ref(null)
-const avatarPreview = ref('')
-const removerAvatar = ref(false)
-const avatarRemotoComErro = ref(false)
-const salvando = ref(false)
-const mensagem = ref(null)
-let toastTimer = null
+const auth = useAuthStore();
+const avatarInput = ref(null);
+const avatarFile = ref(null);
+const avatarPreview = ref("");
+const removerAvatar = ref(false);
+const avatarRemotoComErro = ref(false);
+const salvando = ref(false);
+const mensagem = ref(null);
+let toastTimer = null;
 
 const form = reactive({
-  name: '',
-  phone: '',
-})
+  name: "",
+  phone: "",
+});
 
 const erros = reactive({
-  name: '',
-  phone: '',
-  avatar: '',
-})
+  name: "",
+  phone: "",
+  avatar: "",
+});
 
 const iniciais = computed(() => {
-  const nome = form.name || auth.usuario?.name || ''
+  const nome = form.name || auth.usuario?.name || "";
   return (
     nome
       .split(/\s+/)
       .filter(Boolean)
       .slice(0, 2)
       .map((parte) => parte[0]?.toUpperCase())
-      .join('') || 'A'
-  )
-})
+      .join("") || "A"
+  );
+});
 
 const avatarExibido = computed(() => {
-  if (avatarPreview.value) return avatarPreview.value
-  if (removerAvatar.value || avatarRemotoComErro.value) return ''
-  return auth.usuario?.avatar || ''
-})
+  if (avatarPreview.value) return avatarPreview.value;
+  if (removerAvatar.value || avatarRemotoComErro.value) return "";
+  return auth.usuario?.avatar || "";
+});
 
-const telefoneOriginal = computed(() => formatarTelefone(auth.usuario?.phone || ''))
+const telefoneOriginal = computed(() =>
+  formatarTelefone(auth.usuario?.phone || ""),
+);
 
 const temAlteracoes = computed(() => {
-  const nomeMudou = form.name.trim() !== String(auth.usuario?.name || '').trim()
-  const telefoneMudou = form.phone !== telefoneOriginal.value
+  const nomeMudou =
+    form.name.trim() !== String(auth.usuario?.name || "").trim();
+  const telefoneMudou = form.phone !== telefoneOriginal.value;
 
-  return nomeMudou || telefoneMudou || Boolean(avatarFile.value) || removerAvatar.value
-})
+  return (
+    nomeMudou ||
+    telefoneMudou ||
+    Boolean(avatarFile.value) ||
+    removerAvatar.value
+  );
+});
 
 const ultimoAcesso = computed(() => {
-  const valor = auth.usuario?.last_login
-  if (!valor) return 'Primeiro acesso'
+  const valor = auth.usuario?.last_login;
+  if (!valor) return "Primeiro acesso";
 
-  const data = new Date(valor)
-  if (Number.isNaN(data.getTime())) return 'Não disponível'
+  const data = new Date(valor);
+  if (Number.isNaN(data.getTime())) return "Não disponível";
 
-  return new Intl.DateTimeFormat('pt-BR', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  }).format(data)
-})
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(data);
+});
 
 const metodosLogin = computed(() => {
-  const metodos = []
-  if (auth.usuario?.has_usable_password) metodos.push('E-mail e senha')
-  if (auth.usuario?.google_connected) metodos.push('Google')
-  return metodos.length ? metodos.join(' + ') : 'Sessão autenticada'
-})
+  const metodos = [];
+  if (auth.usuario?.has_usable_password) metodos.push("E-mail e senha");
+  if (auth.usuario?.google_connected) metodos.push("Google");
+  return metodos.length ? metodos.join(" + ") : "Sessão autenticada";
+});
 
 watch(
   () => auth.usuario,
   () => {
-    restaurarFormulario({ preservarMensagem: true })
-    avatarRemotoComErro.value = false
+    restaurarFormulario({ preservarMensagem: true });
+    avatarRemotoComErro.value = false;
   },
   { immediate: true, deep: true },
-)
+);
 
 function restaurarFormulario({ preservarMensagem = false } = {}) {
-  form.name = String(auth.usuario?.name || '')
-  form.phone = telefoneOriginal.value
+  form.name = String(auth.usuario?.name || "");
+  form.phone = telefoneOriginal.value;
 
-  avatarFile.value = null
-  removerAvatar.value = false
-  avatarRemotoComErro.value = false
-  limparPreview()
-  limparErros()
+  avatarFile.value = null;
+  removerAvatar.value = false;
+  avatarRemotoComErro.value = false;
+  limparPreview();
+  limparErros();
 
-  if (avatarInput.value) avatarInput.value.value = ''
-  if (!preservarMensagem) mensagem.value = null
+  if (avatarInput.value) avatarInput.value.value = "";
+  if (!preservarMensagem) mensagem.value = null;
 }
 
 function abrirSeletorFoto() {
-  avatarInput.value?.click()
+  avatarInput.value?.click();
 }
 
 function selecionarFoto(event) {
-  limparErro('avatar')
+  limparErro("avatar");
 
-  const arquivo = event.target.files?.[0]
-  if (!arquivo) return
+  const arquivo = event.target.files?.[0];
+  if (!arquivo) return;
 
   if (!ALLOWED_AVATAR_TYPES.has(arquivo.type)) {
-    erros.avatar = 'Escolha uma imagem JPG, PNG ou WebP.'
-    event.target.value = ''
-    return
+    erros.avatar = "Escolha uma imagem JPG, PNG ou WebP.";
+    event.target.value = "";
+    return;
   }
 
   if (arquivo.size > MAX_AVATAR_BYTES) {
-    erros.avatar = 'A foto de perfil deve ter no máximo 3 MB.'
-    event.target.value = ''
-    return
+    erros.avatar = "A foto de perfil deve ter no máximo 3 MB.";
+    event.target.value = "";
+    return;
   }
 
-  limparPreview()
-  avatarFile.value = arquivo
-  avatarPreview.value = URL.createObjectURL(arquivo)
-  removerAvatar.value = false
+  limparPreview();
+  avatarFile.value = arquivo;
+  avatarPreview.value = URL.createObjectURL(arquivo);
+  removerAvatar.value = false;
 }
 
 function marcarRemocaoAvatar() {
-  avatarFile.value = null
-  removerAvatar.value = Boolean(auth.usuario?.avatar)
-  avatarRemotoComErro.value = false
-  limparPreview()
-  limparErro('avatar')
+  avatarFile.value = null;
+  removerAvatar.value = Boolean(auth.usuario?.avatar);
+  avatarRemotoComErro.value = false;
+  limparPreview();
+  limparErro("avatar");
 
-  if (avatarInput.value) avatarInput.value.value = ''
+  if (avatarInput.value) avatarInput.value.value = "";
 }
 
 function atualizarTelefone(event) {
-  form.phone = mascararTelefone(event.target.value)
-  limparErro('phone')
+  form.phone = mascararTelefone(event.target.value);
+  limparErro("phone");
 }
 
 function mascararTelefone(valor) {
-  const digitos = String(valor || '').replace(/\D/g, '').replace(/^55(?=\d{10,11}$)/, '').slice(0, 11)
+  const digitos = String(valor || "")
+    .replace(/\D/g, "")
+    .replace(/^55(?=\d{10,11}$)/, "")
+    .slice(0, 11);
 
-  if (!digitos) return ''
-  if (digitos.length <= 2) return `(${digitos}`
-  if (digitos.length <= 6) return `(${digitos.slice(0, 2)}) ${digitos.slice(2)}`
+  if (!digitos) return "";
+  if (digitos.length <= 2) return `(${digitos}`;
+  if (digitos.length <= 6)
+    return `(${digitos.slice(0, 2)}) ${digitos.slice(2)}`;
   if (digitos.length <= 10) {
-    return `(${digitos.slice(0, 2)}) ${digitos.slice(2, 6)}-${digitos.slice(6)}`
+    return `(${digitos.slice(0, 2)}) ${digitos.slice(2, 6)}-${digitos.slice(6)}`;
   }
 
-  return `(${digitos.slice(0, 2)}) ${digitos.slice(2, 7)}-${digitos.slice(7)}`
+  return `(${digitos.slice(0, 2)}) ${digitos.slice(2, 7)}-${digitos.slice(7)}`;
 }
 
 function formatarTelefone(valor) {
-  return mascararTelefone(valor)
+  return mascararTelefone(valor);
 }
 
 async function salvarPerfil() {
-  limparErros()
+  limparErros();
 
   if (!form.name.trim()) {
-    erros.name = 'Informe seu nome completo.'
-    return
+    erros.name = "Informe seu nome completo.";
+    return;
   }
 
-  salvando.value = true
+  salvando.value = true;
 
   try {
-    const payload = new FormData()
-    payload.append('name', form.name.trim())
-    payload.append('phone', form.phone.trim())
+    const payload = new FormData();
+    payload.append("name", form.name.trim());
+    payload.append("phone", form.phone.trim());
 
     if (avatarFile.value) {
-      payload.append('avatar', avatarFile.value)
+      payload.append("avatar", avatarFile.value);
     } else if (removerAvatar.value) {
-      payload.append('remove_avatar', 'true')
+      payload.append("remove_avatar", "true");
     }
 
-    const resultado = await auth.atualizarPerfil(payload)
+    const resultado = await auth.atualizarPerfil(payload);
 
     if (!resultado.ok) {
       Object.assign(erros, {
-        name: resultado.campos?.name || '',
-        phone: resultado.campos?.phone || '',
-        avatar: resultado.campos?.avatar || '',
-      })
+        name: resultado.campos?.name || "",
+        phone: resultado.campos?.phone || "",
+        avatar: resultado.campos?.avatar || "",
+      });
 
-      exibirMensagem('error', resultado.erro || 'Não foi possível salvar seu perfil.')
-      return
+      exibirMensagem(
+        "error",
+        resultado.erro || "Não foi possível salvar seu perfil.",
+      );
+      return;
     }
 
-    avatarFile.value = null
-    removerAvatar.value = false
-    avatarRemotoComErro.value = false
-    limparPreview()
-    form.name = String(auth.usuario?.name || '')
-    form.phone = formatarTelefone(auth.usuario?.phone || '')
+    avatarFile.value = null;
+    removerAvatar.value = false;
+    avatarRemotoComErro.value = false;
+    limparPreview();
+    form.name = String(auth.usuario?.name || "");
+    form.phone = formatarTelefone(auth.usuario?.phone || "");
 
-    if (avatarInput.value) avatarInput.value.value = ''
+    if (avatarInput.value) avatarInput.value.value = "";
 
-    exibirMensagem('success', 'Perfil atualizado com sucesso.')
+    exibirMensagem("success", "Perfil atualizado com sucesso.");
   } finally {
-    salvando.value = false
+    salvando.value = false;
   }
 }
 
 function limparErro(campo) {
-  erros[campo] = ''
+  erros[campo] = "";
 }
 
 function limparErros() {
-  erros.name = ''
-  erros.phone = ''
-  erros.avatar = ''
+  erros.name = "";
+  erros.phone = "";
+  erros.avatar = "";
 }
 
 function limparPreview() {
   if (avatarPreview.value) {
-    URL.revokeObjectURL(avatarPreview.value)
-    avatarPreview.value = ''
+    URL.revokeObjectURL(avatarPreview.value);
+    avatarPreview.value = "";
   }
 }
 
 function exibirMensagem(tipo, texto) {
-  mensagem.value = { tipo, texto }
-  window.clearTimeout(toastTimer)
+  mensagem.value = { tipo, texto };
+  window.clearTimeout(toastTimer);
   toastTimer = window.setTimeout(() => {
-    mensagem.value = null
-  }, 4200)
+    mensagem.value = null;
+  }, 4200);
 }
 
 onBeforeUnmount(() => {
-  limparPreview()
-  window.clearTimeout(toastTimer)
-})
+  limparPreview();
+  window.clearTimeout(toastTimer);
+});
 </script>
 
 <style scoped>
 .profile-page {
-  width: min(1180px, 100%);
+  width: min(100%, 1080px);
   margin: 0 auto;
-  color: var(--pp-text-dark);
+  color: var(--student-text);
 }
-
-.profile-page__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 24px;
-}
-
 .profile-page__eyebrow,
 .profile-card__kicker {
-  display: block;
-  margin-bottom: 5px;
-  color: #b77a13;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  display: none;
 }
-
+.profile-page__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 18px;
+}
 .profile-page__header h1 {
   margin: 0;
-  color: #241b16;
-  font-size: clamp(27px, 2.3vw, 36px);
-  line-height: 1.08;
+  font-size: 30px;
 }
-
 .profile-page__header p {
-  max-width: 590px;
-  margin: 8px 0 0;
-  color: var(--pp-text-dark-soft);
-  font-size: 14px;
-  line-height: 1.55;
+  margin: 6px 0 0;
+  color: var(--student-muted);
+  font-size: 13px;
 }
-
 .profile-page__status {
-  display: inline-flex;
+  min-height: 34px;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  min-height: 38px;
-  padding: 0 13px;
-  border: 1px solid rgba(201, 112, 73, 0.18);
-  border-radius: 999px;
-  background: #fff8f3;
-  color: #a95538;
-  font-size: 12px;
+  gap: 6px;
+  padding: 0 9px;
+  border: 1px solid #ead7b0;
+  border-radius: 7px;
+  background: #fff7e8;
+  color: #835f20;
+  font-size: 9px;
   font-weight: 700;
 }
-
 .profile-page__status.is-verified {
-  border-color: rgba(79, 143, 97, 0.18);
-  background: #f1f8f2;
-  color: #377449;
+  border-color: #cadcc1;
+  background: #edf5e9;
+  color: #547341;
 }
-
 .profile-page__grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(310px, 0.8fr);
-  gap: 18px;
+  grid-template-columns: minmax(0, 1.55fr) minmax(270px, 0.8fr);
+  gap: 14px;
 }
-
 .profile-card {
-  min-width: 0;
-  border: 1px solid rgba(36, 17, 8, 0.08);
-  border-radius: 18px;
-  background: #fff;
-  box-shadow: 0 10px 28px rgba(53, 35, 23, 0.045);
-}
-
-.profile-card--identity,
-.profile-card--security,
-.profile-card--form,
-.profile-card--summary {
-  padding: 22px;
-}
-
-.profile-card__head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.profile-card__head > svg {
-  color: #c98a22;
-}
-
-.profile-card__head h2 {
-  margin: 0;
-  color: #271e18;
-  font-size: 18px;
-  line-height: 1.2;
-}
-
-.profile-card--identity {
-  background:
-    radial-gradient(circle at 100% 0, rgba(224, 168, 62, 0.1), transparent 35%),
-    #fff;
-}
-
-.profile-avatar-editor {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.profile-avatar-editor__preview {
-  position: relative;
-  width: 108px;
-  height: 108px;
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  border: 4px solid #fff;
-  border-radius: 50%;
-  background: linear-gradient(145deg, #f4e4c5, #f9f1e4);
-  color: #a56a0b;
-  box-shadow: 0 0 0 1px rgba(224, 168, 62, 0.2), 0 12px 25px rgba(67, 40, 17, 0.1);
-  font-size: 28px;
-  font-weight: 800;
-  overflow: visible;
-}
-
-.profile-avatar-editor__preview img {
-  width: 100%;
-  height: 100%;
-  display: block;
-  border-radius: inherit;
-  object-fit: cover;
-}
-
-.profile-avatar-editor__camera {
-  position: absolute;
-  right: -4px;
-  bottom: 3px;
-  width: 36px;
-  height: 36px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 3px solid #fff;
-  border-radius: 50%;
-  background: #dda034;
-  color: #28170c;
-  cursor: pointer;
-  box-shadow: 0 5px 13px rgba(70, 40, 16, 0.22);
-}
-
-.profile-avatar-editor__content {
-  min-width: 0;
-}
-
-.profile-avatar-editor__content > strong {
-  display: block;
-  overflow: hidden;
-  color: #281f19;
-  font-size: 17px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.profile-avatar-editor__content > span {
-  display: block;
-  margin-top: 4px;
-  overflow: hidden;
-  color: #81776f;
-  font-size: 12.5px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.profile-avatar-editor__content > p {
-  margin: 9px 0 0;
-  color: #a09a94;
-  font-size: 11px;
-}
-
-.profile-avatar-editor__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 13px;
-}
-
-.profile-avatar-editor__input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-.profile-link-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 34px;
-  padding: 0 11px;
-  border: 1px solid rgba(224, 168, 62, 0.26);
-  border-radius: 9px;
-  background: #fff9ef;
-  color: #8f5b08;
-  font-size: 11.5px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.profile-link-btn--danger {
-  border-color: rgba(197, 76, 62, 0.16);
-  background: #fff8f7;
-  color: #b84e40;
-}
-
-.profile-security-list {
-  display: grid;
-  gap: 7px;
-}
-
-.profile-security-item {
-  display: grid;
-  grid-template-columns: 38px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  min-height: 58px;
-  padding: 9px 10px;
-  border-radius: 12px;
-  background: #faf8f5;
-}
-
-.profile-security-item__icon {
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
+  padding: 18px;
+  border: 1px solid var(--student-border);
   border-radius: 10px;
-  background: #f0e4d3;
-  color: #9c680f;
+  background: #fff;
 }
-
-.profile-security-item strong,
-.profile-security-item span {
-  display: block;
-}
-
-.profile-security-item strong {
-  color: #332821;
-  font-size: 12.5px;
-}
-
-.profile-security-item div > span {
-  margin-top: 2px;
-  color: #91877f;
-  font-size: 10.5px;
-  line-height: 1.35;
-}
-
-.profile-security-item__state {
-  padding: 5px 8px;
-  border-radius: 999px;
-  background: #eee9e4;
-  color: #786f68;
-  font-size: 9px;
-  font-weight: 800;
-}
-
-.profile-security-item__state.is-positive {
-  background: #e8f4eb;
-  color: #387149;
-}
-
-.profile-security-note {
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  margin-top: 14px;
-  padding: 11px 12px;
-  border: 1px solid rgba(224, 168, 62, 0.13);
-  border-radius: 11px;
-  background: #fffaf2;
-  color: #8a6a3c;
-}
-
-.profile-security-note svg {
-  flex: 0 0 auto;
-  margin-top: 1px;
-}
-
-.profile-security-note p {
-  margin: 0;
-  font-size: 10.5px;
-  line-height: 1.5;
-}
-
+.profile-card--identity,
 .profile-card--form {
   grid-column: 1;
 }
-
+.profile-card--security,
 .profile-card--summary {
   grid-column: 2;
 }
-
-.profile-card__head--form {
-  align-items: center;
-}
-
-.profile-unsaved {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: #aa6e0c;
-  font-size: 10.5px;
-  font-weight: 700;
-}
-
-.profile-form {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 17px;
-}
-
-.profile-form__field {
-  min-width: 0;
-}
-
-.profile-form__field--wide {
-  grid-column: 1 / -1;
-}
-
-.profile-form__field label {
-  display: block;
-  margin-bottom: 7px;
-  color: #443831;
-  font-size: 11.5px;
-  font-weight: 700;
-}
-
-.profile-form__control {
-  min-height: 47px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 13px;
-  border: 1px solid #ded8d2;
-  border-radius: 10px;
-  background: #fff;
-  color: #9c9188;
-  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
-}
-
-.profile-form__control:focus-within {
-  border-color: #d39a36;
-  box-shadow: 0 0 0 3px rgba(224, 168, 62, 0.12);
-}
-
-.profile-form__control.has-error {
-  border-color: #d36a5f;
-  box-shadow: 0 0 0 3px rgba(211, 106, 95, 0.09);
-}
-
-.profile-form__control--readonly {
-  background: #f6f4f1;
-}
-
-.profile-form__control input {
-  min-width: 0;
-  flex: 1;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: #332921;
-  font: inherit;
-  font-size: 12.5px;
-}
-
-.profile-form__control input[readonly] {
-  color: #827a73;
-  cursor: default;
-}
-
-.profile-form__lock {
-  flex: 0 0 auto;
-  color: #aaa19a;
-}
-
-.profile-form__hint {
-  display: block;
-  margin: 6px 2px 0;
-  color: #a09a94;
-  font-size: 10px;
-  line-height: 1.4;
-}
-
-.profile-field-error {
-  margin: 6px 2px 0;
-  color: #c55449;
-  font-size: 10.5px;
-  font-weight: 600;
-}
-
-.profile-form__actions {
-  grid-column: 1 / -1;
-  display: flex;
-  justify-content: flex-end;
-  gap: 9px;
-  padding-top: 4px;
-}
-
-.profile-btn {
-  min-height: 42px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 16px;
-  border-radius: 10px;
-  font: inherit;
-  font-size: 11.5px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
-}
-
-.profile-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.profile-btn--secondary {
-  border: 1px solid #dfd9d3;
-  background: #fff;
-  color: #625750;
-}
-
-.profile-btn--primary {
-  border: 1px solid #dda034;
-  background: linear-gradient(115deg, #e2a334, #efb544);
-  color: #2c190b;
-  box-shadow: 0 7px 17px rgba(224, 168, 62, 0.16);
-}
-
-.profile-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-.profile-summary-list {
-  margin: 0;
-}
-
-.profile-summary-list > div {
+.profile-card__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+.profile-card__head h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.profile-avatar-editor {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
   gap: 16px;
-  padding: 13px 0;
-  border-bottom: 1px solid #eee9e5;
+  align-items: center;
 }
-
+.profile-avatar-editor__preview {
+  position: relative;
+  width: 82px;
+  height: 82px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #e9e1d7;
+  color: #6d4d1f;
+  font-size: 20px;
+  font-weight: 700;
+}
+.profile-avatar-editor__preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.profile-avatar-editor__camera {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #2a211b;
+  color: #fff;
+}
+.profile-avatar-editor__content > strong {
+  display: block;
+  font-size: 13px;
+}
+.profile-avatar-editor__content > span {
+  display: block;
+  margin-top: 3px;
+  color: var(--student-muted);
+  font-size: 10px;
+}
+.profile-avatar-editor__content > p {
+  margin: 8px 0 0;
+  color: var(--student-muted);
+  font-size: 8px;
+}
+.profile-avatar-editor__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 9px;
+}
+.profile-avatar-editor__input {
+  display: none;
+}
+.profile-link-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #76501a;
+  font-size: 9px;
+  font-weight: 700;
+}
+.profile-link-btn--danger {
+  color: #9a4945;
+}
+.profile-security-list {
+  display: grid;
+}
+.profile-security-item {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--student-border);
+}
+.profile-security-item:last-child {
+  border-bottom: 0;
+}
+.profile-security-item__icon {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  background: #f2eee8;
+  color: #72582f;
+}
+.profile-security-item strong {
+  display: block;
+  font-size: 10px;
+}
+.profile-security-item div > span {
+  display: block;
+  margin-top: 2px;
+  color: var(--student-muted);
+  font-size: 8px;
+  line-height: 1.3;
+}
+.profile-security-item__state {
+  padding: 3px 5px;
+  border-radius: 4px;
+  background: #f2f0ed;
+  color: #716960;
+  font-size: 7px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.profile-security-item__state.is-positive {
+  background: #edf5e9;
+  color: #547341;
+}
+.profile-security-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin-top: 12px;
+  padding: 9px;
+  border-radius: 7px;
+  background: #f7f4f0;
+  color: #6d645c;
+}
+.profile-security-note p {
+  margin: 0;
+  font-size: 8px;
+  line-height: 1.5;
+}
+.profile-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
+}
+.profile-form__field--wide {
+  grid-column: 1/-1;
+}
+.profile-form__field label {
+  display: block;
+  margin-bottom: 5px;
+  color: #59524b;
+  font-size: 9px;
+  font-weight: 700;
+}
+.profile-form__control {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid var(--student-border);
+  border-radius: 7px;
+  background: #fff;
+  color: #918880;
+}
+.profile-form__control:focus-within {
+  border-color: #c9a466;
+  box-shadow: 0 0 0 3px rgba(184, 121, 31, 0.07);
+}
+.profile-form__control.has-error {
+  border-color: #d58b87;
+}
+.profile-form__control--readonly {
+  background: #f7f5f2;
+}
+.profile-form__control input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--student-text);
+  font-size: 10px;
+}
+.profile-form__control input[readonly] {
+  color: #7d756e;
+}
+.profile-form__hint {
+  display: block;
+  margin-top: 4px;
+  color: var(--student-muted);
+  font-size: 8px;
+}
+.profile-field-error {
+  margin: 4px 0 0;
+  color: var(--student-danger);
+  font-size: 8px;
+}
+.profile-form__actions {
+  grid-column: 1/-1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 7px;
+  padding-top: 4px;
+}
+.profile-btn {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 7px;
+  font-size: 9px;
+  font-weight: 700;
+}
+.profile-btn:disabled {
+  opacity: 0.45;
+}
+.profile-btn--secondary {
+  border: 1px solid var(--student-border-strong);
+  background: #fff;
+  color: var(--student-text);
+}
+.profile-btn--primary {
+  border: 0;
+  background: #2a211b;
+  color: #fff;
+}
+.profile-unsaved {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #8a5d1d;
+  font-size: 8px;
+}
+.profile-summary-list {
+  margin: 0;
+}
+.profile-summary-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-top: 1px solid var(--student-border);
+}
 .profile-summary-list > div:first-child {
-  padding-top: 0;
+  border-top: 0;
 }
-
 .profile-summary-list dt {
-  color: #8d837b;
-  font-size: 11px;
+  color: var(--student-muted);
+  font-size: 8px;
 }
-
 .profile-summary-list dd {
   margin: 0;
-  color: #332821;
-  font-size: 11px;
-  font-weight: 750;
   text-align: right;
+  font-size: 9px;
+  font-weight: 650;
 }
-
 .profile-summary-callout {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  margin-top: 18px;
-  padding: 13px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #302015, #3c2516);
-  color: #f3e9d8;
+  gap: 7px;
+  margin-top: 12px;
+  padding: 9px;
+  border-radius: 7px;
+  background: #f7f4f0;
 }
-
 .profile-summary-callout > svg {
-  flex: 0 0 auto;
-  color: #e6a83a;
+  display: none;
 }
-
 .profile-summary-callout strong {
-  font-size: 11.5px;
+  font-size: 9px;
 }
-
 .profile-summary-callout p {
-  margin: 4px 0 0;
-  color: #bda992;
-  font-size: 10px;
+  margin: 3px 0 0;
+  color: var(--student-muted);
+  font-size: 8px;
   line-height: 1.45;
 }
-
 .profile-toast {
   position: fixed;
   right: 24px;
   bottom: 24px;
-  z-index: 80;
-  max-width: min(380px, calc(100vw - 32px));
+  z-index: 90;
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 12px 14px;
-  border: 1px solid rgba(53, 103, 67, 0.18);
-  border-radius: 12px;
-  background: #eff8f1;
-  color: #326642;
-  box-shadow: 0 13px 30px rgba(42, 31, 23, 0.15);
-  font-size: 11.5px;
-  font-weight: 700;
+  gap: 7px;
+  padding: 10px 13px;
+  border: 1px solid #cadbcd;
+  border-radius: 8px;
+  background: #f4faf5;
+  color: #33583a;
+  font-size: 10px;
+  font-weight: 600;
 }
-
 .profile-toast--error {
-  border-color: rgba(184, 78, 64, 0.18);
-  background: #fff4f2;
-  color: #a94e43;
+  border-color: #ebcfcc;
+  background: #fff0ef;
+  color: #984843;
 }
-
 .profile-spin {
-  animation: profile-spin 700ms linear infinite;
+  animation: profile-spin 0.7s linear infinite;
 }
-
-.profile-toast-enter-active,
-.profile-toast-leave-active {
-  transition: opacity 180ms ease, transform 180ms ease;
-}
-
-.profile-toast-enter-from,
-.profile-toast-leave-to {
-  opacity: 0;
-  transform: translateY(8px);
-}
-
 @keyframes profile-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
-
-@media (max-width: 980px) {
+@media (max-width: 900px) {
   .profile-page__grid {
     grid-template-columns: 1fr;
   }
-
+  .profile-card--identity,
   .profile-card--form,
+  .profile-card--security,
   .profile-card--summary {
-    grid-column: auto;
-  }
-
-  .profile-card--security {
-    order: 3;
-  }
-
-  .profile-card--summary {
-    order: 4;
+    grid-column: 1;
   }
 }
-
-@media (max-width: 640px) {
-  .profile-page {
-    padding-bottom: 8px;
-  }
-
+@media (max-width: 650px) {
   .profile-page__header {
-    display: block;
-    margin-bottom: 18px;
-  }
-
-  .profile-page__header h1 {
-    font-size: 26px;
-  }
-
-  .profile-page__header p {
-    margin-top: 6px;
-    font-size: 12px;
-  }
-
-  .profile-page__status {
-    margin-top: 12px;
-    min-height: 34px;
-    font-size: 10.5px;
-  }
-
-  .profile-page__grid {
-    gap: 12px;
-  }
-
-  .profile-card--identity,
-  .profile-card--security,
-  .profile-card--form,
-  .profile-card--summary {
-    padding: 17px;
-    border-radius: 15px;
-  }
-
-  .profile-avatar-editor {
+    align-items: flex-start;
     flex-direction: column;
-    text-align: center;
   }
-
-  .profile-avatar-editor__preview {
-    width: 102px;
-    height: 102px;
+  .profile-page__header h1 {
+    font-size: 25px;
   }
-
-  .profile-avatar-editor__actions {
+  .profile-page__status {
+    width: 100%;
     justify-content: center;
   }
-
-  .profile-avatar-editor__content > p {
-    max-width: 260px;
+  .profile-avatar-editor {
+    grid-template-columns: 68px minmax(0, 1fr);
   }
-
-  .profile-security-item {
-    grid-template-columns: 36px minmax(0, 1fr);
+  .profile-avatar-editor__preview {
+    width: 68px;
+    height: 68px;
   }
-
-  .profile-security-item__state {
-    grid-column: 2;
-    justify-self: start;
-  }
-
   .profile-form {
     grid-template-columns: 1fr;
-    gap: 14px;
   }
-
-  .profile-form__field--wide,
+  .profile-form__field,
+  .profile-form__field--wide {
+    grid-column: 1;
+  }
   .profile-form__actions {
-    grid-column: auto;
+    width: 100%;
   }
-
-  .profile-card__head--form {
-    display: block;
-  }
-
-  .profile-unsaved {
-    margin-top: 7px;
-  }
-
-  .profile-form__actions {
-    display: grid;
-    grid-template-columns: 1fr 1.35fr;
-  }
-
   .profile-btn {
-    padding: 0 10px;
+    flex: 1;
   }
-
   .profile-toast {
-    right: 16px;
+    left: 13px;
+    right: 13px;
     bottom: 78px;
-  }
-}
-
-@media (max-width: 380px) {
-  .profile-form__actions {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .profile-spin {
-    animation: none;
   }
 }
 </style>

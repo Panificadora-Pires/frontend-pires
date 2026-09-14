@@ -13,24 +13,30 @@
     </template>
 
     <template v-else>
-      <component :is="icon" v-if="icon" :size="18" class="pp-btn__icon" aria-hidden="true" />
+      <component
+        :is="icon"
+        v-if="icon"
+        :size="18"
+        class="pp-btn__icon"
+        aria-hidden="true"
+      />
       <slot />
     </template>
   </button>
 </template>
 
 <script setup>
-defineOptions({ inheritAttrs: false })
+defineOptions({ inheritAttrs: false });
 
 defineProps({
-  type: { type: String, default: 'button' },
-  variant: { type: String, default: 'primary' },
+  type: { type: String, default: "button" },
+  variant: { type: String, default: "primary" },
   block: { type: Boolean, default: false },
   loading: { type: Boolean, default: false },
-  loadingText: { type: String, default: 'Carregando...' },
+  loadingText: { type: String, default: "Carregando..." },
   disabled: { type: Boolean, default: false },
   icon: { type: [Object, Function], default: null },
-})
+});
 </script>
 
 <style scoped>
@@ -49,7 +55,11 @@ defineProps({
   font-weight: 700;
   letter-spacing: 0.005em;
   cursor: pointer;
-  transition: transform 180ms ease, filter 180ms ease, box-shadow 180ms ease, background 180ms ease;
+  transition:
+    transform 180ms ease,
+    filter 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
 }
 
 .pp-btn--block {
@@ -101,6 +111,8 @@ defineProps({
 }
 
 @keyframes pp-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

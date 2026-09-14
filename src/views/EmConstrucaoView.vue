@@ -3,14 +3,19 @@
     <div class="placeholder__card">
       <Construction :size="34" />
       <h1>Em construção</h1>
-      <p>Essa tela ainda não foi implementada — as próximas telas do Figma virão aqui.</p>
-      <RouterLink :to="{ name: 'home' }" class="placeholder__link">Voltar ao início</RouterLink>
+      <p>
+        Essa tela ainda não foi implementada — as próximas telas do Figma virão
+        aqui.
+      </p>
+      <RouterLink :to="{ name: 'home' }" class="placeholder__link"
+        >Voltar ao início</RouterLink
+      >
     </div>
   </div>
 </template>
 
 <script setup>
-import { Construction } from 'lucide-vue-next'
+import { Construction } from "lucide-vue-next";
 </script>
 
 <style scoped>
