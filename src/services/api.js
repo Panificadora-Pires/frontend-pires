@@ -90,9 +90,6 @@ api.interceptors.response.use(
       );
 
       const { data } = await refreshPromise;
-
-      // O backend usa rotação de refresh token.
-      // Se vier um refresh novo, substitui imediatamente o anterior.
       persistTokens({
         access: data.access,
         refresh: data.refresh || refreshToken,

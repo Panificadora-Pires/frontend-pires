@@ -255,9 +255,7 @@ function quantidadeFiltro(valor) {
 async function atualizar() {
   try {
     await orders.carregar({ force: true });
-  } catch {
-    // A store já mantém a mensagem de erro.
-  }
+  } catch {}
 }
 
 function limparFiltros() {

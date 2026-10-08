@@ -191,11 +191,22 @@
             <ChevronRight :size="17" aria-hidden="true" />
           </RouterLink>
         </div>
-        <div
-          class="home__hero-fallback home__hero-fallback--standalone"
-          aria-hidden="true"
-        >
-          <ShoppingBag :size="82" />
+        <div class="home__hero-brand-panel" aria-hidden="true">
+          <span
+            class="home__hero-brand-orbit home__hero-brand-orbit--one"
+          ></span>
+          <span
+            class="home__hero-brand-orbit home__hero-brand-orbit--two"
+          ></span>
+
+          <div class="home__hero-brand-inner">
+            <div class="home__hero-brand-logo-wrap">
+              <img src="/logo.png" alt="" class="home__hero-brand-logo" />
+            </div>
+            <span class="home__hero-brand-eyebrow">Pires Panificadora</span>
+            <strong>Seu intervalo, mais prático.</strong>
+            <small>Escolha online. Retire no balcão.</small>
+          </div>
         </div>
       </article>
     </section>
@@ -359,7 +370,10 @@
         />
       </div>
 
-      <div v-else-if="erroPromos" class="home__state home__state--compact">
+      <div
+        v-else-if="erroPromos && !promosAtivas.length"
+        class="home__state home__state--compact"
+      >
         <Tag :size="23" aria-hidden="true" />
         <div>
           <strong>As promoções não puderam ser carregadas.</strong>
@@ -762,33 +776,44 @@ const tituloDestaques = computed(() =>
   temFiltroAtivo.value ? "Produtos encontrados" : "Destaques para você",
 );
 
+function montarPromoProduto(produto, promocao = null) {
+  const precoPromocional = Number(
+    promocao?.preco_promocional ?? produto?.preco_atual ?? produto?.preco ?? 0,
+  );
+  const precoOriginal = Number(produto?.preco ?? precoPromocional);
+  const desconto =
+    precoOriginal > 0 && precoOriginal > precoPromocional
+      ? Math.round(((precoOriginal - precoPromocional) / precoOriginal) * 100)
+      : 0;
+
+  return {
+    ...(promocao || {}),
+    id: promocao?.id ?? `produto-${produto.id}`,
+    produto,
+    produtoId: produto.id,
+    produto_nome: promocao?.produto_nome || produto.nome,
+    preco_promocional: precoPromocional,
+    precoOriginal,
+    desconto,
+    categoriaNome: produto?.categoria_nome || "",
+  };
+}
+
 const promosAtivas = computed(() => {
-  const mapaProdutos = new Map(
-    produtos.value.map((produto) => [produto.id, produto]),
+  const promocoesVigentesPorProduto = new Map(
+    promocoes.value
+      .filter((promo) => promocaoEstaAtiva(promo))
+      .map((promo) => [Number(promo.produto), promo]),
   );
 
-  return promocoes.value
-    .filter((promo) => promocaoEstaAtiva(promo))
-    .filter((promo) => mapaProdutos.has(promo.produto))
-    .map((promo) => {
-      const produto = mapaProdutos.get(promo.produto);
-      const precoPromocional = Number(promo.preco_promocional || 0);
-      const precoOriginal = Number(produto?.preco ?? precoPromocional);
-      const desconto =
-        precoOriginal > 0 && precoOriginal > precoPromocional
-          ? Math.round(
-              ((precoOriginal - precoPromocional) / precoOriginal) * 100,
-            )
-          : 0;
-
-      return {
-        ...promo,
+  return produtos.value
+    .filter((produto) => produto.em_promocao)
+    .map((produto) =>
+      montarPromoProduto(
         produto,
-        precoOriginal,
-        desconto,
-        categoriaNome: produto?.categoria_nome || "",
-      };
-    });
+        promocoesVigentesPorProduto.get(Number(produto.id)) || null,
+      ),
+    );
 });
 
 const promoDestaque = computed(
@@ -1015,7 +1040,8 @@ onBeforeUnmount(() => {
   margin-bottom: 30px;
 }
 .home__hero-card {
-  min-height: 274px;
+  height: 300px;
+  min-height: 300px;
   display: grid;
   grid-template-columns: minmax(0, 1.08fr) minmax(300px, 0.92fr);
   overflow: hidden;
@@ -1089,30 +1115,134 @@ onBeforeUnmount(() => {
   border-color: #835513;
 }
 .home__hero-media {
-  min-height: 274px;
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
   background: #eee9e3;
+}
+.home__hero-media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.16),
+    transparent 28%
+  );
 }
 .home__hero-media img {
   width: 100%;
   height: 100%;
-  min-height: 274px;
+  min-height: 0;
   display: block;
   object-fit: cover;
+  object-position: center;
 }
 .home__hero-fallback {
   width: 100%;
   height: 100%;
-  min-height: 274px;
+  min-height: 0;
   display: grid;
   place-items: center;
   color: #b9935a;
   background: #f0ece7;
 }
 .home__hero-card--institutional {
-  grid-template-columns: minmax(0, 1.2fr) minmax(240px, 0.8fr);
+  grid-template-columns: minmax(0, 1.08fr) minmax(300px, 0.92fr);
 }
-.home__hero-fallback--standalone {
-  min-height: 274px;
+.home__hero-brand-panel {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(
+      circle at 78% 18%,
+      rgba(206, 154, 78, 0.28),
+      transparent 31%
+    ),
+    radial-gradient(
+      circle at 20% 86%,
+      rgba(184, 121, 31, 0.18),
+      transparent 34%
+    ),
+    linear-gradient(135deg, #211710 0%, #302016 58%, #3b2819 100%);
+}
+.home__hero-brand-panel::before {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  z-index: -1;
+  border: 1px solid rgba(235, 204, 154, 0.16);
+  border-radius: 14px;
+}
+.home__hero-brand-inner {
+  position: relative;
+  z-index: 2;
+  width: min(78%, 340px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.home__hero-brand-logo-wrap {
+  width: 112px;
+  height: 112px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 16px;
+  border: 1px solid rgba(232, 196, 137, 0.22);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(4px);
+}
+.home__hero-brand-logo {
+  width: 84px;
+  max-height: 72px;
+  object-fit: contain;
+}
+.home__hero-brand-eyebrow {
+  margin-bottom: 7px;
+  color: #d9ad69;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.home__hero-brand-inner strong {
+  color: #fff8ef;
+  font-size: 21px;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+.home__hero-brand-inner small {
+  margin-top: 8px;
+  color: rgba(255, 248, 239, 0.63);
+  font-size: 11px;
+}
+.home__hero-brand-orbit {
+  position: absolute;
+  z-index: 0;
+  border: 1px solid rgba(218, 174, 103, 0.13);
+  border-radius: 50%;
+}
+.home__hero-brand-orbit--one {
+  width: 230px;
+  height: 230px;
+  top: -118px;
+  right: -66px;
+}
+.home__hero-brand-orbit--two {
+  width: 170px;
+  height: 170px;
+  left: -72px;
+  bottom: -90px;
 }
 .home__dots {
   position: absolute;
@@ -1464,6 +1594,8 @@ onBeforeUnmount(() => {
     grid-row: 2;
   }
   .home__hero-card {
+    height: 290px;
+    min-height: 290px;
     grid-template-columns: 1fr 42%;
   }
   .home__hero-content {
@@ -1500,16 +1632,32 @@ onBeforeUnmount(() => {
   }
   .home__hero-card,
   .home__hero-card--institutional {
+    height: auto;
+    min-height: 0;
     grid-template-columns: 1fr;
   }
   .home__hero-media,
   .home__hero-fallback,
-  .home__hero-media img,
-  .home__hero-fallback--standalone {
-    min-height: 190px;
+  .home__hero-brand-panel {
+    min-height: 205px;
   }
-  .home__hero-media {
+  .home__hero-media,
+  .home__hero-brand-panel {
+    height: 205px;
     grid-row: 1;
+  }
+  .home__hero-brand-logo-wrap {
+    width: 88px;
+    height: 88px;
+    margin-bottom: 11px;
+    border-radius: 22px;
+  }
+  .home__hero-brand-logo {
+    width: 68px;
+    max-height: 58px;
+  }
+  .home__hero-brand-inner strong {
+    font-size: 18px;
   }
   .home__hero-content {
     padding: 22px;
@@ -1540,6 +1688,189 @@ onBeforeUnmount(() => {
   }
   .home__promo-card {
     grid-template-columns: minmax(0, 1fr) 96px;
+  }
+}
+.home__categories {
+  gap: 24px;
+  margin-bottom: 24px;
+  padding: 0 0 1px;
+  border-bottom: 1px solid #e3dfda;
+}
+
+.home__category {
+  min-height: 40px;
+  gap: 0;
+  padding: 0 2px 10px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: #6f6963;
+  font-size: 12.5px;
+  font-weight: 600;
+  transition:
+    color 150ms ease,
+    border-color 150ms ease;
+}
+
+.home__category svg {
+  display: none;
+}
+
+.home__category:hover {
+  border-color: transparent;
+  color: #2d2824;
+}
+
+.home__category.is-active {
+  border-color: #a76b17;
+  background: transparent;
+  color: #2b241f;
+  font-weight: 750;
+}
+
+.home__hero {
+  margin-bottom: 34px;
+}
+
+.home__hero-card {
+  height: 320px;
+  min-height: 320px;
+  border-color: #dfdbd6;
+  border-radius: 12px;
+  box-shadow: 0 7px 22px rgba(37, 28, 22, 0.045);
+}
+
+.home__hero-content {
+  padding: 40px 42px;
+}
+
+.home__hero-tag {
+  margin-bottom: 14px;
+  color: #8d5d17;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+}
+
+.home__hero-content h2 {
+  font-size: 34px;
+}
+
+.home__hero-btn {
+  min-height: 42px;
+  padding: 0 17px;
+  border-color: #2b1d15;
+  background: #2b1d15;
+  color: #fff;
+}
+
+.home__hero-btn:hover {
+  border-color: #1f1510;
+  background: #1f1510;
+}
+
+.home__hero-media::after {
+  display: none;
+}
+
+.home__hero-card--institutional {
+  background: #fff;
+}
+
+.home__hero-brand-panel {
+  background: #24170f;
+}
+
+.home__hero-brand-panel::before,
+.home__hero-brand-orbit {
+  display: none;
+}
+
+.home__hero-brand-logo-wrap {
+  width: 118px;
+  height: 88px;
+  margin-bottom: 16px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.home__hero-brand-logo {
+  width: 104px;
+  max-height: 76px;
+}
+
+.home__hero-brand-eyebrow {
+  margin-bottom: 6px;
+  color: #cf9b4f;
+  letter-spacing: 0.11em;
+}
+
+.home__hero-brand-inner strong {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.home__hero-brand-inner small {
+  color: rgba(255, 248, 239, 0.68);
+  font-size: 11.5px;
+}
+
+.home__dots {
+  bottom: 17px;
+}
+
+@media (max-width: 900px) {
+  .home__categories {
+    gap: 20px;
+  }
+
+  .home__hero-card {
+    height: 300px;
+    min-height: 300px;
+  }
+}
+
+@media (max-width: 640px) {
+  .home__categories {
+    gap: 20px;
+    margin: 14px -13px 20px;
+    padding: 0 13px 1px;
+  }
+
+  .home__category {
+    min-height: 38px;
+    padding-bottom: 9px;
+    font-size: 11.5px;
+  }
+
+  .home__hero-card,
+  .home__hero-card--institutional {
+    height: auto;
+    min-height: 0;
+  }
+
+  .home__hero-media,
+  .home__hero-brand-panel {
+    height: 220px;
+    min-height: 220px;
+  }
+
+  .home__hero-content {
+    padding: 24px 22px 26px;
+  }
+
+  .home__hero-brand-logo-wrap {
+    width: 92px;
+    height: 70px;
+    margin-bottom: 10px;
+  }
+
+  .home__hero-brand-logo {
+    width: 82px;
+    max-height: 58px;
   }
 }
 </style>
