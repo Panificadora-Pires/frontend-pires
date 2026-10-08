@@ -47,7 +47,6 @@ export async function disableGoogleAutoSelect() {
     const google = await waitForGoogleIdentity();
     google.accounts.id.disableAutoSelect();
   } catch {
-    // O logout local não deve falhar caso o GIS esteja indisponível.
   }
 }
 
@@ -68,8 +67,6 @@ async function initializeGoogleIdentity(clientId) {
       },
       auto_select: false,
       ux_mode: "popup",
-      // Mantém o seletor de contas hospedado pelo Google em vez do modal
-      // nativo do Chrome/FedCM.
       use_fedcm_for_button: false,
     });
 

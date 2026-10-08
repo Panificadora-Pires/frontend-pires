@@ -132,7 +132,6 @@ export const useFavoritesStore = defineStore("favorites", {
           atuais.add(produtoId);
           houveMudanca = true;
         } catch {
-          // Entrada antiga inválida/inativa ou já existente: ignora.
         }
       }
 

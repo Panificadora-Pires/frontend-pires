@@ -319,7 +319,6 @@ async function atualizar() {
   try {
     await notifications.carregar({ force: true });
   } catch {
-    // A store já mantém o erro.
   }
 }
 
@@ -343,7 +342,6 @@ async function marcarTodas() {
   try {
     await notifications.marcarTodasLidas();
   } catch {
-    // Mantém o estado atual em caso de erro.
   } finally {
     marcandoTodas.value = false;
   }

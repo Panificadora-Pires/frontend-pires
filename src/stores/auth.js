@@ -222,8 +222,6 @@ export const useAuthStore = defineStore("auth", {
           await authService.logout(refresh);
         }
       } catch {
-        // A sessão local precisa ser encerrada mesmo se o refresh já estiver
-        // expirado, revogado ou se o backend estiver temporariamente indisponível.
       } finally {
         this._limparSessaoLocal();
       }
