@@ -1,7 +1,9 @@
 <template>
   <span class="order-status" :class="`order-status--${config.chave}`">
-    <component :is="config.icon" :size="14" aria-hidden="true" />
-    <span>{{ config.label }}</span>
+    <span class="order-status__icon" aria-hidden="true">
+      <component :is="config.icon" :size="13" />
+    </span>
+    <span class="order-status__label">{{ config.label }}</span>
   </span>
 </template>
 
@@ -70,46 +72,76 @@ const config = computed(() => {
 
 <style scoped>
 .order-status {
+  min-height: 30px;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-height: 24px;
-  padding: 0 8px;
-  border-radius: 6px;
+  gap: 6px;
+  padding: 0 10px;
   border: 1px solid transparent;
-  font-size: 8px;
+  border-radius: var(--pp-radius-full);
+  font-size: 10px;
   font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.015em;
+  white-space: nowrap;
 }
+
 .order-status--pendente {
-  background: #fff7e8;
-  border-color: #ead7b0;
-  color: #835f20;
+  border-color: rgba(224, 168, 62, 0.2);
+  background: #fff6e5;
+  color: #a86a0d;
 }
+
 .order-status--confirmado {
-  background: #eef3f8;
-  border-color: #cfdae5;
-  color: #506b82;
+  border-color: rgba(70, 117, 169, 0.14);
+  background: #eef5fb;
+  color: #456f9f;
 }
+
 .order-status--pronto {
-  background: #edf5e9;
-  border-color: #cadcc1;
-  color: #547341;
+  border-color: rgba(111, 163, 111, 0.18);
+  background: #edf7ec;
+  color: #527e50;
 }
+
 .order-status--retirado {
-  background: #f2f2f2;
-  border-color: #dfdfdf;
-  color: #5f5f5f;
+  border-color: rgba(82, 126, 80, 0.16);
+  background: #f1f6f0;
+  color: #5a7658;
 }
+
 .order-status--cancelado {
+  border-color: rgba(224, 96, 90, 0.16);
   background: #fff0ef;
-  border-color: #ebcfcc;
-  color: #984843;
+  color: #b24f4a;
 }
+
 .order-status--neutro {
-  background: #f2f0ed;
-  border-color: #e0dcd7;
-  color: #716960;
+  border-color: rgba(43, 43, 43, 0.08);
+  background: #f4f1ee;
+  color: #6f6862;
+}
+.order-status {
+  gap: 8px;
+  padding-inline: 11px;
+  line-height: 1;
+}
+
+.order-status__icon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  display: grid;
+  place-items: center;
+}
+
+.order-status__icon svg {
+  width: 13px;
+  height: 13px;
+  display: block;
+}
+
+.order-status__label {
+  display: block;
+  line-height: 1.1;
 }
 </style>
