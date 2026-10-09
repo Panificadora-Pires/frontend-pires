@@ -54,7 +54,7 @@
                   <Pencil :size="14" />Editar</button
                 ><button
                   class="admin-btn admin-btn--sm admin-btn--danger"
-                  @click="excluir(p)"
+                  @click="abrirExclusao(p)"
                 >
                   <Trash2 :size="14" />Excluir
                 </button>
@@ -63,6 +63,71 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+
+    <div
+      v-if="promocaoParaExcluir"
+      class="admin-modal"
+      @click.self="fecharExclusao"
+    >
+      <div
+        class="admin-modal-card promotion-delete-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="promotion-delete-title"
+      >
+        <div class="admin-modal-header">
+          <div>
+            <h2 id="promotion-delete-title">Excluir promoção</h2>
+            <p class="promotion-delete-modal__subtitle">
+              Esta ação remove a promoção cadastrada para
+              <strong>{{ promocaoParaExcluir.produto_nome }}</strong>.
+            </p>
+          </div>
+          <button
+            type="button"
+            class="admin-btn admin-btn--ghost admin-btn--sm"
+            :disabled="excluindo"
+            @click="fecharExclusao"
+          >
+            Fechar
+          </button>
+        </div>
+
+        <div class="admin-modal-body promotion-delete-modal__body">
+          <div class="promotion-delete-modal__icon">
+            <CircleAlert :size="22" />
+          </div>
+          <div>
+            <strong>Deseja realmente excluir esta promoção?</strong>
+            <p>
+              O produto continuará cadastrado normalmente, mas deixará de usar
+              este preço promocional.
+            </p>
+          </div>
+        </div>
+
+        <div class="admin-modal-footer">
+          <button
+            type="button"
+            class="admin-btn"
+            :disabled="excluindo"
+            @click="fecharExclusao"
+          >
+            Voltar
+          </button>
+          <button
+            type="button"
+            class="admin-btn admin-btn--danger"
+            :disabled="excluindo"
+            @click="confirmarExclusao"
+          >
+            <Trash2 :size="15" />
+            {{ excluindo ? "Excluindo..." : "Excluir promoção" }}
+          </button>
+        </div>
+      </div>
     </div>
 
     <div v-if="formAberto" class="admin-modal" @click.self="formAberto = false">
@@ -120,12 +185,14 @@
 <script setup>
 import { onMounted, reactive, ref } from "vue";
 import { CircleAlert, Pencil, Plus, Tags, Trash2 } from "lucide-vue-next";
-import adminService from "@/services/admin.service";
+import adminService, { mensagemErroApi } from "@/services/admin.service";
 
 const promocoes = ref([]);
 const produtos = ref([]);
 const erro = ref("");
 const formAberto = ref(false);
+const promocaoParaExcluir = ref(null);
+const excluindo = ref(false);
 const form = reactive({
   id: null,
   produto: "",
@@ -196,22 +263,33 @@ async function salvar() {
     formAberto.value = false;
     await carregar();
   } catch (e) {
-    const d = e.response?.data;
-    erro.value =
-      typeof d?.non_field_errors?.[0] === "string"
-        ? d.non_field_errors[0]
-        : typeof d?.detail === "string"
-          ? d.detail
-          : "Não foi possível salvar a promoção.";
+    erro.value = mensagemErroApi(e, "Não foi possível salvar a promoção.");
   }
 }
-async function excluir(p) {
-  if (!confirm(`Excluir a promoção de ${p.produto_nome}?`)) return;
+function abrirExclusao(p) {
+  erro.value = "";
+  promocaoParaExcluir.value = p;
+}
+
+function fecharExclusao() {
+  if (excluindo.value) return;
+  promocaoParaExcluir.value = null;
+}
+
+async function confirmarExclusao() {
+  if (!promocaoParaExcluir.value) return;
+
+  excluindo.value = true;
+  erro.value = "";
+
   try {
-    await adminService.excluirPromocao(p.id);
+    await adminService.excluirPromocao(promocaoParaExcluir.value.id);
+    promocaoParaExcluir.value = null;
     await carregar();
-  } catch {
-    erro.value = "Não foi possível excluir a promoção.";
+  } catch (e) {
+    erro.value = mensagemErroApi(e, "Não foi possível excluir a promoção.");
+  } finally {
+    excluindo.value = false;
   }
 }
 onMounted(carregar);
@@ -227,4 +305,41 @@ onMounted(carregar);
   gap: 6px;
   min-width: 160px;
 }
+
+.promotion-delete-modal {
+  width: min(500px, calc(100vw - 32px));
+}
+.promotion-delete-modal__subtitle {
+  margin: 5px 0 0;
+  color: var(--admin-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.promotion-delete-modal__body {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+}
+.promotion-delete-modal__body strong {
+  display: block;
+  color: var(--admin-text);
+  font-size: 14px;
+}
+.promotion-delete-modal__body p {
+  margin: 7px 0 0;
+  color: var(--admin-text-soft);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.promotion-delete-modal__icon {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
 </style>
