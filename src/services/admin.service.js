@@ -1,5 +1,50 @@
 import api from "./api";
 
+export function mensagemErroApi(error, fallback = "Não foi possível concluir a operação.") {
+  const data = error?.response?.data;
+
+  function primeiraMensagem(valor) {
+    if (typeof valor === "string") {
+      const texto = valor.trim();
+      return texto || "";
+    }
+
+    if (Array.isArray(valor)) {
+      for (const item of valor) {
+        const mensagem = primeiraMensagem(item);
+        if (mensagem) return mensagem;
+      }
+      return "";
+    }
+
+    if (valor && typeof valor === "object") {
+      const prioridades = [
+        "detail",
+        "error",
+        "message",
+        "non_field_errors",
+        "status",
+      ];
+
+      for (const chave of prioridades) {
+        if (chave in valor) {
+          const mensagem = primeiraMensagem(valor[chave]);
+          if (mensagem) return mensagem;
+        }
+      }
+
+      for (const item of Object.values(valor)) {
+        const mensagem = primeiraMensagem(item);
+        if (mensagem) return mensagem;
+      }
+    }
+
+    return "";
+  }
+
+  return primeiraMensagem(data) || fallback;
+}
+
 const PAGE_SIZE = 100;
 const MAX_PAGES = 30;
 
