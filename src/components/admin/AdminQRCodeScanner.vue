@@ -1,111 +1,138 @@
 <template>
-  <Teleport to="body">
-    <Transition name="scanner-fade">
-      <div
-        v-if="aberto"
-        class="scanner"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Confirmar retirada"
-        @click.self="fechar"
-      >
-        <section class="scanner__card">
-          <header class="scanner__head">
-            <div>
-              <h2>Confirmar retirada</h2>
-              <p>
-                Leia o QR Code do cliente ou informe o código de retirada
-                manualmente.
-              </p>
-            </div>
-            <button
-              type="button"
-              class="scanner__close"
-              aria-label="Fechar"
-              @click="fechar"
-            >
-              <X :size="19" />
-            </button>
-          </header>
+  <div
+    v-if="aberto"
+    class="qr-scanner"
+    role="presentation"
+    @click.self="fechar"
+  >
+    <section
+      class="qr-scanner__dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="qr-scanner-title"
+    >
+      <header class="qr-scanner__header">
+        <div>
+          <h2 id="qr-scanner-title">Confirmar retirada</h2>
+          <p>Leia o QR Code do cliente ou informe o código de retirada manualmente.</p>
+        </div>
 
-          <div class="scanner__body">
-            <div v-if="cameraAtiva" class="scanner__camera-wrap">
-              <video
-                ref="videoRef"
-                class="scanner__video"
-                muted
-                playsinline
-              ></video>
-              <div class="scanner__target"></div>
-            </div>
+        <button
+          type="button"
+          class="qr-scanner__close"
+          aria-label="Fechar leitor de QR Code"
+          :disabled="processando"
+          @click="fechar"
+        >
+          <X :size="19" />
+        </button>
+      </header>
 
-            <div v-else class="scanner__camera-placeholder">
-              <QrCode :size="32" />
-              <strong>Leitura por câmera</strong>
-              <p v-if="cameraDisponivel">
-                Abra a câmera e posicione o QR Code no centro.
-              </p>
-              <p v-else>
-                Este navegador não oferece leitura automática. Use o código
-                manual.
-              </p>
-              <button
-                v-if="cameraDisponivel"
-                type="button"
-                class="admin-btn"
-                :disabled="iniciandoCamera"
-                @click="iniciarCamera"
-              >
-                <Camera :size="16" />
-                {{ iniciandoCamera ? "Abrindo câmera..." : "Abrir câmera" }}
-              </button>
-            </div>
+      <div class="qr-scanner__body">
+        <div class="qr-scanner__camera" :class="{ 'is-error': cameraErro }">
+          <video
+            ref="video"
+            class="qr-scanner__video"
+            autoplay
+            muted
+            playsinline
+          />
 
-            <div class="scanner__separator"><span>Código manual</span></div>
-
-            <label class="admin-field scanner__field">
-              <span class="admin-field-label">Código de retirada</span>
-              <input
-                v-model.trim="codigo"
-                type="text"
-                autocomplete="off"
-                placeholder="00000000-0000-0000-0000-000000000000"
-                @keyup.enter="confirmar"
-              />
-            </label>
-
-            <p v-if="erro" class="scanner__error">
-              <CircleAlert :size="16" />{{ erro }}
-            </p>
+          <div v-if="cameraIniciando" class="qr-scanner__camera-state">
+            <LoaderCircle :size="27" class="qr-scanner__spinner" />
+            <strong>Abrindo câmera...</strong>
+            <span>Autorize o acesso quando o navegador solicitar.</span>
           </div>
 
-          <footer class="scanner__actions">
-            <button type="button" class="admin-btn" @click="fechar">
-              Cancelar
-            </button>
+          <div v-else-if="cameraErro" class="qr-scanner__camera-state">
+            <CameraOff :size="29" />
+            <strong>{{ cameraErro }}</strong>
+            <span>Você ainda pode usar o código manual abaixo.</span>
             <button
               type="button"
-              class="admin-btn admin-btn--primary"
-              :disabled="!codigo || enviando"
-              @click="confirmar"
+              class="qr-scanner__retry"
+              :disabled="processando"
+              @click="iniciarCamera"
             >
-              <LoaderCircle v-if="enviando" :size="16" class="admin-spin" />
-              <CheckCircle2 v-else :size="16" />
-              {{ enviando ? "Confirmando..." : "Confirmar retirada" }}
+              <Camera :size="15" />
+              Tentar abrir a câmera
             </button>
-          </footer>
-        </section>
+          </div>
+
+          <div v-else class="qr-scanner__guide" aria-hidden="true">
+            <span class="qr-scanner__corner qr-scanner__corner--tl" />
+            <span class="qr-scanner__corner qr-scanner__corner--tr" />
+            <span class="qr-scanner__corner qr-scanner__corner--bl" />
+            <span class="qr-scanner__corner qr-scanner__corner--br" />
+            <div class="qr-scanner__scan-line" />
+          </div>
+
+          <div v-if="!cameraIniciando && !cameraErro" class="qr-scanner__camera-caption">
+            <QrCode :size="15" />
+            Aponte a câmera para o QR Code
+          </div>
+        </div>
+
+        <div class="qr-scanner__divider">
+          <span>Código manual</span>
+        </div>
+
+        <label class="qr-scanner__field">
+          <span>Código de retirada</span>
+          <input
+            v-model.trim="codigo"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="00000000-0000-0000-0000-000000000000"
+            :disabled="processando"
+            @keyup.enter="confirmarManual"
+          />
+        </label>
+
+        <div v-if="erro" class="qr-scanner__error" role="alert">
+          <CircleAlert :size="16" />
+          <span>{{ erro }}</span>
+        </div>
       </div>
-    </Transition>
-  </Teleport>
+
+      <footer class="qr-scanner__footer">
+        <button
+          type="button"
+          class="qr-scanner__button qr-scanner__button--secondary"
+          :disabled="processando"
+          @click="fechar"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          class="qr-scanner__button qr-scanner__button--primary"
+          :disabled="processando || !codigo"
+          @click="confirmarManual"
+        >
+          <LoaderCircle
+            v-if="processando"
+            :size="16"
+            class="qr-scanner__spinner"
+          />
+          <CircleCheck v-else :size="16" />
+          {{ processando ? "Confirmando..." : "Confirmar retirada" }}
+        </button>
+      </footer>
+    </section>
+  </div>
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
+import { nextTick, onBeforeUnmount, ref, watch } from "vue";
+import { BrowserQRCodeReader } from "@zxing/browser";
 import {
   Camera,
-  CheckCircle2,
+  CameraOff,
   CircleAlert,
+  CircleCheck,
   LoaderCircle,
   QrCode,
   X,
@@ -119,276 +146,532 @@ const props = defineProps({
 
 const emit = defineEmits(["close", "retirado"]);
 
+const video = ref(null);
 const codigo = ref("");
 const erro = ref("");
-const enviando = ref(false);
-const iniciandoCamera = ref(false);
-const cameraAtiva = ref(false);
-const videoRef = ref(null);
-let stream = null;
-let rafId = null;
-let detector = null;
+const cameraErro = ref("");
+const cameraIniciando = ref(false);
+const processando = ref(false);
 
-const cameraDisponivel = computed(() => {
-  if (typeof window === "undefined") return false;
-  return Boolean(
-    window.BarcodeDetector && navigator.mediaDevices?.getUserMedia,
-  );
-});
-
-function normalizarErro(error) {
-  const data = error.response?.data;
-  if (typeof data?.codigo_retirada === "string") return data.codigo_retirada;
-  if (Array.isArray(data?.codigo_retirada))
-    return data.codigo_retirada.join(" ");
-  if (typeof data?.detail === "string") return data.detail;
-  if (typeof data === "string") return data;
-  return "Não foi possível confirmar a retirada.";
-}
-
-async function confirmar() {
-  if (!codigo.value || enviando.value) return;
-  enviando.value = true;
-  erro.value = "";
-
-  try {
-    const pedido = await adminService.retirarViaQRCode(codigo.value);
-    pararCamera();
-    emit("retirado", pedido);
-  } catch (error) {
-    erro.value = normalizarErro(error);
-  } finally {
-    enviando.value = false;
-  }
-}
-
-async function iniciarCamera() {
-  if (!cameraDisponivel.value || iniciandoCamera.value) return;
-  iniciandoCamera.value = true;
-  erro.value = "";
-
-  try {
-    detector = new window.BarcodeDetector({ formats: ["qr_code"] });
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: "environment" } },
-      audio: false,
-    });
-    cameraAtiva.value = true;
-    await nextTick();
-    videoRef.value.srcObject = stream;
-    await videoRef.value.play();
-    detectarFrame();
-  } catch {
-    pararCamera();
-    erro.value =
-      "Não foi possível acessar a câmera. Verifique a permissão do navegador.";
-  } finally {
-    iniciandoCamera.value = false;
-  }
-}
-
-async function detectarFrame() {
-  if (!cameraAtiva.value || !detector || !videoRef.value) return;
-
-  try {
-    const resultados = await detector.detect(videoRef.value);
-    const valor = resultados?.[0]?.rawValue;
-    if (valor) {
-      codigo.value = valor.trim();
-      pararCamera();
-      await confirmar();
-      return;
-    }
-  } catch {
-    // Alguns frames podem falhar durante foco/movimento; o próximo frame tenta novamente.
-  }
-
-  rafId = window.requestAnimationFrame(detectarFrame);
-}
-
-function pararCamera() {
-  cameraAtiva.value = false;
-  if (rafId) window.cancelAnimationFrame(rafId);
-  rafId = null;
-  if (stream) {
-    stream.getTracks().forEach((track) => track.stop());
-    stream = null;
-  }
-  if (videoRef.value) videoRef.value.srcObject = null;
-}
-
-function fechar() {
-  pararCamera();
-  emit("close");
-}
+let leitor = null;
+let controles = null;
+let leituraEmAndamento = false;
 
 watch(
   () => props.aberto,
-  (aberto) => {
-    if (aberto) {
-      codigo.value = "";
-      erro.value = "";
-    } else {
+  async (aberto) => {
+    if (!aberto) {
       pararCamera();
+      return;
     }
+
+    codigo.value = "";
+    erro.value = "";
+    cameraErro.value = "";
+    leituraEmAndamento = false;
+
+    await nextTick();
+    await iniciarCamera();
   },
 );
 
 onBeforeUnmount(pararCamera);
+
+async function iniciarCamera() {
+  if (!props.aberto || processando.value) return;
+
+  pararCamera();
+  cameraIniciando.value = true;
+  cameraErro.value = "";
+  erro.value = "";
+
+  try {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      throw new Error("CAMERA_UNAVAILABLE");
+    }
+
+    leitor = new BrowserQRCodeReader(undefined, {
+      delayBetweenScanAttempts: 120,
+      delayBetweenScanSuccess: 500,
+      tryPlayVideoTimeout: 5000,
+    });
+
+    controles = await leitor.decodeFromConstraints(
+      {
+        audio: false,
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+      },
+      video.value,
+      (resultado) => {
+        if (!resultado || leituraEmAndamento || processando.value) return;
+
+        const texto = String(resultado.getText?.() || "").trim();
+        if (!texto) return;
+
+        leituraEmAndamento = true;
+        codigo.value = texto;
+        void confirmarCodigo(texto, { origemCamera: true });
+      },
+    );
+  } catch (e) {
+    cameraErro.value = mensagemErroCamera(e);
+  } finally {
+    cameraIniciando.value = false;
+  }
+}
+
+function pararCamera() {
+  try {
+    controles?.stop?.();
+  } catch {
+    // A câmera já pode ter sido encerrada pelo próprio navegador.
+  }
+
+  controles = null;
+  leitor = null;
+
+  const stream = video.value?.srcObject;
+  if (stream?.getTracks) {
+    stream.getTracks().forEach((track) => track.stop());
+  }
+
+  if (video.value) {
+    video.value.srcObject = null;
+  }
+}
+
+function mensagemErroCamera(error) {
+  const nome = String(error?.name || "");
+
+  if (nome === "NotAllowedError" || nome === "PermissionDeniedError") {
+    return "A permissão da câmera foi bloqueada.";
+  }
+
+  if (
+    nome === "NotFoundError" ||
+    nome === "DevicesNotFoundError" ||
+    nome === "OverconstrainedError"
+  ) {
+    return "Nenhuma câmera compatível foi encontrada.";
+  }
+
+  if (nome === "NotReadableError" || nome === "TrackStartError") {
+    return "A câmera está sendo usada por outro aplicativo.";
+  }
+
+  if (nome === "SecurityError") {
+    return "O navegador bloqueou a câmera por segurança.";
+  }
+
+  return "Não foi possível abrir a câmera.";
+}
+
+async function confirmarManual() {
+  const valor = codigo.value.trim();
+  if (!valor) return;
+  await confirmarCodigo(valor, { origemCamera: false });
+}
+
+async function confirmarCodigo(valor, { origemCamera }) {
+  if (processando.value) return;
+
+  processando.value = true;
+  erro.value = "";
+
+  try {
+    const pedido = await adminService.retirarViaQRCode(valor);
+    pararCamera();
+    emit("retirado", pedido);
+  } catch (e) {
+    erro.value = mensagemErroApi(
+      e,
+      "Não foi possível confirmar a retirada. Confira o código e tente novamente.",
+    );
+
+    if (origemCamera) {
+      leituraEmAndamento = false;
+    }
+  } finally {
+    processando.value = false;
+  }
+}
+
+function mensagemErroApi(error, fallback) {
+  const data = error?.response?.data;
+
+  if (typeof data?.detail === "string") return data.detail;
+  if (typeof data?.codigo_retirada === "string") return data.codigo_retirada;
+  if (Array.isArray(data?.codigo_retirada) && data.codigo_retirada[0]) {
+    return String(data.codigo_retirada[0]);
+  }
+  if (Array.isArray(data?.non_field_errors) && data.non_field_errors[0]) {
+    return String(data.non_field_errors[0]);
+  }
+
+  return fallback;
+}
+
+function fechar() {
+  if (processando.value) return;
+  pararCamera();
+  emit("close");
+}
 </script>
 
 <style scoped>
-.scanner {
+.qr-scanner {
   position: fixed;
   inset: 0;
-  z-index: 120;
+  z-index: 1200;
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(28, 25, 23, 0.48);
+  background: rgba(24, 20, 17, 0.48);
+  backdrop-filter: blur(2px);
 }
-.scanner__card {
+
+.qr-scanner__dialog {
   width: min(520px, 100%);
   max-height: calc(100vh - 40px);
-  overflow-y: auto;
-  border: 1px solid var(--admin-border);
-  border-radius: 14px;
+  overflow: auto;
+  border: 1px solid rgba(58, 41, 28, 0.12);
+  border-radius: 16px;
   background: #fff;
-  color: var(--admin-text);
-  box-shadow: 0 24px 70px rgba(28, 25, 23, 0.18);
+  box-shadow: 0 28px 80px rgba(24, 16, 10, 0.24);
 }
-.scanner__head {
-  display: flex;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 18px 20px 14px;
-  border-bottom: 1px solid var(--admin-border);
-}
-.scanner__head h2 {
-  margin: 0;
-  font-size: 18px;
-}
-.scanner__head p {
-  margin: 5px 0 0;
-  color: var(--admin-muted);
-  font-size: 12px;
-  line-height: 1.5;
-}
-.scanner__close {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  flex: 0 0 34px;
-  border: 1px solid var(--admin-border);
-  border-radius: 8px;
-  background: #fff;
-  color: var(--admin-text-soft);
-  cursor: pointer;
-}
-.scanner__body {
-  padding: 18px 20px;
-}
-.scanner__camera-wrap,
-.scanner__camera-placeholder {
-  position: relative;
-  min-height: 230px;
-  overflow: hidden;
-  border: 1px solid var(--admin-border);
-  border-radius: 10px;
-  background: #1c1917;
-}
-.scanner__video {
-  width: 100%;
-  height: 280px;
-  display: block;
-  object-fit: cover;
-}
-.scanner__target {
-  position: absolute;
-  width: 170px;
-  height: 170px;
-  inset: 50% auto auto 50%;
-  transform: translate(-50%, -50%);
-  border: 2px solid #f5c86e;
-  border-radius: 10px;
-  box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.22);
-}
-.scanner__camera-placeholder {
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 8px;
-  padding: 24px;
-  text-align: center;
-  color: #f5c86e;
-}
-.scanner__camera-placeholder strong {
-  color: #fafaf9;
-  font-size: 13px;
-}
-.scanner__camera-placeholder p {
-  max-width: 330px;
-  margin: 0 0 4px;
-  color: #a8a29e;
-  font-size: 11px;
-  line-height: 1.5;
-}
-.scanner__camera-placeholder .admin-btn {
-  border-color: #57534e;
-  background: #292524;
-  color: #f5f5f4;
-}
-.scanner__separator {
+
+.qr-scanner__header,
+.qr-scanner__footer {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 17px 0 14px;
-  color: var(--admin-muted);
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 18px;
+}
+
+.qr-scanner__header {
+  border-bottom: 1px solid #eee7df;
+}
+
+.qr-scanner__header h2 {
+  margin: 0;
+  color: #23170f;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.qr-scanner__header p {
+  margin: 5px 0 0;
+  color: #81766d;
   font-size: 11px;
+  line-height: 1.45;
 }
-.scanner__separator::after {
+
+.qr-scanner__close {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #e6ded7;
+  border-radius: 9px;
+  background: #fff;
+  color: #71675f;
+  cursor: pointer;
+}
+
+.qr-scanner__body {
+  padding: 16px 18px;
+}
+
+.qr-scanner__camera {
+  min-height: 230px;
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #171411;
+  color: #fff;
+}
+
+.qr-scanner__video {
+  width: 100%;
+  height: 230px;
+  display: block;
+  object-fit: cover;
+  background: #171411;
+}
+
+.qr-scanner__camera-state {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 26px;
+  text-align: center;
+  background: #171411;
+  color: #f6eee6;
+}
+
+.qr-scanner__camera-state strong {
+  font-size: 13px;
+}
+
+.qr-scanner__camera-state span {
+  max-width: 320px;
+  color: #bdb3aa;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.qr-scanner__retry {
+  margin-top: 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.qr-scanner__guide {
+  width: min(190px, 56%);
+  aspect-ratio: 1;
+  position: absolute;
+  inset: 50% auto auto 50%;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+}
+
+.qr-scanner__corner {
+  width: 34px;
+  height: 34px;
+  position: absolute;
+  border-color: #f3b94e;
+  border-style: solid;
+}
+
+.qr-scanner__corner--tl {
+  top: 0;
+  left: 0;
+  border-width: 3px 0 0 3px;
+  border-radius: 9px 0 0;
+}
+
+.qr-scanner__corner--tr {
+  top: 0;
+  right: 0;
+  border-width: 3px 3px 0 0;
+  border-radius: 0 9px 0 0;
+}
+
+.qr-scanner__corner--bl {
+  bottom: 0;
+  left: 0;
+  border-width: 0 0 3px 3px;
+  border-radius: 0 0 0 9px;
+}
+
+.qr-scanner__corner--br {
+  right: 0;
+  bottom: 0;
+  border-width: 0 3px 3px 0;
+  border-radius: 0 0 9px 0;
+}
+
+.qr-scanner__scan-line {
+  height: 2px;
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 50%;
+  border-radius: 999px;
+  background: #f3b94e;
+  box-shadow: 0 0 12px rgba(243, 185, 78, 0.7);
+  animation: qr-scan 1.7s ease-in-out infinite alternate;
+}
+
+.qr-scanner__camera-caption {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  z-index: 3;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: rgba(24, 18, 14, 0.72);
+  color: #f7eee4;
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+}
+
+.qr-scanner__divider {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 16px 0 11px;
+  color: #9b9087;
+  font-size: 10px;
+}
+
+.qr-scanner__divider::before,
+.qr-scanner__divider::after {
   content: "";
-  flex: 1;
   height: 1px;
-  background: var(--admin-border);
+  flex: 1;
+  background: #eee7df;
 }
-.scanner__error {
+
+.qr-scanner__field {
+  display: grid;
+  gap: 7px;
+}
+
+.qr-scanner__field > span {
+  color: #4f433a;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.qr-scanner__field input {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #ded6cf;
+  border-radius: 9px;
+  outline: none;
+  color: #291b13;
+  font: inherit;
+  font-size: 12px;
+}
+
+.qr-scanner__field input:focus {
+  border-color: #b67b20;
+  box-shadow: 0 0 0 3px rgba(182, 123, 32, 0.11);
+}
+
+.qr-scanner__error {
   display: flex;
   align-items: flex-start;
   gap: 7px;
-  margin: 11px 0 0;
-  color: var(--admin-danger);
-  font-size: 12px;
+  margin-top: 11px;
+  padding: 10px 11px;
+  border: 1px solid #fecaca;
+  border-radius: 9px;
+  background: #fff7f7;
+  color: #b42318;
+  font-size: 10px;
   line-height: 1.45;
 }
-.scanner__actions {
-  display: flex;
+
+.qr-scanner__footer {
   justify-content: flex-end;
-  gap: 8px;
-  padding: 14px 20px 18px;
-  border-top: 1px solid var(--admin-border);
+  border-top: 1px solid #eee7df;
 }
-.scanner-fade-enter-active,
-.scanner-fade-leave-active {
-  transition: opacity 150ms ease;
+
+.qr-scanner__button {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 14px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
 }
-.scanner-fade-enter-from,
-.scanner-fade-leave-to {
-  opacity: 0;
+
+.qr-scanner__button:disabled,
+.qr-scanner__retry:disabled,
+.qr-scanner__close:disabled {
+  opacity: 0.62;
+  cursor: wait;
 }
-@media (max-width: 560px) {
-  .scanner {
+
+.qr-scanner__button--secondary {
+  border: 1px solid #ddd5ce;
+  background: #fff;
+  color: #4f433a;
+}
+
+.qr-scanner__button--primary {
+  border: 1px solid #c98d2e;
+  background: #cf9d58;
+  color: #fff;
+}
+
+.qr-scanner__spinner {
+  animation: qr-spin 750ms linear infinite;
+}
+
+@keyframes qr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes qr-scan {
+  from {
+    transform: translateY(-56px);
+  }
+  to {
+    transform: translateY(56px);
+  }
+}
+
+@media (max-width: 600px) {
+  .qr-scanner {
     padding: 10px;
-    align-items: end;
   }
-  .scanner__card {
-    max-height: 92vh;
-    border-radius: 14px 14px 8px 8px;
+
+  .qr-scanner__dialog {
+    max-height: calc(100dvh - 20px);
+    border-radius: 14px;
   }
-  .scanner__actions {
+
+  .qr-scanner__header,
+  .qr-scanner__footer {
+    padding: 14px;
+  }
+
+  .qr-scanner__body {
+    padding: 14px;
+  }
+
+  .qr-scanner__camera,
+  .qr-scanner__video {
+    height: min(52dvh, 330px);
+    min-height: 245px;
+  }
+
+  .qr-scanner__footer {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1.35fr;
+  }
+
+  .qr-scanner__button {
+    width: 100%;
   }
 }
 </style>
