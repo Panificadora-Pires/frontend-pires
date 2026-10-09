@@ -141,7 +141,7 @@
                 "
                 class="admin-btn admin-btn--danger order-actions__main"
                 :disabled="acao"
-                @click="cancelar"
+                @click="abrirCancelamento"
               >
                 <CircleX :size="16" />Cancelar pedido
               </button>
@@ -186,6 +186,73 @@
       @close="scannerAberto = false"
       @retirado="onRetirado"
     />
+
+    <div
+      v-if="cancelamentoAberto"
+      class="admin-modal"
+      @click.self="fecharCancelamento"
+    >
+      <div
+        class="admin-modal-card order-cancel-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="order-cancel-title"
+      >
+        <div class="admin-modal-header">
+          <div>
+            <h2 id="order-cancel-title">Cancelar pedido</h2>
+            <p class="order-cancel-modal__subtitle">
+              Esta ação altera o pedido #{{ pedido.id }} para cancelado.
+            </p>
+          </div>
+          <button
+            type="button"
+            class="admin-btn admin-btn--ghost admin-btn--sm"
+            :disabled="acao"
+            @click="fecharCancelamento"
+          >
+            Fechar
+          </button>
+        </div>
+
+        <div class="admin-modal-body order-cancel-modal__body">
+          <div class="order-cancel-modal__icon">
+            <CircleAlert :size="22" />
+          </div>
+          <div>
+            <strong>Deseja realmente cancelar este pedido?</strong>
+            <p v-if="pedido.forma_pagamento === 'dinheiro'">
+              O estoque reservado será devolvido após a confirmação.
+            </p>
+            <p v-else>
+              O sistema verificará o pagamento no Mercado Pago antes de concluir
+              o cancelamento. Se já houver pagamento aprovado, o fluxo financeiro
+              correspondente será processado primeiro.
+            </p>
+          </div>
+        </div>
+
+        <div class="admin-modal-footer">
+          <button
+            type="button"
+            class="admin-btn"
+            :disabled="acao"
+            @click="fecharCancelamento"
+          >
+            Voltar
+          </button>
+          <button
+            type="button"
+            class="admin-btn admin-btn--danger"
+            :disabled="acao"
+            @click="confirmarCancelamento"
+          >
+            <CircleX :size="16" />
+            {{ acao ? "Cancelando..." : "Cancelar pedido" }}
+          </button>
+        </div>
+      </div>
+    </div>
   </section>
 </template>
 
@@ -204,7 +271,7 @@ import {
   WalletCards,
 } from "lucide-vue-next";
 import AdminQRCodeScanner from "@/components/admin/AdminQRCodeScanner.vue";
-import adminService from "@/services/admin.service";
+import adminService, { mensagemErroApi } from "@/services/admin.service";
 
 const route = useRoute();
 const pedido = ref(null);
@@ -212,6 +279,7 @@ const carregando = ref(false);
 const erro = ref("");
 const acao = ref(false);
 const scannerAberto = ref(false);
+const cancelamentoAberto = ref(false);
 
 const totalItens = computed(() =>
   (pedido.value?.itens || []).reduce(
@@ -262,11 +330,7 @@ function badgePagamento(status) {
   return "admin-badge--warning";
 }
 function msgErro(e) {
-  const d = e.response?.data;
-  if (typeof d?.status === "string") return d.status;
-  if (Array.isArray(d?.status)) return d.status.join(" ");
-  if (typeof d?.detail === "string") return d.detail;
-  return "Não foi possível concluir a operação.";
+  return mensagemErroApi(e, "Não foi possível concluir a operação.");
 }
 
 async function carregar() {
@@ -289,16 +353,30 @@ async function alterar(status) {
       pedido.value.id,
       status,
     );
+    return true;
   } catch (e) {
     erro.value = msgErro(e);
+    return false;
   } finally {
     acao.value = false;
   }
 }
 
-async function cancelar() {
-  if (!window.confirm(`Cancelar o pedido #${pedido.value.id}?`)) return;
-  await alterar("cancelado");
+function abrirCancelamento() {
+  erro.value = "";
+  cancelamentoAberto.value = true;
+}
+
+function fecharCancelamento() {
+  if (acao.value) return;
+  cancelamentoAberto.value = false;
+}
+
+async function confirmarCancelamento() {
+  const sucesso = await alterar("cancelado");
+  if (sucesso) {
+    cancelamentoAberto.value = false;
+  }
 }
 
 function onRetirado(p) {
@@ -492,4 +570,40 @@ onMounted(carregar);
     border-bottom: 1px solid var(--admin-border);
   }
 }
+
+.order-cancel-modal {
+  width: min(520px, calc(100vw - 32px));
+}
+.order-cancel-modal__subtitle {
+  margin: 5px 0 0;
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+.order-cancel-modal__body {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+}
+.order-cancel-modal__body strong {
+  display: block;
+  color: var(--admin-text);
+  font-size: 14px;
+}
+.order-cancel-modal__body p {
+  margin: 7px 0 0;
+  color: var(--admin-text-soft);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.order-cancel-modal__icon {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
 </style>
