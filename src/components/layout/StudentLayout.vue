@@ -202,10 +202,12 @@ import catalogService, { promocaoEstaAtiva } from "@/services/catalog.service";
 import { useAuthStore } from "@/stores/auth";
 import { useCartStore } from "@/stores/cart";
 import { useNotificationsStore } from "@/stores/notifications";
+import { useOrdersStore } from "@/stores/orders";
 
 const auth = useAuthStore();
 const cart = useCartStore();
 const notifications = useNotificationsStore();
+const orders = useOrdersStore();
 const router = useRouter();
 
 const menuAberto = ref(false);
@@ -295,6 +297,17 @@ async function buscarPromocoesAtivas() {
     promoCount.value = 0;
   }
 }
+
+// Notificação nova costuma ser mudança de pedido (ex.: "pronto"): atualiza os pedidos na hora,
+// sem esperar o próximo ciclo da tela "Meus pedidos".
+watch(
+  () => notifications.naoLidas,
+  (atual, anterior) => {
+    if (atual > anterior && orders.inicializado) {
+      orders.carregar({ force: true, silencioso: true }).catch(() => {});
+    }
+  },
+);
 
 onMounted(() => {
   notifications.iniciarPolling();

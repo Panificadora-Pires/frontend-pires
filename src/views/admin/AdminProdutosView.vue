@@ -8,8 +8,18 @@
         </p>
       </div>
       <div class="admin-actions">
-        <button class="admin-btn" :disabled="carregando" @click="carregar">
-          <RefreshCw :size="16" :class="{ 'admin-spin': carregando }" />
+        <BaseRefreshStatus
+          class="admin-refresh-status"
+          :ultima-atualizacao="ultimaAtualizacao"
+          :atualizando="carregando"
+          :erro="carregado ? erroAtualizacao : null"
+        />
+        <button class="admin-btn" :disabled="carregando" @click="atualizar">
+          <RefreshCw
+            :size="16"
+            :class="{ 'admin-spin': carregando }"
+            aria-hidden="true"
+          />
           Atualizar
         </button>
         <RouterLink
@@ -66,14 +76,17 @@
     <div v-if="erro" class="admin-alert admin-alert--error">
       <CircleAlert :size="17" />{{ erro }}
     </div>
-    <div v-if="carregando && !produtos.length" class="admin-loading">
+    <div v-if="!carregado && !erro" class="admin-loading">
       Carregando produtos...
     </div>
-    <div v-else-if="!filtrados.length" class="admin-card admin-empty">
+    <div
+      v-else-if="carregado && !filtrados.length"
+      class="admin-card admin-empty"
+    >
       <Boxes :size="28" /><strong>Nenhum produto encontrado</strong>
     </div>
 
-    <div v-else class="admin-table-wrap">
+    <div v-else-if="carregado" class="admin-table-wrap">
       <table class="admin-table products-table">
         <thead>
           <tr>
@@ -143,7 +156,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, ref } from "vue";
 import {
   Boxes,
   CircleAlert,
@@ -154,11 +167,16 @@ import {
   Search,
 } from "lucide-vue-next";
 import ProductImage from "@/components/catalog/ProductImage.vue";
+import BaseRefreshStatus from "@/components/ui/BaseRefreshStatus.vue";
+import { useAutoRefresh } from "@/composables/useAutoRefresh";
 import adminService from "@/services/admin.service";
+
+// Estoque baixa a cada pedido; 60 s mantém a tabela em dia sem pesar no servidor.
+const INTERVALO_PRODUTOS_MS = 60_000;
 
 const produtos = ref([]);
 const categorias = ref([]);
-const carregando = ref(false);
+const carregado = ref(false);
 const erro = ref("");
 const busca = ref("");
 const categoria = ref("");
@@ -207,15 +225,12 @@ function categoriaNome(id) {
 }
 
 async function carregar() {
-  carregando.value = true;
-  erro.value = "";
   try {
     const [lista, cats] = await Promise.all([
       adminService.listarProdutos(),
       adminService.listarCategorias(),
     ]);
-    categorias.value = cats;
-    produtos.value = await Promise.all(
+    const detalhados = await Promise.all(
       lista.map(async (p) => {
         try {
           return { ...p, ...(await adminService.obterProduto(p.id)) };
@@ -224,11 +239,28 @@ async function carregar() {
         }
       }),
     );
-  } catch {
-    erro.value = "Não foi possível carregar os produtos.";
-  } finally {
-    carregando.value = false;
+    // Não sobrescreve um produto que está sendo ativado/desativado agora.
+    if (alterando.value) return;
+    categorias.value = cats;
+    produtos.value = detalhados;
+    carregado.value = true;
+    erro.value = "";
+  } catch (error) {
+    // Falha em segundo plano mantém a tabela já exibida.
+    if (!carregado.value) erro.value = "Não foi possível carregar os produtos.";
+    throw error;
   }
+}
+
+const {
+  atualizando: carregando,
+  ultimaAtualizacao,
+  erro: erroAtualizacao,
+  atualizarAgora,
+} = useAutoRefresh(carregar, { intervalo: INTERVALO_PRODUTOS_MS });
+
+function atualizar() {
+  atualizarAgora();
 }
 
 async function alternarAtivo(p) {
@@ -244,7 +276,6 @@ async function alternarAtivo(p) {
   }
 }
 
-onMounted(carregar);
 </script>
 
 <style scoped>

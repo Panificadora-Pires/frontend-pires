@@ -1,8 +1,9 @@
 import { defineStore } from "pinia";
 
 import notificationService from "@/services/notification.service";
+import { createAutoRefresh } from "@/utils/autoRefresh";
 
-let pollingTimer = null;
+let autoRefresh = null;
 
 export const useNotificationsStore = defineStore("notifications", {
   state: () => ({
@@ -11,6 +12,8 @@ export const useNotificationsStore = defineStore("notifications", {
     inicializado: false,
     erro: null,
     atualizandoSilenciosamente: false,
+    ultimaAtualizacao: null,
+    erroAtualizacao: null,
   }),
 
   getters: {
@@ -66,27 +69,39 @@ export const useNotificationsStore = defineStore("notifications", {
     },
 
     iniciarPolling(intervaloMs = 30_000) {
-      this.carregar({ force: !this.inicializado }).catch(() => {});
-
-      if (pollingTimer) return;
-
-      pollingTimer = window.setInterval(() => {
-        this.carregar({
-          force: true,
-          silencioso: true,
-        }).catch(() => {});
-      }, intervaloMs);
+      if (!autoRefresh) {
+        autoRefresh = createAutoRefresh(
+          () =>
+            this.carregar({
+              force: true,
+              silencioso: this.inicializado,
+            }),
+          {
+            intervalo: intervaloMs,
+            onEstado: (estado) => {
+              this.ultimaAtualizacao = estado.ultimaAtualizacao;
+              this.erroAtualizacao = estado.erro;
+            },
+          },
+        );
+      }
+      autoRefresh.iniciar();
     },
 
     pararPolling() {
-      if (pollingTimer) {
-        window.clearInterval(pollingTimer);
-        pollingTimer = null;
-      }
+      autoRefresh?.parar();
+    },
+
+    atualizarAgora() {
+      if (autoRefresh) return autoRefresh.atualizarAgora();
+      return this.carregar({ force: true });
     },
 
     resetar() {
       this.pararPolling();
+      autoRefresh = null;
+      this.ultimaAtualizacao = null;
+      this.erroAtualizacao = null;
       this.itens = [];
       this.carregando = false;
       this.inicializado = false;

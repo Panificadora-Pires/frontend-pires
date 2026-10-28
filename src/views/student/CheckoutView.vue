@@ -434,6 +434,11 @@ import MercadoPagoPaymentBrick from "@/components/payment/MercadoPagoPaymentBric
 import paymentService from "@/services/payment.service";
 import { useAuthStore } from "@/stores/auth";
 import { useCartStore } from "@/stores/cart";
+import { createAutoRefresh } from "@/utils/autoRefresh";
+
+// Pix/cartão: confere o pagamento a cada 5 s com a aba visível e na hora em que o cliente
+// volta para a aba (ex.: depois de pagar no app do banco).
+const INTERVALO_PAGAMENTO_MS = 5_000;
 
 const auth = useAuthStore();
 const cart = useCartStore();
@@ -623,11 +628,15 @@ async function consultarPagamento(pedidoId) {
 
 function iniciarPolling(pedidoId) {
   pararPolling();
-  polling = window.setInterval(() => consultarPagamento(pedidoId), 5000);
+  polling = createAutoRefresh(() => consultarPagamento(pedidoId), {
+    intervalo: INTERVALO_PAGAMENTO_MS,
+    imediato: false,
+  });
+  polling.iniciar();
 }
 
 function pararPolling() {
-  if (polling) window.clearInterval(polling);
+  polling?.parar();
   polling = null;
 }
 
