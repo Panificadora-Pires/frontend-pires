@@ -6,6 +6,8 @@ export function mensagemErroApi(error, fallback = "Não foi possível concluir a
   function primeiraMensagem(valor) {
     if (typeof valor === "string") {
       const texto = valor.trim();
+      // Página HTML do servidor (ex.: 404 do Django) não é mensagem para o usuário
+      if (texto.startsWith("<")) return "";
       return texto || "";
     }
 
