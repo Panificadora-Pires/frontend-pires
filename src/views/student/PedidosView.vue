@@ -176,7 +176,9 @@
           v-for="pedido in pedidosFiltrados"
           :key="pedido.id"
           :pedido="pedido"
+          :nao-lidas="chat.naoLidasDoPedido(pedido.id)"
           @ver-qrcode="abrirQRCode"
+          @abrir-chat="abrirChat"
         />
       </div>
     </div>
@@ -185,6 +187,12 @@
       v-if="pedidoQRCode"
       :pedido="pedidoQRCode"
       @close="fecharQRCode"
+    />
+
+    <OrderChatDrawer
+      v-if="pedidoChat"
+      :pedido="pedidoChat"
+      @close="pedidoChat = null"
     />
   </div>
 </template>
@@ -200,10 +208,12 @@ import {
   X,
 } from "lucide-vue-next";
 
+import OrderChatDrawer from "@/components/chat/OrderChatDrawer.vue";
 import OrderCard from "@/components/orders/OrderCard.vue";
 import OrderQRCodeModal from "@/components/orders/OrderQRCodeModal.vue";
 import BaseRefreshStatus from "@/components/ui/BaseRefreshStatus.vue";
 import { useAutoRefresh } from "@/composables/useAutoRefresh";
+import { useChatStore } from "@/stores/chat";
 import { useOrdersStore } from "@/stores/orders";
 
 // Com pedido em andamento o cliente espera o "pronto": atualiza mais rápido.
@@ -211,10 +221,12 @@ const INTERVALO_COM_PEDIDO_ATIVO_MS = 10_000;
 const INTERVALO_SEM_PEDIDO_ATIVO_MS = 60_000;
 
 const orders = useOrdersStore();
+const chat = useChatStore();
 
 const filtro = ref("todos");
 const busca = ref("");
 const pedidoQRCode = ref(null);
+const pedidoChat = ref(null);
 
 const filtros = [
   { valor: "todos", label: "Todos" },
@@ -314,6 +326,10 @@ watch(
 
 function fecharQRCode() {
   pedidoQRCode.value = null;
+}
+
+function abrirChat(pedido) {
+  pedidoChat.value = pedido;
 }
 
 </script>

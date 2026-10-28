@@ -201,11 +201,13 @@ import {
 import catalogService, { promocaoEstaAtiva } from "@/services/catalog.service";
 import { useAuthStore } from "@/stores/auth";
 import { useCartStore } from "@/stores/cart";
+import { useChatStore } from "@/stores/chat";
 import { useNotificationsStore } from "@/stores/notifications";
 import { useOrdersStore } from "@/stores/orders";
 
 const auth = useAuthStore();
 const cart = useCartStore();
+const chat = useChatStore();
 const notifications = useNotificationsStore();
 const orders = useOrdersStore();
 const router = useRouter();
@@ -283,6 +285,7 @@ function limitarBadge(valor) {
 
 async function handleLogout() {
   menuAberto.value = false;
+  chat.resetar();
   await auth.logout();
   await router.replace({ name: "login" });
 }
@@ -311,11 +314,14 @@ watch(
 
 onMounted(() => {
   notifications.iniciarPolling();
+  // Contador de mensagens novas do chat nos cards de "Meus pedidos".
+  chat.iniciarPollingNaoLidas(30_000);
   buscarPromocoesAtivas();
 });
 
 onBeforeUnmount(() => {
   notifications.pararPolling();
+  chat.pararPollingNaoLidas();
 });
 </script>
 

@@ -35,6 +35,19 @@
 
       <div class="order-card__footer-actions">
         <button
+          type="button"
+          class="order-card__chat-button"
+          :aria-label="rotuloChat"
+          @click="abrirChat"
+        >
+          <MessageCircle :size="16" aria-hidden="true" />
+          <span>Mensagens</span>
+          <span v-if="naoLidas" class="order-card__chat-badge" aria-hidden="true">
+            {{ naoLidas > 9 ? "9+" : naoLidas }}
+          </span>
+        </button>
+
+        <button
           v-if="pedido.status === 'pronto'"
           type="button"
           class="order-card__qr-button"
@@ -61,6 +74,7 @@ import {
   CircleCheckBig,
   CircleX,
   Clock3,
+  MessageCircle,
   Package,
   PackageCheck,
   QrCode,
@@ -74,13 +88,27 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  naoLidas: {
+    type: Number,
+    default: 0,
+  },
 });
 
-const emit = defineEmits(["ver-qrcode"]);
+const emit = defineEmits(["ver-qrcode", "abrir-chat"]);
 
 function abrirQRCode() {
   emit("ver-qrcode", props.pedido);
 }
+
+function abrirChat() {
+  emit("abrir-chat", props.pedido);
+}
+
+const rotuloChat = computed(() => {
+  if (!props.naoLidas) return `Mensagens do pedido #${props.pedido.id}`;
+  const novas = props.naoLidas === 1 ? "1 mensagem nova" : `${props.naoLidas} mensagens novas`;
+  return `Mensagens do pedido #${props.pedido.id}: ${novas}`;
+});
 
 const statusInfo = computed(() => {
   const mapa = {
@@ -245,6 +273,32 @@ function formatarMoeda(valor) {
 .order-card__qr-button:hover {
   background: #eef7e9;
 }
+.order-card__chat-button {
+  position: relative;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 1px solid var(--student-border-strong);
+  border-radius: 7px;
+  background: var(--student-surface);
+  color: var(--student-text);
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.order-card__chat-badge {
+  min-width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  padding: 0 5px;
+  border-radius: var(--pp-radius-full);
+  background: var(--student-accent-hover);
+  color: var(--student-surface);
+  font-size: 10px;
+}
 .order-card__total {
   text-align: right;
 }
@@ -269,7 +323,8 @@ function formatarMoeda(valor) {
     margin-left: 0;
     justify-content: space-between;
   }
-  .order-card__qr-button {
+  .order-card__qr-button,
+  .order-card__chat-button {
     flex: 1;
     justify-content: center;
   }
