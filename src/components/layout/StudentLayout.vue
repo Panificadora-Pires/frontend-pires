@@ -1,5 +1,5 @@
 <template>
-  <div class="student-layout">
+  <div class="student-layout" :class="{ 'has-chatbot': mostrarChatbot }">
     <aside class="student-layout__sidebar">
       <RouterLink
         :to="{ name: 'home' }"
@@ -157,6 +157,8 @@
       <RouterView />
     </main>
 
+    <ChatbotWidget v-if="mostrarChatbot" />
+
     <nav class="student-layout__bottom-nav" aria-label="Navegação rápida">
       <RouterLink
         v-for="item in bottomNavItems"
@@ -182,7 +184,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import {
   Bell,
   ClipboardList,
@@ -198,19 +200,23 @@ import {
   X,
 } from "lucide-vue-next";
 
+import ChatbotWidget from "@/components/chatbot/ChatbotWidget.vue";
 import catalogService, { promocaoEstaAtiva } from "@/services/catalog.service";
 import { useAuthStore } from "@/stores/auth";
 import { useCartStore } from "@/stores/cart";
 import { useChatStore } from "@/stores/chat";
+import { useChatbotStore } from "@/stores/chatbot";
 import { useNotificationsStore } from "@/stores/notifications";
 import { useOrdersStore } from "@/stores/orders";
 
 const auth = useAuthStore();
 const cart = useCartStore();
 const chat = useChatStore();
+const chatbot = useChatbotStore();
 const notifications = useNotificationsStore();
 const orders = useOrdersStore();
 const router = useRouter();
+const route = useRoute();
 
 const menuAberto = ref(false);
 const promoCount = ref(0);
@@ -238,6 +244,9 @@ const iniciais = computed(() => {
       .join("") || "A"
   );
 });
+
+// No checkout o cliente está pagando: o assistente não disputa espaço com o formulário.
+const mostrarChatbot = computed(() => route.name !== "checkout");
 
 const navItems = computed(() => [
   { name: "home", label: "Início", icon: Home },
@@ -286,6 +295,7 @@ function limitarBadge(valor) {
 async function handleLogout() {
   menuAberto.value = false;
   chat.resetar();
+  chatbot.resetar();
   await auth.logout();
   await router.replace({ name: "login" });
 }
@@ -653,6 +663,12 @@ onBeforeUnmount(() => {
   .student-layout__badge-dot--bottom {
     top: -5px;
     right: -6px;
+  }
+}
+@media (max-width: 980px) {
+  /* Espaço para o botão do assistente não cobrir o fim da página. */
+  .student-layout.has-chatbot {
+    padding-bottom: calc(66px + 64px);
   }
 }
 @media (max-width: 520px) {
