@@ -52,7 +52,8 @@ https://backend-pires.class.fabricadesoftware.ifc.edu.br/api
 - pagamento por cartão;
 - acompanhamento do status do pedido;
 - QR Code de retirada;
-- chat com a padaria em cada pedido.
+- chat com a padaria em cada pedido;
+- assistente de dúvidas (chatbot por regras e FAQ).
 
 ### Administração
 
@@ -211,6 +212,17 @@ Cada pedido tem uma conversa entre o cliente e a padaria (`/api/chat/`, veja o R
 - Enter envia, Shift+Enter quebra a linha. As mensagens são exibidas sempre como texto (sem `v-html`).
 - Abrir a conversa marca como lidas as mensagens do outro lado; no cliente, também some a notificação "Nova mensagem da padaria".
 - Depois de retirado ou cancelado, o pedido aceita mensagens por mais 24 h (configurável no backend) e então a conversa fica só para leitura.
+
+## Assistente de dúvidas (chatbot)
+
+Botão **Dúvidas?** no canto inferior direito da área do cliente (`components/chatbot/ChatbotWidget.vue`); as respostas vêm de `/api/chatbot/` (regras + FAQ editável no admin do backend).
+
+- **Posição:** no celular, o botão fica acima da navegação inferior e o painel ocupa a tela toda. Fica oculto no checkout para não disputar espaço com o pagamento.
+- **Conversa:** o cliente escreve ou toca nos botões de assunto; só a última resposta mostra os botões de próximo passo. O histórico fica na store `chatbot` durante a sessão e é apagado no logout.
+- **Respostas com dados:** status dos pedidos do próprio cliente e disponibilidade do produto citado ("tem coxinha?").
+- **Falar com a padaria:** leva a `/pedidos?chat=ID`, que abre a gaveta de chat do pedido.
+- **Estados:** abrindo, assistente respondendo, erro com **Tentar de novo** (e mensagem própria para limite de perguntas).
+- **Acessibilidade:** Esc fecha e devolve o foco ao botão; lista com `role="log"`; campo com rótulo.
 
 ## Pagamentos
 
