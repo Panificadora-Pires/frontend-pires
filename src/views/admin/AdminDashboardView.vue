@@ -8,13 +8,23 @@
         </p>
       </div>
       <div class="admin-actions">
+        <BaseRefreshStatus
+          class="admin-refresh-status"
+          :ultima-atualizacao="ultimaAtualizacao"
+          :atualizando="carregando"
+          :erro="pedidosProntos && extrasProntos ? erroAtualizacao : null"
+        />
         <button
           type="button"
           class="admin-btn"
           :disabled="carregando"
-          @click="carregar"
+          @click="atualizarTudo"
         >
-          <RefreshCw :size="16" :class="{ 'admin-spin': carregando }" />
+          <RefreshCw
+            :size="16"
+            :class="{ 'admin-spin': carregando }"
+            aria-hidden="true"
+          />
           Atualizar
         </button>
       </div>
@@ -28,29 +38,33 @@
     <div class="admin-kpis">
       <article class="admin-kpi">
         <span class="admin-kpi-label">Pedidos hoje</span>
-        <strong class="admin-kpi-value">{{ metricas.pedidosHoje }}</strong>
+        <strong class="admin-kpi-value">{{ pedidosProntos ? metricas.pedidosHoje : "—" }}</strong>
         <span class="admin-kpi-caption"
-          >{{ metricas.pendentes }} aguardando confirmação</span
+          >{{ pedidosProntos ? metricas.pendentes : "—" }} aguardando
+          confirmação</span
         >
       </article>
       <article class="admin-kpi">
         <span class="admin-kpi-label">Prontos para retirada</span>
-        <strong class="admin-kpi-value">{{ metricas.prontos }}</strong>
+        <strong class="admin-kpi-value">{{
+          pedidosProntos ? metricas.prontos : "—"
+        }}</strong>
         <span class="admin-kpi-caption">Pedidos aguardando no balcão</span>
       </article>
       <article class="admin-kpi">
         <span class="admin-kpi-label">Faturamento hoje</span>
         <strong class="admin-kpi-value">{{
-          formatarMoeda(metricas.faturamentoHoje)
+          extrasProntos ? formatarMoeda(metricas.faturamentoHoje) : "—"
         }}</strong>
         <span class="admin-kpi-caption"
-          >{{ metricas.retiradosHoje }} pedidos retirados</span
+          >{{ extrasProntos ? metricas.retiradosHoje : "—" }} pedidos
+          retirados</span
         >
       </article>
       <article class="admin-kpi">
         <span class="admin-kpi-label">Pagamentos pendentes</span>
         <strong class="admin-kpi-value">{{
-          metricas.pagamentosPendentes
+          pedidosProntos ? metricas.pagamentosPendentes : "—"
         }}</strong>
         <span class="admin-kpi-caption">Pendentes ou em processamento</span>
       </article>
@@ -91,7 +105,7 @@
             <div>
               <strong>Pendentes</strong><span>Aguardando confirmação</span>
             </div>
-            <b>{{ metricas.pendentes }}</b>
+            <b>{{ pedidosProntos ? metricas.pendentes : "—" }}</b>
           </RouterLink>
           <RouterLink
             :to="{ name: 'admin-pedidos', query: { status: 'confirmado' } }"
@@ -101,7 +115,7 @@
               class="dashboard-queue__dot dashboard-queue__dot--info"
             ></span>
             <div><strong>Confirmados</strong><span>Em preparo</span></div>
-            <b>{{ metricas.confirmados }}</b>
+            <b>{{ pedidosProntos ? metricas.confirmados : "—" }}</b>
           </RouterLink>
           <RouterLink
             :to="{ name: 'admin-pedidos', query: { status: 'pronto' } }"
@@ -111,17 +125,21 @@
               class="dashboard-queue__dot dashboard-queue__dot--success"
             ></span>
             <div><strong>Prontos</strong><span>Aguardando retirada</span></div>
-            <b>{{ metricas.prontos }}</b>
+            <b>{{ pedidosProntos ? metricas.prontos : "—" }}</b>
           </RouterLink>
         </div>
         <div class="dashboard-catalog-summary">
           <div>
             <span>Produtos ativos</span
-            ><strong>{{ metricas.produtosAtivos }}</strong>
+            ><strong>{{
+              extrasProntos ? metricas.produtosAtivos : "—"
+            }}</strong>
           </div>
           <div>
             <span>Promoções ativas</span
-            ><strong>{{ metricas.promocoesAtivas }}</strong>
+            ><strong>{{
+              extrasProntos ? metricas.promocoesAtivas : "—"
+            }}</strong>
           </div>
         </div>
       </aside>
@@ -138,7 +156,7 @@
         /></RouterLink>
       </div>
 
-      <div v-if="carregando && !pedidosRecentes.length" class="admin-loading">
+      <div v-if="!pedidosProntos" class="admin-loading">
         Carregando pedidos...
       </div>
       <div v-else-if="!pedidosRecentes.length" class="admin-empty">
@@ -207,7 +225,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, ref } from "vue";
 import {
   ChevronRight,
   CircleAlert,
@@ -216,11 +234,19 @@ import {
 } from "lucide-vue-next";
 
 import AdminLineChart from "@/components/admin/AdminLineChart.vue";
+import BaseRefreshStatus from "@/components/ui/BaseRefreshStatus.vue";
+import { useAutoRefresh } from "@/composables/useAutoRefresh";
 import adminService from "@/services/admin.service";
+import { useAdminOrdersStore } from "@/stores/adminOrders";
 
-const carregando = ref(false);
-const erro = ref("");
-const pedidos = ref([]);
+// Catálogo e relatório mudam devagar; os pedidos vêm da store atualizada pelo AdminLayout.
+const INTERVALO_EXTRAS_MS = 60_000;
+
+const adminOrders = useAdminOrdersStore();
+const pedidos = computed(() => adminOrders.itens);
+const pedidosProntos = computed(() => adminOrders.inicializado);
+const extrasProntos = ref(false);
+const erroExtras = ref("");
 const produtosAtivos = ref([]);
 const promocoes = ref([]);
 const relatorioHoje = ref(null);
@@ -321,30 +347,52 @@ function badgePedido(status) {
   return "admin-badge--neutral";
 }
 
-async function carregar() {
-  carregando.value = true;
-  erro.value = "";
+async function carregarExtras() {
   const hoje = hojeISO();
   try {
-    const [listaPedidos, listaProdutos, listaPromocoes, relatorio] =
-      await Promise.all([
-        adminService.listarPedidos(),
-        adminService.listarProdutos({ ativo: true }),
-        adminService.listarPromocoes(),
-        adminService.relatorioVendas({ dataInicio: hoje, dataFim: hoje }),
-      ]);
-    pedidos.value = listaPedidos;
+    const [listaProdutos, listaPromocoes, relatorio] = await Promise.all([
+      adminService.listarProdutos({ ativo: true }),
+      adminService.listarPromocoes(),
+      adminService.relatorioVendas({ dataInicio: hoje, dataFim: hoje }),
+    ]);
     produtosAtivos.value = listaProdutos;
     promocoes.value = listaPromocoes;
     relatorioHoje.value = relatorio;
-  } catch {
-    erro.value = "Não foi possível carregar todos os dados do dashboard.";
-  } finally {
-    carregando.value = false;
+    extrasProntos.value = true;
+    erroExtras.value = "";
+  } catch (error) {
+    // Mantém os números já exibidos; só avisa se nunca carregou.
+    if (!extrasProntos.value) {
+      erroExtras.value = "Não foi possível carregar todos os dados do dashboard.";
+    }
+    throw error;
   }
 }
 
-onMounted(carregar);
+const extras = useAutoRefresh(carregarExtras, {
+  intervalo: INTERVALO_EXTRAS_MS,
+});
+
+const carregando = computed(
+  () => extras.atualizando.value || adminOrders.atualizando,
+);
+const erro = computed(() => adminOrders.erro || erroExtras.value);
+const erroAtualizacao = computed(
+  () => extras.erro.value || adminOrders.erroAtualizacao,
+);
+const ultimaAtualizacao = computed(() => {
+  const datas = [extras.ultimaAtualizacao.value, adminOrders.ultimaAtualizacao]
+    .filter(Boolean)
+    .map((data) => data.getTime());
+  return datas.length ? new Date(Math.min(...datas)) : null;
+});
+
+function atualizarTudo() {
+  Promise.allSettled([
+    extras.atualizarAgora(),
+    adminOrders.atualizarAgora(),
+  ]);
+}
 </script>
 
 <style scoped>
