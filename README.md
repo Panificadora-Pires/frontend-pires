@@ -176,7 +176,25 @@ order.service.js
 payment.service.js
 ```
 
-A autenticação utiliza JWT e o cliente HTTP é responsável por enviar o token nas requisições autenticadas.
+A autenticação utiliza JWT e o cliente HTTP é responsável por enviar o token nas requisições autenticadas. Falha de rede (sem resposta do servidor) não desloga o usuário: os tokens só são apagados quando o backend recusa a sessão.
+
+## Atualização automática
+
+As telas se atualizam sozinhas por polling, sem recarregar a página. A lógica fica em `src/utils/autoRefresh.js` (`createAutoRefresh`) e no composable `src/composables/useAutoRefresh.js`:
+
+- não faz requisições com a aba escondida; ao voltar para a aba, ganhar foco ou reconectar, atualiza na hora;
+- nunca executa duas buscas ao mesmo tempo e, em erro, espera cada vez mais (até 5 min) antes de tentar de novo;
+- falha em segundo plano mantém os dados já exibidos e mostra "Sem conexão, tentando de novo".
+
+| Tela | Intervalo |
+|---|---|
+| Fila, dashboard (pedidos) e detalhe do pedido no admin | 15 s |
+| Meus pedidos (cliente) | 10 s com pedido em andamento, 60 s sem |
+| Notificações (badge do menu) | 30 s |
+| Cardápio, produtos do admin e números do dashboard | 60 s |
+| Pagamento Pix/cartão no checkout | 5 s |
+
+No admin, a store `adminOrders` é a única fonte da fila: o `AdminLayout` a mantém atualizada, e o badge do menu, o dashboard e a tela de pedidos leem dela. Mudar o status atualiza a lista local na hora. SSE/WebSocket não foi adotado porque o Gunicorn síncrono do Fabroku prenderia um worker por conexão.
 
 ## Pagamentos
 
