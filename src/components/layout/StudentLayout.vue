@@ -1,6 +1,6 @@
 <template>
   <div class="student-layout" :class="{ 'has-chatbot': mostrarChatbot }">
-    <aside class="student-layout__sidebar">
+    <header class="student-layout__topbar">
       <RouterLink
         :to="{ name: 'home' }"
         class="student-layout__brand"
@@ -9,50 +9,116 @@
         <img src="/logo.png" alt="Pires Panificadora" />
       </RouterLink>
 
-      <nav class="student-layout__nav" aria-label="Navegação principal">
+      <nav class="student-layout__top-nav" aria-label="Navegação principal">
         <RouterLink
-          v-for="item in navItems"
+          v-for="item in topNavItems"
           :key="item.name"
           :to="{ name: item.name }"
-          class="student-layout__nav-item"
+          class="student-layout__top-link"
           exact-active-class="is-active"
         >
-          <component :is="item.icon" :size="20" aria-hidden="true" />
-          <span>{{ item.label }}</span>
+          {{ item.label }}
           <span v-if="item.badge" class="student-layout__badge">{{
             limitarBadge(item.badge)
           }}</span>
         </RouterLink>
       </nav>
 
-      <div class="student-layout__user-card">
-        <RouterLink :to="{ name: 'perfil' }" class="student-layout__user">
-          <span class="student-layout__avatar">
+      <form
+        class="student-layout__search"
+        role="search"
+        @submit.prevent="buscarNoCardapio"
+      >
+        <Search :size="16" aria-hidden="true" />
+        <label for="busca-topo" class="student-layout__sr">Buscar no cardápio</label>
+        <input
+          id="busca-topo"
+          v-model.trim="termoBusca"
+          type="search"
+          placeholder="Buscar coxinha, suco, bolo…"
+          autocomplete="off"
+        />
+      </form>
+
+      <div class="student-layout__top-actions">
+        <RouterLink
+          :to="{ name: 'favoritos' }"
+          class="student-layout__round-btn"
+          aria-label="Favoritos"
+          title="Favoritos"
+        >
+          <Heart :size="18" aria-hidden="true" />
+        </RouterLink>
+        <RouterLink
+          :to="{ name: 'notificacoes' }"
+          class="student-layout__round-btn"
+          :aria-label="rotuloNotificacoes"
+          title="Notificações"
+        >
+          <Bell :size="18" aria-hidden="true" />
+          <span
+            v-if="notifications.naoLidas"
+            class="student-layout__badge-dot"
+            aria-hidden="true"
+            >{{ limitarBadge(notifications.naoLidas) }}</span
+          >
+        </RouterLink>
+
+        <div
+          ref="contaRef"
+          class="student-layout__account"
+          @keydown.esc="fecharContaComTeclado"
+        >
+          <button
+            ref="botaoConta"
+            type="button"
+            class="student-layout__round-btn student-layout__avatar"
+            :aria-expanded="contaAberta"
+            :aria-controls="contaAberta ? 'menu-conta' : undefined"
+            :aria-label="rotuloConta"
+            @click="contaAberta = !contaAberta"
+          >
             <img
               v-if="avatarDisponivel"
               :src="auth.usuario.avatar"
-              :alt="`Foto de ${auth.usuario?.name || 'usuário'}`"
+              alt=""
               @error="avatarComErro = true"
             />
             <template v-else>{{ iniciais }}</template>
-          </span>
-          <div class="student-layout__user-info">
-            <strong>{{ auth.usuario?.name || "Aluno" }}</strong>
-            <span>{{ auth.isAdmin ? "Administração" : "Cliente" }}</span>
+          </button>
+          <div
+            v-if="contaAberta"
+            id="menu-conta"
+            class="student-layout__account-menu"
+          >
+            <strong>{{ auth.usuario?.name || "Cliente" }}</strong>
+            <RouterLink :to="{ name: 'perfil' }" @click="fecharConta">
+              <User :size="16" aria-hidden="true" /> Meu perfil
+            </RouterLink>
+            <RouterLink :to="{ name: 'favoritos' }" @click="fecharConta">
+              <Heart :size="16" aria-hidden="true" /> Favoritos
+            </RouterLink>
+            <button type="button" @click="handleLogout">
+              <LogOut :size="16" aria-hidden="true" /> Sair da conta
+            </button>
           </div>
-        </RouterLink>
+        </div>
 
-        <button
-          type="button"
-          class="student-layout__logout"
-          aria-label="Sair da conta"
-          title="Sair da conta"
-          @click="handleLogout"
+        <RouterLink
+          ref="carrinhoTopo"
+          :to="{ name: 'carrinho' }"
+          class="student-layout__cart"
+          :class="{ 'pp-pulo': carrinhoPulando }"
+          :aria-label="rotuloCarrinho"
         >
-          <LogOut :size="18" />
-        </button>
+          <ShoppingBag :size="18" aria-hidden="true" />
+          <span>Carrinho</span>
+          <span class="student-layout__cart-count" aria-hidden="true">{{
+            limitarBadge(cart.totalItens)
+          }}</span>
+        </RouterLink>
       </div>
-    </aside>
+    </header>
 
     <header class="student-layout__mobile-header">
       <button
@@ -90,8 +156,10 @@
           >
         </RouterLink>
         <RouterLink
+          ref="carrinhoMobile"
           :to="{ name: 'carrinho' }"
           class="student-layout__icon-btn"
+          :class="{ 'pp-pulo': carrinhoPulando }"
           aria-label="Carrinho"
         >
           <ShoppingCart :size="19" />
@@ -183,7 +251,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   Bell,
@@ -193,6 +261,7 @@ import {
   LayoutGrid,
   LogOut,
   Menu,
+  Search,
   ShoppingBag,
   ShoppingCart,
   Tag,
@@ -208,6 +277,7 @@ import { useChatStore } from "@/stores/chat";
 import { useChatbotStore } from "@/stores/chatbot";
 import { useNotificationsStore } from "@/stores/notifications";
 import { useOrdersStore } from "@/stores/orders";
+import { animarVooAoCarrinho } from "@/utils/vooAoCarrinho";
 
 const auth = useAuthStore();
 const cart = useCartStore();
@@ -219,6 +289,15 @@ const router = useRouter();
 const route = useRoute();
 
 const menuAberto = ref(false);
+const contaAberta = ref(false);
+const contaRef = ref(null);
+const botaoConta = ref(null);
+const termoBusca = ref(route.name === "cardapio" ? String(route.query.busca || "") : "");
+const carrinhoTopo = ref(null);
+const carrinhoMobile = ref(null);
+const carrinhoPulando = ref(false);
+let timerPulo = null;
+let pararDeOuvirCarrinho = null;
 const promoCount = ref(0);
 const avatarComErro = ref(false);
 
@@ -274,6 +353,24 @@ const navItems = computed(() => [
   { name: "perfil", label: "Perfil", icon: User },
 ]);
 
+// Menu do topo (desktop): o essencial para pedir; conta e carrinho ficam à direita.
+const topNavItems = computed(() => [
+  { name: "home", label: "Início" },
+  { name: "cardapio", label: "Cardápio" },
+  { name: "promocoes", label: "Promoções", badge: promoCount.value || null },
+  { name: "pedidos", label: "Meus pedidos" },
+]);
+
+const rotuloNotificacoes = computed(() =>
+  notifications.naoLidas
+    ? `Notificações: ${notifications.naoLidas} não lidas`
+    : "Notificações",
+);
+const rotuloConta = computed(() => `Conta de ${auth.usuario?.name || "cliente"}`);
+const rotuloCarrinho = computed(
+  () => `Carrinho com ${cart.totalItens} ${cart.totalItens === 1 ? "item" : "itens"}`,
+);
+
 const bottomNavItems = computed(() => [
   { name: "home", label: "Início", icon: Home },
   { name: "cardapio", label: "Cardápio", icon: LayoutGrid },
@@ -292,8 +389,55 @@ function limitarBadge(valor) {
   return numero > 99 ? "99+" : numero;
 }
 
+function buscarNoCardapio() {
+  const busca = termoBusca.value;
+  router.push({ name: "cardapio", query: busca ? { busca } : {} });
+}
+
+// Fora do cardápio a busca do topo começa vazia; no cardápio, acompanha a URL.
+watch(
+  () => [route.name, route.query.busca],
+  ([nome, busca]) => {
+    termoBusca.value = nome === "cardapio" ? String(busca || "") : "";
+  },
+);
+
+function fecharConta() {
+  contaAberta.value = false;
+}
+
+function fecharContaComTeclado() {
+  if (!contaAberta.value) return;
+  fecharConta();
+  botaoConta.value?.focus();
+}
+
+function fecharContaAoClicarFora(event) {
+  if (contaAberta.value && !contaRef.value?.contains(event.target)) {
+    fecharConta();
+  }
+}
+
+watch(() => route.fullPath, fecharConta);
+
+function elementoDoCarrinhoVisivel() {
+  const candidatos = [carrinhoTopo.value?.$el, carrinhoMobile.value?.$el];
+  return candidatos.find((el) => el && el.getBoundingClientRect().width > 0) || null;
+}
+
+async function pularContador() {
+  window.clearTimeout(timerPulo);
+  carrinhoPulando.value = false;
+  await nextTick();
+  carrinhoPulando.value = true;
+  timerPulo = window.setTimeout(() => {
+    carrinhoPulando.value = false;
+  }, 500);
+}
+
 async function handleLogout() {
   menuAberto.value = false;
+  contaAberta.value = false;
   chat.resetar();
   chatbot.resetar();
   await auth.logout();
@@ -327,45 +471,231 @@ onMounted(() => {
   // Contador de mensagens novas do chat nos cards de "Meus pedidos".
   chat.iniciarPollingNaoLidas(30_000);
   buscarPromocoesAtivas();
+  document.addEventListener("click", fecharContaAoClicarFora);
+  // Só depois que o item entrou no carrinho (sem erro): o produto voa e o contador pula.
+  pararDeOuvirCarrinho = cart.$onAction(({ name, after }) => {
+    if (name !== "adicionar") return;
+    after(async () => {
+      await animarVooAoCarrinho(elementoDoCarrinhoVisivel());
+      pularContador();
+    });
+  });
 });
 
 onBeforeUnmount(() => {
   notifications.pararPolling();
   chat.pararPollingNaoLidas();
+  document.removeEventListener("click", fecharContaAoClicarFora);
+  pararDeOuvirCarrinho?.();
+  window.clearTimeout(timerPulo);
 });
 </script>
 
 <style scoped>
 .student-layout {
   min-height: 100vh;
-  display: grid;
-  grid-template-columns: 224px minmax(0, 1fr);
+  background: var(--student-bg);
 }
-.student-layout__sidebar {
+.student-layout__topbar {
   position: sticky;
   top: 0;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  padding: 20px 14px 16px;
-  background: var(--student-sidebar);
-  border-right: 1px solid #38281e;
-  color: #efe6dc;
-  overflow-y: auto;
-}
-.student-layout__brand {
-  height: 54px;
+  z-index: 60;
+  height: var(--pp-altura-topo);
   display: flex;
   align-items: center;
-  padding: 0 10px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  margin-bottom: 14px;
+  gap: 24px;
+  padding: 0 max(32px, calc((100vw - 1240px) / 2));
+  border-bottom: 1px solid var(--student-border);
+  background: var(--pp-creme);
+}
+.student-layout__brand {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
 }
 .student-layout__brand img {
-  width: 150px;
-  max-height: 40px;
+  width: 128px;
+  max-height: 44px;
   object-fit: contain;
   object-position: left center;
+}
+.student-layout__top-nav {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+.student-layout__top-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0;
+  border-bottom: 2px solid transparent;
+  color: var(--student-text);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+.student-layout__top-link:hover {
+  color: var(--student-accent);
+}
+.student-layout__top-link.is-active {
+  border-color: var(--pp-gold);
+  color: var(--student-accent);
+}
+.student-layout__search {
+  flex: 1;
+  max-width: 380px;
+  margin-left: auto;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  border: 1px solid var(--student-border);
+  border-radius: var(--pp-radius-full);
+  background: var(--student-surface);
+  color: var(--student-muted-2);
+}
+.student-layout__search:focus-within {
+  border-color: var(--student-accent);
+  outline: 2.5px solid var(--pp-gold);
+  outline-offset: 2px;
+}
+.student-layout__search input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--student-text);
+  font-size: 14px;
+}
+.student-layout__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.student-layout__top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.student-layout__round-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--student-border);
+  border-radius: 50%;
+  background: var(--student-surface);
+  color: var(--student-text);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.student-layout__round-btn:hover {
+  border-color: var(--student-border-strong);
+}
+.student-layout__round-btn .student-layout__badge-dot {
+  top: -4px;
+  right: -4px;
+}
+.student-layout__avatar {
+  overflow: hidden;
+  background: var(--student-accent-soft);
+  color: var(--student-accent-hover);
+  font-size: 12px;
+  font-weight: 700;
+}
+.student-layout__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.student-layout__account {
+  position: relative;
+}
+.student-layout__account-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 210px;
+  display: grid;
+  gap: 2px;
+  padding: 8px;
+  border: 1px solid var(--student-border);
+  border-radius: var(--student-radius);
+  background: var(--student-surface);
+  box-shadow: var(--student-shadow);
+}
+.student-layout__account-menu strong {
+  margin-bottom: 4px;
+  padding: 6px 10px 8px;
+  border-bottom: 1px solid var(--student-border);
+  font-size: 13px;
+}
+.student-layout__account-menu a,
+.student-layout__account-menu button {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--student-radius-sm);
+  background: transparent;
+  color: var(--student-text);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.student-layout__account-menu a:hover,
+.student-layout__account-menu button:hover {
+  background: var(--student-surface-soft);
+}
+.student-layout__cart {
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 0 16px;
+  border-radius: var(--pp-radius-full);
+  background: var(--student-text);
+  color: var(--pp-creme);
+  font-size: 14px;
+  font-weight: 700;
+  transition: background 0.2s ease;
+}
+.student-layout__cart:hover {
+  background: var(--pp-marrom-2);
+}
+.student-layout__cart-count {
+  min-width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  padding: 0 6px;
+  border-radius: var(--pp-radius-full);
+  background: var(--pp-gold);
+  color: var(--student-text);
+  font-size: 12px;
+}
+@media (max-width: 1180px) {
+  .student-layout__topbar {
+    gap: 16px;
+  }
+  .student-layout__top-nav {
+    gap: 14px;
+  }
+  .student-layout__cart > span:not(.student-layout__cart-count) {
+    display: none;
+  }
 }
 .student-layout__nav {
   display: flex;
@@ -419,58 +749,6 @@ onBeforeUnmount(() => {
   font-size: 10px;
   font-weight: 800;
 }
-.student-layout__user-card {
-  margin-top: auto;
-  padding: 14px 6px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.student-layout__user {
-  min-width: 0;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.student-layout__avatar {
-  width: 34px;
-  height: 34px;
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  border-radius: 50%;
-  background: #4a3425;
-  color: #f5e6d5;
-  font-size: 11px;
-  font-weight: 700;
-}
-.student-layout__avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.student-layout__user-info {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.student-layout__user-info strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: #f7f1ea;
-  font-size: 12px;
-  font-weight: 650;
-}
-.student-layout__user-info span {
-  color: #998b7f;
-  font-size: 10px;
-}
-.student-layout__logout,
 .student-layout__icon-btn,
 .student-layout__menu-btn {
   display: grid;
@@ -479,19 +757,11 @@ onBeforeUnmount(() => {
   background: transparent;
   cursor: pointer;
 }
-.student-layout__logout {
-  width: 34px;
-  height: 34px;
-  color: #a99c91;
-  border-radius: 7px;
-}
-.student-layout__logout:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
-}
 .student-layout__main {
   min-width: 0;
-  padding: 32px 34px 46px;
+  max-width: 1304px;
+  margin: 0 auto;
+  padding: 28px 32px 56px;
 }
 .student-layout__mobile-header,
 .student-layout__bottom-nav {
@@ -560,8 +830,8 @@ onBeforeUnmount(() => {
   display: grid;
   place-items: center;
   border-radius: 999px;
-  background: #b8791f;
-  color: #fff;
+  background: var(--student-accent);
+  color: var(--student-surface);
   font-size: 9px;
   font-weight: 800;
 }
@@ -579,7 +849,7 @@ onBeforeUnmount(() => {
     padding-top: 58px;
     padding-bottom: 66px;
   }
-  .student-layout__sidebar {
+  .student-layout__topbar {
     display: none;
   }
   .student-layout__mobile-header {
@@ -592,7 +862,7 @@ onBeforeUnmount(() => {
     align-items: center;
     gap: 8px;
     padding: 0 14px;
-    background: #fff;
+    background: var(--pp-creme);
     border-bottom: 1px solid var(--student-border);
   }
   .student-layout__menu-btn {
@@ -637,7 +907,7 @@ onBeforeUnmount(() => {
     grid-template-columns: repeat(5, 1fr);
     padding: 5px max(4px, env(safe-area-inset-right))
       max(5px, env(safe-area-inset-bottom)) max(4px, env(safe-area-inset-left));
-    background: #fff;
+    background: var(--pp-creme);
     border-top: 1px solid var(--student-border);
   }
   .student-layout__bottom-item {
@@ -646,8 +916,8 @@ onBeforeUnmount(() => {
     align-items: center;
     justify-content: center;
     gap: 3px;
-    color: #817971;
-    font-size: 9px;
+    color: var(--student-muted);
+    font-size: 10px;
     font-weight: 600;
   }
   .student-layout__bottom-item.is-active {

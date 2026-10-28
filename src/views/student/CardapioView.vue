@@ -219,7 +219,8 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import {
   CheckCircle2,
   ChevronDown,
@@ -250,7 +251,23 @@ const INTERVALO_CARDAPIO_MS = 60_000;
 
 const categorias = ref([]);
 const produtos = ref([]);
-const busca = ref("");
+const route = useRoute();
+// A busca do menu do topo chega por /cardapio?busca=termo.
+const busca = ref(String(route.query.busca || ""));
+const router = useRouter();
+watch(
+  () => route.query.busca,
+  (valor) => {
+    busca.value = String(valor || "");
+  },
+);
+// Mantém a URL igual ao campo: limpar aqui e buscar o mesmo termo pelo topo volta a filtrar.
+watch(busca, (valor) => {
+  const termo = valor.trim();
+  if (termo === String(route.query.busca || "")) return;
+  const { busca: _anterior, ...resto } = route.query;
+  router.replace({ query: termo ? { ...resto, busca: termo } : resto });
+});
 const categoriaAtiva = ref(null);
 const filtroRapido = ref("todos");
 const ordenacao = ref("relevancia");
@@ -538,7 +555,7 @@ onBeforeUnmount(() => {
   display: block;
   margin-bottom: 6px;
   color: #bd7c14;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 850;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -596,7 +613,7 @@ onBeforeUnmount(() => {
   border-radius: 999px;
   background: #d99b2f;
   color: #2b180c;
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 900;
 }
 
@@ -612,7 +629,7 @@ onBeforeUnmount(() => {
 
 .menu-page__cart-summary small {
   color: #91877e;
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .menu-page__cart-summary strong {
@@ -760,7 +777,7 @@ onBeforeUnmount(() => {
   background: transparent;
   color: #847a71;
   font: inherit;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 720;
   cursor: pointer;
 }
@@ -807,7 +824,7 @@ onBeforeUnmount(() => {
   border-radius: 999px;
   background: #efe5d8;
   color: #755020;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 850;
 }
 
@@ -1068,7 +1085,7 @@ onBeforeUnmount(() => {
 
   .menu-page__quick-filters button {
     min-height: 28px;
-    font-size: 9px;
+    font-size: 12px;
   }
 
   .menu-page__clear {
@@ -1091,7 +1108,7 @@ onBeforeUnmount(() => {
   .menu-page__result-badge {
     min-width: 27px;
     height: 27px;
-    font-size: 9px;
+    font-size: 12px;
   }
 
   .menu-page__grid {
@@ -1314,7 +1331,7 @@ onBeforeUnmount(() => {
 
   .menu-page__quick-filters button {
     min-height: 32px;
-    font-size: 10px;
+    font-size: 12px;
   }
 }
 </style>

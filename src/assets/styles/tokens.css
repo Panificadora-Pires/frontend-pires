@@ -2,7 +2,7 @@
    Pires Panificadora — Design Tokens (Premium Scale)
    ============================================================ */
 
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Anton&family=Caveat:wght@600;700&family=Inter:wght@400;500;600;700&display=swap");
 
 :root {
   /* --- Cores base --- */
@@ -69,6 +69,57 @@
   --pp-success-bg: rgba(111, 163, 111, 0.12);
 
   --pp-radius-full: 999px;
+
+  /* --- Área do cliente: direção "Balcão creme" (Fase 5) --- */
+  --pp-creme: #fbf6ee;
+  --pp-creme-2: #f4ebdc;
+  --pp-creme-3: #eadfcd;
+  --pp-creme-borda: #dccbaf;
+  --pp-marrom: #2a160b;
+  --pp-marrom-2: #5a3418;
+  --pp-texto-2: #6b5641;
+  --pp-texto-3: #76624d;
+  --pp-dourado-escuro: #a0661d;
+  --pp-dourado-profundo: #7f4f14;
+  --pp-dourado-suave: #fbf0dc;
+  --pp-verde: #4f7a55;
+  --pp-verde-suave: #edf5ee;
+  /* Camadas da cena do banner (morros de massa). */
+  --pp-massa-1: #efdcb8;
+  --pp-massa-2: #e6c68e;
+  --pp-massa-3: #d6a764;
+  /* Títulos condensados só em banners e chamadas; anotações "à mão" com moderação. */
+  --pp-font-titulo: "Anton", Impact, "Arial Narrow", sans-serif;
+  --pp-font-nota: "Caveat", "Comic Sans MS", cursive;
+  --pp-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --pp-radius-card-lg: 20px;
+  /* Altura do menu fixo do topo (desktop) e do cabeçalho do celular. */
+  --pp-altura-topo: 72px;
+  --pp-altura-topo-mobile: 58px;
+  --pp-sombra-card: 0 14px 30px rgba(42, 22, 11, 0.08);
+
+  /* Cores das ilustrações próprias dos produtos (ProductIllustration.vue). */
+  --ilu-sombra: #e3d4bb;
+  --ilu-massa: #d48a35;
+  --ilu-massa-clara: #eaae5c;
+  --ilu-tostado: #a9621f;
+  --ilu-queijo: #f2c870;
+  --ilu-queijo-claro: #f5cf7e;
+  --ilu-queijo-escuro: #d3963a;
+  --ilu-brilho: #fff3cf;
+  --ilu-chocolate: #5a2e17;
+  --ilu-chocolate-claro: #7a4326;
+  --ilu-cenoura: #e8903f;
+  --ilu-laranja: #f29a2e;
+  --ilu-laranja-clara: #ffd08a;
+  --ilu-uva: #7b3a5a;
+  --ilu-uva-clara: #a85f83;
+  --ilu-agua: #d7ebf2;
+  --ilu-agua-tampa: #4f8fb0;
+  --ilu-lata: #c43d2f;
+  --ilu-lata-clara: #e86a55;
+  --ilu-papel: #b8793a;
+  --ilu-vidro: #ffffff;
 
   /* Fundo escurecido atrás de modais e gavetas. */
   --pp-overlay: rgba(26, 21, 17, 0.58);

@@ -213,6 +213,36 @@ Cada pedido tem uma conversa entre o cliente e a padaria (`/api/chat/`, veja o R
 - Abrir a conversa marca como lidas as mensagens do outro lado; no cliente, também some a notificação "Nova mensagem da padaria".
 - Depois de retirado ou cancelado, o pedido aceita mensagens por mais 24 h (configurável no backend) e então a conversa fica só para leitura.
 
+## Identidade visual da área do cliente
+
+Direção "Balcão creme" (Fase 5): fundo creme, marrom nos textos, dourado nos detalhes. A área admin mantém o visual próprio.
+
+- **Tokens** em `src/assets/styles/tokens.css`: paleta (`--pp-creme`, `--pp-marrom`, `--pp-dourado-escuro`…), fontes e cores das ilustrações (`--ilu-*`).
+  - Os `--student-*` de `student.css` apontam para esses tokens.
+  - **Anton** só em títulos de banner, **Caveat** em anotações "à mão" e **Inter** no resto.
+- **Menu fixo no topo (desktop):** Início, Cardápio, Promoções, Meus pedidos, busca (leva a `/cardapio?busca=`), favoritos, notificações, menu de conta e botão Carrinho com contador. No celular continuam o cabeçalho e a navegação inferior.
+- **Ilustrações próprias:** o cardápio é fictício, então produto sem foto ganha um SVG próprio.
+  - Componente `components/catalog/ProductIllustration.vue`; o tipo vem de `utils/ilustracaoProduto.js` (nome do produto e depois categoria).
+  - Foto cadastrada no admin tem prioridade.
+- **Home:** saudação → banner (`components/home/HomeBanner.vue`) → Destaques (`ProductCard`) → Como funciona (`components/home/HomeComoFunciona.vue`) → Promoções (se houver).
+
+### Animações
+
+| Onde | O quê |
+|---|---|
+| Banner | Carrossel de 6 s com pausa no mouse ou foco, setas e indicadores com progresso. Conteúdo: promoções vigentes; sem promoção, destaques; e sempre o slide "Como funciona" |
+| Banner | Parallax: 3 camadas de "morros de massa" sobem em velocidades diferentes nos primeiros 320 px de rolagem |
+| Como funciona | Os 3 passos sobem acompanhando a rolagem |
+| Cards | Zoom só na imagem ao passar o mouse (sem mudar o tamanho do card) |
+| Carrinho | O produto "voa" até o carrinho e o contador pula, **só depois** de `cart.adicionar` (`utils/vooAoCarrinho.js` + `StudentLayout`) |
+| Seções | Aparecem suavemente ao entrar na tela (diretiva `v-revelar`) |
+
+Com `prefers-reduced-motion: reduce`:
+
+- não há voo nem parallax;
+- o banner não troca sozinho;
+- passos e seções aparecem completos.
+
 ## Assistente de dúvidas (chatbot)
 
 Botão **Dúvidas?** no canto inferior direito da área do cliente (`components/chatbot/ChatbotWidget.vue`); as respostas vêm de `/api/chatbot/` (regras + FAQ editável no admin do backend).

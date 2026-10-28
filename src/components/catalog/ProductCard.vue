@@ -4,6 +4,7 @@
     :class="{ 'product-card--promo': produto.em_promocao }"
   >
     <button
+      ref="midia"
       type="button"
       class="product-card__media-button"
       :aria-label="`Ver detalhes de ${produto.nome}`"
@@ -72,7 +73,7 @@
         :class="{ 'is-loading': adicionando }"
         :disabled="adicionando"
         :aria-label="`Adicionar ${produto.nome} ao carrinho`"
-        @click="$emit('add', produto)"
+        @click="adicionar"
       >
         <LoaderCircle
           v-if="adicionando"
@@ -87,18 +88,28 @@
 </template>
 
 <script setup>
+import { useTemplateRef } from "vue";
 import { Heart, LoaderCircle, Plus, Sparkles, Tag } from "lucide-vue-next";
 
 import ProductImage from "@/components/catalog/ProductImage.vue";
+import { registrarOrigemVoo } from "@/utils/vooAoCarrinho";
 
-defineProps({
+const props = defineProps({
   produto: { type: Object, required: true },
   favorito: { type: Boolean, default: false },
   favoritando: { type: Boolean, default: false },
   adicionando: { type: Boolean, default: false },
 });
 
-defineEmits(["open", "favorite", "add"]);
+const emit = defineEmits(["open", "favorite", "add"]);
+
+const midia = useTemplateRef("midia");
+
+// O voo até o carrinho parte da imagem do card; ele só acontece se o item entrar no carrinho.
+function adicionar() {
+  registrarOrigemVoo(midia.value);
+  emit("add", props.produto);
+}
 
 function formatarPreco(valor) {
   return new Intl.NumberFormat("pt-BR", {
@@ -114,17 +125,13 @@ function formatarPreco(valor) {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  padding: 10px;
   border: 1px solid var(--student-border);
-  border-radius: 10px;
-  background: #fff;
+  border-radius: var(--pp-radius-card-lg);
+  background: var(--student-surface);
   transition:
-    border-color 0.15s ease,
-    transform 0.15s ease;
-}
-.product-card:hover {
-  border-color: #d4c3aa;
-  transform: translateY(-1px);
+    border-color 0.2s var(--pp-ease),
+    box-shadow 0.2s var(--pp-ease);
 }
 .product-card__media-button,
 .product-card__copy {
@@ -138,69 +145,90 @@ function formatarPreco(valor) {
 .product-card__media-button {
   width: 100%;
   display: block;
+  overflow: hidden;
+  border-radius: 14px;
+}
+/* Zoom só na imagem: o card não muda de tamanho. */
+.product-card__media-button :deep(img),
+.product-card__media-button :deep(svg) {
+  transition: transform 0.45s var(--pp-ease);
+}
+@media (hover: hover) {
+  .product-card:hover {
+    border-color: var(--student-border-strong);
+    box-shadow: var(--student-shadow);
+  }
+  .product-card:hover .product-card__media-button :deep(img) {
+    transform: scale(1.06);
+  }
+  .product-card:hover .product-card__media-button :deep(svg) {
+    transform: scale(1.08) rotate(-3deg);
+  }
 }
 .product-card__badge {
   position: absolute;
-  left: 9px;
-  top: 9px;
+  left: 10px;
+  top: 10px;
   z-index: 2;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 6px;
-  border-radius: 5px;
-  background: #40362f;
-  color: #fff;
-  font-size: 8px;
+  padding: 5px 8px;
+  border-radius: var(--pp-radius-full);
+  background: var(--student-text);
+  color: var(--pp-creme);
+  font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 .product-card__badge--promo {
-  background: #8e5b16;
+  background: var(--student-accent);
 }
 .product-card__favorite {
   position: absolute;
-  right: 9px;
-  top: 9px;
+  right: 18px;
+  top: 18px;
   z-index: 3;
-  width: 31px;
-  height: 31px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
   padding: 0;
-  border: 1px solid rgba(40, 35, 31, 0.1);
+  border: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.94);
-  color: #776f67;
+  background: var(--student-surface);
+  color: var(--student-muted);
+  box-shadow: 0 2px 8px rgba(42, 22, 11, 0.08);
   cursor: pointer;
+  transition: transform 0.15s var(--pp-ease);
 }
-.product-card__favorite:hover {
-  color: #443d37;
+.product-card__favorite:active {
+  transform: scale(0.9);
 }
 .product-card__favorite.is-active {
-  color: #a34540;
+  color: var(--student-danger);
 }
 .product-card__favorite:disabled {
   opacity: 0.6;
 }
 .product-card__copy {
-  padding: 12px 12px 5px;
+  padding: 12px 4px 4px;
 }
 .product-card__category {
   display: block;
-  margin-bottom: 4px;
-  color: var(--student-muted);
-  font-size: 9px;
+  margin-bottom: 3px;
+  color: var(--student-muted-2);
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
 }
 .product-card h2 {
   margin: 0;
-  font-size: 13px;
-  font-weight: 650;
-  line-height: 1.35;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
 }
 .product-card__footer {
   margin-top: auto;
@@ -208,7 +236,7 @@ function formatarPreco(valor) {
   align-items: flex-end;
   justify-content: space-between;
   gap: 8px;
-  padding: 5px 11px 11px;
+  padding: 8px 4px 2px;
 }
 .product-card__prices {
   display: flex;
@@ -216,32 +244,38 @@ function formatarPreco(valor) {
   flex-direction: column;
 }
 .product-card__prices strong {
-  color: var(--student-text);
-  font-size: 15px;
+  color: var(--pp-marrom-2);
+  font-size: 17px;
 }
 .product-card__old-price {
-  color: #9b938b;
-  font-size: 9px;
+  color: var(--student-muted-2);
+  font-size: 12px;
   text-decoration: line-through;
 }
 .product-card__add {
-  width: 34px;
-  height: 34px;
+  width: 42px;
+  height: 42px;
   flex: 0 0 auto;
   display: grid;
   place-items: center;
   padding: 0;
   border: 0;
-  border-radius: 8px;
-  background: #2a211b;
-  color: #fff;
+  border-radius: 50%;
+  background: var(--student-text);
+  color: var(--pp-creme);
   cursor: pointer;
+  transition:
+    transform 0.15s var(--pp-ease),
+    background 0.2s;
 }
 .product-card__add:hover:not(:disabled) {
-  background: #18120e;
+  background: var(--pp-marrom-2);
+}
+.product-card__add:active:not(:disabled) {
+  transform: scale(0.9);
 }
 .product-card__add:disabled {
-  opacity: 0.5;
+  opacity: 0.55;
 }
 .product-card__spinner {
   animation: pc-spin 0.7s linear infinite;
@@ -252,22 +286,22 @@ function formatarPreco(valor) {
   }
 }
 @media (max-width: 640px) {
+  .product-card {
+    padding: 8px;
+    border-radius: 16px;
+  }
   .product-card h2 {
-    font-size: 12px;
-  }
-  .product-card__copy {
-    padding: 10px 10px 4px;
-  }
-  .product-card__footer {
-    padding: 5px 9px 9px;
+    font-size: 14px;
   }
   .product-card__favorite {
-    width: 29px;
-    height: 29px;
+    right: 14px;
+    top: 14px;
+    width: 34px;
+    height: 34px;
   }
   .product-card__add {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
   }
 }
 </style>

@@ -219,7 +219,7 @@ function formatarMoeda(valor) {
   display: block;
   margin-top: 2px;
   color: var(--student-muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .order-card__body {
   padding: 5px 15px;
@@ -239,7 +239,7 @@ function formatarMoeda(valor) {
   align-items: flex-start;
   gap: 6px;
   color: var(--student-muted);
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.45;
 }
 .order-card__status-copy svg {
@@ -266,7 +266,7 @@ function formatarMoeda(valor) {
   border-radius: 7px;
   background: #f5faf2;
   color: #4f6d3d;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -284,7 +284,7 @@ function formatarMoeda(valor) {
   border-radius: 7px;
   background: var(--student-surface);
   color: var(--student-text);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -297,7 +297,7 @@ function formatarMoeda(valor) {
   border-radius: var(--pp-radius-full);
   background: var(--student-accent-hover);
   color: var(--student-surface);
-  font-size: 10px;
+  font-size: 12px;
 }
 .order-card__total {
   text-align: right;
@@ -305,7 +305,7 @@ function formatarMoeda(valor) {
 .order-card__total span {
   display: block;
   color: var(--student-muted);
-  font-size: 8px;
+  font-size: 11px;
 }
 .order-card__total strong {
   font-size: 14px;

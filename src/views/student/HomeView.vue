@@ -1,445 +1,98 @@
 <template>
   <div class="home">
-    <header class="home__header">
-      <div class="home__greeting-row">
-        <div class="home__greeting">
-          <h1>{{ saudacao }}, {{ primeiroNome }}!</h1>
-          <p>Confira o cardápio e acompanhe seus pedidos.</p>
-        </div>
-
-        <RouterLink
-          :to="{ name: 'perfil' }"
-          class="home__mobile-avatar"
-          aria-label="Abrir perfil"
-        >
-          <img
-            v-if="avatarDisponivel"
-            :src="auth.usuario.avatar"
-            :alt="`Foto de ${auth.usuario?.name || 'usuário'}`"
-            @error="avatarComErro = true"
-          />
-          <template v-else>{{ iniciais }}</template>
-        </RouterLink>
-      </div>
-
-      <label class="home__search">
-        <Search :size="19" aria-hidden="true" />
-        <input
-          v-model="busca"
-          type="search"
-          placeholder="Buscar produtos, categorias..."
-          aria-label="Buscar produtos e categorias"
-        />
-      </label>
-
-      <div class="home__actions">
-        <RouterLink
-          :to="{ name: 'notificacoes' }"
-          class="home__icon-btn"
-          aria-label="Notificações"
-        >
-          <Bell :size="20" />
-          <span v-if="notifications.naoLidas" class="home__badge">{{
-            limitarBadge(notifications.naoLidas)
-          }}</span>
-        </RouterLink>
-
-        <RouterLink
-          :to="{ name: 'carrinho' }"
-          class="home__icon-btn"
-          aria-label="Carrinho"
-        >
-          <ShoppingCart :size="20" />
-          <span v-if="cart.totalItens" class="home__badge">{{
-            limitarBadge(cart.totalItens)
-          }}</span>
-        </RouterLink>
-
-        <RouterLink
-          :to="{ name: 'perfil' }"
-          class="home__avatar"
-          aria-label="Abrir perfil"
-        >
-          <img
-            v-if="avatarDisponivel"
-            :src="auth.usuario.avatar"
-            :alt="`Foto de ${auth.usuario?.name || 'usuário'}`"
-            @error="avatarComErro = true"
-          />
-          <template v-else>{{ iniciais }}</template>
-        </RouterLink>
-      </div>
+    <header class="home__intro">
+      <h1>{{ saudacao }}, {{ primeiroNome }}!</h1>
+      <p>Peça agora e retire no balcão antes do sinal tocar.</p>
     </header>
 
-    <nav class="home__categories" aria-label="Categorias do cardápio">
-      <button
-        type="button"
-        class="home__category"
-        :class="{ 'is-active': categoriaAtiva === null }"
-        @click="selecionarCategoria(null)"
-      >
-        <LayoutGrid :size="18" aria-hidden="true" />
-        <span>Todos</span>
-      </button>
+    <HomeBanner
+      :slides="slidesBanner"
+      :carregando="carregandoProdutos || carregandoPromos"
+      :adicionando-id="produtoAdicionando"
+      @adicionar="adicionarAoCarrinho"
+    />
 
-      <button
-        v-for="categoria in categorias"
-        :key="categoria.id"
-        type="button"
-        class="home__category"
-        :class="{ 'is-active': categoriaAtiva === categoria.id }"
-        @click="selecionarCategoria(categoria.id)"
-      >
-        <component
-          :is="iconeParaCategoria(categoria.slug || categoria.nome)"
-          :size="18"
-          aria-hidden="true"
-        />
-        <span>{{ categoria.nome }}</span>
-      </button>
-    </nav>
-
-    <section class="home__hero" aria-label="Destaque do dia">
-      <div
-        v-if="carregandoPromos || carregandoProdutos"
-        class="home__hero-card home__skeleton"
-        aria-hidden="true"
-      />
-
-      <template v-else-if="promoDestaque">
-        <Transition name="hero-fade" mode="out-in">
-          <article :key="promoDestaque.id" class="home__hero-card">
-            <div class="home__hero-content">
-              <span class="home__hero-tag">
-                <Flame :size="14" aria-hidden="true" />
-                Oferta em destaque
-              </span>
-
-              <h2>{{ promoDestaque.produto_nome }}</h2>
-              <p>Oferta disponível por tempo limitado.</p>
-
-              <div class="home__hero-price">
-                <span
-                  v-if="
-                    promoDestaque.precoOriginal >
-                    Number(promoDestaque.preco_promocional)
-                  "
-                  class="home__hero-price-old"
-                >
-                  {{ formatarPreco(promoDestaque.precoOriginal) }}
-                </span>
-                <strong>{{
-                  formatarPreco(promoDestaque.preco_promocional)
-                }}</strong>
-              </div>
-
-              <button
-                type="button"
-                class="home__hero-btn"
-                @click="abrirProduto(promoDestaque.produto)"
-              >
-                Ver detalhes
-                <ChevronRight :size="17" aria-hidden="true" />
-              </button>
-            </div>
-
-            <div class="home__hero-media">
-              <img
-                v-if="imagemDisponivel(promoDestaque.produto)"
-                :src="imagemProduto(promoDestaque.produto)"
-                :alt="promoDestaque.produto_nome"
-                fetchpriority="high"
-                @error="registrarErroImagem(promoDestaque.produto?.id)"
-              />
-              <div v-else class="home__hero-fallback" aria-hidden="true">
-                <component
-                  :is="iconeParaCategoria(promoDestaque.categoriaNome)"
-                  :size="84"
-                />
-              </div>
-            </div>
-          </article>
-        </Transition>
-
-        <div
-          v-if="promosAtivas.length > 1"
-          class="home__dots"
-          aria-label="Selecionar promoção"
-        >
-          <button
-            v-for="(promo, index) in promosAtivas"
-            :key="promo.id"
-            type="button"
-            :class="{ 'is-active': index === promoIndex }"
-            :aria-label="`Mostrar promoção ${index + 1}`"
-            :aria-current="index === promoIndex ? 'true' : undefined"
-            @click="promoIndex = index"
-          />
-        </div>
-      </template>
-
-      <article v-else class="home__hero-card home__hero-card--institutional">
-        <div class="home__hero-content">
-          <span class="home__hero-tag">
-            <ShoppingBag :size="14" aria-hidden="true" />
-            Pires Panificadora
-          </span>
-          <h2>Reserve e retire no balcão.</h2>
-          <p>Monte o pedido no site e retire quando estiver pronto.</p>
-          <RouterLink :to="{ name: 'cardapio' }" class="home__hero-btn">
-            Ver cardápio
-            <ChevronRight :size="17" aria-hidden="true" />
-          </RouterLink>
-        </div>
-        <div class="home__hero-brand-panel" aria-hidden="true">
-          <span
-            class="home__hero-brand-orbit home__hero-brand-orbit--one"
-          ></span>
-          <span
-            class="home__hero-brand-orbit home__hero-brand-orbit--two"
-          ></span>
-
-          <div class="home__hero-brand-inner">
-            <div class="home__hero-brand-logo-wrap">
-              <img src="/logo.png" alt="" class="home__hero-brand-logo" />
-            </div>
-            <span class="home__hero-brand-eyebrow">Pires Panificadora</span>
-            <strong>Seu intervalo, mais prático.</strong>
-            <small>Escolha online. Retire no balcão.</small>
-          </div>
-        </div>
-      </article>
-    </section>
-
-    <section class="home__section" aria-labelledby="titulo-destaques">
-      <div class="home__section-head">
+    <section v-revelar class="home__secao" aria-labelledby="titulo-destaques">
+      <header class="home__secao-topo">
         <div>
-          <h2 id="titulo-destaques">{{ tituloDestaques }}</h2>
-          <p v-if="temFiltroAtivo">
-            Resultados com base nos filtros selecionados.
-          </p>
+          <h2 id="titulo-destaques">Destaques para você</h2>
+          <span class="home__nota" aria-hidden="true">escolha e adicione</span>
         </div>
-        <RouterLink :to="{ name: 'cardapio' }">
-          Ver todos
-          <ChevronRight :size="16" aria-hidden="true" />
+        <RouterLink :to="{ name: 'cardapio' }" class="home__link">
+          Ver cardápio <ArrowRight :size="16" aria-hidden="true" />
         </RouterLink>
-      </div>
+      </header>
 
       <div
         v-if="carregandoProdutos"
-        class="home__product-row"
+        class="home__grade"
         aria-label="Carregando produtos"
       >
-        <div
-          v-for="index in 5"
-          :key="index"
-          class="home__product-card home__product-card--skeleton home__skeleton"
-        />
+        <div v-for="indice in 4" :key="indice" class="home__skeleton" aria-hidden="true">
+          <span class="home__skeleton-img" />
+          <span />
+          <span class="home__skeleton-curto" />
+        </div>
       </div>
 
-      <div
-        v-else-if="erroProdutos"
-        class="home__state home__state--error"
-        role="alert"
-      >
-        <CircleAlert :size="24" aria-hidden="true" />
-        <div>
-          <strong>Não foi possível carregar o cardápio.</strong>
-          <p>Verifique sua conexão e tente novamente.</p>
-        </div>
-        <button type="button" @click="carregarProdutos">
+      <div v-else-if="erroProdutos" class="home__estado" role="alert">
+        <CircleAlert :size="26" aria-hidden="true" />
+        <strong>Não conseguimos carregar os produtos.</strong>
+        <p>Verifique sua conexão e tente novamente.</p>
+        <button type="button" class="home__botao-secundario" @click="carregarProdutos">
           Tentar novamente
         </button>
       </div>
 
-      <div v-else-if="!destaques.length" class="home__state">
-        <SearchX :size="25" aria-hidden="true" />
-        <div>
-          <strong>Nenhum produto encontrado.</strong>
-          <p>Tente mudar a busca ou selecionar outra categoria.</p>
-        </div>
+      <div v-else-if="!destaques.length" class="home__estado">
+        <ShoppingBag :size="26" aria-hidden="true" />
+        <strong>O cardápio de hoje ainda não foi publicado.</strong>
+        <p>Volte daqui a pouco: os produtos aparecem aqui assim que a padaria liberar.</p>
       </div>
 
-      <div v-else class="home__product-row">
-        <article
+      <div v-else class="home__grade">
+        <ProductCard
           v-for="produto in destaques"
           :key="produto.id"
-          class="home__product-card"
-        >
-          <button
-            type="button"
-            class="home__fav-btn"
-            :class="{ 'is-active': favorites.tem(produto.id) }"
-            :aria-label="
-              favorites.tem(produto.id)
-                ? `Remover ${produto.nome} dos favoritos`
-                : `Favoritar ${produto.nome}`
-            "
-            @click="alternarFavorito(produto)"
-          >
-            <Heart
-              :size="18"
-              :fill="favorites.tem(produto.id) ? 'currentColor' : 'none'"
-            />
-          </button>
-
-          <button
-            type="button"
-            class="home__product-open"
-            :aria-label="`Ver detalhes de ${produto.nome}`"
-            @click="abrirProduto(produto)"
-          >
-            <div class="home__product-image">
-              <img
-                v-if="imagemDisponivel(produto)"
-                :src="imagemProduto(produto)"
-                :alt="produto.nome"
-                loading="lazy"
-                @error="registrarErroImagem(produto.id)"
-              />
-              <div v-else class="home__product-fallback" aria-hidden="true">
-                <component
-                  :is="iconeParaCategoria(produto.categoria_nome)"
-                  :size="42"
-                />
-              </div>
-
-              <span v-if="produto.em_promocao" class="home__product-promo"
-                >Oferta</span
-              >
-            </div>
-
-            <div class="home__product-body">
-              <h3>{{ produto.nome }}</h3>
-              <p>{{ produto.categoria_nome || "Produto" }}</p>
-            </div>
-          </button>
-
-          <div class="home__product-footer">
-            <div class="home__product-prices">
-              <span
-                v-if="produto.em_promocao"
-                class="home__product-price-old"
-                >{{ formatarPreco(produto.preco) }}</span
-              >
-              <strong>{{ formatarPreco(produto.preco_atual) }}</strong>
-            </div>
-
-            <button
-              type="button"
-              class="home__add-btn"
-              :disabled="produtoAdicionando === produto.id"
-              :aria-label="`Adicionar ${produto.nome} ao carrinho`"
-              @click="adicionarAoCarrinho(produto)"
-            >
-              <LoaderCircle
-                v-if="produtoAdicionando === produto.id"
-                :size="18"
-                class="home__add-spinner"
-              />
-              <Plus v-else :size="19" />
-            </button>
-          </div>
-        </article>
+          :produto="produto"
+          :favorito="favorites.tem(produto.id)"
+          :favoritando="favorites.estaProcessando(produto.id)"
+          :adicionando="produtoAdicionando === produto.id"
+          @open="abrirProduto"
+          @favorite="alternarFavorito"
+          @add="adicionarAoCarrinho"
+        />
       </div>
     </section>
 
+    <HomeComoFunciona class="home__secao" />
+
     <section
-      class="home__section home__section--promos"
+      v-if="produtosEmPromocao.length"
+      v-revelar
+      class="home__secao"
       aria-labelledby="titulo-promocoes"
     >
-      <div class="home__section-head">
+      <header class="home__secao-topo">
         <div>
-          <h2 id="titulo-promocoes">Ofertas</h2>
+          <h2 id="titulo-promocoes">Promoções de hoje</h2>
         </div>
-        <RouterLink :to="{ name: 'promocoes' }">
-          Ver todas
-          <ChevronRight :size="16" aria-hidden="true" />
+        <RouterLink :to="{ name: 'promocoes' }" class="home__link">
+          Ver promoções <ArrowRight :size="16" aria-hidden="true" />
         </RouterLink>
-      </div>
-
-      <div
-        v-if="carregandoPromos || carregandoProdutos"
-        class="home__promo-row"
-        aria-label="Carregando promoções"
-      >
-        <div
-          v-for="index in 3"
-          :key="index"
-          class="home__promo-card home__skeleton"
+      </header>
+      <div class="home__grade">
+        <ProductCard
+          v-for="produto in produtosEmPromocao"
+          :key="produto.id"
+          :produto="produto"
+          :favorito="favorites.tem(produto.id)"
+          :favoritando="favorites.estaProcessando(produto.id)"
+          :adicionando="produtoAdicionando === produto.id"
+          @open="abrirProduto"
+          @favorite="alternarFavorito"
+          @add="adicionarAoCarrinho"
         />
-      </div>
-
-      <div
-        v-else-if="erroPromos && !promosAtivas.length"
-        class="home__state home__state--compact"
-      >
-        <Tag :size="23" aria-hidden="true" />
-        <div>
-          <strong>As promoções não puderam ser carregadas.</strong>
-          <p>O restante do cardápio continua disponível.</p>
-        </div>
-      </div>
-
-      <div
-        v-else-if="!promosAtivas.length"
-        class="home__state home__state--compact"
-      >
-        <Tag :size="23" aria-hidden="true" />
-        <div>
-          <strong>Nenhuma promoção ativa agora.</strong>
-          <p>Quando houver uma oferta vigente, ela aparecerá aqui.</p>
-        </div>
-      </div>
-
-      <div v-else class="home__promo-row">
-        <article
-          v-for="promo in promocoesVisiveis"
-          :key="promo.id"
-          class="home__promo-card"
-          role="button"
-          tabindex="0"
-          :aria-label="`Ver detalhes de ${promo.produto_nome}`"
-          @click="abrirProduto(promo.produto)"
-          @keydown.enter="abrirProduto(promo.produto)"
-          @keydown.space.prevent="abrirProduto(promo.produto)"
-        >
-          <div class="home__promo-copy">
-            <span class="home__promo-category">{{
-              promo.categoriaNome || "Oferta"
-            }}</span>
-            <h3>{{ promo.produto_nome }}</h3>
-
-            <div class="home__promo-prices">
-              <strong>{{ formatarPreco(promo.preco_promocional) }}</strong>
-              <span
-                v-if="promo.precoOriginal > Number(promo.preco_promocional)"
-              >
-                {{ formatarPreco(promo.precoOriginal) }}
-              </span>
-            </div>
-          </div>
-
-          <div class="home__promo-media">
-            <img
-              v-if="imagemDisponivel(promo.produto)"
-              :src="imagemProduto(promo.produto)"
-              :alt="promo.produto_nome"
-              loading="lazy"
-              @error="registrarErroImagem(promo.produto?.id)"
-            />
-            <component
-              v-else
-              :is="iconeParaCategoria(promo.categoriaNome)"
-              :size="48"
-              aria-hidden="true"
-            />
-          </div>
-
-          <span v-if="promo.desconto > 0" class="home__promo-discount"
-            >-{{ promo.desconto }}%</span
-          >
-        </article>
       </div>
     </section>
 
@@ -448,13 +101,9 @@
       :produto="produtoDetalhado"
       :loading="carregandoDetalhe"
       :adding="adicionandoModal"
-      :favorito="
-        Boolean(produtoDetalhado && favorites.tem(produtoDetalhado.id))
-      "
+      :favorito="Boolean(produtoDetalhado && favorites.tem(produtoDetalhado.id))"
       :favoritando="
-        Boolean(
-          produtoDetalhado && favorites.estaProcessando(produtoDetalhado.id),
-        )
+        Boolean(produtoDetalhado && favorites.estaProcessando(produtoDetalhado.id))
       "
       @close="fecharModal"
       @favorite="alternarFavorito"
@@ -463,7 +112,7 @@
 
     <Transition name="toast">
       <div v-if="toast" class="home__toast" role="status" aria-live="polite">
-        <Check :size="18" aria-hidden="true" />
+        <Check :size="17" aria-hidden="true" />
         {{ toast }}
       </div>
     </Transition>
@@ -471,30 +120,13 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import {
-  Bell,
-  Check,
-  ChevronRight,
-  CircleAlert,
-  Coffee,
-  Cookie,
-  Croissant,
-  Flame,
-  Heart,
-  LayoutGrid,
-  LoaderCircle,
-  Package,
-  Plus,
-  Search,
-  SearchX,
-  Sandwich,
-  ShoppingBag,
-  ShoppingCart,
-  Tag,
-} from "lucide-vue-next";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { ArrowRight, Check, CircleAlert, ShoppingBag } from "lucide-vue-next";
 
+import ProductCard from "@/components/catalog/ProductCard.vue";
 import ProductDetailsModal from "@/components/catalog/ProductDetailsModal.vue";
+import HomeBanner from "@/components/home/HomeBanner.vue";
+import HomeComoFunciona from "@/components/home/HomeComoFunciona.vue";
 import catalogService, {
   promocaoEstaAtiva,
   resolverUrlMidia,
@@ -502,50 +134,32 @@ import catalogService, {
 import { useAuthStore } from "@/stores/auth";
 import { useCartStore } from "@/stores/cart";
 import { useFavoritesStore } from "@/stores/favorites";
-import { useNotificationsStore } from "@/stores/notifications";
+import { ilustracaoParaProduto } from "@/utils/ilustracaoProduto";
+
+const MAXIMO_DESTAQUES = 8;
+const MAXIMO_PROMOCOES_NO_BANNER = 3;
+const MAXIMO_DESTAQUES_NO_BANNER = 2;
 
 const auth = useAuthStore();
 const cart = useCartStore();
 const favorites = useFavoritesStore();
-const notifications = useNotificationsStore();
 
-const busca = ref("");
-const categoriaAtiva = ref(null);
-const categorias = ref([]);
 const produtos = ref([]);
 const promocoes = ref([]);
-const imagensComErro = ref(new Set());
-const avatarComErro = ref(false);
-
 const carregandoProdutos = ref(true);
 const carregandoPromos = ref(true);
 const erroProdutos = ref(false);
-const erroPromos = ref(false);
 const modalAberto = ref(false);
 const carregandoDetalhe = ref(false);
 const produtoDetalhado = ref(null);
 const produtoAdicionando = ref(null);
 const adicionandoModal = ref(false);
-const detalhesCache = new Map();
-
-const promoIndex = ref(0);
 const toast = ref("");
-let intervaloPromo = null;
+const detalhesCache = new Map();
 let timeoutToast = null;
 
 const primeiroNome = computed(
   () => (auth.usuario?.name || "Aluno").trim().split(/\s+/)[0] || "Aluno",
-);
-
-const avatarDisponivel = computed(
-  () => Boolean(auth.usuario?.avatar) && !avatarComErro.value,
-);
-
-watch(
-  () => auth.usuario?.avatar,
-  () => {
-    avatarComErro.value = false;
-  },
 );
 
 const saudacao = computed(() => {
@@ -555,45 +169,6 @@ const saudacao = computed(() => {
   return "Boa noite";
 });
 
-const iniciais = computed(() => {
-  const nome = auth.usuario?.name || "";
-  return (
-    nome
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((parte) => parte[0]?.toUpperCase())
-      .join("") || "A"
-  );
-});
-
-const ICONES_POR_CATEGORIA = {
-  salgado: Croissant,
-  salgados: Croissant,
-  pao: Croissant,
-  paes: Croissant,
-  doce: Cookie,
-  doces: Cookie,
-  bebida: Coffee,
-  bebidas: Coffee,
-  lanche: Sandwich,
-  lanches: Sandwich,
-  combo: ShoppingBag,
-  combos: ShoppingBag,
-};
-
-function chaveCategoria(valor) {
-  return String(valor || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
-}
-
-function iconeParaCategoria(valor) {
-  return ICONES_POR_CATEGORIA[chaveCategoria(valor)] || Package;
-}
-
 function formatarPreco(valor) {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -601,32 +176,86 @@ function formatarPreco(valor) {
   }).format(Number(valor || 0));
 }
 
-function limitarBadge(valor) {
-  const numero = Number(valor || 0);
-  return numero > 99 ? "99+" : numero;
+// Produtos em destaque primeiro; sem destaque marcado, os primeiros ativos.
+const destaques = computed(() => {
+  const marcados = produtos.value.filter((produto) => produto.destaque);
+  const restantes = produtos.value.filter((produto) => !produto.destaque);
+  return [...marcados, ...restantes].slice(0, MAXIMO_DESTAQUES);
+});
+
+// Só produtos com promoção vigente (a API marca em_promocao; a lista de promoções confirma a vigência).
+const produtosEmPromocao = computed(() => {
+  const vigentes = new Map(
+    promocoes.value
+      .filter((promocao) => promocaoEstaAtiva(promocao))
+      .map((promocao) => [Number(promocao.produto), promocao]),
+  );
+  return produtos.value.filter(
+    (produto) => produto.em_promocao && vigentes.has(Number(produto.id)),
+  );
+});
+
+function slideDeProduto(produto, { etiqueta, destaque, texto, nota }) {
+  const preco = formatarPreco(produto.preco_atual ?? produto.preco);
+  return {
+    id: `produto-${produto.id}`,
+    etiqueta,
+    titulo: [produto.nome],
+    destaque,
+    texto,
+    nota,
+    ilustracao: ilustracaoParaProduto(produto),
+    imagem: resolverUrlMidia(produto.imagem) || null,
+    acao: { tipo: "adicionar", rotulo: `Adicionar · ${preco}`, produto },
+  };
 }
 
-function selecionarCategoria(id) {
-  categoriaAtiva.value = id;
-}
+// Banner: promoções reais primeiro; sem promoção, os destaques da casa. "Como funciona" fecha a fila.
+const slidesBanner = computed(() => {
+  const emPromocao = produtosEmPromocao.value.slice(0, MAXIMO_PROMOCOES_NO_BANNER);
+  const slides = emPromocao.length
+    ? emPromocao.map((produto) => {
+        const original = Number(produto.preco);
+        const atual = Number(produto.preco_atual ?? produto.preco);
+        const desconto = original > atual ? Math.round(((original - atual) / original) * 100) : 0;
+        return slideDeProduto(produto, {
+          etiqueta: "Promoção de hoje",
+          destaque: `por ${formatarPreco(atual)}`,
+          texto: `De ${formatarPreco(original)} por ${formatarPreco(atual)} enquanto durar a promoção.`,
+          nota: desconto ? `${desconto}% mais barato` : "",
+        });
+      })
+    : produtos.value
+        .filter((produto) => produto.destaque)
+        .slice(0, MAXIMO_DESTAQUES_NO_BANNER)
+        .map((produto) =>
+          slideDeProduto(produto, {
+            etiqueta: "Destaque da casa",
+            destaque: "sem fila.",
+            texto: "Peça agora pelo app e retire no balcão mostrando o QR Code.",
+            nota: "direto do balcão",
+          }),
+        );
 
-function imagemProduto(produto) {
-  return resolverUrlMidia(produto?.imagem);
-}
-
-function imagemDisponivel(produto) {
-  return Boolean(produto?.imagem && !imagensComErro.value.has(produto?.id));
-}
-
-function registrarErroImagem(produtoId) {
-  if (!produtoId) return;
-  imagensComErro.value.add(produtoId);
-  imagensComErro.value = new Set(imagensComErro.value);
-}
+  return [
+    ...slides,
+    {
+      id: "como-funciona",
+      etiqueta: "Como funciona",
+      titulo: ["Pediu,", "pagou,"],
+      destaque: "mostrou.",
+      texto:
+        "Pix, cartão ou dinheiro na retirada. Quando ficar pronto, você recebe o aviso e mostra o QR Code no balcão.",
+      nota: "é só mostrar no balcão",
+      ilustracao: "qr",
+      imagem: null,
+      acao: { tipo: "rota", rotulo: "Ver meus pedidos", rota: "pedidos" },
+    },
+  ];
+});
 
 async function alternarFavorito(produto) {
   if (!produto?.id) return;
-
   const estavaFavoritado = favorites.tem(produto.id);
 
   try {
@@ -652,7 +281,6 @@ async function obterDetalhes(produto) {
 
 async function abrirProduto(produto) {
   if (!produto?.id) return;
-
   modalAberto.value = true;
   carregandoDetalhe.value = true;
   produtoDetalhado.value = null;
@@ -686,9 +314,7 @@ async function adicionarAoCarrinho(produto) {
 
     const itemAtual = cart.itens.find((item) => item.produto.id === produto.id);
     if ((itemAtual?.quantidade || 0) >= estoque) {
-      mostrarToast(
-        `Você já adicionou todo o estoque disponível de ${produto.nome}.`,
-      );
+      mostrarToast(`Você já adicionou todo o estoque disponível de ${produto.nome}.`);
       return;
     }
 
@@ -733,113 +359,6 @@ function mostrarToast(mensagem) {
   }, 2200);
 }
 
-const temFiltroAtivo = computed(() =>
-  Boolean(categoriaAtiva.value || busca.value.trim()),
-);
-
-const produtosFiltrados = computed(() => {
-  let lista = produtos.value;
-
-  if (categoriaAtiva.value) {
-    lista = lista.filter(
-      (produto) => produto.categoria === categoriaAtiva.value,
-    );
-  }
-
-  const termo = busca.value.trim().toLocaleLowerCase("pt-BR");
-  if (termo) {
-    lista = lista.filter((produto) => {
-      const texto =
-        `${produto.nome || ""} ${produto.categoria_nome || ""}`.toLocaleLowerCase(
-          "pt-BR",
-        );
-      return texto.includes(termo);
-    });
-  }
-
-  return lista;
-});
-
-const destaques = computed(() => {
-  const lista = produtosFiltrados.value;
-
-  if (temFiltroAtivo.value) {
-    return lista.slice(0, 6);
-  }
-
-  const marcados = lista.filter((produto) => produto.destaque);
-  const restantes = lista.filter((produto) => !produto.destaque);
-  return [...marcados, ...restantes].slice(0, 5);
-});
-
-const tituloDestaques = computed(() =>
-  temFiltroAtivo.value ? "Produtos encontrados" : "Destaques para você",
-);
-
-function montarPromoProduto(produto, promocao = null) {
-  const precoPromocional = Number(
-    promocao?.preco_promocional ?? produto?.preco_atual ?? produto?.preco ?? 0,
-  );
-  const precoOriginal = Number(produto?.preco ?? precoPromocional);
-  const desconto =
-    precoOriginal > 0 && precoOriginal > precoPromocional
-      ? Math.round(((precoOriginal - precoPromocional) / precoOriginal) * 100)
-      : 0;
-
-  return {
-    ...(promocao || {}),
-    id: promocao?.id ?? `produto-${produto.id}`,
-    produto,
-    produtoId: produto.id,
-    produto_nome: promocao?.produto_nome || produto.nome,
-    preco_promocional: precoPromocional,
-    precoOriginal,
-    desconto,
-    categoriaNome: produto?.categoria_nome || "",
-  };
-}
-
-const promosAtivas = computed(() => {
-  const promocoesVigentesPorProduto = new Map(
-    promocoes.value
-      .filter((promo) => promocaoEstaAtiva(promo))
-      .map((promo) => [Number(promo.produto), promo]),
-  );
-
-  return produtos.value
-    .filter((produto) => produto.em_promocao)
-    .map((produto) =>
-      montarPromoProduto(
-        produto,
-        promocoesVigentesPorProduto.get(Number(produto.id)) || null,
-      ),
-    );
-});
-
-const promoDestaque = computed(
-  () => promosAtivas.value[promoIndex.value] || promosAtivas.value[0] || null,
-);
-const promocoesVisiveis = computed(() => promosAtivas.value.slice(0, 3));
-
-watch(
-  () => promosAtivas.value.length,
-  (quantidade) => {
-    if (!quantidade) {
-      promoIndex.value = 0;
-    } else if (promoIndex.value >= quantidade) {
-      promoIndex.value = 0;
-    }
-  },
-);
-
-async function carregarCategorias() {
-  try {
-    categorias.value = await catalogService.listarCategoriasAtivas();
-  } catch {
-    categorias.value = [];
-  }
-}
-
 async function carregarProdutos() {
   carregandoProdutos.value = true;
   erroProdutos.value = false;
@@ -856,1021 +375,199 @@ async function carregarProdutos() {
 
 async function carregarPromocoes() {
   carregandoPromos.value = true;
-  erroPromos.value = false;
 
   try {
     promocoes.value = await catalogService.listarPromocoes();
   } catch {
+    // Sem a lista de promoções, o banner usa os destaques da casa.
     promocoes.value = [];
-    erroPromos.value = true;
   } finally {
     carregandoPromos.value = false;
   }
 }
 
-function iniciarCarrossel() {
-  window.clearInterval(intervaloPromo);
-  intervaloPromo = window.setInterval(() => {
-    if (promosAtivas.value.length > 1) {
-      promoIndex.value = (promoIndex.value + 1) % promosAtivas.value.length;
-    }
-  }, 6500);
-}
-
 onMounted(() => {
   favorites.carregar().catch(() => {});
-  notifications
-    .carregar({
-      force: !notifications.inicializado,
-    })
-    .catch(() => {});
-
-  Promise.allSettled([
-    carregarCategorias(),
-    carregarProdutos(),
-    carregarPromocoes(),
-  ]);
-  iniciarCarrossel();
+  Promise.allSettled([carregarProdutos(), carregarPromocoes()]);
 });
 
 onBeforeUnmount(() => {
-  window.clearInterval(intervaloPromo);
   window.clearTimeout(timeoutToast);
 });
 </script>
 
 <style scoped>
 .home {
-  width: min(100%, 1280px);
+  width: min(100%, 1240px);
   margin: 0 auto;
   color: var(--student-text);
 }
-.home__header {
-  display: grid;
-  grid-template-columns: minmax(260px, 1fr) minmax(280px, 420px) auto;
-  align-items: center;
-  gap: 18px;
-  margin-bottom: 22px;
-}
-.home__greeting-row {
-  min-width: 0;
-}
-.home__greeting h1 {
-  margin: 0;
-  font-size: 29px;
-  font-weight: 700;
-  line-height: 1.15;
-}
-.home__greeting p {
-  margin: 6px 0 0;
-  color: var(--student-muted);
-  font-size: 13px;
-}
-.home__search {
-  height: 42px;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 0 12px;
-  background: #fff;
-  border: 1px solid var(--student-border);
-  border-radius: 8px;
-  color: #8a827b;
-}
-.home__search:focus-within {
-  border-color: #c9a466;
-  box-shadow: 0 0 0 3px rgba(184, 121, 31, 0.08);
-}
-.home__search input {
-  width: 100%;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--student-text);
-  font-size: 13px;
-}
-.home__actions {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.home__icon-btn {
-  position: relative;
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--student-border);
-  border-radius: 8px;
-  background: #fff;
-  color: #605950;
-}
-.home__badge {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  min-width: 17px;
-  height: 17px;
-  padding: 0 4px;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  background: var(--student-accent);
-  color: #fff;
-  font-size: 9px;
-  font-weight: 800;
-}
-.home__avatar,
-.home__mobile-avatar {
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  border-radius: 50%;
-  background: #e7ded3;
-  color: #654718;
-  font-size: 11px;
-  font-weight: 700;
-}
-.home__avatar img,
-.home__mobile-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.home__mobile-avatar {
-  display: none;
-}
-.home__categories {
-  display: flex;
-  gap: 7px;
+.home__intro {
   margin-bottom: 20px;
-  overflow: auto;
-  scrollbar-width: none;
 }
-.home__categories::-webkit-scrollbar {
-  display: none;
+.home__intro h1 {
+  margin: 0;
+  font-size: 28px;
 }
-.home__category {
-  flex: 0 0 auto;
-  min-height: 36px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 0 12px;
-  border: 1px solid var(--student-border);
-  border-radius: 8px;
-  background: #fff;
-  color: #625b54;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.home__category:hover {
-  border-color: var(--student-border-strong);
-}
-.home__category.is-active {
-  border-color: #c89a51;
-  background: var(--student-accent-soft);
-  color: #7d5114;
-}
-.home__hero {
-  position: relative;
-  margin-bottom: 30px;
-}
-.home__hero-card {
-  height: 300px;
-  min-height: 300px;
-  display: grid;
-  grid-template-columns: minmax(0, 1.08fr) minmax(300px, 0.92fr);
-  overflow: hidden;
-  border: 1px solid var(--student-border);
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: var(--student-shadow);
-}
-.home__hero-content {
-  padding: 36px 38px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-}
-.home__hero-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 15px;
-  color: #8b5d1a;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-}
-.home__hero-content h2 {
-  margin: 0 0 8px;
-  max-width: 560px;
-  font-size: 33px;
-  line-height: 1.08;
-  font-weight: 700;
-}
-.home__hero-content p {
-  margin: 0 0 19px;
+.home__intro p {
+  margin: 4px 0 0;
   color: var(--student-muted);
   font-size: 14px;
-  line-height: 1.55;
 }
-.home__hero-price {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  margin-bottom: 20px;
+.home__secao {
+  margin-top: 44px;
 }
-.home__hero-price strong {
-  color: var(--student-text);
-  font-size: 26px;
-}
-.home__hero-price-old {
-  color: #9e968e;
-  font-size: 13px;
-  text-decoration: line-through;
-}
-.home__hero-btn {
-  min-height: 40px;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 0 15px;
-  border: 1px solid #9e691c;
-  border-radius: 8px;
-  background: #9e691c;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.home__hero-btn:hover {
-  background: #835513;
-  border-color: #835513;
-}
-.home__hero-media {
-  position: relative;
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
-  background: #eee9e3;
-}
-.home__hero-media::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.16),
-    transparent 28%
-  );
-}
-.home__hero-media img {
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  display: block;
-  object-fit: cover;
-  object-position: center;
-}
-.home__hero-fallback {
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  display: grid;
-  place-items: center;
-  color: #b9935a;
-  background: #f0ece7;
-}
-.home__hero-card--institutional {
-  grid-template-columns: minmax(0, 1.08fr) minmax(300px, 0.92fr);
-}
-.home__hero-brand-panel {
-  position: relative;
-  height: 100%;
-  min-height: 0;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  isolation: isolate;
-  background:
-    radial-gradient(
-      circle at 78% 18%,
-      rgba(206, 154, 78, 0.28),
-      transparent 31%
-    ),
-    radial-gradient(
-      circle at 20% 86%,
-      rgba(184, 121, 31, 0.18),
-      transparent 34%
-    ),
-    linear-gradient(135deg, #211710 0%, #302016 58%, #3b2819 100%);
-}
-.home__hero-brand-panel::before {
-  content: "";
-  position: absolute;
-  inset: 18px;
-  z-index: -1;
-  border: 1px solid rgba(235, 204, 154, 0.16);
-  border-radius: 14px;
-}
-.home__hero-brand-inner {
-  position: relative;
-  z-index: 2;
-  width: min(78%, 340px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-.home__hero-brand-logo-wrap {
-  width: 112px;
-  height: 112px;
-  display: grid;
-  place-items: center;
-  margin-bottom: 16px;
-  border: 1px solid rgba(232, 196, 137, 0.22);
-  border-radius: 28px;
-  background: rgba(255, 255, 255, 0.045);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(4px);
-}
-.home__hero-brand-logo {
-  width: 84px;
-  max-height: 72px;
-  object-fit: contain;
-}
-.home__hero-brand-eyebrow {
-  margin-bottom: 7px;
-  color: #d9ad69;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-.home__hero-brand-inner strong {
-  color: #fff8ef;
-  font-size: 21px;
-  line-height: 1.15;
-  letter-spacing: -0.025em;
-}
-.home__hero-brand-inner small {
-  margin-top: 8px;
-  color: rgba(255, 248, 239, 0.63);
-  font-size: 11px;
-}
-.home__hero-brand-orbit {
-  position: absolute;
-  z-index: 0;
-  border: 1px solid rgba(218, 174, 103, 0.13);
-  border-radius: 50%;
-}
-.home__hero-brand-orbit--one {
-  width: 230px;
-  height: 230px;
-  top: -118px;
-  right: -66px;
-}
-.home__hero-brand-orbit--two {
-  width: 170px;
-  height: 170px;
-  left: -72px;
-  bottom: -90px;
-}
-.home__dots {
-  position: absolute;
-  left: 38px;
-  bottom: 15px;
-  display: flex;
-  gap: 6px;
-}
-.home__dots button {
-  width: 6px;
-  height: 6px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: #d2cbc4;
-  cursor: pointer;
-}
-.home__dots button.is-active {
-  width: 18px;
-  border-radius: 999px;
-  background: var(--student-accent);
-}
-.home__section {
-  margin-top: 30px;
-}
-.home__section-head {
+.home__secao-topo {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 14px;
+  gap: 16px;
+  margin-bottom: 16px;
 }
-.home__section-head h2 {
+.home__secao-topo > div {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+.home__secao-topo h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: 24px;
+}
+.home__nota {
+  color: var(--pp-dourado-escuro);
+  font-family: var(--pp-font-nota);
+  font-size: 22px;
   font-weight: 700;
 }
-.home__section-head p {
-  margin: 4px 0 0;
-  color: var(--student-muted);
-  font-size: 12px;
-}
-.home__section-head > a {
+.home__link {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #795016;
-  font-size: 12px;
+  color: var(--student-accent);
+  font-size: 14px;
   font-weight: 700;
-}
-.home__product-row {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
-}
-.home__product-card {
-  position: relative;
-  min-width: 0;
-  overflow: hidden;
-  border: 1px solid var(--student-border);
-  border-radius: 10px;
-  background: #fff;
-}
-.home__product-card:hover {
-  border-color: #d6c5ad;
-}
-.home__product-open {
-  width: 100%;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-}
-.home__product-image {
-  position: relative;
-  aspect-ratio: 1.22/1;
-  overflow: hidden;
-  background: #f1ede8;
-}
-.home__product-image img {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-  transition: transform 0.2s ease;
-}
-.home__product-card:hover .home__product-image img {
-  transform: scale(1.025);
-}
-.home__product-fallback {
-  height: 100%;
-  display: grid;
-  place-items: center;
-  color: #bb965f;
-}
-.home__product-promo {
-  position: absolute;
-  left: 9px;
-  top: 9px;
-  padding: 4px 7px;
-  border-radius: 5px;
-  background: #8e5b16;
-  color: #fff;
-  font-size: 9px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.home__fav-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 2;
-  width: 31px;
-  height: 31px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 1px solid rgba(40, 35, 31, 0.1);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.93);
-  color: #746d66;
-  cursor: pointer;
-}
-.home__fav-btn.is-active {
-  color: #9d3e39;
-}
-.home__product-body {
-  padding: 11px 11px 4px;
-}
-.home__product-body h3 {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 650;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
-.home__product-body p {
-  margin: 4px 0 0;
-  color: var(--student-muted);
-  font-size: 10px;
+.home__link:hover {
+  color: var(--student-accent-hover);
 }
-.home__product-footer {
-  min-height: 55px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 6px 10px 10px;
-}
-.home__product-prices {
-  display: flex;
-  flex-direction: column;
-}
-.home__product-prices strong {
-  font-size: 15px;
-  color: var(--student-text);
-}
-.home__product-price-old {
-  color: #9c948c;
-  font-size: 9px;
-  text-decoration: line-through;
-}
-.home__add-btn {
-  width: 34px;
-  height: 34px;
-  flex: 0 0 auto;
+.home__grade {
   display: grid;
-  place-items: center;
-  border: 0;
-  border-radius: 8px;
-  background: #2a211b;
-  color: #fff;
-  cursor: pointer;
-}
-.home__add-btn:disabled {
-  opacity: 0.55;
-}
-.home__add-spinner,
-.home__spinner {
-  animation: student-spin 0.7s linear infinite;
-}
-.home__promo-row {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-.home__promo-card {
-  position: relative;
-  min-height: 132px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 112px;
-  overflow: hidden;
-  border: 1px solid var(--student-border);
-  border-radius: 10px;
-  background: #fff;
-  cursor: pointer;
-}
-.home__promo-card:hover {
-  border-color: #d3bd9d;
-}
-.home__promo-copy {
-  padding: 17px;
-}
-.home__promo-category {
-  color: var(--student-muted);
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.home__promo-copy h3 {
-  margin: 6px 0 12px;
-  font-size: 15px;
-}
-.home__promo-prices {
-  display: flex;
-  align-items: baseline;
-  gap: 7px;
-}
-.home__promo-prices strong {
-  font-size: 17px;
-}
-.home__promo-prices span {
-  color: #999087;
-  font-size: 10px;
-  text-decoration: line-through;
-}
-.home__promo-media {
-  overflow: hidden;
-  display: grid;
-  place-items: center;
-  background: #f1ede8;
-  color: #bb965f;
-}
-.home__promo-media img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.home__promo-discount {
-  position: absolute;
-  top: 9px;
-  right: 9px;
-  padding: 4px 6px;
-  border-radius: 5px;
-  background: #fff;
-  color: #8c5916;
-  border: 1px solid #e2cfb0;
-  font-size: 9px;
-  font-weight: 800;
-}
-.home__state {
-  min-height: 108px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 20px;
-  border: 1px solid var(--student-border);
-  border-radius: 10px;
-  background: #fff;
-  color: var(--student-muted);
-}
-.home__state strong {
-  color: var(--student-text);
-  font-size: 13px;
-}
-.home__state p {
-  margin: 3px 0 0;
-  font-size: 11px;
-}
-.home__state button {
-  margin-left: auto;
-  padding: 8px 12px;
-  border: 1px solid var(--student-border-strong);
-  border-radius: 7px;
-  background: #fff;
-  color: var(--student-text);
-  font-size: 11px;
-  font-weight: 700;
-}
-.home__state--compact {
-  min-height: 86px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
 }
 .home__skeleton {
-  background: linear-gradient(90deg, #eeeae5 25%, #f7f5f2 50%, #eeeae5 75%);
-  background-size: 200% 100%;
-  animation: student-shimmer 1.25s infinite;
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--student-border);
+  border-radius: var(--pp-radius-card-lg);
+  background: var(--student-surface);
 }
-.home__product-card--skeleton {
-  min-height: 235px;
+.home__skeleton span {
+  height: 14px;
+  border-radius: 6px;
+  background: var(--pp-creme-2);
+  animation: home-pulso 1.2s ease-in-out infinite;
+}
+.home__skeleton .home__skeleton-img {
+  height: auto;
+  aspect-ratio: 1.18 / 1;
+  border-radius: 14px;
+}
+.home__skeleton .home__skeleton-curto {
+  width: 45%;
+}
+@keyframes home-pulso {
+  50% {
+    opacity: 0.55;
+  }
+}
+.home__estado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 40px 20px;
+  border: 1px solid var(--student-border);
+  border-radius: var(--pp-radius-card-lg);
+  background: var(--student-surface);
+  color: var(--student-accent);
+  text-align: center;
+}
+.home__estado strong {
+  color: var(--student-text);
+  font-size: 16px;
+}
+.home__estado p {
+  margin: 0 0 8px;
+  color: var(--student-muted);
+  font-size: 14px;
+}
+.home__botao-secundario {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--student-border-strong);
+  border-radius: var(--pp-radius-full);
+  background: var(--student-surface);
+  color: var(--student-text);
+  font-weight: 700;
+  cursor: pointer;
 }
 .home__toast {
   position: fixed;
-  right: 24px;
-  bottom: 24px;
+  left: 50%;
+  bottom: 28px;
   z-index: 90;
   display: flex;
   align-items: center;
   gap: 8px;
-  max-width: 360px;
-  padding: 11px 14px;
-  border: 1px solid #cadbcd;
-  border-radius: 8px;
-  background: #f4faf5;
-  color: #33583a;
-  box-shadow: 0 10px 30px rgba(30, 40, 30, 0.1);
-  font-size: 12px;
+  padding: 12px 18px;
+  border-radius: var(--pp-radius-full);
+  background: var(--pp-marrom);
+  color: var(--pp-creme);
+  font-size: 14px;
   font-weight: 600;
+  box-shadow: var(--pp-sombra-card);
+  transform: translateX(-50%);
 }
-.hero-fade-enter-active,
-.hero-fade-leave-active,
 .toast-enter-active,
 .toast-leave-active {
-  transition: opacity 0.15s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
-.hero-fade-enter-from,
-.hero-fade-leave-to,
 .toast-enter-from,
 .toast-leave-to {
   opacity: 0;
+  transform: translate(-50%, 10px);
 }
-@keyframes student-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-@keyframes student-shimmer {
-  to {
-    background-position: -200% 0;
-  }
-}
-@media (max-width: 1180px) {
-  .home__product-row {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-  .home__promo-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-@media (max-width: 900px) {
-  .home__header {
-    grid-template-columns: 1fr auto;
-  }
-  .home__search {
-    grid-column: 1/-1;
-    grid-row: 2;
-  }
-  .home__hero-card {
-    height: 290px;
-    min-height: 290px;
-    grid-template-columns: 1fr 42%;
-  }
-  .home__hero-content {
-    padding: 28px;
-  }
-  .home__product-row {
+@media (max-width: 1100px) {
+  .home__grade {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-@media (max-width: 640px) {
-  .home__header {
-    display: block;
+@media (max-width: 760px) {
+  .home__intro h1 {
+    font-size: 23px;
   }
-  .home__greeting-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 14px;
+  .home__secao {
+    margin-top: 32px;
   }
-  .home__greeting h1 {
-    font-size: 24px;
+  .home__secao-topo h2 {
+    font-size: 20px;
   }
-  .home__actions {
-    display: none;
+  .home__nota {
+    font-size: 19px;
   }
-  .home__mobile-avatar {
-    display: grid;
-    flex: 0 0 auto;
-  }
-  .home__categories {
-    margin: 16px -13px 18px;
-    padding: 0 13px;
-  }
-  .home__hero-card,
-  .home__hero-card--institutional {
-    height: auto;
-    min-height: 0;
-    grid-template-columns: 1fr;
-  }
-  .home__hero-media,
-  .home__hero-fallback,
-  .home__hero-brand-panel {
-    min-height: 205px;
-  }
-  .home__hero-media,
-  .home__hero-brand-panel {
-    height: 205px;
-    grid-row: 1;
-  }
-  .home__hero-brand-logo-wrap {
-    width: 88px;
-    height: 88px;
-    margin-bottom: 11px;
-    border-radius: 22px;
-  }
-  .home__hero-brand-logo {
-    width: 68px;
-    max-height: 58px;
-  }
-  .home__hero-brand-inner strong {
-    font-size: 18px;
-  }
-  .home__hero-content {
-    padding: 22px;
-  }
-  .home__hero-content h2 {
-    font-size: 25px;
-  }
-  .home__dots {
-    left: 22px;
-  }
-  .home__product-row {
+  .home__grade {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 9px;
-  }
-  .home__promo-row {
-    grid-template-columns: 1fr;
-  }
-  .home__section {
-    margin-top: 24px;
-  }
-  .home__section-head h2 {
-    font-size: 18px;
+    gap: 10px;
   }
   .home__toast {
-    left: 13px;
-    right: 13px;
-    bottom: 78px;
-  }
-  .home__promo-card {
-    grid-template-columns: minmax(0, 1fr) 96px;
-  }
-}
-.home__categories {
-  gap: 24px;
-  margin-bottom: 24px;
-  padding: 0 0 1px;
-  border-bottom: 1px solid #e3dfda;
-}
-
-.home__category {
-  min-height: 40px;
-  gap: 0;
-  padding: 0 2px 10px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
-  background: transparent;
-  color: #6f6963;
-  font-size: 12.5px;
-  font-weight: 600;
-  transition:
-    color 150ms ease,
-    border-color 150ms ease;
-}
-
-.home__category svg {
-  display: none;
-}
-
-.home__category:hover {
-  border-color: transparent;
-  color: #2d2824;
-}
-
-.home__category.is-active {
-  border-color: #a76b17;
-  background: transparent;
-  color: #2b241f;
-  font-weight: 750;
-}
-
-.home__hero {
-  margin-bottom: 34px;
-}
-
-.home__hero-card {
-  height: 320px;
-  min-height: 320px;
-  border-color: #dfdbd6;
-  border-radius: 12px;
-  box-shadow: 0 7px 22px rgba(37, 28, 22, 0.045);
-}
-
-.home__hero-content {
-  padding: 40px 42px;
-}
-
-.home__hero-tag {
-  margin-bottom: 14px;
-  color: #8d5d17;
-  font-size: 10.5px;
-  letter-spacing: 0.06em;
-}
-
-.home__hero-content h2 {
-  font-size: 34px;
-}
-
-.home__hero-btn {
-  min-height: 42px;
-  padding: 0 17px;
-  border-color: #2b1d15;
-  background: #2b1d15;
-  color: #fff;
-}
-
-.home__hero-btn:hover {
-  border-color: #1f1510;
-  background: #1f1510;
-}
-
-.home__hero-media::after {
-  display: none;
-}
-
-.home__hero-card--institutional {
-  background: #fff;
-}
-
-.home__hero-brand-panel {
-  background: #24170f;
-}
-
-.home__hero-brand-panel::before,
-.home__hero-brand-orbit {
-  display: none;
-}
-
-.home__hero-brand-logo-wrap {
-  width: 118px;
-  height: 88px;
-  margin-bottom: 16px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  backdrop-filter: none;
-}
-
-.home__hero-brand-logo {
-  width: 104px;
-  max-height: 76px;
-}
-
-.home__hero-brand-eyebrow {
-  margin-bottom: 6px;
-  color: #cf9b4f;
-  letter-spacing: 0.11em;
-}
-
-.home__hero-brand-inner strong {
-  font-size: 20px;
-  font-weight: 700;
-}
-
-.home__hero-brand-inner small {
-  color: rgba(255, 248, 239, 0.68);
-  font-size: 11.5px;
-}
-
-.home__dots {
-  bottom: 17px;
-}
-
-@media (max-width: 900px) {
-  .home__categories {
-    gap: 20px;
-  }
-
-  .home__hero-card {
-    height: 300px;
-    min-height: 300px;
-  }
-}
-
-@media (max-width: 640px) {
-  .home__categories {
-    gap: 20px;
-    margin: 14px -13px 20px;
-    padding: 0 13px 1px;
-  }
-
-  .home__category {
-    min-height: 38px;
-    padding-bottom: 9px;
-    font-size: 11.5px;
-  }
-
-  .home__hero-card,
-  .home__hero-card--institutional {
-    height: auto;
-    min-height: 0;
-  }
-
-  .home__hero-media,
-  .home__hero-brand-panel {
-    height: 220px;
-    min-height: 220px;
-  }
-
-  .home__hero-content {
-    padding: 24px 22px 26px;
-  }
-
-  .home__hero-brand-logo-wrap {
-    width: 92px;
-    height: 70px;
-    margin-bottom: 10px;
-  }
-
-  .home__hero-brand-logo {
-    width: 82px;
-    max-height: 58px;
+    bottom: calc(64px + 80px + env(safe-area-inset-bottom));
+    max-width: calc(100vw - 32px);
   }
 }
 </style>

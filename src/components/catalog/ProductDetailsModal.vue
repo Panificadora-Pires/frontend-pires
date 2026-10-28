@@ -28,7 +28,7 @@
           </div>
 
           <template v-else-if="produto">
-            <div class="product-modal__media">
+            <div ref="midia" class="product-modal__media">
               <ProductImage :produto="produto" variant="modal" loading="eager">
                 <span v-if="produto.em_promocao" class="product-modal__offer">
                   <Tag :size="13" /> Em promoção
@@ -140,7 +140,7 @@
                 type="button"
                 class="product-modal__add"
                 :disabled="!statusEstoque.disponivel || adding"
-                @click="$emit('add', { produto, quantidade })"
+                @click="adicionar"
               >
                 <LoaderCircle
                   v-if="adding"
@@ -190,6 +190,7 @@ import {
 } from "lucide-vue-next";
 
 import ProductImage from "@/components/catalog/ProductImage.vue";
+import { registrarOrigemVoo } from "@/utils/vooAoCarrinho";
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -201,6 +202,14 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["close", "favorite", "add"]);
+
+const midia = ref(null);
+
+// O voo até o carrinho parte da imagem do modal (só acontece se o item entrar no carrinho).
+function adicionar() {
+  registrarOrigemVoo(midia.value);
+  emit("add", { produto: props.produto, quantidade: quantidade.value });
+}
 const quantidade = ref(1);
 
 watch(
@@ -541,7 +550,7 @@ function formatarPreco(valor) {
   gap: 6px;
   margin: 12px 0 0;
   color: #938a81;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .product-modal__loading,
@@ -709,7 +718,7 @@ function formatarPreco(valor) {
   border-radius: 7px;
   background: #9d6517;
   color: #fff;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .product-modal__content {
@@ -842,7 +851,7 @@ function formatarPreco(valor) {
   justify-content: flex-start;
   margin-top: 11px;
   color: #857e78;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 @media (max-width: 900px) {
