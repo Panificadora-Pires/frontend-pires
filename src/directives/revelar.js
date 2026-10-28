@@ -15,7 +15,9 @@ function obterObservador() {
         observador.unobserve(entrada.target);
       });
     },
-    { threshold: 0.15 },
+    // Basta a borda da seção entrar na tela: em seções altas (grade de produtos no celular),
+    // exigir uma fração da área deixaria um vazio abaixo do banner.
+    { threshold: 0, rootMargin: "0px 0px -10% 0px" },
   );
   return observador;
 }
