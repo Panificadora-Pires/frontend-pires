@@ -199,6 +199,7 @@
 
 <script setup>
 import { computed, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import {
   CircleAlert,
   RefreshCw,
@@ -222,6 +223,8 @@ const INTERVALO_SEM_PEDIDO_ATIVO_MS = 60_000;
 
 const orders = useOrdersStore();
 const chat = useChatStore();
+const route = useRoute();
+const router = useRouter();
 
 const filtro = ref("todos");
 const busca = ref("");
@@ -331,6 +334,21 @@ function fecharQRCode() {
 function abrirChat(pedido) {
   pedidoChat.value = pedido;
 }
+
+// O assistente (chatbot) leva para /pedidos?chat=ID: abre a conversa desse pedido e limpa a URL.
+watch(
+  [() => route.query.chat, () => orders.inicializado],
+  ([chatId, carregado]) => {
+    if (!chatId || !carregado) return;
+    const pedido = orders.itens.find(
+      (item) => Number(item.id) === Number(chatId),
+    );
+    if (pedido) abrirChat(pedido);
+    const { chat: _chat, ...query } = route.query;
+    router.replace({ query });
+  },
+  { immediate: true },
+);
 
 </script>
 
