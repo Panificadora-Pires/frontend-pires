@@ -158,6 +158,24 @@
             </div>
           </section>
 
+          <section class="admin-card order-chat-card">
+            <div class="admin-card-header">
+              <div>
+                <h2 class="admin-card-title">Conversa com o cliente</h2>
+                <span class="admin-card-meta">
+                  Ele recebe uma notificação a cada resposta.
+                </span>
+              </div>
+            </div>
+            <OrderChatPanel
+              :key="pedido.id"
+              class="order-chat-card__panel"
+              :pedido-id="pedido.id"
+              variante="admin"
+              :nome-cliente="pedido.usuario_nome || 'Cliente'"
+            />
+          </section>
+
           <section class="admin-card">
             <div class="admin-card-header">
               <h2 class="admin-card-title">Informações</h2>
@@ -281,6 +299,7 @@ import {
   WalletCards,
 } from "lucide-vue-next";
 import AdminQRCodeScanner from "@/components/admin/AdminQRCodeScanner.vue";
+import OrderChatPanel from "@/components/chat/OrderChatPanel.vue";
 import BaseRefreshStatus from "@/components/ui/BaseRefreshStatus.vue";
 import { useAutoRefresh } from "@/composables/useAutoRefresh";
 import { mensagemErroApi } from "@/services/admin.service";
@@ -539,6 +558,12 @@ function onRetirado(p) {
   display: grid;
   align-content: start;
   gap: 14px;
+}
+.order-chat-card {
+  overflow: hidden;
+}
+.order-chat-card__panel {
+  height: 440px;
 }
 .order-actions {
   display: grid;
