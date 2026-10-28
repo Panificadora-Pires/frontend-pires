@@ -146,7 +146,6 @@
       </div>
     </template>
 
-    <span class="home-banner__assinatura" aria-hidden="true">Pires · padaria do intervalo</span>
   </section>
 </template>
 
@@ -527,17 +526,6 @@ onBeforeUnmount(() => {
     transform: scaleX(1);
   }
 }
-.home-banner__assinatura {
-  position: absolute;
-  right: 28px;
-  top: 22px;
-  z-index: 1;
-  color: var(--pp-marrom-2);
-  font-family: var(--pp-font-display);
-  font-size: 14px;
-  font-weight: 700;
-  opacity: 0.55;
-}
 .home-banner__skeleton {
   position: relative;
   z-index: 1;
@@ -612,9 +600,6 @@ onBeforeUnmount(() => {
   .home-banner__seta {
     width: 34px;
     height: 34px;
-  }
-  .home-banner__assinatura {
-    display: none;
   }
   .home-banner__skeleton {
     padding: 40px 22px;
