@@ -219,7 +219,8 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { useRoute } from "vue-router";
 import {
   CheckCircle2,
   ChevronDown,
@@ -250,7 +251,15 @@ const INTERVALO_CARDAPIO_MS = 60_000;
 
 const categorias = ref([]);
 const produtos = ref([]);
-const busca = ref("");
+const route = useRoute();
+// A busca do menu do topo chega por /cardapio?busca=termo.
+const busca = ref(String(route.query.busca || ""));
+watch(
+  () => route.query.busca,
+  (valor) => {
+    busca.value = String(valor || "");
+  },
+);
 const categoriaAtiva = ref(null);
 const filtroRapido = ref("todos");
 const ordenacao = ref("relevancia");

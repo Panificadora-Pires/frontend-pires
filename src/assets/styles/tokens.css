@@ -93,6 +93,9 @@
   --pp-font-nota: "Caveat", "Comic Sans MS", cursive;
   --pp-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   --pp-radius-card-lg: 20px;
+  /* Altura do menu fixo do topo (desktop) e do cabeçalho do celular. */
+  --pp-altura-topo: 72px;
+  --pp-altura-topo-mobile: 58px;
   --pp-sombra-card: 0 14px 30px rgba(42, 22, 11, 0.08);
 
   /* Cores das ilustrações próprias dos produtos (ProductIllustration.vue). */

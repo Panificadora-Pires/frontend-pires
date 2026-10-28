@@ -153,3 +153,13 @@
 .pp-pulo {
   animation: pp-pulo 0.45s var(--pp-ease);
 }
+
+/* O menu fixo não cobre âncoras nem o foco por teclado. */
+html {
+  scroll-padding-top: calc(var(--pp-altura-topo) + 16px);
+}
+@media (max-width: 980px) {
+  html {
+    scroll-padding-top: calc(var(--pp-altura-topo-mobile) + 16px);
+  }
+}
