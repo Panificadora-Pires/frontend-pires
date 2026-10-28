@@ -706,7 +706,7 @@ onBeforeUnmount(() => {
   border: 1px solid #ddd6cf;
   border-radius: 50%;
   background: #fff;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
 }
 
@@ -811,7 +811,7 @@ onBeforeUnmount(() => {
   display: block;
   margin-bottom: 5px;
   color: #8b5d1c;
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -826,7 +826,7 @@ onBeforeUnmount(() => {
 .checkout-payment__head p {
   margin: 5px 0 0;
   color: var(--student-muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .checkout-methods {
@@ -960,7 +960,7 @@ onBeforeUnmount(() => {
   border-radius: 8px;
   background: #2a211b;
   color: #fff;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 720;
   cursor: pointer;
 }
@@ -973,7 +973,7 @@ onBeforeUnmount(() => {
   margin: 0 20px 18px;
   padding: 11px 12px;
   border-radius: 8px;
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.45;
 }
 
@@ -1010,7 +1010,7 @@ onBeforeUnmount(() => {
 
 .checkout-summary {
   position: sticky;
-  top: 24px;
+  top: calc(var(--pp-altura-topo) + 24px);
   padding: 18px;
   box-shadow: 0 8px 24px rgba(47, 38, 31, 0.035);
 }
@@ -1090,7 +1090,7 @@ onBeforeUnmount(() => {
 }
 
 .checkout-summary__item-price {
-  font-size: 9px;
+  font-size: 12px;
   white-space: nowrap;
 }
 
@@ -1111,11 +1111,11 @@ onBeforeUnmount(() => {
 
 .checkout-summary__rows span {
   color: var(--student-muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .checkout-summary__rows strong {
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .checkout-summary__total {
@@ -1143,7 +1143,7 @@ onBeforeUnmount(() => {
   border-radius: 8px;
   background: #f7f4ef;
   color: #6e645b;
-  font-size: 8px;
+  font-size: 11px;
   line-height: 1.45;
 }
 
@@ -1195,7 +1195,7 @@ onBeforeUnmount(() => {
   display: block;
   margin: 2px 0 5px;
   color: #8b5d1c;
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -1276,7 +1276,7 @@ onBeforeUnmount(() => {
   border-radius: 8px;
   background: #2a211b;
   color: #fff;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -1304,7 +1304,7 @@ onBeforeUnmount(() => {
   gap: 7px;
   margin-top: 15px;
   color: var(--student-muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .checkout-result__footer {
@@ -1324,7 +1324,7 @@ onBeforeUnmount(() => {
 
 .checkout-result__summary span {
   color: var(--student-muted);
-  font-size: 8px;
+  font-size: 11px;
 }
 
 .checkout-result__summary strong {
@@ -1347,7 +1347,7 @@ onBeforeUnmount(() => {
   border-radius: 8px;
   background: #2a211b;
   color: #fff;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 

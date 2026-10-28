@@ -64,6 +64,23 @@
       </select>
     </div>
 
+    <div
+      v-if="chat.naoLidas.total"
+      class="admin-alert admin-alert--warning orders-chat-alert"
+      role="status"
+    >
+      <MessageCircle :size="17" aria-hidden="true" />
+      <span>{{ textoMensagensNaoLidas }}</span>
+      <button
+        type="button"
+        class="admin-btn admin-btn--sm"
+        :aria-pressed="somenteComMensagens"
+        @click="somenteComMensagens = !somenteComMensagens"
+      >
+        {{ somenteComMensagens ? "Mostrar todos" : "Ver só esses pedidos" }}
+      </button>
+    </div>
+
     <div v-if="erro" class="admin-alert admin-alert--error">
       <CircleAlert :size="17" />{{ erro }}
     </div>
@@ -95,6 +112,13 @@
             <td>
               <strong>#{{ p.id }}</strong
               ><small>{{ totalItens(p) }} itens</small>
+              <span
+                v-if="chat.naoLidasDoPedido(p.id)"
+                class="orders-table__chat"
+              >
+                <MessageCircle :size="12" aria-hidden="true" />
+                {{ rotuloNaoLidas(chat.naoLidasDoPedido(p.id)) }}
+              </span>
             </td>
             <td>
               <strong>{{ p.usuario_nome || "Cliente" }}</strong>
@@ -137,15 +161,19 @@ import {
   ChevronRight,
   CircleAlert,
   ClipboardList,
+  MessageCircle,
   RefreshCw,
   Search,
 } from "lucide-vue-next";
 import BaseRefreshStatus from "@/components/ui/BaseRefreshStatus.vue";
 import { useAdminOrdersStore } from "@/stores/adminOrders";
+import { useChatStore } from "@/stores/chat";
 
 const route = useRoute();
 // A lista vem da store compartilhada, mantida atualizada pelo AdminLayout.
 const adminOrders = useAdminOrdersStore();
+const chat = useChatStore();
+const somenteComMensagens = ref(false);
 const pedidos = computed(() => adminOrders.itens);
 const erro = computed(() => adminOrders.erro);
 const busca = ref("");
@@ -196,6 +224,8 @@ const filtrados = computed(() => {
       if (filtroStatus.value && p.status !== filtroStatus.value) return false;
       if (filtroPagamento.value && p.status_pagamento !== filtroPagamento.value)
         return false;
+      if (somenteComMensagens.value && !chat.naoLidasDoPedido(p.id))
+        return false;
       if (!q) return true;
       return (
         String(p.id).includes(q) ||
@@ -225,6 +255,29 @@ function formatarData(v) {
         timeStyle: "short",
       }).format(new Date(v))
     : "—";
+}
+const textoMensagensNaoLidas = computed(() => {
+  const total = chat.naoLidas.total;
+  const pedidosComMensagem = chat.pedidosComNaoLidas;
+  const mensagens =
+    total === 1
+      ? "1 mensagem de cliente não lida"
+      : `${total} mensagens de clientes não lidas`;
+  const emPedidos =
+    pedidosComMensagem === 1 ? "em 1 pedido" : `em ${pedidosComMensagem} pedidos`;
+  return `${mensagens} ${emPedidos}.`;
+});
+
+// Lidas todas, o filtro deixaria a lista vazia: volta a mostrar tudo.
+watch(
+  () => chat.naoLidas.total,
+  (total) => {
+    if (!total) somenteComMensagens.value = false;
+  },
+);
+
+function rotuloNaoLidas(quantidade) {
+  return quantidade === 1 ? "1 mensagem nova" : `${quantidade} mensagens novas`;
 }
 function totalItens(p) {
   return (p.itens || []).reduce((s, i) => s + Number(i.quantidade || 0), 0);
@@ -282,6 +335,25 @@ function atualizar() {
 }
 .payment-method {
   font-size: 12px;
+}
+.orders-chat-alert {
+  flex-wrap: wrap;
+  align-items: center;
+}
+.orders-chat-alert span {
+  flex: 1;
+}
+.orders-table__chat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 2px 7px;
+  border-radius: var(--pp-radius-full);
+  background: var(--admin-accent-soft);
+  color: var(--admin-accent-hover);
+  font-size: 11px;
+  font-weight: 700;
 }
 .orders-table__action {
   text-align: right;

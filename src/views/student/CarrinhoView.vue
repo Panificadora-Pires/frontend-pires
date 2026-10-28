@@ -580,7 +580,7 @@ onBeforeUnmount(() => {
 .cart-page__section-head p {
   margin: 4px 0 0;
   color: var(--student-muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .cart-page__clear {
@@ -591,7 +591,7 @@ onBeforeUnmount(() => {
   border: 0;
   background: transparent;
   color: #8c514c;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -610,7 +610,7 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid var(--student-border);
   background: #fbf8f3;
   color: #78664e;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .cart-page__item-list {
@@ -663,7 +663,7 @@ onBeforeUnmount(() => {
   align-items: baseline;
   gap: 6px;
   color: #8e857d;
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .cart-item__prices strong {
@@ -682,7 +682,7 @@ onBeforeUnmount(() => {
   gap: 5px;
   margin: 8px 0 0;
   color: var(--student-danger);
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.4;
 }
 
@@ -730,7 +730,7 @@ onBeforeUnmount(() => {
   display: block;
   margin-top: 6px;
   color: var(--student-muted);
-  font-size: 8px;
+  font-size: 11px;
 }
 
 .cart-item__subtotal {
@@ -769,7 +769,7 @@ onBeforeUnmount(() => {
 
 .cart-summary {
   position: sticky;
-  top: 24px;
+  top: calc(var(--pp-altura-topo) + 24px);
   padding: 20px;
   border: 1px solid var(--student-border);
   border-radius: 14px;
@@ -814,11 +814,11 @@ onBeforeUnmount(() => {
 
 .cart-summary__rows span {
   color: var(--student-muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .cart-summary__rows strong {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 650;
 }
 
@@ -857,7 +857,7 @@ onBeforeUnmount(() => {
 .cart-summary__pickup strong {
   display: block;
   color: #433a32;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .cart-summary__pickup p {
@@ -875,7 +875,7 @@ onBeforeUnmount(() => {
   border-radius: 8px;
   background: var(--student-danger-soft);
   color: var(--student-danger);
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.45;
 }
 
@@ -915,7 +915,7 @@ onBeforeUnmount(() => {
   gap: 5px;
   margin-top: 10px;
   color: #817970;
-  font-size: 8px;
+  font-size: 11px;
   text-align: center;
 }
 

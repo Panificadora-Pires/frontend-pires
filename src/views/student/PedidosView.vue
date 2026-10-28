@@ -176,7 +176,9 @@
           v-for="pedido in pedidosFiltrados"
           :key="pedido.id"
           :pedido="pedido"
+          :nao-lidas="chat.naoLidasDoPedido(pedido.id)"
           @ver-qrcode="abrirQRCode"
+          @abrir-chat="abrirChat"
         />
       </div>
     </div>
@@ -186,11 +188,18 @@
       :pedido="pedidoQRCode"
       @close="fecharQRCode"
     />
+
+    <OrderChatDrawer
+      v-if="pedidoChat"
+      :pedido="pedidoChat"
+      @close="pedidoChat = null"
+    />
   </div>
 </template>
 
 <script setup>
 import { computed, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import {
   CircleAlert,
   RefreshCw,
@@ -200,10 +209,12 @@ import {
   X,
 } from "lucide-vue-next";
 
+import OrderChatDrawer from "@/components/chat/OrderChatDrawer.vue";
 import OrderCard from "@/components/orders/OrderCard.vue";
 import OrderQRCodeModal from "@/components/orders/OrderQRCodeModal.vue";
 import BaseRefreshStatus from "@/components/ui/BaseRefreshStatus.vue";
 import { useAutoRefresh } from "@/composables/useAutoRefresh";
+import { useChatStore } from "@/stores/chat";
 import { useOrdersStore } from "@/stores/orders";
 
 // Com pedido em andamento o cliente espera o "pronto": atualiza mais rápido.
@@ -211,10 +222,14 @@ const INTERVALO_COM_PEDIDO_ATIVO_MS = 10_000;
 const INTERVALO_SEM_PEDIDO_ATIVO_MS = 60_000;
 
 const orders = useOrdersStore();
+const chat = useChatStore();
+const route = useRoute();
+const router = useRouter();
 
 const filtro = ref("todos");
 const busca = ref("");
 const pedidoQRCode = ref(null);
+const pedidoChat = ref(null);
 
 const filtros = [
   { valor: "todos", label: "Todos" },
@@ -316,6 +331,25 @@ function fecharQRCode() {
   pedidoQRCode.value = null;
 }
 
+function abrirChat(pedido) {
+  pedidoChat.value = pedido;
+}
+
+// O assistente (chatbot) leva para /pedidos?chat=ID: abre a conversa desse pedido e limpa a URL.
+watch(
+  [() => route.query.chat, () => orders.inicializado],
+  ([chatId, carregado]) => {
+    if (!chatId || !carregado) return;
+    const pedido = orders.itens.find(
+      (item) => Number(item.id) === Number(chatId),
+    );
+    if (pedido) abrirChat(pedido);
+    const { chat: _chat, ...query } = route.query;
+    router.replace({ query });
+  },
+  { immediate: true },
+);
+
 </script>
 
 <style scoped>
@@ -345,7 +379,7 @@ function fecharQRCode() {
 }
 .orders-page__summary {
   display: grid;
-  grid-template-columns: repeat(3, 92px);
+  grid-template-columns: repeat(3, minmax(108px, auto));
   overflow: hidden;
   border: 1px solid var(--student-border);
   border-radius: 8px;
@@ -364,7 +398,7 @@ function fecharQRCode() {
 }
 .orders-page__summary span {
   color: var(--student-muted);
-  font-size: 8px;
+  font-size: 11px;
 }
 .orders-page__summary strong {
   margin-top: 2px;
@@ -395,7 +429,7 @@ function fecharQRCode() {
   border-radius: 6px;
   background: transparent;
   color: #766e66;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 .orders-page__tabs button.is-active {
@@ -430,7 +464,7 @@ function fecharQRCode() {
   outline: 0;
   background: transparent;
   color: var(--student-text);
-  font-size: 10px;
+  font-size: 12px;
 }
 .orders-page__search button {
   border: 0;
@@ -458,7 +492,7 @@ function fecharQRCode() {
   display: flex;
   justify-content: space-between;
   color: var(--student-muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .orders-page__sync {
   display: flex;
@@ -513,7 +547,7 @@ function fecharQRCode() {
   border-radius: 7px;
   background: #fff;
   color: var(--student-text);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 .orders-page__skeleton {

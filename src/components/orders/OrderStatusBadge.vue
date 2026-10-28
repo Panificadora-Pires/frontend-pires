@@ -79,7 +79,7 @@ const config = computed(() => {
   padding: 0 10px;
   border: 1px solid transparent;
   border-radius: var(--pp-radius-full);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.015em;
   white-space: nowrap;

@@ -218,7 +218,7 @@ onBeforeUnmount(() => {
 .qr-modal__header p {
   margin: 6px 0 0;
   color: var(--student-muted);
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.5;
 }
 .qr-modal__loading,
@@ -230,7 +230,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   text-align: center;
   color: var(--student-muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .qr-modal__spinner {
   animation: qr-spin 0.7s linear infinite;
@@ -248,7 +248,7 @@ onBeforeUnmount(() => {
   border: 1px solid var(--student-border-strong);
   border-radius: 7px;
   background: #fff;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 .qr-modal__content {
@@ -278,7 +278,7 @@ onBeforeUnmount(() => {
 .qr-modal__code span {
   display: block;
   color: var(--student-muted);
-  font-size: 8px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -286,7 +286,7 @@ onBeforeUnmount(() => {
   display: block;
   margin-top: 5px;
   overflow-wrap: anywhere;
-  font-size: 10px;
+  font-size: 12px;
 }
 .qr-modal__notice {
   display: flex;
@@ -299,7 +299,7 @@ onBeforeUnmount(() => {
 }
 .qr-modal__notice p {
   margin: 0;
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.5;
 }
 @keyframes qr-spin {

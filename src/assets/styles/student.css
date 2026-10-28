@@ -1,25 +1,26 @@
 :root {
-  --student-bg: #f5f3f0;
+  /* Apontam para a paleta "Balcão creme" de tokens.css: as telas que usam estes nomes mudam juntas. */
+  --student-bg: var(--pp-creme);
   --student-surface: #ffffff;
-  --student-surface-soft: #faf9f7;
-  --student-border: #e5e0da;
-  --student-border-strong: #d7d0c8;
-  --student-text: #28231f;
-  --student-muted: #756e67;
-  --student-muted-2: #9a938c;
-  --student-accent: #b8791f;
-  --student-accent-hover: #965f14;
-  --student-accent-soft: #fbf2df;
+  --student-surface-soft: var(--pp-creme-2);
+  --student-border: var(--pp-creme-3);
+  --student-border-strong: var(--pp-creme-borda);
+  --student-text: var(--pp-marrom);
+  --student-muted: var(--pp-texto-2);
+  --student-muted-2: var(--pp-texto-3);
+  --student-accent: var(--pp-dourado-escuro);
+  --student-accent-hover: var(--pp-dourado-profundo);
+  --student-accent-soft: var(--pp-dourado-suave);
   --student-danger: #b94a45;
   --student-danger-soft: #fff1ef;
-  --student-success: #4f7a55;
-  --student-success-soft: #edf5ee;
+  --student-success: var(--pp-verde);
+  --student-success-soft: var(--pp-verde-suave);
   --student-warning: #9a6b23;
-  --student-sidebar: #211710;
-  --student-sidebar-soft: #2b1d14;
-  --student-radius: 10px;
-  --student-radius-sm: 7px;
-  --student-shadow: 0 8px 24px rgba(47, 38, 31, 0.06);
+  --student-sidebar: var(--pp-marrom);
+  --student-sidebar-soft: var(--pp-marrom-2);
+  --student-radius: 14px;
+  --student-radius-sm: 9px;
+  --student-shadow: var(--pp-sombra-card);
 }
 .student-layout {
   background: var(--student-bg);
@@ -49,7 +50,7 @@
   -webkit-tap-highlight-color: transparent;
 }
 .student-layout ::selection {
-  background: rgba(184, 121, 31, 0.2);
+  background: var(--pp-gold-soft);
 }
 .student-layout ::-webkit-scrollbar {
   width: 9px;
@@ -93,5 +94,72 @@
   }
   .student-page-header h1 {
     font-size: 25px;
+  }
+}
+
+/* Seções que aparecem suavemente na rolagem (diretiva v-revelar). */
+.pp-revelar {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.6s var(--pp-ease),
+    transform 0.6s var(--pp-ease);
+}
+.pp-revelar.is-visivel {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pp-revelar {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Clone do produto voando até o carrinho (utils/vooAoCarrinho.js). */
+.pp-voo-carrinho {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 200;
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 8px;
+  border-radius: 50%;
+  background: var(--pp-creme-2);
+  box-shadow: var(--pp-sombra-card);
+  pointer-events: none;
+}
+.pp-voo-carrinho img,
+.pp-voo-carrinho svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Contador do carrinho "pula" quando um item entra. */
+@keyframes pp-pulo {
+  30% {
+    transform: scale(1.14);
+  }
+  60% {
+    transform: scale(0.95);
+  }
+}
+.pp-pulo {
+  animation: pp-pulo 0.45s var(--pp-ease);
+}
+
+/* O menu fixo não cobre âncoras nem o foco por teclado. */
+html {
+  scroll-padding-top: calc(var(--pp-altura-topo) + 16px);
+}
+@media (max-width: 980px) {
+  html {
+    scroll-padding-top: calc(var(--pp-altura-topo-mobile) + 16px);
   }
 }

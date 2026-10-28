@@ -57,14 +57,14 @@ function formatarMoeda(valor) {
   gap: 9px;
   min-height: 36px;
   border-bottom: 1px solid #f0ece7;
-  font-size: 10px;
+  font-size: 12px;
 }
 .order-items-preview__item:last-child {
   border-bottom: 0;
 }
 .order-items-preview__quantity {
   color: var(--student-muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .order-items-preview__name {
   min-width: 0;
@@ -80,6 +80,6 @@ function formatarMoeda(valor) {
 .order-items-preview__more {
   padding: 8px 0;
   color: var(--student-muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 </style>

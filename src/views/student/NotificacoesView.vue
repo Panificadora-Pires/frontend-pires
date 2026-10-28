@@ -399,7 +399,7 @@ async function marcarTodas() {
   border-radius: 7px;
   background: #fff;
   color: #615850;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 .notifications-page__toolbar {
@@ -424,7 +424,7 @@ async function marcarTodas() {
   border-radius: 6px;
   background: transparent;
   color: #756d65;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 .notifications-page__tabs button.is-active {
@@ -470,7 +470,7 @@ async function marcarTodas() {
 }
 .notifications-page__group-title span {
   color: var(--student-muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .notifications-page__list {
   overflow: hidden;
@@ -529,7 +529,7 @@ async function marcarTodas() {
   border-radius: 4px;
   background: #9b681c;
   color: #fff;
-  font-size: 7px;
+  font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
 }
@@ -537,7 +537,7 @@ async function marcarTodas() {
   display: block;
   margin-top: 4px;
   color: var(--student-muted);
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.45;
 }
 .notification-card__time {
@@ -546,7 +546,7 @@ async function marcarTodas() {
   gap: 4px;
   margin-top: 6px;
   color: #9b938b;
-  font-size: 8px;
+  font-size: 11px;
 }
 .notification-card__read,
 .notification-card__arrow {
@@ -590,7 +590,7 @@ async function marcarTodas() {
   border: 1px solid var(--student-border-strong);
   border-radius: 7px;
   background: #fff;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 .notifications-page__skeleton {

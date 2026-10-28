@@ -166,9 +166,11 @@ import {
 import "@/assets/styles/admin.css";
 import { useAdminOrdersStore } from "@/stores/adminOrders";
 import { useAuthStore } from "@/stores/auth";
+import { useChatStore } from "@/stores/chat";
 
 const auth = useAuthStore();
 const adminOrders = useAdminOrdersStore();
+const chat = useChatStore();
 const router = useRouter();
 const menuAberto = ref(false);
 
@@ -227,6 +229,7 @@ function limitarBadge(valor) {
 async function handleLogout() {
   menuAberto.value = false;
   adminOrders.resetar();
+  chat.resetar();
   await auth.logout();
   await router.replace({ name: "login" });
 }
@@ -235,10 +238,13 @@ async function handleLogout() {
 // o badge do menu, o dashboard e a tela de pedidos leem a mesma store.
 onMounted(() => {
   adminOrders.iniciarAutoAtualizacao();
+  // Mensagens de clientes ainda não lidas, no mesmo ritmo da fila.
+  chat.iniciarPollingNaoLidas(15_000);
 });
 
 onBeforeUnmount(() => {
   adminOrders.pararAutoAtualizacao();
+  chat.pararPollingNaoLidas();
 });
 </script>
 

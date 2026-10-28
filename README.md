@@ -51,7 +51,9 @@ https://backend-pires.class.fabricadesoftware.ifc.edu.br/api
 - pagamento por Pix;
 - pagamento por cartão;
 - acompanhamento do status do pedido;
-- QR Code de retirada.
+- QR Code de retirada;
+- chat com a padaria em cada pedido;
+- assistente de dúvidas (chatbot por regras e FAQ).
 
 ### Administração
 
@@ -65,7 +67,8 @@ https://backend-pires.class.fabricadesoftware.ifc.edu.br/api
 - usuários;
 - alteração do status dos pedidos;
 - confirmação de retirada;
-- leitura de QR Code por câmera ou código manual.
+- leitura de QR Code por câmera ou código manual;
+- chat com o cliente no detalhe do pedido e aviso de mensagens não lidas na fila.
 
 ## Estrutura principal
 
@@ -191,10 +194,65 @@ As telas se atualizam sozinhas por polling, sem recarregar a página. A lógica 
 | Fila, dashboard (pedidos) e detalhe do pedido no admin | 15 s |
 | Meus pedidos (cliente) | 10 s com pedido em andamento, 60 s sem |
 | Notificações (badge do menu) | 30 s |
+| Chat aberto (gaveta do cliente ou detalhe do admin) | 5 s |
+| Mensagens não lidas do chat | 30 s no cliente, 15 s no admin |
 | Cardápio, produtos do admin e números do dashboard | 60 s |
 | Pagamento Pix/cartão no checkout | 5 s |
 
 No admin, a store `adminOrders` é a única fonte da fila: o `AdminLayout` a mantém atualizada, e o badge do menu, o dashboard e a tela de pedidos leem dela. Mudar o status atualiza a lista local na hora. SSE/WebSocket não foi adotado porque o Gunicorn síncrono do Fabroku prenderia um worker por conexão.
+
+## Chat por pedido
+
+Cada pedido tem uma conversa entre o cliente e a padaria (`/api/chat/`, veja o README do backend).
+
+- Cliente: botão **Mensagens** no card de "Meus pedidos", com contador de mensagens novas; abre uma gaveta (`components/chat/OrderChatDrawer.vue`), em tela cheia no celular.
+- Admin: card **Conversa com o cliente** no detalhe do pedido; a fila mostra quantas mensagens não lidas há e permite filtrar só esses pedidos.
+- O painel (`components/chat/OrderChatPanel.vue`) é o mesmo nos dois lados. Fluxo: `OrderChatPanel` → `stores/chat.js` → `services/chat.service.js`.
+- Envio otimista: a mensagem aparece na hora como "Enviando..."; se falhar, fica marcada como "Não enviada", com **Tentar de novo** e **Descartar**.
+- Enter envia, Shift+Enter quebra a linha. As mensagens são exibidas sempre como texto (sem `v-html`).
+- Abrir a conversa marca como lidas as mensagens do outro lado; no cliente, também some a notificação "Nova mensagem da padaria".
+- Depois de retirado ou cancelado, o pedido aceita mensagens por mais 24 h (configurável no backend) e então a conversa fica só para leitura.
+
+## Identidade visual da área do cliente
+
+Direção "Balcão creme" (Fase 5): fundo creme, marrom nos textos, dourado nos detalhes. A área admin mantém o visual próprio.
+
+- **Tokens** em `src/assets/styles/tokens.css`: paleta (`--pp-creme`, `--pp-marrom`, `--pp-dourado-escuro`…), fontes e cores das ilustrações (`--ilu-*`).
+  - Os `--student-*` de `student.css` apontam para esses tokens.
+  - **Anton** só em títulos de banner, **Caveat** em anotações "à mão" e **Inter** no resto.
+- **Menu fixo no topo (desktop):** Início, Cardápio, Promoções, Meus pedidos, busca (leva a `/cardapio?busca=`), favoritos, notificações, menu de conta e botão Carrinho com contador. No celular continuam o cabeçalho e a navegação inferior.
+- **Ilustrações próprias:** o cardápio é fictício, então produto sem foto ganha um SVG próprio.
+  - Componente `components/catalog/ProductIllustration.vue`; o tipo vem de `utils/ilustracaoProduto.js` (nome do produto e depois categoria).
+  - Foto cadastrada no admin tem prioridade.
+- **Home:** saudação → banner (`components/home/HomeBanner.vue`) → Destaques (`ProductCard`) → Como funciona (`components/home/HomeComoFunciona.vue`) → Promoções (se houver).
+
+### Animações
+
+| Onde | O quê |
+|---|---|
+| Banner | Carrossel de 6 s com pausa no mouse ou foco, setas e indicadores com progresso. Conteúdo: promoções vigentes; sem promoção, destaques; e sempre o slide "Como funciona" |
+| Banner | Parallax: 3 camadas de "morros de massa" sobem em velocidades diferentes nos primeiros 320 px de rolagem |
+| Como funciona | Os 3 passos sobem acompanhando a rolagem |
+| Cards | Zoom só na imagem ao passar o mouse (sem mudar o tamanho do card) |
+| Carrinho | O produto "voa" até o carrinho e o contador pula, **só depois** de `cart.adicionar` (`utils/vooAoCarrinho.js` + `StudentLayout`) |
+| Seções | Aparecem suavemente ao entrar na tela (diretiva `v-revelar`) |
+
+Com `prefers-reduced-motion: reduce`:
+
+- não há voo nem parallax;
+- o banner não troca sozinho;
+- passos e seções aparecem completos.
+
+## Assistente de dúvidas (chatbot)
+
+Botão **Dúvidas?** no canto inferior direito da área do cliente (`components/chatbot/ChatbotWidget.vue`); as respostas vêm de `/api/chatbot/` (regras + FAQ editável no admin do backend).
+
+- **Posição:** no celular, o botão fica acima da navegação inferior e o painel ocupa a tela toda. Fica oculto no checkout para não disputar espaço com o pagamento.
+- **Conversa:** o cliente escreve ou toca nos botões de assunto; só a última resposta mostra os botões de próximo passo. O histórico fica na store `chatbot` durante a sessão e é apagado no logout.
+- **Respostas com dados:** status dos pedidos do próprio cliente e disponibilidade do produto citado ("tem coxinha?").
+- **Falar com a padaria:** leva a `/pedidos?chat=ID`, que abre a gaveta de chat do pedido.
+- **Estados:** abrindo, assistente respondendo, erro com **Tentar de novo** (e mensagem própria para limite de perguntas).
+- **Acessibilidade:** Esc fecha e devolve o foco ao botão; lista com `role="log"`; campo com rótulo.
 
 ## Pagamentos
 
