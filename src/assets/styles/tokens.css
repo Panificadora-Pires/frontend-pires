@@ -95,6 +95,29 @@
   --pp-radius-card-lg: 20px;
   --pp-sombra-card: 0 14px 30px rgba(42, 22, 11, 0.08);
 
+  /* Cores das ilustrações próprias dos produtos (ProductIllustration.vue). */
+  --ilu-sombra: #e3d4bb;
+  --ilu-massa: #d48a35;
+  --ilu-massa-clara: #eaae5c;
+  --ilu-tostado: #a9621f;
+  --ilu-queijo: #f2c870;
+  --ilu-queijo-claro: #f5cf7e;
+  --ilu-queijo-escuro: #d3963a;
+  --ilu-brilho: #fff3cf;
+  --ilu-chocolate: #5a2e17;
+  --ilu-chocolate-claro: #7a4326;
+  --ilu-cenoura: #e8903f;
+  --ilu-laranja: #f29a2e;
+  --ilu-laranja-clara: #ffd08a;
+  --ilu-uva: #7b3a5a;
+  --ilu-uva-clara: #a85f83;
+  --ilu-agua: #d7ebf2;
+  --ilu-agua-tampa: #4f8fb0;
+  --ilu-lata: #c43d2f;
+  --ilu-lata-clara: #e86a55;
+  --ilu-papel: #b8793a;
+  --ilu-vidro: #ffffff;
+
   /* Fundo escurecido atrás de modais e gavetas. */
   --pp-overlay: rgba(26, 21, 17, 0.58);
 }

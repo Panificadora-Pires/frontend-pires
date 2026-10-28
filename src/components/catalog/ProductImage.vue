@@ -2,6 +2,7 @@
   <div
     class="catalog-product-image"
     :class="`catalog-product-image--${variant}`"
+    :data-ilustracao="tipoIlustracao"
   >
     <img
       v-if="temImagem"
@@ -12,11 +13,7 @@
     />
 
     <div v-else class="catalog-product-image__fallback" aria-hidden="true">
-      <component
-        :is="iconeCategoria"
-        :size="tamanhoIcone"
-        :stroke-width="1.7"
-      />
+      <ProductIllustration :tipo="tipoIlustracao" />
     </div>
 
     <slot />
@@ -25,16 +22,10 @@
 
 <script setup>
 import { computed, ref, watch } from "vue";
-import {
-  Coffee,
-  Cookie,
-  Croissant,
-  Package,
-  Sandwich,
-  ShoppingBag,
-} from "lucide-vue-next";
 
+import ProductIllustration from "@/components/catalog/ProductIllustration.vue";
 import { resolverUrlMidia } from "@/services/catalog.service";
+import { ilustracaoParaProduto } from "@/utils/ilustracaoProduto";
 
 const props = defineProps({
   produto: { type: Object, default: null },
@@ -56,48 +47,15 @@ const temImagem = computed(
   () => Boolean(urlImagem.value) && !imagemComErro.value,
 );
 
-const tamanhoIcone = computed(() => {
-  if (props.variant === "modal") return 74;
-  if (props.variant === "compact") return 34;
-  return 48;
-});
-
-const ICONES = {
-  salgado: Croissant,
-  salgados: Croissant,
-  pao: Croissant,
-  paes: Croissant,
-  doce: Cookie,
-  doces: Cookie,
-  bebida: Coffee,
-  bebidas: Coffee,
-  lanche: Sandwich,
-  lanches: Sandwich,
-  combo: ShoppingBag,
-  combos: ShoppingBag,
-};
-
-function chaveCategoria(valor) {
-  return String(valor || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
-}
-
-const iconeCategoria = computed(() => {
-  const categoria =
-    props.produto?.categoria_nome || props.produto?.categoria?.nome;
-  return ICONES[chaveCategoria(categoria)] || Package;
-});
+// Sem foto: ilustração própria escolhida pelo nome/categoria (o cardápio é fictício).
+const tipoIlustracao = computed(() => ilustracaoParaProduto(props.produto));
 </script>
 
 <style scoped>
 .catalog-product-image {
   position: relative;
   overflow: hidden;
-  background: #f0ece7;
-  color: #b09268;
+  background: var(--pp-creme-2);
 }
 .catalog-product-image--card {
   aspect-ratio: 1.18/1;
@@ -123,8 +81,14 @@ const iconeCategoria = computed(() => {
   height: 100%;
   display: grid;
   place-items: center;
-  background: #f0ece7;
-  color: #b09268;
+  padding: 9%;
+  background: var(--pp-creme-2);
+}
+.catalog-product-image--compact .catalog-product-image__fallback {
+  padding: 8%;
+}
+.catalog-product-image--modal .catalog-product-image__fallback {
+  padding: 14%;
 }
 @media (max-width: 700px) {
   .catalog-product-image--card {
