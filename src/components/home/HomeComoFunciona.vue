@@ -57,11 +57,18 @@ let quadroAgendado = false;
 function atualizar() {
   quadroAgendado = false;
   const reduzido = Boolean(consultaMovimento?.matches);
+  // Sem promoções, esta é a última seção: no fim da página tudo precisa estar completo.
+  const fimDaPagina =
+    window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
   (passos.value || []).forEach((passo, indice) => {
-    const topo = passo.getBoundingClientRect().top;
-    const progresso = reduzido
-      ? 1
-      : (window.innerHeight - topo - indice * ATRASO_POR_PASSO_PX) / (window.innerHeight * TRECHO_DA_TELA);
+    // Posição pela lista (que não se move), para o translate do próprio passo não distorcer o cálculo.
+    const lista = passo.parentElement;
+    const topo = lista.getBoundingClientRect().top + (passo.offsetTop - lista.offsetTop);
+    const progresso =
+      reduzido || fimDaPagina
+        ? 1
+        : (window.innerHeight - topo - indice * ATRASO_POR_PASSO_PX) /
+          (window.innerHeight * TRECHO_DA_TELA);
     passo.style.setProperty("--q", Math.min(1, Math.max(0, progresso)).toFixed(3));
   });
 }

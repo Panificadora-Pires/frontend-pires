@@ -44,7 +44,9 @@ export function animarVooAoCarrinho(destino) {
   const clone = document.createElement("div");
   clone.className = "pp-voo-carrinho";
   clone.setAttribute("aria-hidden", "true");
-  const visual = elementoOrigem.querySelector("img, svg");
+  const visual = elementoOrigem.matches("img, svg")
+    ? elementoOrigem
+    : elementoOrigem.querySelector("img, svg");
   if (visual) clone.appendChild(visual.cloneNode(true));
   document.body.appendChild(clone);
 

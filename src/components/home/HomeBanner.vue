@@ -28,7 +28,7 @@
       </svg>
     </div>
 
-    <div v-if="carregando" class="home-banner__skeleton" aria-label="Carregando destaques">
+    <div v-if="carregando" class="home-banner__skeleton" role="status" aria-label="Carregando destaques">
       <span /><span /><span />
     </div>
 
@@ -79,10 +79,11 @@
             </svg>
           </span>
           <img
-            v-if="slide.imagem"
+            v-if="slide.imagem && !fotosComErro.has(slide.id)"
             :src="slide.imagem"
             :alt="slide.titulo.join(' ')"
             class="home-banner__foto"
+            @error="registrarFotoComErro(slide.id)"
           />
           <svg
             v-else-if="slide.ilustracao === 'qr'"
@@ -174,9 +175,15 @@ const raiz = useTemplateRef("raiz");
 const atual = shallowRef(0);
 const pausado = shallowRef(false);
 const movimentoReduzido = shallowRef(false);
+// Foto que não carregou (ex.: 404 no Cloudinary) volta para a ilustração.
+const fotosComErro = shallowRef(new Set());
 let timer = null;
 let consultaMovimento = null;
 let quadroAgendado = false;
+
+function registrarFotoComErro(id) {
+  fotosComErro.value = new Set(fotosComErro.value).add(id);
+}
 
 function irPara(indice) {
   const total = props.slides.length;
@@ -206,8 +213,10 @@ function retomarSeFocoSaiu(event) {
 }
 
 function adicionar(slide, event) {
-  const arte = event.currentTarget.closest(".home-banner__slide")?.querySelector(".home-banner__arte");
-  registrarOrigemVoo(arte);
+  const produto = event.currentTarget
+    .closest(".home-banner__slide")
+    ?.querySelector(".home-banner__foto, .home-banner__ilustracao");
+  registrarOrigemVoo(produto);
   emit("adicionar", slide.acao.produto);
 }
 

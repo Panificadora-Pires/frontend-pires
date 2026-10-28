@@ -769,7 +769,7 @@ onBeforeUnmount(() => {
 
 .cart-summary {
   position: sticky;
-  top: 24px;
+  top: calc(var(--pp-altura-topo) + 24px);
   padding: 20px;
   border: 1px solid var(--student-border);
   border-radius: 14px;

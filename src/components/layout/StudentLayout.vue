@@ -64,12 +64,17 @@
           >
         </RouterLink>
 
-        <div ref="contaRef" class="student-layout__account">
+        <div
+          ref="contaRef"
+          class="student-layout__account"
+          @keydown.esc="fecharContaComTeclado"
+        >
           <button
+            ref="botaoConta"
             type="button"
             class="student-layout__round-btn student-layout__avatar"
             :aria-expanded="contaAberta"
-            aria-controls="menu-conta"
+            :aria-controls="contaAberta ? 'menu-conta' : undefined"
             :aria-label="rotuloConta"
             @click="contaAberta = !contaAberta"
           >
@@ -85,7 +90,6 @@
             v-if="contaAberta"
             id="menu-conta"
             class="student-layout__account-menu"
-            @keydown.esc="fecharConta"
           >
             <strong>{{ auth.usuario?.name || "Cliente" }}</strong>
             <RouterLink :to="{ name: 'perfil' }" @click="fecharConta">
@@ -287,6 +291,7 @@ const route = useRoute();
 const menuAberto = ref(false);
 const contaAberta = ref(false);
 const contaRef = ref(null);
+const botaoConta = ref(null);
 const termoBusca = ref(route.name === "cardapio" ? String(route.query.busca || "") : "");
 const carrinhoTopo = ref(null);
 const carrinhoMobile = ref(null);
@@ -399,6 +404,12 @@ watch(
 
 function fecharConta() {
   contaAberta.value = false;
+}
+
+function fecharContaComTeclado() {
+  if (!contaAberta.value) return;
+  fecharConta();
+  botaoConta.value?.focus();
 }
 
 function fecharContaAoClicarFora(event) {
@@ -549,6 +560,8 @@ onBeforeUnmount(() => {
 }
 .student-layout__search:focus-within {
   border-color: var(--student-accent);
+  outline: 2.5px solid var(--pp-gold);
+  outline-offset: 2px;
 }
 .student-layout__search input {
   min-width: 0;

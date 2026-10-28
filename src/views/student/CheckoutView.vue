@@ -1010,7 +1010,7 @@ onBeforeUnmount(() => {
 
 .checkout-summary {
   position: sticky;
-  top: 24px;
+  top: calc(var(--pp-altura-topo) + 24px);
   padding: 18px;
   box-shadow: 0 8px 24px rgba(47, 38, 31, 0.035);
 }
