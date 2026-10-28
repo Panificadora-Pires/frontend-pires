@@ -100,8 +100,12 @@ api.interceptors.response.use(
 
       return api(originalRequest);
     } catch (refreshError) {
-      clearTokens();
-      redirectToLoginAfterExpiredSession();
+      // Sem resposta (rede caiu, servidor acordando) não significa sessão expirada:
+      // mantém os tokens para a próxima tentativa em vez de deslogar o usuário.
+      if (refreshError?.response) {
+        clearTokens();
+        redirectToLoginAfterExpiredSession();
+      }
 
       return Promise.reject(refreshError);
     } finally {

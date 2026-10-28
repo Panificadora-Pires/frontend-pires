@@ -208,8 +208,15 @@ export const useAuthStore = defineStore("auth", {
       try {
         await this.buscarUsuarioLogado();
         return true;
-      } catch {
-        this._limparSessaoLocal();
+      } catch (error) {
+        const status = error?.response?.status;
+        if (status === 401 || status === 403) {
+          this._limparSessaoLocal();
+        } else {
+          // Falha de rede ou do servidor: mantém os tokens e tenta de novo na próxima navegação.
+          this.usuario = null;
+          this.sessaoInicializada = false;
+        }
         return false;
       }
     },
