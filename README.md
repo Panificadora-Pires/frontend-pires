@@ -51,7 +51,8 @@ https://backend-pires.class.fabricadesoftware.ifc.edu.br/api
 - pagamento por Pix;
 - pagamento por cartão;
 - acompanhamento do status do pedido;
-- QR Code de retirada.
+- QR Code de retirada;
+- chat com a padaria em cada pedido.
 
 ### Administração
 
@@ -65,7 +66,8 @@ https://backend-pires.class.fabricadesoftware.ifc.edu.br/api
 - usuários;
 - alteração do status dos pedidos;
 - confirmação de retirada;
-- leitura de QR Code por câmera ou código manual.
+- leitura de QR Code por câmera ou código manual;
+- chat com o cliente no detalhe do pedido e aviso de mensagens não lidas na fila.
 
 ## Estrutura principal
 
@@ -191,10 +193,24 @@ As telas se atualizam sozinhas por polling, sem recarregar a página. A lógica 
 | Fila, dashboard (pedidos) e detalhe do pedido no admin | 15 s |
 | Meus pedidos (cliente) | 10 s com pedido em andamento, 60 s sem |
 | Notificações (badge do menu) | 30 s |
+| Chat aberto (gaveta do cliente ou detalhe do admin) | 5 s |
+| Mensagens não lidas do chat | 30 s no cliente, 15 s no admin |
 | Cardápio, produtos do admin e números do dashboard | 60 s |
 | Pagamento Pix/cartão no checkout | 5 s |
 
 No admin, a store `adminOrders` é a única fonte da fila: o `AdminLayout` a mantém atualizada, e o badge do menu, o dashboard e a tela de pedidos leem dela. Mudar o status atualiza a lista local na hora. SSE/WebSocket não foi adotado porque o Gunicorn síncrono do Fabroku prenderia um worker por conexão.
+
+## Chat por pedido
+
+Cada pedido tem uma conversa entre o cliente e a padaria (`/api/chat/`, veja o README do backend).
+
+- Cliente: botão **Mensagens** no card de "Meus pedidos", com contador de mensagens novas; abre uma gaveta (`components/chat/OrderChatDrawer.vue`), em tela cheia no celular.
+- Admin: card **Conversa com o cliente** no detalhe do pedido; a fila mostra quantas mensagens não lidas há e permite filtrar só esses pedidos.
+- O painel (`components/chat/OrderChatPanel.vue`) é o mesmo nos dois lados. Fluxo: `OrderChatPanel` → `stores/chat.js` → `services/chat.service.js`.
+- Envio otimista: a mensagem aparece na hora como "Enviando..."; se falhar, fica marcada como "Não enviada", com **Tentar de novo** e **Descartar**.
+- Enter envia, Shift+Enter quebra a linha. As mensagens são exibidas sempre como texto (sem `v-html`).
+- Abrir a conversa marca como lidas as mensagens do outro lado; no cliente, também some a notificação "Nova mensagem da padaria".
+- Depois de retirado ou cancelado, o pedido aceita mensagens por mais 24 h (configurável no backend) e então a conversa fica só para leitura.
 
 ## Pagamentos
 
