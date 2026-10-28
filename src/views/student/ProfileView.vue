@@ -738,7 +738,7 @@ onBeforeUnmount(() => {
 .profile-avatar-editor__content > p {
   margin: 8px 0 0;
   color: #98918b;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .profile-avatar-editor__actions {
@@ -777,7 +777,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 5px;
   color: #8a641f;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 650;
 }
 
@@ -863,7 +863,7 @@ onBeforeUnmount(() => {
 .profile-field-error {
   margin: 6px 2px 0;
   color: #b34e45;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -1006,13 +1006,13 @@ onBeforeUnmount(() => {
 
 .profile-summary-list dt {
   color: #817a74;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .profile-summary-list dd {
   margin: 0;
   color: #332d28;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   text-align: right;
 }

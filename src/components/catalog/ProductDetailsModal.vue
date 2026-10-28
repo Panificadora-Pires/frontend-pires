@@ -550,7 +550,7 @@ function formatarPreco(valor) {
   gap: 6px;
   margin: 12px 0 0;
   color: #938a81;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .product-modal__loading,
@@ -718,7 +718,7 @@ function formatarPreco(valor) {
   border-radius: 7px;
   background: #9d6517;
   color: #fff;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .product-modal__content {
@@ -851,7 +851,7 @@ function formatarPreco(valor) {
   justify-content: flex-start;
   margin-top: 11px;
   color: #857e78;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 @media (max-width: 900px) {

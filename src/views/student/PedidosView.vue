@@ -379,7 +379,7 @@ watch(
 }
 .orders-page__summary {
   display: grid;
-  grid-template-columns: repeat(3, 92px);
+  grid-template-columns: repeat(3, minmax(108px, auto));
   overflow: hidden;
   border: 1px solid var(--student-border);
   border-radius: 8px;
@@ -398,7 +398,7 @@ watch(
 }
 .orders-page__summary span {
   color: var(--student-muted);
-  font-size: 8px;
+  font-size: 11px;
 }
 .orders-page__summary strong {
   margin-top: 2px;
@@ -429,7 +429,7 @@ watch(
   border-radius: 6px;
   background: transparent;
   color: #766e66;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 .orders-page__tabs button.is-active {
@@ -464,7 +464,7 @@ watch(
   outline: 0;
   background: transparent;
   color: var(--student-text);
-  font-size: 10px;
+  font-size: 12px;
 }
 .orders-page__search button {
   border: 0;
@@ -492,7 +492,7 @@ watch(
   display: flex;
   justify-content: space-between;
   color: var(--student-muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .orders-page__sync {
   display: flex;
@@ -547,7 +547,7 @@ watch(
   border-radius: 7px;
   background: #fff;
   color: var(--student-text);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 .orders-page__skeleton {

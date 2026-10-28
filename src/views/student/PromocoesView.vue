@@ -475,7 +475,7 @@ onBeforeUnmount(() => {
   display: block;
   margin-bottom: 6px;
   color: #bd7a10;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 850;
   letter-spacing: 0.11em;
   text-transform: uppercase;
@@ -533,7 +533,7 @@ onBeforeUnmount(() => {
   border-radius: 999px;
   background: #d99b2f;
   color: #2b180c;
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 900;
 }
 
@@ -549,7 +549,7 @@ onBeforeUnmount(() => {
 
 .promotions-page__cart small {
   color: #91877e;
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .promotions-page__cart strong {
@@ -592,7 +592,7 @@ onBeforeUnmount(() => {
 
 .promotions-page__summary small {
   color: #978e86;
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .promotions-page__summary strong {
@@ -704,7 +704,7 @@ onBeforeUnmount(() => {
 .promotions-page__content-head p {
   margin: 4px 0 0;
   color: #948a82;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .promotions-page__grid {
@@ -726,7 +726,7 @@ onBeforeUnmount(() => {
   margin-top: 7px;
   padding: 0 3px;
   color: #948a81;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 650;
 }
 
@@ -739,7 +739,7 @@ onBeforeUnmount(() => {
   border-radius: 999px;
   background: #f4ead8;
   color: #8a5400;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 850;
   white-space: nowrap;
 }
@@ -974,7 +974,7 @@ onBeforeUnmount(() => {
   .promotions-page__discount {
     min-height: 20px;
     padding-inline: 6px;
-    font-size: 8px;
+    font-size: 11px;
   }
 
   .promotions-page__toast {
