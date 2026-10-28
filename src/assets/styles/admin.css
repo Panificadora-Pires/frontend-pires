@@ -62,6 +62,11 @@
   flex-wrap: wrap;
 }
 
+/* Indicador "Atualizado há X" ao lado do botão Atualizar. */
+.admin-refresh-status {
+  color: var(--admin-muted);
+}
+
 .admin-btn {
   min-height: 40px;
   display: inline-flex;

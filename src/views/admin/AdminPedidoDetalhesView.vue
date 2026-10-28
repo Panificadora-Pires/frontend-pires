@@ -14,8 +14,18 @@
         </p>
       </div>
       <div class="admin-actions">
-        <button class="admin-btn" :disabled="carregando" @click="carregar">
-          <RefreshCw :size="16" :class="{ 'admin-spin': carregando }" />
+        <BaseRefreshStatus
+          class="admin-refresh-status"
+          :ultima-atualizacao="ultimaAtualizacao"
+          :atualizando="carregando"
+          :erro="pedido ? erroAtualizacao : null"
+        />
+        <button class="admin-btn" :disabled="carregando" @click="atualizar">
+          <RefreshCw
+            :size="16"
+            :class="{ 'admin-spin': carregando }"
+            aria-hidden="true"
+          />
           Atualizar
         </button>
       </div>
@@ -24,7 +34,7 @@
     <div v-if="erro" class="admin-alert admin-alert--error">
       <CircleAlert :size="17" />{{ erro }}
     </div>
-    <div v-if="carregando && !pedido" class="admin-card admin-loading">
+    <div v-if="!pedido && !erro" class="admin-card admin-loading">
       Carregando pedido...
     </div>
 
@@ -257,7 +267,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import {
   ArrowLeft,
@@ -271,12 +281,21 @@ import {
   WalletCards,
 } from "lucide-vue-next";
 import AdminQRCodeScanner from "@/components/admin/AdminQRCodeScanner.vue";
-import adminService, { mensagemErroApi } from "@/services/admin.service";
+import BaseRefreshStatus from "@/components/ui/BaseRefreshStatus.vue";
+import { useAutoRefresh } from "@/composables/useAutoRefresh";
+import { mensagemErroApi } from "@/services/admin.service";
+import { useAdminOrdersStore } from "@/stores/adminOrders";
+
+// O detalhe é aberto para agir no pedido (pagamento aprovado, retirada): atualiza com frequência.
+const INTERVALO_DETALHE_MS = 15_000;
 
 const route = useRoute();
-const pedido = ref(null);
-const carregando = ref(false);
+const adminOrders = useAdminOrdersStore();
+// Mostra na hora o que já está na fila e completa com a busca do detalhe.
+const pedido = ref(adminOrders.porId(route.params.id));
 const erro = ref("");
+// Incrementa a cada mudança feita nesta tela, para descartar buscas que começaram antes dela.
+let versaoLocal = 0;
 const acao = ref(false);
 const scannerAberto = ref(false);
 const cancelamentoAberto = ref(false);
@@ -334,25 +353,49 @@ function msgErro(e) {
 }
 
 async function carregar() {
-  carregando.value = true;
-  erro.value = "";
+  const versaoNoInicio = versaoLocal;
   try {
-    pedido.value = await adminService.obterPedido(route.params.id);
-  } catch {
-    erro.value = "Não foi possível carregar este pedido.";
-  } finally {
-    carregando.value = false;
+    const atualizado = await adminOrders.obterPedido(route.params.id);
+    if (versaoNoInicio === versaoLocal && !acao.value) {
+      pedido.value = atualizado;
+    }
+    erro.value = "";
+  } catch (error) {
+    // Falha em segundo plano não apaga o pedido já exibido.
+    if (!pedido.value) erro.value = "Não foi possível carregar este pedido.";
+    throw error;
   }
 }
+
+const {
+  atualizando: carregando,
+  ultimaAtualizacao,
+  erro: erroAtualizacao,
+  atualizarAgora,
+} = useAutoRefresh(carregar, { intervalo: INTERVALO_DETALHE_MS });
+
+function atualizar() {
+  atualizarAgora();
+}
+
+// Navegar de um pedido para outro reaproveita o componente.
+watch(
+  () => route.params.id,
+  (id, anterior) => {
+    if (!id || id === anterior) return;
+    pedido.value = adminOrders.porId(id);
+    erro.value = "";
+    versaoLocal += 1;
+    atualizarAgora();
+  },
+);
 
 async function alterar(status) {
   acao.value = true;
   erro.value = "";
   try {
-    pedido.value = await adminService.alterarStatusPedido(
-      pedido.value.id,
-      status,
-    );
+    versaoLocal += 1;
+    pedido.value = await adminOrders.alterarStatus(pedido.value.id, status);
     return true;
   } catch (e) {
     erro.value = msgErro(e);
@@ -381,9 +424,10 @@ async function confirmarCancelamento() {
 
 function onRetirado(p) {
   scannerAberto.value = false;
+  versaoLocal += 1;
   pedido.value = p;
+  adminOrders.substituirPedido(p);
 }
-onMounted(carregar);
 </script>
 
 <style scoped>

@@ -57,23 +57,31 @@
         </button>
       </div>
 
-      <button
-        type="button"
-        class="notifications-page__refresh"
-        :disabled="notifications.carregando"
-        aria-label="Atualizar notificações"
-        title="Atualizar"
-        @click="atualizar"
-      >
-        <RefreshCw
-          :size="17"
-          :class="{ 'is-spinning': notifications.carregando }"
+      <div class="notifications-page__sync">
+        <BaseRefreshStatus
+          :ultima-atualizacao="notifications.ultimaAtualizacao"
+          :atualizando="atualizando"
+          :erro="notifications.inicializado ? notifications.erroAtualizacao : null"
         />
-      </button>
+        <button
+          type="button"
+          class="notifications-page__refresh"
+          :disabled="atualizando"
+          aria-label="Atualizar notificações"
+          title="Atualizar"
+          @click="atualizar"
+        >
+          <RefreshCw
+            :size="17"
+            :class="{ 'is-spinning': atualizando }"
+            aria-hidden="true"
+          />
+        </button>
+      </div>
     </div>
 
     <div
-      v-if="notifications.carregando && !notifications.inicializado"
+      v-if="!notifications.inicializado && !notifications.erro"
       class="notifications-page__list"
       aria-label="Carregando notificações"
     >
@@ -200,7 +208,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, ref } from "vue";
 import {
   BellOff,
   BellRing,
@@ -214,6 +222,7 @@ import {
   RefreshCw,
 } from "lucide-vue-next";
 
+import BaseRefreshStatus from "@/components/ui/BaseRefreshStatus.vue";
 import { useNotificationsStore } from "@/stores/notifications";
 
 const notifications = useNotificationsStore();
@@ -221,6 +230,11 @@ const notifications = useNotificationsStore();
 const filtro = ref("todas");
 const processandoId = ref(null);
 const marcandoTodas = ref(false);
+
+// O StudentLayout mantém as notificações atualizadas; esta tela só exibe o estado.
+const atualizando = computed(
+  () => notifications.carregando || notifications.atualizandoSilenciosamente,
+);
 
 const notificacoesFiltradas = computed(() => {
   if (filtro.value === "nao-lidas") {
@@ -317,8 +331,9 @@ function formatarMomento(valor) {
 
 async function atualizar() {
   try {
-    await notifications.carregar({ force: true });
+    await notifications.atualizarAgora();
   } catch {
+    // O estado de erro já aparece na tela.
   }
 }
 
@@ -347,13 +362,6 @@ async function marcarTodas() {
   }
 }
 
-onMounted(() => {
-  notifications
-    .carregar({
-      force: !notifications.inicializado,
-    })
-    .catch(() => {});
-});
 </script>
 
 <style scoped>
@@ -426,6 +434,12 @@ onMounted(() => {
 .notifications-page__tabs span {
   margin-left: 4px;
   opacity: 0.7;
+}
+.notifications-page__sync {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--student-muted);
 }
 .notifications-page__refresh {
   width: 38px;

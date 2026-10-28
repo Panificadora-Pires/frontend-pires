@@ -71,18 +71,22 @@
         <button
           type="button"
           class="orders-page__refresh"
-          :disabled="orders.carregando"
+          :disabled="atualizando"
           aria-label="Atualizar pedidos"
           title="Atualizar"
           @click="atualizar"
         >
-          <RefreshCw :size="17" :class="{ 'is-spinning': orders.carregando }" />
+          <RefreshCw
+            :size="17"
+            :class="{ 'is-spinning': atualizando }"
+            aria-hidden="true"
+          />
         </button>
       </div>
     </div>
 
     <div
-      v-if="orders.carregando && !orders.inicializado"
+      v-if="!orders.inicializado && !orders.erro"
       class="orders-page__list"
       aria-label="Carregando pedidos"
     >
@@ -159,13 +163,12 @@
               : "pedidos encontrados"
           }}
         </span>
-        <span
-          v-if="orders.atualizandoSilenciosamente"
+        <BaseRefreshStatus
           class="orders-page__sync"
-        >
-          <RefreshCw :size="12" class="is-spinning" />
-          Atualizando
-        </span>
+          :ultima-atualizacao="ultimaAtualizacao"
+          :atualizando="atualizando"
+          :erro="erroAtualizacao"
+        />
       </div>
 
       <div class="orders-page__list">
@@ -187,7 +190,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import {
   CircleAlert,
   RefreshCw,
@@ -199,14 +202,19 @@ import {
 
 import OrderCard from "@/components/orders/OrderCard.vue";
 import OrderQRCodeModal from "@/components/orders/OrderQRCodeModal.vue";
+import BaseRefreshStatus from "@/components/ui/BaseRefreshStatus.vue";
+import { useAutoRefresh } from "@/composables/useAutoRefresh";
 import { useOrdersStore } from "@/stores/orders";
+
+// Com pedido em andamento o cliente espera o "pronto": atualiza mais rápido.
+const INTERVALO_COM_PEDIDO_ATIVO_MS = 10_000;
+const INTERVALO_SEM_PEDIDO_ATIVO_MS = 60_000;
 
 const orders = useOrdersStore();
 
 const filtro = ref("todos");
 const busca = ref("");
 const pedidoQRCode = ref(null);
-let refreshTimer = null;
 
 const filtros = [
   { valor: "todos", label: "Todos" },
@@ -252,10 +260,34 @@ function quantidadeFiltro(valor) {
   return orders.finalizados.length;
 }
 
-async function atualizar() {
-  try {
-    await orders.carregar({ force: true });
-  } catch {}
+const {
+  atualizando,
+  ultimaAtualizacao,
+  erro: erroAtualizacao,
+  atualizarAgora,
+  reagendar,
+} = useAutoRefresh(
+  () =>
+    orders.carregar({
+      force: true,
+      silencioso: orders.inicializado,
+    }),
+  {
+    intervalo: () =>
+      orders.emAndamento.length
+        ? INTERVALO_COM_PEDIDO_ATIVO_MS
+        : INTERVALO_SEM_PEDIDO_ATIVO_MS,
+  },
+);
+
+// Um pedido novo ou finalizado muda o ritmo das atualizações.
+watch(
+  () => orders.emAndamento.length,
+  () => reagendar(),
+);
+
+function atualizar() {
+  atualizarAgora();
 }
 
 function limparFiltros() {
@@ -268,29 +300,22 @@ function abrirQRCode(pedido) {
   pedidoQRCode.value = pedido;
 }
 
+// Quando o balcão confirma a retirada, o QR deixa de valer: fecha o modal sozinho.
+watch(
+  () => orders.itens,
+  (itens) => {
+    if (!pedidoQRCode.value) return;
+    const atual = itens.find(
+      (pedido) => Number(pedido.id) === Number(pedidoQRCode.value.id),
+    );
+    if (atual && atual.status !== "pronto") pedidoQRCode.value = null;
+  },
+);
+
 function fecharQRCode() {
   pedidoQRCode.value = null;
 }
 
-onMounted(() => {
-  orders.carregar({ force: !orders.inicializado }).catch(() => {});
-
-  refreshTimer = window.setInterval(() => {
-    orders
-      .carregar({
-        force: true,
-        silencioso: true,
-      })
-      .catch(() => {});
-  }, 30_000);
-});
-
-onBeforeUnmount(() => {
-  if (refreshTimer) {
-    window.clearInterval(refreshTimer);
-    refreshTimer = null;
-  }
-});
 </script>
 
 <style scoped>

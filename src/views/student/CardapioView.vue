@@ -157,7 +157,7 @@
           <h2>Não conseguimos carregar o cardápio.</h2>
           <p>Verifique sua conexão e tente novamente.</p>
         </div>
-        <button type="button" @click="carregarDados">Tentar novamente</button>
+        <button type="button" @click="tentarNovamente">Tentar novamente</button>
       </div>
 
       <div v-else-if="!produtosFiltrados.length" class="menu-page__state">
@@ -237,12 +237,16 @@ import {
 
 import ProductCard from "@/components/catalog/ProductCard.vue";
 import ProductDetailsModal from "@/components/catalog/ProductDetailsModal.vue";
+import { useAutoRefresh } from "@/composables/useAutoRefresh";
 import catalogService from "@/services/catalog.service";
 import { useCartStore } from "@/stores/cart";
 import { useFavoritesStore } from "@/stores/favorites";
 
 const cart = useCartStore();
 const favorites = useFavoritesStore();
+
+// Estoque e disponibilidade mudam a cada pedido; o cardápio confere a cada minuto.
+const INTERVALO_CARDAPIO_MS = 60_000;
 
 const categorias = ref([]);
 const produtos = ref([]);
@@ -370,9 +374,16 @@ async function alternarFavorito(produto) {
   }
 }
 
+// `carregando` só vale para a primeira carga; as seguintes são silenciosas e,
+// se falharem, mantêm o cardápio que já está na tela.
+let carregouUmaVez = false;
+
 async function carregarDados() {
-  carregando.value = true;
-  erro.value = false;
+  const primeiraCarga = !carregouUmaVez;
+  if (primeiraCarga) {
+    carregando.value = true;
+    erro.value = false;
+  }
 
   try {
     const [categoriasData, produtosData] = await Promise.all([
@@ -382,13 +393,24 @@ async function carregarDados() {
 
     categorias.value = categoriasData;
     produtos.value = produtosData;
-  } catch {
-    erro.value = true;
-    categorias.value = [];
-    produtos.value = [];
+    // Detalhes guardados podem ter estoque antigo.
+    detalhesCache.clear();
+    carregouUmaVez = true;
+    erro.value = false;
+  } catch (error) {
+    if (primeiraCarga) erro.value = true;
+    throw error;
   } finally {
     carregando.value = false;
   }
+}
+
+const { atualizarAgora } = useAutoRefresh(carregarDados, {
+  intervalo: INTERVALO_CARDAPIO_MS,
+});
+
+function tentarNovamente() {
+  atualizarAgora();
 }
 
 async function obterDetalhes(produto) {
@@ -490,7 +512,6 @@ function mostrarToast(mensagem) {
 
 onMounted(() => {
   favorites.carregar().catch(() => {});
-  carregarDados();
 });
 
 onBeforeUnmount(() => {

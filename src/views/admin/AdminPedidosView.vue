@@ -9,8 +9,22 @@
         </p>
       </div>
       <div class="admin-actions">
-        <button class="admin-btn" :disabled="carregando" @click="carregar">
-          <RefreshCw :size="16" :class="{ 'admin-spin': carregando }" />
+        <BaseRefreshStatus
+          class="admin-refresh-status"
+          :ultima-atualizacao="adminOrders.ultimaAtualizacao"
+          :atualizando="adminOrders.atualizando"
+          :erro="adminOrders.inicializado ? adminOrders.erroAtualizacao : null"
+        />
+        <button
+          class="admin-btn"
+          :disabled="adminOrders.atualizando"
+          @click="atualizar"
+        >
+          <RefreshCw
+            :size="16"
+            :class="{ 'admin-spin': adminOrders.atualizando }"
+            aria-hidden="true"
+          />
           Atualizar
         </button>
       </div>
@@ -53,14 +67,17 @@
     <div v-if="erro" class="admin-alert admin-alert--error">
       <CircleAlert :size="17" />{{ erro }}
     </div>
-    <div v-if="carregando && !pedidos.length" class="admin-loading">
+    <div v-if="!adminOrders.inicializado && !erro" class="admin-loading">
       Carregando pedidos...
     </div>
-    <div v-else-if="!filtrados.length" class="admin-card admin-empty">
+    <div
+      v-else-if="adminOrders.inicializado && !filtrados.length"
+      class="admin-card admin-empty"
+    >
       <ClipboardList :size="28" /><strong>Nenhum pedido encontrado</strong>
     </div>
 
-    <div v-else class="admin-table-wrap">
+    <div v-else-if="adminOrders.inicializado" class="admin-table-wrap">
       <table class="admin-table orders-table">
         <thead>
           <tr>
@@ -114,7 +131,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import {
   ChevronRight,
@@ -123,16 +140,17 @@ import {
   RefreshCw,
   Search,
 } from "lucide-vue-next";
-import adminService from "@/services/admin.service";
+import BaseRefreshStatus from "@/components/ui/BaseRefreshStatus.vue";
+import { useAdminOrdersStore } from "@/stores/adminOrders";
 
 const route = useRoute();
-const pedidos = ref([]);
-const carregando = ref(false);
-const erro = ref("");
+// A lista vem da store compartilhada, mantida atualizada pelo AdminLayout.
+const adminOrders = useAdminOrdersStore();
+const pedidos = computed(() => adminOrders.itens);
+const erro = computed(() => adminOrders.erro);
 const busca = ref("");
 const filtroStatus = ref(String(route.query.status || ""));
 const filtroPagamento = ref(String(route.query.pagamento || ""));
-let timer = null;
 
 watch(
   () => route.query.status,
@@ -219,25 +237,9 @@ function badgePedido(status) {
   return "admin-badge--neutral";
 }
 
-async function carregar(silencioso = false) {
-  if (!silencioso) carregando.value = true;
-  erro.value = "";
-  try {
-    pedidos.value = await adminService.listarPedidos();
-  } catch {
-    if (!silencioso) erro.value = "Não foi possível carregar os pedidos.";
-  } finally {
-    carregando.value = false;
-  }
+function atualizar() {
+  adminOrders.atualizarAgora()?.catch(() => {});
 }
-
-onMounted(() => {
-  carregar();
-  timer = window.setInterval(() => carregar(true), 30000);
-});
-onBeforeUnmount(() => {
-  if (timer) window.clearInterval(timer);
-});
 </script>
 
 <style scoped>

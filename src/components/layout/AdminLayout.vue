@@ -164,15 +164,13 @@ import {
 } from "lucide-vue-next";
 
 import "@/assets/styles/admin.css";
-import adminService from "@/services/admin.service";
+import { useAdminOrdersStore } from "@/stores/adminOrders";
 import { useAuthStore } from "@/stores/auth";
 
 const auth = useAuthStore();
+const adminOrders = useAdminOrdersStore();
 const router = useRouter();
 const menuAberto = ref(false);
-const pendentes = ref(0);
-const prontos = ref(0);
-let timer = null;
 
 const iniciais = computed(() => {
   const nome = auth.usuario?.name || auth.usuario?.email || "Admin";
@@ -200,7 +198,7 @@ const navGroups = computed(() => [
         name: "admin-pedidos",
         label: "Pedidos",
         icon: ClipboardList,
-        badge: pendentes.value + prontos.value || null,
+        badge: adminOrders.aguardandoAcao || null,
       },
     ],
   },
@@ -226,33 +224,21 @@ function limitarBadge(valor) {
   return numero > 99 ? "99+" : numero;
 }
 
-async function atualizarContadores() {
-  try {
-    const [listaPendentes, listaProntos] = await Promise.all([
-      adminService.listarPedidos({ status: "pendente" }),
-      adminService.listarPedidos({ status: "pronto" }),
-    ]);
-    pendentes.value = listaPendentes.length;
-    prontos.value = listaProntos.length;
-  } catch {
-    pendentes.value = 0;
-    prontos.value = 0;
-  }
-}
-
 async function handleLogout() {
   menuAberto.value = false;
+  adminOrders.resetar();
   await auth.logout();
   await router.replace({ name: "login" });
 }
 
+// A fila do admin fica atualizada em segundo plano enquanto o painel estiver aberto:
+// o badge do menu, o dashboard e a tela de pedidos leem a mesma store.
 onMounted(() => {
-  atualizarContadores();
-  timer = window.setInterval(atualizarContadores, 30_000);
+  adminOrders.iniciarAutoAtualizacao();
 });
 
 onBeforeUnmount(() => {
-  if (timer) window.clearInterval(timer);
+  adminOrders.pararAutoAtualizacao();
 });
 </script>
 
