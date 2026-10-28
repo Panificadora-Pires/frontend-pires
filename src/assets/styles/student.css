@@ -1,25 +1,26 @@
 :root {
-  --student-bg: #f5f3f0;
+  /* Apontam para a paleta "Balcão creme" de tokens.css: as telas que usam estes nomes mudam juntas. */
+  --student-bg: var(--pp-creme);
   --student-surface: #ffffff;
-  --student-surface-soft: #faf9f7;
-  --student-border: #e5e0da;
-  --student-border-strong: #d7d0c8;
-  --student-text: #28231f;
-  --student-muted: #756e67;
-  --student-muted-2: #9a938c;
-  --student-accent: #b8791f;
-  --student-accent-hover: #965f14;
-  --student-accent-soft: #fbf2df;
+  --student-surface-soft: var(--pp-creme-2);
+  --student-border: var(--pp-creme-3);
+  --student-border-strong: var(--pp-creme-borda);
+  --student-text: var(--pp-marrom);
+  --student-muted: var(--pp-texto-2);
+  --student-muted-2: var(--pp-texto-3);
+  --student-accent: var(--pp-dourado-escuro);
+  --student-accent-hover: var(--pp-dourado-profundo);
+  --student-accent-soft: var(--pp-dourado-suave);
   --student-danger: #b94a45;
   --student-danger-soft: #fff1ef;
-  --student-success: #4f7a55;
-  --student-success-soft: #edf5ee;
+  --student-success: var(--pp-verde);
+  --student-success-soft: var(--pp-verde-suave);
   --student-warning: #9a6b23;
-  --student-sidebar: #211710;
-  --student-sidebar-soft: #2b1d14;
-  --student-radius: 10px;
-  --student-radius-sm: 7px;
-  --student-shadow: 0 8px 24px rgba(47, 38, 31, 0.06);
+  --student-sidebar: var(--pp-marrom);
+  --student-sidebar-soft: var(--pp-marrom-2);
+  --student-radius: 14px;
+  --student-radius-sm: 9px;
+  --student-shadow: var(--pp-sombra-card);
 }
 .student-layout {
   background: var(--student-bg);
@@ -49,7 +50,7 @@
   -webkit-tap-highlight-color: transparent;
 }
 .student-layout ::selection {
-  background: rgba(184, 121, 31, 0.2);
+  background: var(--pp-gold-soft);
 }
 .student-layout ::-webkit-scrollbar {
   width: 9px;
