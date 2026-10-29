@@ -1,7 +1,24 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { Bell, ChevronDown, Heart, LogOut, Menu, Search, ShoppingBag, User, X } from "lucide-vue-next";
+import {
+  Bell,
+  ChevronDown,
+  Heart,
+  LogOut,
+  Menu,
+  Search,
+  ShoppingBag,
+  User,
+  X,
+} from "lucide-vue-next";
 import StudentHeaderPanel from "@/components/layout/StudentHeaderPanel.vue";
 import { useAuthStore } from "@/stores/auth";
 import { useCartStore } from "@/stores/cart";
@@ -34,22 +51,50 @@ const itens = [
   { tipo: "promocoes", rotulo: "Promoções" },
   { tipo: "pedidos", rotulo: "Meus pedidos" },
 ];
-const iniciais = computed(() => (auth.usuario?.name || "Cliente").split(/\s+/).filter(Boolean).slice(0, 2).map(p => p[0].toUpperCase()).join(""));
-const rotuloCarrinho = computed(() => `Carrinho com ${cart.totalItens} ${cart.totalItens === 1 ? "item" : "itens"}`);
-const rotuloNotificacoes = computed(() => notifications.naoLidas ? `Notificações: ${notifications.naoLidas} não lidas` : "Notificações");
-const badge = (valor) => Number(valor) > 99 ? "99+" : valor;
+const iniciais = computed(() =>
+  (auth.usuario?.name || "Cliente")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0].toUpperCase())
+    .join(""),
+);
+const rotuloCarrinho = computed(
+  () =>
+    `Carrinho com ${cart.totalItens} ${cart.totalItens === 1 ? "item" : "itens"}`,
+);
+const rotuloNotificacoes = computed(() =>
+  notifications.naoLidas
+    ? `Notificações: ${notifications.naoLidas} não lidas`
+    : "Notificações",
+);
+const badge = (valor) => (Number(valor) > 99 ? "99+" : valor);
 
-watch(() => [route.name, route.query.busca], ([nome, busca]) => {
-  termoBusca.value = nome === "cardapio" ? String(busca || "") : "";
-}, { immediate: true });
-watch(() => route.fullPath, () => fechar());
-watch(() => auth.usuario?.avatar, () => { avatarComErro.value = false; });
+watch(
+  () => [route.name, route.query.busca],
+  ([nome, busca]) => {
+    termoBusca.value = nome === "cardapio" ? String(busca || "") : "";
+  },
+  { immediate: true },
+);
+watch(
+  () => route.fullPath,
+  () => fechar(),
+);
+watch(
+  () => auth.usuario?.avatar,
+  () => {
+    avatarComErro.value = false;
+  },
+);
 
 function registrarGatilho(tipo, el) {
   if (el) gatilhos.set(tipo, el);
   else gatilhos.delete(tipo);
 }
-function cancelarFechamento() { window.clearTimeout(timerFechamento); }
+function cancelarFechamento() {
+  window.clearTimeout(timerFechamento);
+}
 function fechar({ restaurarFoco = false } = {}) {
   cancelarFechamento();
   const destino = mobileAberto.value ? botaoMobile.value : ultimoGatilho;
@@ -78,14 +123,19 @@ function alternar(tipo, event) {
 }
 function aoEntrar(tipo, event) {
   if (event.pointerType !== "mouse" || !consultaDesktop?.matches) return;
-  if (painel.value === tipo) { cancelarFechamento(); return; }
+  if (painel.value === tipo) {
+    cancelarFechamento();
+    return;
+  }
   abrir(tipo, event, true);
 }
 function agendarFechamento(event) {
   if (!consultaDesktop?.matches || event.pointerType !== "mouse") return;
   if (raiz.value?.contains(event.relatedTarget)) return;
   if (!aberturaHover && raiz.value?.contains(document.activeElement)) return;
-  timerFechamento = window.setTimeout(() => { painel.value = null; }, 180);
+  timerFechamento = window.setTimeout(() => {
+    painel.value = null;
+  }, 180);
 }
 async function abrirComTeclado(tipo, event) {
   event.preventDefault();
@@ -101,25 +151,44 @@ function aoEscape(event) {
   event.stopPropagation();
   fechar({ restaurarFoco: true });
 }
-function desativarPainel(el) { el.inert = true; el.setAttribute("aria-hidden", "true"); }
-function ativarPainel(el) { el.inert = false; el.removeAttribute("aria-hidden"); }
+function desativarPainel(el) {
+  el.inert = true;
+  el.setAttribute("aria-hidden", "true");
+}
+function ativarPainel(el) {
+  el.inert = false;
+  el.removeAttribute("aria-hidden");
+}
 function alternarMobile() {
   cancelarFechamento();
   mobileAberto.value = !mobileAberto.value;
   painel.value = null;
 }
 function clicarFora(event) {
-  if ((painel.value || mobileAberto.value) && !raiz.value?.contains(event.target)) fechar();
+  if (
+    (painel.value || mobileAberto.value) &&
+    !raiz.value?.contains(event.target)
+  )
+    fechar();
 }
 function sairFoco(event) {
-  if (event.relatedTarget && !raiz.value?.contains(event.relatedTarget)) fechar();
+  if (event.relatedTarget && !raiz.value?.contains(event.relatedTarget))
+    fechar();
 }
 function buscar() {
   fechar();
-  router.push({ name: "cardapio", query: termoBusca.value ? { busca: termoBusca.value } : {} });
+  router.push({
+    name: "cardapio",
+    query: termoBusca.value ? { busca: termoBusca.value } : {},
+  });
 }
-function sair() { fechar(); emit("logout"); }
-function aoMudarLayout() { fechar(); }
+function sair() {
+  fechar();
+  emit("logout");
+}
+function aoMudarLayout() {
+  fechar();
+}
 
 onMounted(() => {
   consultaDesktop = window.matchMedia("(min-width: 1180px)");
@@ -136,64 +205,235 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
 </script>
 
 <template>
-  <header ref="raiz" class="student-header" :class="{ 'is-expanded': painel || mobileAberto }" @keydown.esc="aoEscape" @focusout="sairFoco" @pointerleave="agendarFechamento" @pointerenter="cancelarFechamento">
+  <header
+    ref="raiz"
+    class="student-header"
+    :class="{ 'is-expanded': painel || mobileAberto }"
+    @keydown.esc="aoEscape"
+    @focusout="sairFoco"
+    @pointerleave="agendarFechamento"
+    @pointerenter="cancelarFechamento"
+  >
     <div class="student-header__bar">
-      <button ref="botaoMobile" type="button" class="student-header__icon student-header__mobile-toggle" :aria-label="mobileAberto ? 'Fechar menu' : 'Abrir menu'" :aria-expanded="mobileAberto" aria-controls="navegacao-mobile" @click="alternarMobile">
-        <X v-if="mobileAberto" :size="22" aria-hidden="true" /><Menu v-else :size="22" aria-hidden="true" />
+      <button
+        ref="botaoMobile"
+        type="button"
+        class="student-header__icon student-header__mobile-toggle"
+        :aria-label="mobileAberto ? 'Fechar menu' : 'Abrir menu'"
+        :aria-expanded="mobileAberto"
+        aria-controls="navegacao-mobile"
+        @click="alternarMobile"
+      >
+        <X v-if="mobileAberto" :size="22" aria-hidden="true" /><Menu
+          v-else
+          :size="22"
+          aria-hidden="true"
+        />
       </button>
-      <RouterLink :to="{ name: 'home' }" class="student-header__brand" aria-label="Pires Panificadora - Início" @click="fechar()">
+      <RouterLink
+        :to="{ name: 'home' }"
+        class="student-header__brand"
+        aria-label="Pires Panificadora - Início"
+        @click="fechar()"
+      >
         <img src="/logo.png" alt="Pires Panificadora" />
       </RouterLink>
       <nav class="student-header__nav" aria-label="Navegação principal">
-        <RouterLink :to="{ name: 'home' }" class="student-header__nav-link" exact-active-class="is-active" @click="fechar()" @pointerenter="painel = null">Início</RouterLink>
-        <button v-for="item in itens" :key="item.tipo" :ref="el => registrarGatilho(item.tipo, el)" type="button" class="student-header__nav-link" :class="{ 'is-active': route.name === item.tipo, 'is-open': painel === item.tipo }" :aria-expanded="painel === item.tipo" :aria-controls="`painel-${item.tipo}`" @pointerenter="aoEntrar(item.tipo, $event)" @click="alternar(item.tipo, $event)" @keydown.down="abrirComTeclado(item.tipo, $event)">
-          {{ item.rotulo }} <ChevronDown :size="13" aria-hidden="true" />
-          <span v-if="item.tipo === 'promocoes' && catalogo.promocoesAtivas.length" class="student-header__badge">{{ badge(catalogo.promocoesAtivas.length) }}</span>
+        <RouterLink
+          :to="{ name: 'home' }"
+          class="student-header__nav-link"
+          exact-active-class="is-active"
+          @click="fechar()"
+          @pointerenter="painel = null"
+          >Início</RouterLink
+        >
+        <button
+          v-for="item in itens"
+          :key="item.tipo"
+          :ref="(el) => registrarGatilho(item.tipo, el)"
+          type="button"
+          class="student-header__nav-link"
+          :class="{
+            'is-active': route.name === item.tipo,
+            'is-open': painel === item.tipo,
+          }"
+          :aria-expanded="painel === item.tipo"
+          :aria-controls="`painel-${item.tipo}`"
+          @pointerenter="aoEntrar(item.tipo, $event)"
+          @click="alternar(item.tipo, $event)"
+          @keydown.down="abrirComTeclado(item.tipo, $event)"
+        >
+          {{ item.rotulo }}
+          <ChevronDown :size="13" aria-hidden="true" />
         </button>
       </nav>
-      <form class="student-header__search student-header__search--desktop" role="search" @submit.prevent="buscar">
+      <form
+        class="student-header__search student-header__search--desktop"
+        role="search"
+        @submit.prevent="buscar"
+      >
         <Search :size="17" aria-hidden="true" />
-        <label for="busca-topo" class="student-header__sr">Buscar no cardápio</label>
-        <input id="busca-topo" v-model.trim="termoBusca" type="search" placeholder="Qual vai ser o seu pedido?" autocomplete="off" />
+        <label for="busca-topo" class="student-header__sr"
+          >Buscar no cardápio</label
+        >
+        <input
+          id="busca-topo"
+          v-model.trim="termoBusca"
+          type="search"
+          placeholder="Qual vai ser o seu pedido?"
+          autocomplete="off"
+        />
       </form>
       <div class="student-header__actions">
-        <RouterLink :to="{ name: 'favoritos' }" class="student-header__icon student-header__desktop-action" aria-label="Favoritos" title="Favoritos" @click="fechar()"><Heart :size="19" aria-hidden="true" /></RouterLink>
-        <RouterLink :to="{ name: 'notificacoes' }" class="student-header__icon" :aria-label="rotuloNotificacoes" title="Notificações" @click="fechar()">
-          <Bell :size="19" aria-hidden="true" /><span v-if="notifications.naoLidas" class="student-header__badge" aria-hidden="true">{{ badge(notifications.naoLidas) }}</span>
+        <RouterLink
+          :to="{ name: 'favoritos' }"
+          class="student-header__icon student-header__desktop-action"
+          aria-label="Favoritos"
+          title="Favoritos"
+          @click="fechar()"
+          ><Heart :size="19" aria-hidden="true"
+        /></RouterLink>
+        <RouterLink
+          :to="{ name: 'notificacoes' }"
+          class="student-header__icon"
+          :aria-label="rotuloNotificacoes"
+          title="Notificações"
+          @click="fechar()"
+        >
+          <Bell :size="19" aria-hidden="true" /><span
+            v-if="notifications.naoLidas"
+            class="student-header__badge"
+            aria-hidden="true"
+            >{{ badge(notifications.naoLidas) }}</span
+          >
         </RouterLink>
-        <button :ref="el => registrarGatilho('conta', el)" type="button" class="student-header__icon student-header__avatar student-header__desktop-action" :aria-label="`Conta de ${auth.usuario?.name || 'cliente'}`" :aria-expanded="painel === 'conta'" aria-controls="painel-conta" @click="alternar('conta', $event)" @keydown.down="abrirComTeclado('conta', $event)">
-          <img v-if="auth.usuario?.avatar && !avatarComErro" :src="auth.usuario.avatar" alt="" referrerpolicy="no-referrer" @error="avatarComErro = true" /><span v-else>{{ iniciais }}</span>
+        <button
+          :ref="(el) => registrarGatilho('conta', el)"
+          type="button"
+          class="student-header__icon student-header__avatar student-header__desktop-action"
+          :aria-label="`Conta de ${auth.usuario?.name || 'cliente'}`"
+          :aria-expanded="painel === 'conta'"
+          aria-controls="painel-conta"
+          @click="alternar('conta', $event)"
+          @keydown.down="abrirComTeclado('conta', $event)"
+        >
+          <img
+            v-if="auth.usuario?.avatar && !avatarComErro"
+            :src="auth.usuario.avatar"
+            alt=""
+            referrerpolicy="no-referrer"
+            @error="avatarComErro = true"
+          /><span v-else>{{ iniciais }}</span>
         </button>
-        <RouterLink ref="carrinho" :to="{ name: 'carrinho' }" class="student-header__cart" :class="{ 'pp-pulo': carrinhoPulando }" :aria-label="rotuloCarrinho" @click="fechar()">
-          <ShoppingBag :size="19" aria-hidden="true" /><span class="student-header__cart-label">Carrinho</span><span class="student-header__cart-count" aria-hidden="true">{{ badge(cart.totalItens) }}</span>
+        <RouterLink
+          ref="carrinho"
+          :to="{ name: 'carrinho' }"
+          class="student-header__cart"
+          :class="{ 'pp-pulo': carrinhoPulando }"
+          :aria-label="rotuloCarrinho"
+          @click="fechar()"
+        >
+          <ShoppingBag :size="19" aria-hidden="true" /><span
+            class="student-header__cart-label"
+            >Carrinho</span
+          ><span class="student-header__cart-count" aria-hidden="true">{{
+            badge(cart.totalItens)
+          }}</span>
         </RouterLink>
       </div>
     </div>
 
-    <Transition name="header-panel" @before-enter="ativarPainel" @before-leave="desativarPainel">
-      <div v-if="painel && !mobileAberto" :id="`painel-${painel}`" :key="painel" class="student-header__dropdown" :class="{ 'student-header__dropdown--account': painel === 'conta' }" @pointerenter="cancelarFechamento">
-        <div class="student-header__glass student-header__desktop-panel"><StudentHeaderPanel :tipo="painel" @navigate="fechar()" @logout="sair" /></div>
+    <Transition
+      name="header-panel"
+      @before-enter="ativarPainel"
+      @before-leave="desativarPainel"
+    >
+      <div
+        v-if="painel && !mobileAberto"
+        :id="`painel-${painel}`"
+        :key="painel"
+        class="student-header__dropdown"
+        :class="{ 'student-header__dropdown--account': painel === 'conta' }"
+        @pointerenter="cancelarFechamento"
+      >
+        <div class="student-header__glass student-header__desktop-panel">
+          <StudentHeaderPanel
+            :tipo="painel"
+            @navigate="fechar()"
+            @logout="sair"
+          />
+        </div>
       </div>
     </Transition>
 
-    <Transition name="header-panel" @before-enter="ativarPainel" @before-leave="desativarPainel">
-      <div v-if="mobileAberto" id="navegacao-mobile" class="student-header__mobile-panel student-header__glass">
-        <form class="student-header__search" role="search" @submit.prevent="buscar">
-          <Search :size="18" aria-hidden="true" /><label for="busca-mobile" class="student-header__sr">Buscar no cardápio</label>
-          <input id="busca-mobile" v-model.trim="termoBusca" type="search" placeholder="Buscar coxinha, suco, bolo…" autocomplete="off" /><button type="submit" aria-label="Buscar"><Search :size="19" aria-hidden="true" /></button>
+    <Transition
+      name="header-panel"
+      @before-enter="ativarPainel"
+      @before-leave="desativarPainel"
+    >
+      <div
+        v-if="mobileAberto"
+        id="navegacao-mobile"
+        class="student-header__mobile-panel student-header__glass"
+      >
+        <form
+          class="student-header__search"
+          role="search"
+          @submit.prevent="buscar"
+        >
+          <Search :size="18" aria-hidden="true" /><label
+            for="busca-mobile"
+            class="student-header__sr"
+            >Buscar no cardápio</label
+          >
+          <input
+            id="busca-mobile"
+            v-model.trim="termoBusca"
+            type="search"
+            placeholder="Buscar coxinha, suco, bolo…"
+            autocomplete="off"
+          /><button type="submit" aria-label="Buscar">
+            <Search :size="19" aria-hidden="true" />
+          </button>
         </form>
         <nav aria-label="Menu mobile">
-          <RouterLink :to="{ name: 'home' }" class="student-header__mobile-link" exact-active-class="is-active" @click="fechar()">Início</RouterLink>
-          <div v-for="item in itens" :key="item.tipo" class="student-header__mobile-group">
-            <button type="button" class="student-header__mobile-link" :aria-expanded="painel === item.tipo" :aria-controls="`mobile-${item.tipo}`" @click="alternar(item.tipo, $event)">{{ item.rotulo }}<ChevronDown :size="18" aria-hidden="true" /></button>
-            <div v-if="painel === item.tipo" :id="`mobile-${item.tipo}`"><StudentHeaderPanel :tipo="item.tipo" @navigate="fechar()" /></div>
+          <RouterLink
+            :to="{ name: 'home' }"
+            class="student-header__mobile-link"
+            exact-active-class="is-active"
+            @click="fechar()"
+            >Início</RouterLink
+          >
+          <div
+            v-for="item in itens"
+            :key="item.tipo"
+            class="student-header__mobile-group"
+          >
+            <button
+              type="button"
+              class="student-header__mobile-link"
+              :aria-expanded="painel === item.tipo"
+              :aria-controls="`mobile-${item.tipo}`"
+              @click="alternar(item.tipo, $event)"
+            >
+              {{ item.rotulo }}<ChevronDown :size="18" aria-hidden="true" />
+            </button>
+            <div v-if="painel === item.tipo" :id="`mobile-${item.tipo}`">
+              <StudentHeaderPanel :tipo="item.tipo" @navigate="fechar()" />
+            </div>
           </div>
         </nav>
         <div class="student-header__mobile-account">
-          <span>{{ auth.usuario?.name || 'Sua conta' }}</span>
-          <RouterLink :to="{ name: 'favoritos' }" @click="fechar()"><Heart :size="18" aria-hidden="true" />Favoritos</RouterLink>
-          <RouterLink :to="{ name: 'perfil' }" @click="fechar()"><User :size="18" aria-hidden="true" />Meu perfil</RouterLink>
-          <button type="button" @click="sair"><LogOut :size="18" aria-hidden="true" />Sair da conta</button>
+          <span>{{ auth.usuario?.name || "Sua conta" }}</span>
+          <RouterLink :to="{ name: 'favoritos' }" @click="fechar()"
+            ><Heart :size="18" aria-hidden="true" />Favoritos</RouterLink
+          >
+          <RouterLink :to="{ name: 'perfil' }" @click="fechar()"
+            ><User :size="18" aria-hidden="true" />Meu perfil</RouterLink
+          >
+          <button type="button" @click="sair">
+            <LogOut :size="18" aria-hidden="true" />Sair da conta
+          </button>
         </div>
       </div>
     </Transition>
@@ -216,15 +456,19 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
   z-index: 80;
 }
 
-.student-header__bar, .student-header__glass {
+.student-header__bar,
+.student-header__glass {
   background: var(--pp-header-fallback);
   border: 1px solid var(--pp-header-line);
   border-radius: var(--pp-header-radius);
   box-shadow: var(--pp-header-shadow);
 }
 
-@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .student-header__bar, .student-header__glass {
+@supports (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  .student-header__bar,
+  .student-header__glass {
     background: var(--pp-header-glass);
     -webkit-backdrop-filter: blur(22px) saturate(145%);
     backdrop-filter: blur(22px) saturate(145%);
@@ -241,7 +485,9 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
   display: flex;
   align-items: center;
   gap: 18px;
-  box-shadow: var(--pp-header-shadow), inset 0 1px 0 var(--pp-header-reflection);
+  box-shadow:
+    var(--pp-header-shadow),
+    inset 0 1px 0 var(--pp-header-reflection);
 }
 
 .student-header :is(a, button):focus-visible {
@@ -284,7 +530,9 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
-  transition: background .18s ease, color .18s ease;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
 }
 
 .student-header__nav-link.is-active {
@@ -292,7 +540,7 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
 }
 
 .student-header__nav-link.is-active::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 1px;
   left: 10px;
@@ -302,15 +550,16 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
   background: var(--pp-header-accent);
 }
 
-.student-header__nav-link:hover, .student-header__nav-link.is-open {
+.student-header__nav-link:hover,
+.student-header__nav-link.is-open {
   background: var(--pp-header-hover);
 }
 
 .student-header__nav-link > svg {
-  transition: transform .18s ease;
+  transition: transform 0.18s ease;
 }
 
-.student-header__nav-link[aria-expanded='true'] > svg {
+.student-header__nav-link[aria-expanded="true"] > svg {
   transform: rotate(180deg);
 }
 
@@ -388,10 +637,11 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
   background: transparent;
   color: var(--pp-header-text);
   cursor: pointer;
-  transition: background .18s ease;
+  transition: background 0.18s ease;
 }
 
-.student-header__icon:hover, .student-header__icon[aria-expanded='true'] {
+.student-header__icon:hover,
+.student-header__icon[aria-expanded="true"] {
   background: var(--pp-header-hover);
 }
 
@@ -471,7 +721,9 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
 }
 
 .student-header__desktop-panel {
-  max-height: calc(100dvh - var(--pp-header-top) - var(--pp-header-height) - 40px);
+  max-height: calc(
+    100dvh - var(--pp-header-top) - var(--pp-header-height) - 40px
+  );
   overflow-y: auto;
 }
 
@@ -480,7 +732,8 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
   width: min(680px, 100%);
 }
 
-.student-header__mobile-toggle, .student-header__mobile-panel {
+.student-header__mobile-toggle,
+.student-header__mobile-panel {
   display: none;
 }
 
@@ -494,11 +747,15 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
   white-space: nowrap;
 }
 
-.header-panel-enter-active, .header-panel-leave-active {
-  transition: opacity .18s ease, transform .18s ease;
+.header-panel-enter-active,
+.header-panel-leave-active {
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
 }
 
-.header-panel-enter-from, .header-panel-leave-to {
+.header-panel-enter-from,
+.header-panel-leave-to {
   opacity: 0;
   transform: translateY(-6px);
 }
@@ -525,7 +782,10 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
     gap: 8px;
   }
 
-  .student-header__nav, .student-header__search--desktop, .student-header__desktop-action, .student-header__dropdown {
+  .student-header__nav,
+  .student-header__search--desktop,
+  .student-header__desktop-action,
+  .student-header__dropdown {
     display: none;
   }
 
@@ -568,7 +828,9 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
     display: block;
     margin-top: 10px;
     padding: 16px;
-    max-height: calc(100dvh - var(--pp-header-top) - var(--pp-header-height) - 30px);
+    max-height: calc(
+      100dvh - var(--pp-header-top) - var(--pp-header-height) - 30px
+    );
     overflow-y: auto;
     overscroll-behavior: contain;
   }
@@ -594,11 +856,13 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
     cursor: pointer;
   }
 
-  .student-header__mobile-link:hover, .student-header__mobile-link.is-active, .student-header__mobile-link[aria-expanded='true'] {
+  .student-header__mobile-link:hover,
+  .student-header__mobile-link.is-active,
+  .student-header__mobile-link[aria-expanded="true"] {
     color: var(--pp-header-accent);
   }
 
-  .student-header__mobile-link[aria-expanded='true'] > svg {
+  .student-header__mobile-link[aria-expanded="true"] > svg {
     transform: rotate(180deg);
   }
 
@@ -617,7 +881,7 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
     overflow-wrap: anywhere;
   }
 
-  .student-header__mobile-account :is(a,button) {
+  .student-header__mobile-account :is(a, button) {
     min-height: 44px;
     display: flex;
     align-items: center;
@@ -633,11 +897,13 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .header-panel-enter-active, .header-panel-leave-active {
+  .header-panel-enter-active,
+  .header-panel-leave-active {
     transition: none;
   }
 
-  .header-panel-enter-from, .header-panel-leave-to {
+  .header-panel-enter-from,
+  .header-panel-leave-to {
     transform: none;
   }
 }
