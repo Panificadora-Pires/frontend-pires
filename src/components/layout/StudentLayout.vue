@@ -506,7 +506,7 @@ onBeforeUnmount(() => {
   gap: 24px;
   padding: 0 max(32px, calc((100vw - 1240px) / 2));
   border-bottom: 1px solid var(--student-border);
-  background: var(--pp-creme);
+  background: var(--pp-marrom);
 }
 .student-layout__brand {
   flex: 0 0 auto;
@@ -531,18 +531,18 @@ onBeforeUnmount(() => {
   gap: 6px;
   padding: 8px 0;
   border-bottom: 2px solid transparent;
-  color: var(--student-text);
+  color: var(--pp-creme);
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
   transition: color 0.15s ease;
 }
 .student-layout__top-link:hover {
-  color: var(--student-accent);
+  color: var(--pp-gold);
 }
 .student-layout__top-link.is-active {
   border-color: var(--pp-gold);
-  color: var(--student-accent);
+  color: var(--pp-gold);
 }
 .student-layout__search {
   flex: 1;
@@ -666,7 +666,7 @@ onBeforeUnmount(() => {
   gap: 8px;
   padding: 0 8px 0 16px;
   border-radius: var(--pp-radius-full);
-  background: var(--student-text);
+  background: var(--pp-marrom-2);
   color: var(--pp-creme);
   font-size: 14px;
   font-weight: 700;
@@ -862,13 +862,13 @@ onBeforeUnmount(() => {
     align-items: center;
     gap: 8px;
     padding: 0 14px;
-    background: var(--pp-creme);
+    background: var(--pp-marrom);
     border-bottom: 1px solid var(--student-border);
   }
   .student-layout__menu-btn {
     width: 38px;
     height: 38px;
-    color: var(--student-text);
+    color: var(--pp-creme);
     border-radius: 7px;
   }
   .student-layout__mobile-brand {
@@ -888,7 +888,7 @@ onBeforeUnmount(() => {
     position: relative;
     width: 38px;
     height: 38px;
-    color: var(--student-text);
+    color: var(--pp-creme);
     border-radius: 7px;
   }
   .student-layout__icon-btn .student-layout__badge-dot {
