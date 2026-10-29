@@ -2,13 +2,9 @@
   <section
     ref="raiz"
     class="home-banner"
-    :class="{ 'is-pausado': pausado, 'is-estatico': movimentoReduzido }"
+    :class="{ 'is-pausado': abaEscondida, 'is-estatico': movimentoReduzido, 'tem-comercial': temComercial(slidesVisuais[atual]) }"
     aria-roledescription="carrossel"
     aria-label="Destaques da Pires"
-    @mouseenter="pausar"
-    @mouseleave="retomar"
-    @focusin="pausar"
-    @focusout="retomarSeFocoSaiu"
   >
     <!-- Cena em camadas: "morros de massa" que sobem em velocidades diferentes na rolagem. -->
     <div class="home-banner__cena" aria-hidden="true">
@@ -34,10 +30,10 @@
 
     <template v-else>
       <article
-        v-for="(slide, indice) in slides"
+        v-for="(slide, indice) in slidesVisuais"
         :key="slide.id"
         class="home-banner__slide"
-        :class="{ 'is-ativo': indice === atual }"
+        :class="{ 'is-ativo': indice === atual, 'home-banner__slide--comercial': temComercial(slide) }"
         aria-roledescription="slide"
         :aria-label="`${indice + 1} de ${slides.length}`"
         :aria-hidden="indice !== atual"
@@ -71,15 +67,37 @@
         </div>
 
         <div class="home-banner__arte">
-          <span v-if="slide.nota" class="home-banner__nota">
+          <span v-if="slide.nota && !slide.video" class="home-banner__nota">
             {{ slide.nota }}
             <svg viewBox="0 0 90 40" aria-hidden="true">
               <path d="M4 6 C30 6 50 14 74 32" />
               <path d="M64 32 L76 33 L72 21" />
             </svg>
           </span>
+          <!-- Comercial com cenário: cores originais e poster independente do vídeo. -->
           <img
-            v-if="slide.imagem && !fotosComErro.has(slide.id)"
+            v-if="slide.poster && !fotosComErro.has(slide.poster)"
+            :src="slide.poster"
+            :alt="slide.titulo.join(' ')"
+            class="home-banner__poster"
+            @error="registrarFotoComErro(slide.poster)"
+          />
+          <video
+            v-if="slide.video && !movimentoReduzido && !videosComErro.has(slide.id)"
+            :ref="(el) => registrarVideo(slide.id, el)"
+            class="home-banner__video"
+            :src="slide.video"
+            :poster="slide.poster"
+            muted
+            playsinline
+            preload="metadata"
+            aria-hidden="true"
+            @error="registrarVideoComErro(slide.id)"
+            @ended="aoTerminarVideo(slide.id)"
+            @canplay="sincronizarVideos"
+          />
+          <img
+            v-else-if="(!slide.poster || fotosComErro.has(slide.poster)) && slide.imagem && !fotosComErro.has(slide.id)"
             :src="slide.imagem"
             :alt="slide.titulo.join(' ')"
             class="home-banner__foto"
@@ -106,7 +124,7 @@
             <circle class="qr-botao" cx="100" cy="162" r="5" />
           </svg>
           <ProductIllustration
-            v-else
+            v-else-if="!slide.poster || fotosComErro.has(slide.poster)"
             class="home-banner__ilustracao"
             :tipo="slide.ilustracao"
           />
@@ -114,14 +132,6 @@
       </article>
 
       <div v-if="slides.length > 1" class="home-banner__controles">
-        <button
-          type="button"
-          class="home-banner__seta"
-          aria-label="Destaque anterior"
-          @click="irPara(atual - 1)"
-        >
-          <ChevronLeft :size="18" aria-hidden="true" />
-        </button>
         <div class="home-banner__indicadores">
           <button
             v-for="(slide, indice) in slides"
@@ -129,20 +139,12 @@
             type="button"
             class="home-banner__indicador"
             :class="{ 'is-ativo': indice === atual }"
-            :style="{ '--duracao': `${DURACAO_SLIDE_MS}ms` }"
+            :style="{ '--duracao': `${slide.duracao || DURACAO_SLIDE_MS}ms` }"
             :aria-label="`Ir para o destaque ${indice + 1}`"
             :aria-current="indice === atual ? 'true' : undefined"
             @click="irPara(indice)"
           />
         </div>
-        <button
-          type="button"
-          class="home-banner__seta"
-          aria-label="Próximo destaque"
-          @click="irPara(atual + 1)"
-        >
-          <ChevronRight :size="18" aria-hidden="true" />
-        </button>
       </div>
     </template>
 
@@ -150,8 +152,8 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, shallowRef, useTemplateRef, watch } from "vue";
-import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag } from "lucide-vue-next";
+import { computed, nextTick, onBeforeUnmount, onMounted, shallowRef, useTemplateRef, watch } from "vue";
+import { ArrowRight, ShoppingBag } from "lucide-vue-next";
 
 import ProductIllustration from "@/components/catalog/ProductIllustration.vue";
 import { registrarOrigemVoo } from "@/utils/vooAoCarrinho";
@@ -162,6 +164,7 @@ const ROLAGEM_PARALLAX_PX = 320;
 
 const props = defineProps({
   // { id, etiqueta, titulo: string[], destaque, texto, nota?, ilustracao, imagem?,
+  //   video?, poster?, videoMobile?, posterMobile?, duracao?,
   //   acao: { tipo: 'adicionar' | 'rota', rotulo, produto?, rota? } }
   slides: { type: Array, default: () => [] },
   carregando: { type: Boolean, default: false },
@@ -172,13 +175,72 @@ const emit = defineEmits(["adicionar"]);
 
 const raiz = useTemplateRef("raiz");
 const atual = shallowRef(0);
-const pausado = shallowRef(false);
 const movimentoReduzido = shallowRef(false);
+const abaEscondida = shallowRef(document.hidden);
+const consultaLayout = window.matchMedia("(max-width: 760px)");
+const telaMobile = shallowRef(consultaLayout.matches);
+const slidesVisuais = computed(() => props.slides.map((slide) => ({
+  ...slide,
+  video: telaMobile.value && slide.videoMobile ? slide.videoMobile : slide.video,
+  poster: telaMobile.value && slide.posterMobile ? slide.posterMobile : slide.poster,
+})));
 // Foto que não carregou (ex.: 404 no Cloudinary) volta para a ilustração.
 const fotosComErro = shallowRef(new Set());
 let timer = null;
 let consultaMovimento = null;
 let quadroAgendado = false;
+
+// Falha ou bloqueio de reprodução mantém o poster; depois, foto/ilustração.
+const videosComErro = shallowRef(new Set());
+const videos = new Map();
+
+function temComercial(slide) {
+  if (!slide?.video) return false;
+  return (!movimentoReduzido.value && !videosComErro.value.has(slide.id)) ||
+    (slide.poster && !fotosComErro.value.has(slide.poster));
+}
+
+function registrarVideoComErro(id) {
+  videosComErro.value = new Set(videosComErro.value).add(id);
+  nextTick(agendar);
+}
+
+function registrarVideo(id, el) {
+  if (el) videos.set(id, el);
+  else videos.delete(id);
+}
+
+// Só o destaque ativo toca. Movimento reduzido renderiza apenas o poster.
+function sincronizarVideos() {
+  props.slides.forEach((slide, indice) => {
+    const video = videos.get(slide.id);
+    if (!video) return;
+    if (indice === atual.value && !movimentoReduzido.value && !abaEscondida.value) {
+      if (video.paused) video.play().catch((erro) => {
+        if (erro.name !== "AbortError") registrarVideoComErro(slide.id);
+      });
+    } else {
+      video.pause();
+      if (indice !== atual.value && video.currentTime !== 0) video.currentTime = 0;
+    }
+  });
+}
+
+watch([atual, movimentoReduzido, abaEscondida, telaMobile, () => props.slides], () => {
+  nextTick(() => { sincronizarVideos(); agendar(); });
+}, { flush: "post" });
+
+function aoTerminarVideo(id) {
+  if (props.slides[atual.value]?.id === id && !abaEscondida.value) irPara(atual.value + 1);
+}
+
+function aoMudarVisibilidade() {
+  abaEscondida.value = document.hidden;
+}
+
+function aoMudarLayout() {
+  telaMobile.value = consultaLayout.matches;
+}
 
 function registrarFotoComErro(id) {
   fotosComErro.value = new Set(fotosComErro.value).add(id);
@@ -193,28 +255,17 @@ function irPara(indice) {
 
 function agendar() {
   window.clearTimeout(timer);
-  if (pausado.value || movimentoReduzido.value || props.slides.length < 2) return;
-  timer = window.setTimeout(() => irPara(atual.value + 1), DURACAO_SLIDE_MS);
-}
-
-function pausar() {
-  pausado.value = true;
-  window.clearTimeout(timer);
-}
-
-function retomar() {
-  pausado.value = false;
-  agendar();
-}
-
-function retomarSeFocoSaiu(event) {
-  if (!raiz.value?.contains(event.relatedTarget)) retomar();
+  if (movimentoReduzido.value || abaEscondida.value || props.slides.length < 2) return;
+  const slide = props.slides[atual.value];
+  // O comercial toca até o fim; sair do slide reinicia a mídia para a próxima visita.
+  if (slide?.video && !videosComErro.value.has(slide.id)) return;
+  timer = window.setTimeout(() => irPara(atual.value + 1), slide?.duracao || DURACAO_SLIDE_MS);
 }
 
 function adicionar(slide, event) {
   const produto = event.currentTarget
     .closest(".home-banner__slide")
-    ?.querySelector(".home-banner__foto, .home-banner__ilustracao");
+    ?.querySelector(".home-banner__video, .home-banner__foto, .home-banner__ilustracao");
   registrarOrigemVoo(produto);
   emit("adicionar", slide.acao.produto);
 }
@@ -250,17 +301,23 @@ watch(
 );
 
 onMounted(() => {
+  consultaLayout.addEventListener("change", aoMudarLayout);
   consultaMovimento = window.matchMedia?.("(prefers-reduced-motion: reduce)") || null;
   consultaMovimento?.addEventListener?.("change", aoMudarMovimento);
   movimentoReduzido.value = Boolean(consultaMovimento?.matches);
   window.addEventListener("scroll", aoRolar, { passive: true });
+  document.addEventListener("visibilitychange", aoMudarVisibilidade);
   atualizarCena();
   agendar();
+  nextTick(sincronizarVideos);
 });
 
 onBeforeUnmount(() => {
+  consultaLayout.removeEventListener("change", aoMudarLayout);
   window.clearTimeout(timer);
   window.removeEventListener("scroll", aoRolar);
+  document.removeEventListener("visibilitychange", aoMudarVisibilidade);
+  videos.forEach((video) => video.pause());
   consultaMovimento?.removeEventListener?.("change", aoMudarMovimento);
 });
 </script>
@@ -407,6 +464,20 @@ onBeforeUnmount(() => {
   place-items: center;
   transform: translateY(calc((1 - var(--p)) * 60px)) scale(calc(0.94 + var(--p) * 0.06));
 }
+.home-banner__video {
+  width: 360px;
+  height: 360px;
+  object-fit: contain;
+  opacity: 0;
+  transform: scale(0.9);
+  transition:
+    opacity 0.6s var(--pp-ease),
+    transform 0.7s var(--pp-ease);
+}
+.is-ativo .home-banner__video {
+  opacity: 1;
+  transform: none;
+}
 .home-banner__ilustracao,
 .home-banner__foto {
   width: 290px;
@@ -472,42 +543,84 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 12px;
 }
-.home-banner__seta {
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--pp-creme-borda);
-  border-radius: 50%;
-  background: var(--pp-creme);
+.home-banner button:focus-visible,
+.home-banner a:focus-visible {
+  outline: 3px solid var(--pp-dourado-escuro);
+  outline-offset: 3px;
+}
+.home-banner.tem-comercial {
+  height: 460px;
+}
+.home-banner__slide--comercial {
+  grid-template-columns: 1fr;
+  background: var(--pp-creme-2);
+}
+.home-banner__slide--comercial .home-banner__texto {
+  position: relative;
+  z-index: 2;
+  max-width: 40%;
+}
+.home-banner__slide--comercial .home-banner__etiqueta,
+.home-banner__slide--comercial .home-banner__titulo,
+.home-banner__slide--comercial .home-banner__texto p {
+  color: var(--pp-creme);
+}
+.home-banner__slide--comercial .home-banner__titulo em {
+  color: var(--pp-gold);
+}
+.home-banner__slide--comercial .home-banner__botao {
+  background: var(--pp-gold);
   color: var(--pp-marrom);
-  cursor: pointer;
+}
+.tem-comercial button:focus-visible {
+  outline-color: var(--pp-creme);
+}
+.home-banner__slide--comercial .home-banner__arte {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: none;
+}
+.home-banner__poster,
+.home-banner__slide--comercial .home-banner__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: right center;
+  transform: none;
+}
+.home-banner__slide--comercial .home-banner__video {
+  z-index: 1;
 }
 .home-banner__indicadores {
   display: flex;
-  gap: 6px;
+  gap: 0;
 }
 .home-banner__indicador {
   position: relative;
-  width: 28px;
-  height: 6px;
-  overflow: hidden;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border: 0;
-  border-radius: 6px;
-  background: var(--pp-creme-borda);
+  background: transparent;
   cursor: pointer;
 }
 /* Área de toque maior que a barrinha visível. */
 .home-banner__indicador::before {
   content: "";
   position: absolute;
-  inset: -12px -2px;
+  inset: 19px 8px;
+  border-radius: 6px;
+  background: var(--pp-creme-borda);
 }
 .home-banner__indicador.is-ativo::after {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: 19px 8px;
+  border-radius: 6px;
   background: var(--pp-dourado-escuro);
   transform-origin: left;
   animation: home-banner-progresso var(--duracao) linear forwards;
@@ -558,36 +671,43 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 760px) {
-  /* Celular: altura média; a ilustração fica no canto e os produtos aparecem logo abaixo. */
+  /* Celular: mídia acima e chamadas na mesma posição em todos os slides. */
   .home-banner {
-    height: 400px;
+    --altura-midia: max(260px, calc((100vw - 26px) * 7 / 9));
+    height: calc(var(--altura-midia) + 320px);
     border-radius: 22px;
   }
   .home-banner__slide {
-    grid-template-columns: 1fr;
-    align-items: start;
-    padding: 26px 20px 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: var(--altura-midia) 20px 64px;
+  }
+  .home-banner__texto {
+    width: 100%;
+    flex: none;
   }
   .home-banner__titulo {
     margin: 8px 0 10px;
-    font-size: 36px;
+    font-size: clamp(30px, 8.5vw, 36px);
   }
   .home-banner__texto p {
-    max-width: 62%;
+    max-width: 100%;
     margin-bottom: 16px;
     font-size: 14px;
   }
   .home-banner__arte {
     position: absolute;
-    right: 8px;
-    bottom: 46px;
-    width: 150px;
-    height: 150px;
+    inset: 0 0 auto;
+    width: 100%;
+    height: var(--altura-midia);
+    transform: none;
   }
+  .home-banner__video,
   .home-banner__ilustracao,
   .home-banner__foto {
-    width: 140px;
-    height: 140px;
+    width: 210px;
+    height: 210px;
   }
   .home-banner__nota {
     display: none;
@@ -595,11 +715,7 @@ onBeforeUnmount(() => {
   .home-banner__controles {
     left: 20px;
     right: auto;
-    bottom: 16px;
-  }
-  .home-banner__seta {
-    width: 34px;
-    height: 34px;
+    bottom: 8px;
   }
   .home-banner__skeleton {
     padding: 40px 22px;
@@ -609,6 +725,35 @@ onBeforeUnmount(() => {
   }
   .home-banner__skeleton span:nth-child(2) {
     width: 60%;
+  }
+  .home-banner.tem-comercial {
+    height: calc(var(--altura-midia) + 320px);
+  }
+  .home-banner__slide--comercial {
+    padding: var(--altura-midia) 20px 64px;
+  }
+  .home-banner__slide--comercial .home-banner__arte {
+    height: 100%;
+    overflow: hidden;
+  }
+  .home-banner__slide--comercial .home-banner__texto {
+    width: 100%;
+    max-width: 100%;
+    flex: none;
+  }
+  .home-banner__slide--comercial .home-banner__texto p {
+    max-width: 100%;
+  }
+  .home-banner__slide--comercial .home-banner__video,
+  .home-banner__slide--comercial .home-banner__poster {
+    object-position: center top;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-banner *,
+  .home-banner *::after {
+    transition: none !important;
+    animation: none !important;
   }
 }
 </style>

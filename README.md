@@ -226,6 +226,14 @@ Direção "Balcão creme" (Fase 5): fundo creme, marrom nos textos, dourado nos 
   - Foto cadastrada no admin tem prioridade.
 - **Home:** saudação → banner (`components/home/HomeBanner.vue`) → Destaques (`ProductCard`) → Como funciona (`components/home/HomeComoFunciona.vue`) → Promoções (se houver).
 
+### Comercial da coxinha no banner
+
+O banner usa o comercial aprovado da coxinha, sem áudio, com versão horizontal no desktop e vertical no celular. Os demais produtos mantêm suas fotos ou ilustrações; novos vídeos serão adicionados posteriormente. As mídias e os respectivos posters ficam em `public/videos/`.
+
+O vídeo toca somente no slide ativo, avança ao terminar e reinicia ao retornar. A aba escondida pausa a reprodução; movimento reduzido, erro ou bloqueio de reprodução usam o poster. Os indicadores permitem escolher o destaque por toque ou teclado. O header usa marrom no desktop e no celular.
+
+Os destaques continuam vindo dos produtos e promoções cadastrados, com preço, estoque e ações de compra existentes. A mídia não altera a seleção dos produtos.
+
 ### Animações
 
 | Onde | O quê |
