@@ -93,9 +93,9 @@
   --pp-font-nota: "Caveat", "Comic Sans MS", cursive;
   --pp-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   --pp-radius-card-lg: 20px;
-  /* Altura do menu fixo do topo (desktop) e do cabeçalho do celular. */
-  --pp-altura-topo: 72px;
-  --pp-altura-topo-mobile: 58px;
+  /* Ocupação do topo: preserva os offsets existentes de foco e resumos sticky. */
+  --pp-altura-topo: calc(var(--pp-header-top) + var(--pp-header-height));
+  --pp-altura-topo-mobile: var(--pp-altura-topo);
   --pp-sombra-card: 0 14px 30px rgba(42, 22, 11, 0.08);
 
   /* Cores das ilustrações próprias dos produtos (ProductIllustration.vue). */
@@ -123,6 +123,31 @@
 
   /* Fundo escurecido atrás de modais e gavetas. */
   --pp-overlay: rgba(26, 21, 17, 0.58);
+
+  /* Navegação flutuante: vidro neutro, com leitura sobre vídeo e creme. */
+  --pp-header-top: 20px;
+  --pp-header-edge: 32px;
+  --pp-header-height: 76px;
+  --pp-header-radius: 22px;
+  --pp-header-fallback: #f5f5f5;
+  --pp-header-glass: linear-gradient(135deg, rgba(255, 255, 255, .82), rgba(255, 255, 255, .76));
+  --pp-header-panel-glass: linear-gradient(135deg, rgba(255, 255, 255, .92), rgba(255, 255, 255, .86));
+  --pp-header-line: rgba(45, 45, 45, .18);
+  --pp-header-reflection: rgba(255, 255, 255, .65);
+  --pp-header-hover: rgba(0, 0, 0, .05);
+  --pp-header-text: #262626;
+  --pp-header-muted: #454545;
+  --pp-header-accent: #5b3e08;
+  --pp-header-shadow: 0 12px 35px rgba(0, 0, 0, .12);
+}
+
+@media (max-width: 1179px) {
+  :root {
+    --pp-header-top: max(12px, env(safe-area-inset-top));
+    --pp-header-edge: 12px;
+    --pp-header-height: 62px;
+    --pp-header-radius: 20px;
+  }
 }
 
 * {

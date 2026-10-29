@@ -220,7 +220,12 @@ Direção "Balcão creme" (Fase 5): fundo creme, marrom nos textos, dourado nos 
 - **Tokens** em `src/assets/styles/tokens.css`: paleta (`--pp-creme`, `--pp-marrom`, `--pp-dourado-escuro`…), fontes e cores das ilustrações (`--ilu-*`).
   - Os `--student-*` de `student.css` apontam para esses tokens.
   - **Anton** só em títulos de banner, **Caveat** em anotações "à mão" e **Inter** no resto.
-- **Menu fixo no topo (desktop):** Início, Cardápio, Promoções, Meus pedidos, busca (leva a `/cardapio?busca=`), favoritos, notificações, menu de conta e botão Carrinho com contador. No celular continuam o cabeçalho e a navegação inferior.
+- **Header flutuante:** barra de vidro neutro translúcido com margens externas, sempre visível na rolagem. Início, Cardápio, Promoções e Meus pedidos, busca (`/cardapio?busca=`), favoritos, notificações, conta e Carrinho com contador permanecem disponíveis.
+  - `components/layout/StudentHeader.vue` cuida das interações; `StudentHeaderPanel.vue` apresenta os painéis. Categorias e promoções vêm de `stores/navigationCatalog.js` pelos serviços existentes, sem outro polling.
+  - Cardápio abre categorias reais com filtro por `/cardapio?categoria=id`. Promoções lista apenas ofertas vigentes; quando não há ofertas, mantém o acesso ao cardápio. Pedidos aponta para acompanhamento/QR e notificações existentes.
+  - Mouse, clique, ArrowDown e Escape; fechamento ao navegar, clicar fora ou sair com o foco. No tablet/celular (abaixo de 1180 px), painel com busca e grupos expansíveis por toque; navegação inferior preservada.
+  - Tokens `--pp-header-*`, `backdrop-filter` nativo, fallback sólido sem suporte e movimento reduzido. Os offsets existentes de foco e resumos sticky acompanham a altura e a margem da barra.
+  - Fotos de perfil têm recorte circular com `object-fit: cover`, inclusive em imagens verticais/horizontais. O campo `avatar` da API também fornece a foto Google quando não há upload próprio; esse fallback depende da atualização do backend com a migration `core.0010`.
 - **Ilustrações próprias:** o cardápio é fictício, então produto sem foto ganha um SVG próprio.
   - Componente `components/catalog/ProductIllustration.vue`; o tipo vem de `utils/ilustracaoProduto.js` (nome do produto e depois categoria).
   - Foto cadastrada no admin tem prioridade.
@@ -230,7 +235,7 @@ Direção "Balcão creme" (Fase 5): fundo creme, marrom nos textos, dourado nos 
 
 O banner usa o comercial aprovado da coxinha, sem áudio, com versão horizontal no desktop e vertical no celular. Os demais produtos mantêm suas fotos ou ilustrações; novos vídeos serão adicionados posteriormente. As mídias e os respectivos posters ficam em `public/videos/`.
 
-O vídeo toca somente no slide ativo, avança ao terminar e reinicia ao retornar. A aba escondida pausa a reprodução; movimento reduzido, erro ou bloqueio de reprodução usam o poster. Os indicadores permitem escolher o destaque por toque ou teclado. O header usa marrom no desktop e no celular.
+O vídeo toca somente no slide ativo, avança ao terminar e reinicia ao retornar. A aba escondida pausa a reprodução; movimento reduzido, erro ou bloqueio de reprodução usam o poster. Os indicadores permitem escolher o destaque por toque ou teclado. O header usa vidro neutro no desktop e no celular.
 
 Os destaques continuam vindo dos produtos e promoções cadastrados, com preço, estoque e ações de compra existentes. A mídia não altera a seleção dos produtos.
 
