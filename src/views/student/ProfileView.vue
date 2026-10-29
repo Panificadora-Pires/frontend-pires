@@ -32,6 +32,7 @@
               <img
                 v-if="avatarExibido"
                 :src="avatarExibido"
+                referrerpolicy="no-referrer"
                 :alt="`Foto de ${auth.usuario?.name || 'usuário'}`"
                 @error="avatarRemotoComErro = true"
               />
@@ -691,6 +692,8 @@ onBeforeUnmount(() => {
 }
 
 .profile-avatar-editor__preview img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   display: block;
