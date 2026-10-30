@@ -255,20 +255,27 @@ const route = useRoute();
 // A busca do menu do topo chega por /cardapio?busca=termo.
 const busca = ref(String(route.query.busca || ""));
 const router = useRouter();
-watch(
-  () => route.query.busca,
-  (valor) => {
-    busca.value = String(valor || "");
-  },
-);
-// Mantém a URL igual ao campo: limpar aqui e buscar o mesmo termo pelo topo volta a filtrar.
-watch(busca, (valor) => {
-  const termo = valor.trim();
-  if (termo === String(route.query.busca || "")) return;
-  const { busca: _anterior, ...resto } = route.query;
-  router.replace({ query: termo ? { ...resto, busca: termo } : resto });
+// O mega menu usa o filtro existente por id, sem criar uma nova página.
+function categoriaDaUrl(valor) {
+  const numero = Number(valor);
+  return Number.isSafeInteger(numero) && numero > 0 ? numero : null;
+}
+const categoriaAtiva = ref(categoriaDaUrl(route.query.categoria));
+watch(() => [route.query.busca, route.query.categoria], ([termo, categoria]) => {
+  busca.value = String(termo || "");
+  categoriaAtiva.value = categoriaDaUrl(categoria);
 });
-const categoriaAtiva = ref(null);
+// Um único replace evita que limpar os dois filtros restaure parte da URL anterior.
+watch([busca, categoriaAtiva], ([valor, categoria]) => {
+  const termo = valor.trim();
+  if (termo === String(route.query.busca || "") && categoria === categoriaDaUrl(route.query.categoria)) return;
+  const query = { ...route.query };
+  if (termo) query.busca = termo;
+  else delete query.busca;
+  if (categoria) query.categoria = String(categoria);
+  else delete query.categoria;
+  router.replace({ query });
+});
 const filtroRapido = ref("todos");
 const ordenacao = ref("relevancia");
 const detalhesCache = new Map();
@@ -1063,7 +1070,7 @@ onBeforeUnmount(() => {
 
   .menu-page__categories {
     gap: 7px;
-    margin-inline: -16px;
+    margin-inline: 0;
     padding: 2px 16px 8px;
   }
 
@@ -1319,7 +1326,7 @@ onBeforeUnmount(() => {
 
   .menu-page__categories {
     gap: 20px;
-    margin-inline: -16px;
+    margin-inline: 0;
     padding-inline: 16px;
   }
 

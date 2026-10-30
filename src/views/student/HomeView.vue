@@ -12,6 +12,8 @@
       @adicionar="adicionarAoCarrinho"
     />
 
+    <HomeCategories />
+
     <section v-revelar class="home__secao" aria-labelledby="titulo-destaques">
       <header class="home__secao-topo">
         <div>
@@ -126,6 +128,7 @@ import { ArrowRight, Check, CircleAlert, ShoppingBag } from "lucide-vue-next";
 import ProductCard from "@/components/catalog/ProductCard.vue";
 import ProductDetailsModal from "@/components/catalog/ProductDetailsModal.vue";
 import HomeBanner from "@/components/home/HomeBanner.vue";
+import HomeCategories from "@/components/home/HomeCategories.vue";
 import HomeComoFunciona from "@/components/home/HomeComoFunciona.vue";
 import catalogService, {
   promocaoEstaAtiva,
@@ -195,6 +198,8 @@ const produtosEmPromocao = computed(() => {
   );
 });
 
+// Comercial v3 aprovado, sem texto gravado; demais produtos mantêm foto/ilustração.
+
 function slideDeProduto(produto, { etiqueta, destaque, texto, nota }) {
   const preco = formatarPreco(produto.preco_atual ?? produto.preco);
   return {
@@ -206,6 +211,13 @@ function slideDeProduto(produto, { etiqueta, destaque, texto, nota }) {
     nota,
     ilustracao: ilustracaoParaProduto(produto),
     imagem: resolverUrlMidia(produto.imagem) || null,
+    ...(ilustracaoParaProduto(produto) === "coxinha" && {
+      video: "/videos/coxinha-banner.mp4",
+      poster: "/videos/coxinha-banner-poster.jpg",
+      videoMobile: "/videos/coxinha-banner-mobile-v2.mp4",
+      posterMobile: "/videos/coxinha-banner-mobile-v2-poster.jpg",
+      duracao: 16000,
+    }),
     acao: { tipo: "adicionar", rotulo: `Adicionar · ${preco}`, produto },
   };
 }
