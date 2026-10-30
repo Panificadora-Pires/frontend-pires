@@ -1,0 +1,46 @@
+name: CI Frontend
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-frontend-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build (Node 22)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build frontend and PWA
+        run: npm run build
+
+      - name: Verify generated entry point
+        shell: bash
+        run: |
+          test -s dist/index.html
+          test -d dist/assets
+          find dist/assets -maxdepth 1 -type f \( -name '*.js' -o -name '*.css' \) | grep -q .
+
+# O package.json ainda não possui script de testes.
+# Este check valida build/PWA, não autenticação, carrinho ou checkout.
