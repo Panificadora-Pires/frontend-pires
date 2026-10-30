@@ -60,8 +60,10 @@ onMounted(() => catalogo.carregarCategorias());
       <RouterLink v-for="categoria in disponiveis" :key="categoria.slug"
         :to="{ name: 'cardapio', query: { categoria: String(categoria.id) } }"
         class="home-categories__card">
-        <img :src="categoria.imagem" alt="" width="800" height="800" loading="lazy" decoding="async"
-          class="home-categories__image" />
+        <div class="home-categories__media">
+          <img :src="categoria.imagem" alt="" width="800" height="800" loading="lazy" decoding="async"
+            class="home-categories__image" />
+        </div>
         <div class="home-categories__body">
           <h3 class="home-categories__name">{{ categoria.nome }}</h3>
           <p class="home-categories__description">{{ categoria.descricao }}</p>
@@ -154,12 +156,28 @@ onMounted(() => catalogo.carregarCategorias());
     box-shadow: var(--pp-sombra-card);
   }
 }
+.home-categories__media {
+  flex: none;
+  overflow: hidden;
+  aspect-ratio: 1;
+}
 .home-categories__image {
   display: block;
   width: 100%;
   height: auto;
   aspect-ratio: 1;
   object-fit: contain;
+  transition: transform .45s var(--pp-ease);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .home-categories__card:focus-visible .home-categories__image {
+    transform: scale(1.06);
+  }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .home-categories__card:hover .home-categories__image {
+    transform: scale(1.06);
+  }
 }
 .home-categories__body {
   display: flex;
@@ -264,6 +282,7 @@ onMounted(() => catalogo.carregarCategorias());
   .home-categories__note svg { width: 40px; flex: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .home-categories__card { transition: none; }
+  .home-categories__card,
+  .home-categories__image { transition: none; }
 }
 </style>

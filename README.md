@@ -233,7 +233,7 @@ Direção "Balcão creme" (Fase 5): fundo creme, marrom nos textos, dourado nos 
 
 ### Vitrine de categorias V1
 
-Salgados, Doces, Bebidas e Combos usam as quatro fotografias estáticas fornecidas no protótipo aprovado, otimizadas em `src/assets/images/categories/` (WebP 800×800, aproximadamente 129 KB no total). Os produtos aparecem inteiros, com `object-fit: contain`: quatro colunas no desktop e duas até 980 px. Cada card é um único RouterLink; mouse e foco realçam borda/sombra sem mover a foto. Teclado, toque e movimento reduzido são respeitados.
+Salgados, Doces, Bebidas e Combos usam as quatro fotografias estáticas fornecidas no protótipo aprovado, otimizadas em `src/assets/images/categories/` (WebP 800×800, aproximadamente 129 KB no total). Os produtos aparecem inteiros, com `object-fit: contain`: quatro colunas no desktop e duas até 980 px. Cada card é um único RouterLink; mouse e foco realçam borda/sombra e ampliam a foto em 6% com a mesma transição suave dos cards de produtos (0,45 s). A imagem fica contida na sua área, sem alterar o tamanho do card. Movimento reduzido desativa o zoom; navegação por teclado e toque permanece independente do efeito.
 
 `HomeCategories.vue` reutiliza `useNavigationCatalogStore.carregarCategorias()`, compartilhado com o header. A apresentação encontra categorias ativas por slug ou nome normalizado e navega para `{ name: 'cardapio', query: { categoria: String(id) } }`, com o id retornado pela API. O filtro existente do cardápio mantém a seleção ao navegar e recarregar. Categorias ausentes/inativas não geram links; há estados de carregamento, erro com nova tentativa e vazio. Nenhum endpoint, filtro, dependência, header ou banner foi alterado.
 
