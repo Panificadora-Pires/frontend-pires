@@ -55,6 +55,7 @@
       <div v-else class="home__grade">
         <ProductCard
           v-for="produto in destaques"
+          variant="home"
           :key="produto.id"
           :produto="produto"
           :favorito="favorites.tem(produto.id)"
@@ -86,6 +87,7 @@
       <div class="home__grade">
         <ProductCard
           v-for="produto in produtosEmPromocao"
+          variant="home"
           :key="produto.id"
           :produto="produto"
           :favorito="favorites.tem(produto.id)"

@@ -219,7 +219,7 @@ Direção "Balcão creme" (Fase 5): fundo creme, marrom nos textos, dourado nos 
 
 - **Tokens** em `src/assets/styles/tokens.css`: paleta (`--pp-creme`, `--pp-marrom`, `--pp-dourado-escuro`…), fontes e cores das ilustrações (`--ilu-*`).
   - Os `--student-*` de `student.css` apontam para esses tokens.
-  - **Anton** em chamadas do banner e da vitrine de categorias, **Caveat** em anotações "à mão" e **Inter** no corpo e nas ações.
+  - **Anton** em chamadas do banner, da vitrine de categorias e nos produtos da Home, **Caveat** em anotações "à mão" e **Inter** no corpo e nas ações.
 - **Header flutuante:** barra de vidro neutro translúcido com margens externas, sempre visível na rolagem. Início, Cardápio, Promoções e Meus pedidos, busca (`/cardapio?busca=`), favoritos, notificações, conta e Carrinho com contador permanecem disponíveis.
   - `components/layout/StudentHeader.vue` cuida das interações; `StudentHeaderPanel.vue` apresenta os painéis. Categorias e promoções vêm de `stores/navigationCatalog.js` pelos serviços existentes, sem outro polling.
   - Cardápio abre categorias reais com filtro por `/cardapio?categoria=id`. Promoções lista apenas ofertas vigentes; quando não há ofertas, mantém o acesso ao cardápio. Pedidos aponta para acompanhamento/QR e notificações existentes.
@@ -238,6 +238,14 @@ Salgados, Doces, Bebidas e Combos usam as quatro fotografias estáticas fornecid
 `HomeCategories.vue` reutiliza `useNavigationCatalogStore.carregarCategorias()`, compartilhado com o header. A apresentação encontra categorias ativas por slug ou nome normalizado e navega para `{ name: 'cardapio', query: { categoria: String(id) } }`, com o id retornado pela API. O filtro existente do cardápio mantém a seleção ao navegar e recarregar. Categorias ausentes/inativas não geram links; há estados de carregamento, erro com nova tentativa e vazio. Nenhum endpoint, filtro, dependência, header ou banner foi alterado.
 
 Validação e capturas locais: `../docs/prints/categorias-v1-2026-10-30/`. Não há script `npm test` neste projeto; foram usados build e verificações no Chrome DevTools MCP com dados fictícios/API local. A aprovação visual final cabe ao Arthur.
+
+### Cards de produtos da Home
+
+`ProductCard` recebe `variant="home"` somente nos destaques e promoções da página inicial. Essa variante acompanha as categorias: superfície branca, borda creme, nome em Anton, mídia até as bordas superiores e controles independentes de detalhes, favorito e adição ao carrinho. A grade, a largura dos cards e a altura da mídia são preservadas; nomes longos continuam sem truncamento. Cardápio, Favoritos e a página de Promoções mantêm a variante padrão.
+
+Foto cadastrada e ilustração de fallback continuam no `ProductImage`. Hover e foco ampliam somente a imagem em 6%, sem giro ou mudança no tamanho do card; movimento reduzido desativa o efeito. Preços, estados de carregamento, eventos e voo ao carrinho usam o fluxo existente.
+
+Provas locais em `../docs/prints/produtos-home-2026-10-30/`: verificações Playwright com Chrome, dados fictícios e API simulada no navegador, além de capturas pelo Chrome DevTools MCP. Isso não valida autenticação, checkout ou pagamento contra o backend real. O projeto continua sem script `npm test` e sem dependência nova de testes.
 
 ### Comercial da coxinha no banner
 
