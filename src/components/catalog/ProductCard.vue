@@ -1,7 +1,10 @@
 <template>
   <article
     class="product-card"
-    :class="{ 'product-card--promo': produto.em_promocao }"
+    :class="{
+      'product-card--promo': produto.em_promocao,
+      'product-card--home': variant === 'home',
+    }"
   >
     <button
       ref="midia"
@@ -99,6 +102,7 @@ const props = defineProps({
   favorito: { type: Boolean, default: false },
   favoritando: { type: Boolean, default: false },
   adicionando: { type: Boolean, default: false },
+  variant: { type: String, default: "default" },
 });
 
 const emit = defineEmits(["open", "favorite", "add"]);
@@ -158,10 +162,10 @@ function formatarPreco(valor) {
     border-color: var(--student-border-strong);
     box-shadow: var(--student-shadow);
   }
-  .product-card:hover .product-card__media-button :deep(img) {
+  .product-card:not(.product-card--home):hover .product-card__media-button :deep(img) {
     transform: scale(1.06);
   }
-  .product-card:hover .product-card__media-button :deep(svg) {
+  .product-card:not(.product-card--home):hover .product-card__media-button :deep(svg) {
     transform: scale(1.08) rotate(-3deg);
   }
 }
@@ -302,6 +306,113 @@ function formatarPreco(valor) {
   .product-card__add {
     width: 40px;
     height: 40px;
+  }
+}
+.product-card--home {
+  padding: 0;
+  border-color: var(--pp-creme-3);
+  border-radius: var(--pp-radius-card-lg);
+  background: var(--pp-surface-card);
+  color: var(--pp-marrom);
+}
+.product-card--home .product-card__media-button {
+  position: relative;
+  height: 0;
+  /* A mídia perde a moldura, conservando a altura anterior. */
+  padding-top: calc((100% - 20px) / 1.18);
+  border-radius: calc(var(--pp-radius-card-lg) - 1px) calc(var(--pp-radius-card-lg) - 1px) 0 0;
+}
+.product-card--home :deep(.catalog-product-image) {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+}
+.product-card--home .product-card__copy {
+  padding: 12px 14px 4px;
+}
+.product-card--home .product-card__category {
+  color: var(--pp-texto-2);
+}
+.product-card--home h2 {
+  font-family: var(--pp-font-titulo);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+.product-card--home .product-card__footer {
+  padding: 8px 14px 14px;
+}
+.product-card--home .product-card__favorite {
+  top: 10px;
+  right: 10px;
+}
+.product-card--home .product-card__add {
+  background: var(--pp-marrom);
+  color: var(--pp-surface-card);
+}
+.product-card--home:focus-within {
+  border-color: var(--pp-dourado-escuro);
+  box-shadow: var(--pp-sombra-card);
+}
+.product-card--home button:focus-visible {
+  outline: 3px solid var(--pp-dourado-escuro);
+  outline-offset: 3px;
+}
+.product-card--home :deep(.catalog-product-image > img),
+.product-card--home :deep(.catalog-product-image__fallback > svg) {
+  transform: none;
+  transition: transform 0.45s var(--pp-ease);
+}
+@media (hover: hover) {
+  .product-card--home:hover {
+    border-color: var(--pp-dourado-escuro);
+    box-shadow: var(--pp-sombra-card);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .product-card--home:focus-within :deep(.catalog-product-image > img),
+  .product-card--home:focus-within :deep(.catalog-product-image__fallback > svg) {
+    transform: scale(1.06);
+  }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .product-card--home:hover :deep(.catalog-product-image > img),
+  .product-card--home:hover :deep(.catalog-product-image__fallback > svg) {
+    transform: scale(1.06);
+  }
+}
+@media (max-width: 700px) {
+  .product-card--home .product-card__media-button {
+    padding-top: calc((100% - 20px) / 1.08);
+  }
+}
+@media (max-width: 640px) {
+  .product-card--home .product-card__media-button {
+    padding-top: calc((100% - 16px) / 1.08);
+  }
+  .product-card--home h2 {
+    font-size: 17px;
+  }
+  .product-card--home .product-card__copy {
+    padding: 12px 12px 4px;
+  }
+  .product-card--home .product-card__footer {
+    padding: 8px 12px 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .product-card--home,
+  .product-card--home :deep(.catalog-product-image > img),
+  .product-card--home :deep(.catalog-product-image__fallback > svg) {
+    transition: none;
+  }
+  .product-card--home :deep(.catalog-product-image > img),
+  .product-card--home :deep(.catalog-product-image__fallback > svg) {
+    transform: none;
   }
 }
 </style>
