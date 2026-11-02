@@ -93,20 +93,22 @@
                 >
                   <button
                     type="button"
+                    class="pp-card-action"
                     :disabled="finalizando || item.quantidade <= 1"
                     :aria-label="`Diminuir quantidade de ${item.produto.nome}`"
                     @click="alterarQuantidade(item, item.quantidade - 1)"
                   >
-                    <Minus :size="15" />
+                    <CardActionContent><Minus :size="15" /></CardActionContent>
                   </button>
                   <strong>{{ item.quantidade }}</strong>
                   <button
                     type="button"
+                    class="pp-card-action"
                     :disabled="finalizando || !podeAumentar(item)"
                     :aria-label="`Aumentar quantidade de ${item.produto.nome}`"
                     @click="alterarQuantidade(item, item.quantidade + 1)"
                   >
-                    <Plus :size="15" />
+                    <CardActionContent><Plus :size="15" /></CardActionContent>
                   </button>
                 </div>
 
@@ -127,12 +129,12 @@
 
               <button
                 type="button"
-                class="cart-item__remove"
+                class="cart-item__remove pp-card-action pp-card-action--danger"
                 :disabled="finalizando"
                 :aria-label="`Remover ${item.produto.nome} do carrinho`"
                 @click="removerItem(item.produto.id)"
               >
-                <X :size="16" />
+                <CardActionContent><X :size="16" /></CardActionContent>
               </button>
             </article>
           </div>
@@ -242,6 +244,7 @@ import {
 } from "lucide-vue-next";
 
 import ProductImage from "@/components/catalog/ProductImage.vue";
+import CardActionContent from "@/components/ui/CardActionContent.vue";
 import CartRecommendations from "@/components/cart/CartRecommendations.vue";
 import catalogService from "@/services/catalog.service";
 import { useCartStore } from "@/stores/cart";
@@ -710,13 +713,14 @@ onBeforeUnmount(() => {
   cursor: pointer;
 }
 
-.cart-item__quantity button:hover:not(:disabled) {
-  background: #f1ece6;
-}
 
 .cart-item__quantity button:disabled {
   opacity: 0.32;
   cursor: not-allowed;
+}
+.cart-item__quantity .pp-card-action:focus-visible {
+  outline-color: var(--pp-marrom);
+  outline-offset: -3px;
 }
 
 .cart-item__quantity strong {
@@ -762,10 +766,6 @@ onBeforeUnmount(() => {
   cursor: pointer;
 }
 
-.cart-item__remove:hover:not(:disabled) {
-  background: #fff1ef;
-  color: var(--student-danger);
-}
 
 .cart-summary {
   position: sticky;

@@ -49,20 +49,24 @@
           <button
             v-if="slide.acao.tipo === 'adicionar'"
             type="button"
-            class="home-banner__botao"
+            class="home-banner__botao pp-card-action"
             :disabled="adicionandoId === slide.acao.produto?.id"
             @click="adicionar(slide, $event)"
           >
-            <ShoppingBag :size="17" aria-hidden="true" />
-            {{ slide.acao.rotulo }}
+            <CardActionContent>
+              <ShoppingBag :size="17" aria-hidden="true" />
+              {{ slide.acao.rotulo }}
+            </CardActionContent>
           </button>
           <RouterLink
             v-else
             :to="{ name: slide.acao.rota }"
-            class="home-banner__botao"
+            class="home-banner__botao pp-card-action"
           >
-            {{ slide.acao.rotulo }}
-            <ArrowRight :size="17" aria-hidden="true" />
+            <CardActionContent>
+              {{ slide.acao.rotulo }}
+              <ArrowRight :size="17" aria-hidden="true" />
+            </CardActionContent>
           </RouterLink>
         </div>
 
@@ -156,6 +160,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, shallowRef, useTemplate
 import { ArrowRight, ShoppingBag } from "lucide-vue-next";
 
 import ProductIllustration from "@/components/catalog/ProductIllustration.vue";
+import CardActionContent from "@/components/ui/CardActionContent.vue";
 import { registrarOrigemVoo } from "@/utils/vooAoCarrinho";
 
 // Tempo de cada destaque e trecho de rolagem em que a cena termina de "subir".
@@ -326,7 +331,12 @@ onBeforeUnmount(() => {
 .home-banner {
   --p: 0;
   position: relative;
-  height: 380px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  grid-template-rows: repeat(4, auto);
+  align-content: center;
+  min-height: 460px;
+  padding: 40px 56px 64px;
   overflow: hidden;
   border-radius: 28px;
   background: var(--pp-creme-2);
@@ -363,13 +373,11 @@ onBeforeUnmount(() => {
   opacity: 0.8;
 }
 .home-banner__slide {
-  position: absolute;
-  inset: 0;
+  grid-area: 1 / 1 / -1 / -1;
   z-index: 1;
   display: grid;
-  grid-template-columns: 1.05fr 1fr;
-  align-items: center;
-  padding: 0 56px;
+  grid-template-columns: subgrid;
+  grid-template-rows: subgrid;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.4s var(--pp-ease);
@@ -378,25 +386,12 @@ onBeforeUnmount(() => {
   opacity: 1;
   pointer-events: auto;
 }
-.home-banner__texto > * {
-  opacity: 0;
-  transform: translateY(14px);
-  transition:
-    opacity 0.5s var(--pp-ease),
-    transform 0.5s var(--pp-ease);
-}
-.is-ativo .home-banner__texto > * {
-  opacity: 1;
-  transform: none;
-}
-.is-ativo .home-banner__texto > :nth-child(2) {
-  transition-delay: 0.08s;
-}
-.is-ativo .home-banner__texto > :nth-child(3) {
-  transition-delay: 0.16s;
-}
-.is-ativo .home-banner__texto > :nth-child(4) {
-  transition-delay: 0.24s;
+.home-banner__texto {
+  /* Todos os slides medem as mesmas linhas, inclusive os inativos. */
+  display: grid;
+  grid-column: 1;
+  grid-row: 1 / -1;
+  grid-template-rows: subgrid;
 }
 .home-banner__etiqueta {
   display: block;
@@ -430,6 +425,9 @@ onBeforeUnmount(() => {
   line-height: 1.5;
 }
 .home-banner__botao {
+  --pp-card-action-radius: 75%;
+  align-self: start;
+  justify-self: start;
   min-height: 46px;
   display: inline-flex;
   align-items: center;
@@ -446,7 +444,7 @@ onBeforeUnmount(() => {
     transform 0.18s var(--pp-ease),
     box-shadow 0.18s var(--pp-ease);
 }
-.home-banner__botao:hover {
+.home-banner__botao:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(42, 22, 11, 0.18);
 }
@@ -459,6 +457,9 @@ onBeforeUnmount(() => {
 }
 .home-banner__arte {
   position: relative;
+  grid-column: 2;
+  grid-row: 1 / -1;
+  align-self: center;
   height: 300px;
   display: grid;
   place-items: center;
@@ -548,17 +549,10 @@ onBeforeUnmount(() => {
   outline: 3px solid var(--pp-dourado-escuro);
   outline-offset: 3px;
 }
-.home-banner.tem-comercial {
-  height: 460px;
-}
-.home-banner__slide--comercial {
-  grid-template-columns: 1fr;
-  background: var(--pp-creme-2);
-}
 .home-banner__slide--comercial .home-banner__texto {
   position: relative;
   z-index: 2;
-  max-width: 40%;
+  max-width: 78%;
 }
 .home-banner__slide--comercial .home-banner__etiqueta,
 .home-banner__slide--comercial .home-banner__titulo,
@@ -572,11 +566,16 @@ onBeforeUnmount(() => {
   background: var(--pp-gold);
   color: var(--pp-marrom);
 }
+.home-banner__slide--comercial .home-banner__botao :deep(.pp-card-action__fill) {
+  background: var(--pp-marrom);
+  color: var(--pp-creme);
+}
 .tem-comercial button:focus-visible {
   outline-color: var(--pp-creme);
 }
 .home-banner__slide--comercial .home-banner__arte {
   position: absolute;
+  grid-area: auto;
   inset: 0;
   width: 100%;
   height: 100%;
@@ -641,10 +640,10 @@ onBeforeUnmount(() => {
 }
 .home-banner__skeleton {
   position: relative;
+  grid-area: 1 / 1 / -1 / -1;
   z-index: 1;
   display: grid;
   gap: 14px;
-  padding: 70px 56px;
 }
 .home-banner__skeleton span {
   height: 22px;
@@ -674,18 +673,14 @@ onBeforeUnmount(() => {
   /* Celular: mídia acima e chamadas na mesma posição em todos os slides. */
   .home-banner {
     --altura-midia: max(260px, calc((100vw - 26px) * 7 / 9));
-    height: calc(var(--altura-midia) + 320px);
-    border-radius: 22px;
-  }
-  .home-banner__slide {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    min-height: calc(var(--altura-midia) + 320px);
     padding: var(--altura-midia) 20px 64px;
+    border-radius: 22px;
   }
   .home-banner__texto {
     width: 100%;
-    flex: none;
   }
   .home-banner__titulo {
     margin: 8px 0 10px;
@@ -698,6 +693,7 @@ onBeforeUnmount(() => {
   }
   .home-banner__arte {
     position: absolute;
+    grid-area: auto;
     inset: 0 0 auto;
     width: 100%;
     height: var(--altura-midia);
@@ -717,20 +713,11 @@ onBeforeUnmount(() => {
     right: auto;
     bottom: 8px;
   }
-  .home-banner__skeleton {
-    padding: 40px 22px;
-  }
   .home-banner__skeleton span:nth-child(1) {
     width: 80%;
   }
   .home-banner__skeleton span:nth-child(2) {
     width: 60%;
-  }
-  .home-banner.tem-comercial {
-    height: calc(var(--altura-midia) + 320px);
-  }
-  .home-banner__slide--comercial {
-    padding: var(--altura-midia) 20px 64px;
   }
   .home-banner__slide--comercial .home-banner__arte {
     height: 100%;
@@ -739,7 +726,6 @@ onBeforeUnmount(() => {
   .home-banner__slide--comercial .home-banner__texto {
     width: 100%;
     max-width: 100%;
-    flex: none;
   }
   .home-banner__slide--comercial .home-banner__texto p {
     max-width: 100%;

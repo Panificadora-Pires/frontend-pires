@@ -46,17 +46,20 @@
 
             <button
               type="button"
+              class="pp-card-action"
               :disabled="adicionandoId === produto.id"
               :aria-label="`Adicionar ${produto.nome} ao carrinho`"
               @click="adicionar(produto)"
             >
-              <LoaderCircle
-                v-if="adicionandoId === produto.id"
-                :size="14"
-                class="cart-recommendation__spinner"
-              />
-              <Plus v-else :size="15" />
-              {{ adicionandoId === produto.id ? "Adicionando" : "Adicionar" }}
+              <CardActionContent>
+                <LoaderCircle
+                  v-if="adicionandoId === produto.id"
+                  :size="14"
+                  class="cart-recommendation__spinner"
+                />
+                <Plus v-else :size="15" />
+                {{ adicionandoId === produto.id ? "Adicionando" : "Adicionar" }}
+              </CardActionContent>
             </button>
           </div>
         </div>
@@ -77,6 +80,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { ArrowRight, Check, LoaderCircle, Plus } from "lucide-vue-next";
 
 import ProductImage from "@/components/catalog/ProductImage.vue";
+import CardActionContent from "@/components/ui/CardActionContent.vue";
 import catalogService from "@/services/catalog.service";
 import { useCartStore } from "@/stores/cart";
 
@@ -403,10 +407,6 @@ onBeforeUnmount(() => {
   cursor: pointer;
 }
 
-.cart-recommendation__bottom button:hover:not(:disabled) {
-  background: #2a211b;
-  color: #fff;
-}
 
 .cart-recommendation__bottom button:disabled {
   opacity: 0.62;
