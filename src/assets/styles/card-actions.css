@@ -44,12 +44,12 @@
 }
 .pp-card-action:not(:disabled):not([aria-disabled="true"]):not(.is-loading):focus-visible > .pp-card-action__fill,
 .pp-card-action-trigger:focus-visible .pp-card-action__fill {
-  clip-path: circle(120% at 50% 100%);
+  clip-path: circle(var(--pp-card-action-radius, 120%) at 50% 100%);
 }
 @media (hover: hover) {
   .pp-card-action:not(:disabled):not([aria-disabled="true"]):not(.is-loading):hover > .pp-card-action__fill,
   .pp-card-action-trigger:hover .pp-card-action__fill {
-    clip-path: circle(120% at 50% 100%);
+    clip-path: circle(var(--pp-card-action-radius, 120%) at 50% 100%);
   }
 }
 @media (prefers-reduced-motion: reduce) {

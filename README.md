@@ -255,7 +255,9 @@ Aplicação: adicionar/favorito do `ProductCard` (Home, Cardápio, Promoções e
 
 Disabled/loading ocultam imediatamente o preenchimento e preservam o spinner; toque independe de hover, foco permanece visível e movimento reduzido troca o estado sem expansão/contração perceptível. O foco de quantidade fica dentro do grupo que recorta seu conteúdo. Zoom das fotos, bordas/sombras, voo ao carrinho, header e banner mantêm seus fluxos.
 
-Provas e gravação local: `../docs/prints/hover-cards-2026-11-01/`; plano: `../docs/planos/hover-circular-cards.md`. Testes de interface usam dados fictícios e API simulada no navegador; não validam checkout ou pagamento real. Admin, superfícies de detalhes/notificações, modal, banner e botões externos aos cards não recebem a classe.
+Provas e gravação local: `../docs/prints/hover-cards-2026-11-01/`; plano: `../docs/planos/hover-circular-cards.md`. Testes de interface usam dados fictícios e API simulada no navegador; não validam checkout ou pagamento real. Admin, superfícies de detalhes/notificações, modal e demais botões externos aos cards não recebem a classe, com a extensão do banner descrita abaixo.
+
+Extensão solicitada ao banner: os CTAs de compra e navegação de `HomeBanner.vue` usam o mesmo componente/efeito. No comercial, o botão dourado recebe o círculo marrom com conteúdo creme; nos demais slides, o botão marrom recebe dourado. A variável local `--pp-card-action-radius: 75%` ajusta o recorte ao botão largo para a expansão permanecer perceptível (o padrão de 120% continua nos cards). Conteúdo, dimensões, vídeo, navegação e adição/voo ao carrinho são preservados.
 
 ### Comercial da coxinha no banner
 

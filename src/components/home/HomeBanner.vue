@@ -49,20 +49,24 @@
           <button
             v-if="slide.acao.tipo === 'adicionar'"
             type="button"
-            class="home-banner__botao"
+            class="home-banner__botao pp-card-action"
             :disabled="adicionandoId === slide.acao.produto?.id"
             @click="adicionar(slide, $event)"
           >
-            <ShoppingBag :size="17" aria-hidden="true" />
-            {{ slide.acao.rotulo }}
+            <CardActionContent>
+              <ShoppingBag :size="17" aria-hidden="true" />
+              {{ slide.acao.rotulo }}
+            </CardActionContent>
           </button>
           <RouterLink
             v-else
             :to="{ name: slide.acao.rota }"
-            class="home-banner__botao"
+            class="home-banner__botao pp-card-action"
           >
-            {{ slide.acao.rotulo }}
-            <ArrowRight :size="17" aria-hidden="true" />
+            <CardActionContent>
+              {{ slide.acao.rotulo }}
+              <ArrowRight :size="17" aria-hidden="true" />
+            </CardActionContent>
           </RouterLink>
         </div>
 
@@ -156,6 +160,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, shallowRef, useTemplate
 import { ArrowRight, ShoppingBag } from "lucide-vue-next";
 
 import ProductIllustration from "@/components/catalog/ProductIllustration.vue";
+import CardActionContent from "@/components/ui/CardActionContent.vue";
 import { registrarOrigemVoo } from "@/utils/vooAoCarrinho";
 
 // Tempo de cada destaque e trecho de rolagem em que a cena termina de "subir".
@@ -430,6 +435,7 @@ onBeforeUnmount(() => {
   line-height: 1.5;
 }
 .home-banner__botao {
+  --pp-card-action-radius: 75%;
   min-height: 46px;
   display: inline-flex;
   align-items: center;
@@ -446,7 +452,7 @@ onBeforeUnmount(() => {
     transform 0.18s var(--pp-ease),
     box-shadow 0.18s var(--pp-ease);
 }
-.home-banner__botao:hover {
+.home-banner__botao:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(42, 22, 11, 0.18);
 }
@@ -571,6 +577,10 @@ onBeforeUnmount(() => {
 .home-banner__slide--comercial .home-banner__botao {
   background: var(--pp-gold);
   color: var(--pp-marrom);
+}
+.home-banner__slide--comercial .home-banner__botao :deep(.pp-card-action__fill) {
+  background: var(--pp-marrom);
+  color: var(--pp-creme);
 }
 .tem-comercial button:focus-visible {
   outline-color: var(--pp-creme);
