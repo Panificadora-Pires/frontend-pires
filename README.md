@@ -259,6 +259,8 @@ Provas e gravação local: `../docs/prints/hover-cards-2026-11-01/`; plano: `../
 
 Extensão solicitada ao banner: os CTAs de compra e navegação de `HomeBanner.vue` usam o mesmo componente/efeito. No comercial, o botão dourado recebe o círculo marrom com conteúdo creme; nos demais slides, o botão marrom recebe dourado. A variável local `--pp-card-action-radius: 75%` ajusta o recorte ao botão largo para a expansão permanecer perceptível (o padrão de 120% continua nos cards). Conteúdo, dimensões, vídeo, navegação e adição/voo ao carrinho são preservados.
 
+Correção de alinhamento do banner: etiqueta, título, descrição e CTA compartilham linhas de CSS Grid/subgrid entre todos os slides. A altura mínima é comum ao comercial, promoções e QR; conteúdos maiores ampliam o conjunto sem recorte. A troca mantém apenas o fade do slide, sem subida das chamadas. O hover circular continua independente. Evidências locais: `../docs/prints/banner-alinhamento-2026-11-02/` (73 verificações de layout/mídia e 21 de hover/ações, Chromium, dados fictícios).
+
 ### Comercial da coxinha no banner
 
 O banner usa o comercial aprovado da coxinha, sem áudio, com versão horizontal no desktop e vertical no celular. Os demais produtos mantêm suas fotos ou ilustrações; novos vídeos serão adicionados posteriormente. As mídias e os respectivos posters ficam em `public/videos/`.
