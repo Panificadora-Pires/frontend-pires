@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted } from "vue";
 import { ArrowRight, ArrowUpRight } from "lucide-vue-next";
+import CardActionContent from "@/components/ui/CardActionContent.vue";
 import { useNavigationCatalogStore } from "@/stores/navigationCatalog";
 import salgados from "@/assets/images/categories/salgados.webp";
 import doces from "@/assets/images/categories/doces.webp";
@@ -59,7 +60,7 @@ onMounted(() => catalogo.carregarCategorias());
     <div v-if="disponiveis.length" class="home-categories__grid">
       <RouterLink v-for="categoria in disponiveis" :key="categoria.slug"
         :to="{ name: 'cardapio', query: { categoria: String(categoria.id) } }"
-        class="home-categories__card">
+        class="home-categories__card pp-card-action-trigger">
         <div class="home-categories__media">
           <img :src="categoria.imagem" alt="" width="800" height="800" loading="lazy" decoding="async"
             class="home-categories__image" />
@@ -69,7 +70,7 @@ onMounted(() => catalogo.carregarCategorias());
           <p class="home-categories__description">{{ categoria.descricao }}</p>
           <span class="home-categories__cta">
             Ver {{ categoria.nome.toLocaleLowerCase('pt-BR') }}
-            <span class="home-categories__arrow"><ArrowRight :size="22" aria-hidden="true" /></span>
+            <span class="home-categories__arrow pp-card-action"><CardActionContent><ArrowRight :size="22" aria-hidden="true" /></CardActionContent></span>
           </span>
         </div>
       </RouterLink>

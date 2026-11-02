@@ -30,9 +30,10 @@
 
     <button
       type="button"
-      class="product-card__favorite"
+      class="product-card__favorite pp-card-action"
       :class="{ 'is-active': favorito, 'is-loading': favoritando }"
       :disabled="favoritando"
+      :aria-pressed="favorito"
       :aria-label="
         favorito
           ? `Remover ${produto.nome} dos favoritos`
@@ -40,13 +41,15 @@
       "
       @click="$emit('favorite', produto)"
     >
-      <LoaderCircle
-        v-if="favoritando"
-        :size="17"
-        class="product-card__spinner"
-        aria-hidden="true"
-      />
-      <Heart v-else :size="18" :fill="favorito ? 'currentColor' : 'none'" />
+      <CardActionContent>
+        <LoaderCircle
+          v-if="favoritando"
+          :size="17"
+          class="product-card__spinner"
+          aria-hidden="true"
+        />
+        <Heart v-else :size="18" :fill="favorito ? 'currentColor' : 'none'" />
+      </CardActionContent>
     </button>
 
     <button
@@ -72,19 +75,21 @@
 
       <button
         type="button"
-        class="product-card__add"
+        class="product-card__add pp-card-action"
         :class="{ 'is-loading': adicionando }"
         :disabled="adicionando"
         :aria-label="`Adicionar ${produto.nome} ao carrinho`"
         @click="adicionar"
       >
-        <LoaderCircle
-          v-if="adicionando"
-          :size="18"
-          class="product-card__spinner"
-          aria-hidden="true"
-        />
-        <Plus v-else :size="19" aria-hidden="true" />
+        <CardActionContent>
+          <LoaderCircle
+            v-if="adicionando"
+            :size="18"
+            class="product-card__spinner"
+            aria-hidden="true"
+          />
+          <Plus v-else :size="19" aria-hidden="true" />
+        </CardActionContent>
       </button>
     </div>
   </article>
@@ -95,6 +100,7 @@ import { useTemplateRef } from "vue";
 import { Heart, LoaderCircle, Plus, Sparkles, Tag } from "lucide-vue-next";
 
 import ProductImage from "@/components/catalog/ProductImage.vue";
+import CardActionContent from "@/components/ui/CardActionContent.vue";
 import { registrarOrigemVoo } from "@/utils/vooAoCarrinho";
 
 const props = defineProps({
@@ -271,9 +277,6 @@ function formatarPreco(valor) {
   transition:
     transform 0.15s var(--pp-ease),
     background 0.2s;
-}
-.product-card__add:hover:not(:disabled) {
-  background: var(--pp-marrom-2);
 }
 .product-card__add:active:not(:disabled) {
   transform: scale(0.9);

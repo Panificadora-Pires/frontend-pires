@@ -247,6 +247,16 @@ Foto cadastrada e ilustração de fallback continuam no `ProductImage`. Hover e 
 
 Provas locais em `../docs/prints/produtos-home-2026-10-30/`: verificações Playwright com Chrome, dados fictícios e API simulada no navegador, além de capturas pelo Chrome DevTools MCP. Isso não valida autenticação, checkout ou pagamento contra o backend real. O projeto continua sem script `npm test` e sem dependência nova de testes.
 
+### Ações dos cards: preenchimento circular
+
+As ações dos cards da área do cliente compartilham `assets/styles/card-actions.css` e `components/ui/CardActionContent.vue`. A classe opt-in `pp-card-action` recorta uma camada dourada por `clip-path: circle()`, expandindo do centro inferior em 450 ms com `--pp-ease` e retraindo na saída. A camada revela simultaneamente uma cópia visual do conteúdo em marrom, marcada com `aria-hidden`, mantendo o contraste durante a passagem do círculo. O nome acessível, os eventos e o estado continuam no botão original. Não há animação JavaScript nem dependência nova.
+
+Aplicação: adicionar/favorito do `ProductCard` (Home, Cardápio, Promoções e Favoritos), setas visuais do `HomeCategories`, adicionar nas recomendações do carrinho, Mensagens/QR do `OrderCard` e quantidade/remoção dos itens do carrinho. Nas categorias, `pp-card-action-trigger` acompanha hover/foco do RouterLink original, sem botão aninhado. A remoção usa fundo de alerta suave e ícone vermelho; favorito selecionado mantém coração preenchido e `aria-pressed`. QR conserva seu estado de sucesso original.
+
+Disabled/loading ocultam imediatamente o preenchimento e preservam o spinner; toque independe de hover, foco permanece visível e movimento reduzido troca o estado sem expansão/contração perceptível. O foco de quantidade fica dentro do grupo que recorta seu conteúdo. Zoom das fotos, bordas/sombras, voo ao carrinho, header e banner mantêm seus fluxos.
+
+Provas e gravação local: `../docs/prints/hover-cards-2026-11-01/`; plano: `../docs/planos/hover-circular-cards.md`. Testes de interface usam dados fictícios e API simulada no navegador; não validam checkout ou pagamento real. Admin, superfícies de detalhes/notificações, modal, banner e botões externos aos cards não recebem a classe.
+
 ### Comercial da coxinha no banner
 
 O banner usa o comercial aprovado da coxinha, sem áudio, com versão horizontal no desktop e vertical no celular. Os demais produtos mantêm suas fotos ou ilustrações; novos vídeos serão adicionados posteriormente. As mídias e os respectivos posters ficam em `public/videos/`.
