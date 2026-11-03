@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-11-03T01:33:24.621Z",
+        "reason": "Arthur: AGENTS.md, Visual e midia, define Inter no corpo; pedido atual exige manter a tipografia do bloco de referencia. Excecao somente para Inter, preservando Anton e Caveat em seus papeis."
+      }
+    ]
+  }
+}
