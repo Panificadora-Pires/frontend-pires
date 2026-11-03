@@ -231,6 +231,12 @@ Direção "Balcão creme" (Fase 5): fundo creme, marrom nos textos, dourado nos 
   - Foto cadastrada no admin tem prioridade.
 - **Home:** saudação → banner (`components/home/HomeBanner.vue`) → categorias (`components/home/HomeCategories.vue`) → Destaques (`ProductCard`) → Como funciona (`components/home/HomeComoFunciona.vue`) → Promoções (se houver).
 
+### Cabeçalhos de seção da Home
+
+`HomeSectionHeader.vue` é o padrão compartilhado por categorias, destaques, como funciona e promoções. A referência é “Seu intervalo, do seu jeito.” / “Ver cardápio”: Anton 400, `clamp(30px, 3.4vw, 48px)`, marrom, entrelinha 1.18 e tracking −.025em. Apoio Inter e notas Caveat mantêm papéis distintos; ações usam Inter 14/700, ArrowUpRight 18, gap 8, área mínima de 44px e hover sublinhado. No celular, as ações ficam abaixo e à direita.
+
+Os tokens `--pp-home-section-*` em `tokens.css` controlam a tipografia e o ritmo: seções após 48px/32px e cabeçalhos até conteúdo com 24px/16px (desktop/mobile). Usar esse componente em novos cabeçalhos da Home; não duplicar CSS nem aplicar o padrão aos títulos dos produtos. Sistema visual documentado em [DESIGN.md](DESIGN.md), com sidecar em `.impeccable/design.json`. Provas locais: `../docs/prints/cabecalhos-home-2026-11-02/`; dados fictícios e API simulada, sem infraestrutura npm test adicional.
+
 ### Vitrine de categorias V1
 
 Salgados, Doces, Bebidas e Combos usam as quatro fotografias estáticas fornecidas no protótipo aprovado, otimizadas em `src/assets/images/categories/` (WebP 800×800, aproximadamente 129 KB no total). Os produtos aparecem inteiros, com `object-fit: contain`: quatro colunas no desktop e duas até 980 px. Cada card é um único RouterLink; mouse e foco realçam borda/sombra e ampliam a foto em 6% com a mesma transição suave dos cards de produtos (0,45 s). A imagem fica contida na sua área, sem alterar o tamanho do card. Movimento reduzido desativa o zoom; navegação por teclado e toque permanece independente do efeito.

@@ -15,15 +15,13 @@
     <HomeCategories />
 
     <section v-revelar class="home__secao" aria-labelledby="titulo-destaques">
-      <header class="home__secao-topo">
-        <div>
-          <h2 id="titulo-destaques">Destaques para você</h2>
-          <span class="home__nota" aria-hidden="true">escolha e adicione</span>
-        </div>
-        <RouterLink :to="{ name: 'cardapio' }" class="home__link">
-          Ver cardápio <ArrowRight :size="16" aria-hidden="true" />
-        </RouterLink>
-      </header>
+      <HomeSectionHeader
+        title-id="titulo-destaques"
+        title="Destaques para você"
+        note="escolha e adicione"
+        :action-to="{ name: 'cardapio' }"
+        action-label="Ver cardápio"
+      />
 
       <div
         v-if="carregandoProdutos"
@@ -76,14 +74,12 @@
       class="home__secao"
       aria-labelledby="titulo-promocoes"
     >
-      <header class="home__secao-topo">
-        <div>
-          <h2 id="titulo-promocoes">Promoções de hoje</h2>
-        </div>
-        <RouterLink :to="{ name: 'promocoes' }" class="home__link">
-          Ver promoções <ArrowRight :size="16" aria-hidden="true" />
-        </RouterLink>
-      </header>
+      <HomeSectionHeader
+        title-id="titulo-promocoes"
+        title="Promoções de hoje"
+        :action-to="{ name: 'promocoes' }"
+        action-label="Ver promoções"
+      />
       <div class="home__grade">
         <ProductCard
           v-for="produto in produtosEmPromocao"
@@ -125,13 +121,14 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
-import { ArrowRight, Check, CircleAlert, ShoppingBag } from "lucide-vue-next";
+import { Check, CircleAlert, ShoppingBag } from "lucide-vue-next";
 
 import ProductCard from "@/components/catalog/ProductCard.vue";
 import ProductDetailsModal from "@/components/catalog/ProductDetailsModal.vue";
 import HomeBanner from "@/components/home/HomeBanner.vue";
 import HomeCategories from "@/components/home/HomeCategories.vue";
 import HomeComoFunciona from "@/components/home/HomeComoFunciona.vue";
+import HomeSectionHeader from "@/components/home/HomeSectionHeader.vue";
 import catalogService, {
   promocaoEstaAtiva,
   resolverUrlMidia,
@@ -429,42 +426,7 @@ onBeforeUnmount(() => {
   font-size: 14px;
 }
 .home__secao {
-  margin-top: 44px;
-}
-.home__secao-topo {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-.home__secao-topo > div {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-}
-.home__secao-topo h2 {
-  margin: 0;
-  font-size: 24px;
-}
-.home__nota {
-  color: var(--pp-dourado-escuro);
-  font-family: var(--pp-font-nota);
-  font-size: 22px;
-  font-weight: 700;
-}
-.home__link {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--student-accent);
-  font-size: 14px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-.home__link:hover {
-  color: var(--student-accent-hover);
+  margin-top: var(--pp-home-section-space);
 }
 .home__grade {
   display: grid;
@@ -565,15 +527,6 @@ onBeforeUnmount(() => {
 @media (max-width: 760px) {
   .home__intro h1 {
     font-size: 23px;
-  }
-  .home__secao {
-    margin-top: 32px;
-  }
-  .home__secao-topo h2 {
-    font-size: 20px;
-  }
-  .home__nota {
-    font-size: 19px;
   }
   .home__grade {
     grid-template-columns: repeat(2, minmax(0, 1fr));

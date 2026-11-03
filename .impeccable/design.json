@@ -1,0 +1,256 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-03T01:30:23.595Z",
+  "title": "Design System: Pires Panificadora",
+  "extensions": {
+    "colorMeta": {
+      "marrom": {
+        "canonical": "#2a160b",
+        "role": "primary",
+        "displayName": "marrom",
+        "tonalRamp": [
+          "oklch(15.00% 0.0190 48.82)",
+          "oklch(26.43% 0.0335 48.82)",
+          "oklch(37.86% 0.0381 48.82)",
+          "oklch(49.29% 0.0381 48.82)",
+          "oklch(60.71% 0.0381 48.82)",
+          "oklch(72.14% 0.0381 48.82)",
+          "oklch(83.57% 0.0250 48.82)",
+          "oklch(95.00% 0.0076 48.82)"
+        ]
+      },
+      "marrom-secundario": {
+        "canonical": "#5a3418",
+        "role": "neutral",
+        "displayName": "marrom secundario",
+        "tonalRamp": [
+          "oklch(15.00% 0.0342 54.96)",
+          "oklch(26.43% 0.0602 54.96)",
+          "oklch(37.86% 0.0684 54.96)",
+          "oklch(49.29% 0.0684 54.96)",
+          "oklch(60.71% 0.0684 54.96)",
+          "oklch(72.14% 0.0684 54.96)",
+          "oklch(83.57% 0.0449 54.96)",
+          "oklch(95.00% 0.0137 54.96)"
+        ]
+      },
+      "creme": {
+        "canonical": "#fbf6ee",
+        "role": "neutral",
+        "displayName": "creme",
+        "tonalRamp": [
+          "oklch(15.00% 0.0059 79.79)",
+          "oklch(26.43% 0.0105 79.79)",
+          "oklch(37.86% 0.0119 79.79)",
+          "oklch(49.29% 0.0119 79.79)",
+          "oklch(60.71% 0.0119 79.79)",
+          "oklch(72.14% 0.0119 79.79)",
+          "oklch(83.57% 0.0078 79.79)",
+          "oklch(95.00% 0.0024 79.79)"
+        ]
+      },
+      "creme-camada": {
+        "canonical": "#f4ebdc",
+        "role": "neutral",
+        "displayName": "creme camada",
+        "tonalRamp": [
+          "oklch(15.00% 0.0111 80.69)",
+          "oklch(26.43% 0.0195 80.69)",
+          "oklch(37.86% 0.0222 80.69)",
+          "oklch(49.29% 0.0222 80.69)",
+          "oklch(60.71% 0.0222 80.69)",
+          "oklch(72.14% 0.0222 80.69)",
+          "oklch(83.57% 0.0146 80.69)",
+          "oklch(95.00% 0.0044 80.69)"
+        ]
+      },
+      "creme-borda": {
+        "canonical": "#eadfcd",
+        "role": "neutral",
+        "displayName": "creme borda",
+        "tonalRamp": [
+          "oklch(15.00% 0.0135 80.24)",
+          "oklch(26.43% 0.0237 80.24)",
+          "oklch(37.86% 0.0269 80.24)",
+          "oklch(49.29% 0.0269 80.24)",
+          "oklch(60.71% 0.0269 80.24)",
+          "oklch(72.14% 0.0269 80.24)",
+          "oklch(83.57% 0.0177 80.24)",
+          "oklch(95.00% 0.0054 80.24)"
+        ]
+      },
+      "superficie": {
+        "canonical": "#ffffff",
+        "role": "neutral",
+        "displayName": "superficie",
+        "tonalRamp": [
+          "oklch(15.00% 0.0000 89.88)",
+          "oklch(26.43% 0.0000 89.88)",
+          "oklch(37.86% 0.0000 89.88)",
+          "oklch(49.29% 0.0000 89.88)",
+          "oklch(60.71% 0.0000 89.88)",
+          "oklch(72.14% 0.0000 89.88)",
+          "oklch(83.57% 0.0000 89.88)",
+          "oklch(95.00% 0.0000 89.88)"
+        ]
+      },
+      "texto-secundario": {
+        "canonical": "#6b5641",
+        "role": "neutral",
+        "displayName": "texto secundario",
+        "tonalRamp": [
+          "oklch(15.00% 0.0212 66.48)",
+          "oklch(26.43% 0.0374 66.48)",
+          "oklch(37.86% 0.0424 66.48)",
+          "oklch(49.29% 0.0424 66.48)",
+          "oklch(60.71% 0.0424 66.48)",
+          "oklch(72.14% 0.0424 66.48)",
+          "oklch(83.57% 0.0279 66.48)",
+          "oklch(95.00% 0.0085 66.48)"
+        ]
+      },
+      "dourado-escuro": {
+        "canonical": "#a0661d",
+        "role": "primary",
+        "displayName": "dourado escuro",
+        "tonalRamp": [
+          "oklch(15.00% 0.0560 66.94)",
+          "oklch(26.43% 0.0987 66.94)",
+          "oklch(37.86% 0.1121 66.94)",
+          "oklch(49.29% 0.1121 66.94)",
+          "oklch(60.71% 0.1121 66.94)",
+          "oklch(72.14% 0.1121 66.94)",
+          "oklch(83.57% 0.0737 66.94)",
+          "oklch(95.00% 0.0224 66.94)"
+        ]
+      },
+      "dourado": {
+        "canonical": "#e0a83e",
+        "role": "primary",
+        "displayName": "dourado",
+        "tonalRamp": [
+          "oklch(15.00% 0.0678 79.77)",
+          "oklch(26.43% 0.1195 79.77)",
+          "oklch(37.86% 0.1357 79.77)",
+          "oklch(49.29% 0.1357 79.77)",
+          "oklch(60.71% 0.1357 79.77)",
+          "oklch(72.14% 0.1357 79.77)",
+          "oklch(83.57% 0.0892 79.77)",
+          "oklch(95.00% 0.0271 79.77)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "section-title": {
+        "displayName": "Título de seção da Home",
+        "purpose": "Autoridade: Seu intervalo, do seu jeito."
+      }
+    },
+    "shadows": [
+      {
+        "name": "pp-sombra-card",
+        "value": "0 14px 30px rgba(42, 22, 11, 0.08)",
+        "purpose": "Resposta de hover/foco dos cards existentes."
+      }
+    ],
+    "motion": [
+      {
+        "name": "pp-ease",
+        "value": "cubic-bezier(0.2, 0.7, 0.2, 1)",
+        "purpose": "Transições existentes."
+      },
+      {
+        "name": "card-action",
+        "value": "450ms",
+        "purpose": "Expansão/retração circular, suprimida com movimento reduzido."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "home-mobile",
+        "value": "760px"
+      },
+      {
+        "name": "categories-two-columns",
+        "value": "980px"
+      },
+      {
+        "name": "products-three-columns",
+        "value": "1100px"
+      },
+      {
+        "name": "header-mobile",
+        "value": "1179px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Ação secundária da Home",
+      "kind": "button",
+      "refersTo": "home-section-action",
+      "description": "Link canônico com seta diagonal; foco e hover sublinhados.",
+      "html": "<a class=\"ds-section-header__action\" href=\"/cardapio\">Ver cardápio <svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M7 17 17 7M7 7h10v10\"/></svg></a>",
+      "css": "\n.ds-section-header {\n  display: flex;\n  align-items: flex-end;\n  justify-content: space-between;\n  gap: var(--pp-home-section-header-gap);\n  margin: 0 0 var(--pp-home-section-header-after);\n  padding: 0;\n}\n.ds-section-header__copy {\n  align-self: flex-start;\n  min-width: 0;\n  max-width: 100%;\n}\n.ds-section-header__heading {\n  display: flex;\n  align-items: baseline;\n  flex-wrap: wrap;\n  gap: 4px var(--pp-space-2);\n}\n.ds-section-header__title {\n  margin: 0 0 var(--pp-space-1);\n  color: var(--pp-marrom);\n  font-family: var(--pp-font-titulo);\n  font-size: var(--pp-home-section-title-size);\n  font-weight: 400;\n  line-height: var(--pp-home-section-title-leading);\n  letter-spacing: var(--pp-home-section-title-tracking);\n  text-wrap: balance;\n  overflow-wrap: anywhere;\n}\n.ds-section-header__intro {\n  margin: 0;\n  color: var(--pp-texto-2);\n  font-family: var(--pp-font-body);\n  font-size: var(--pp-home-section-intro-size);\n  line-height: 1.5;\n}\n.ds-section-header__note {\n  color: var(--pp-dourado-escuro);\n  font-family: var(--pp-font-nota);\n  font-size: var(--pp-home-section-note-size);\n  font-weight: 700;\n}\n.ds-section-header__action {\n  display: inline-flex;\n  align-items: center;\n  gap: var(--pp-space-1);\n  min-height: 44px;\n  flex: none;\n  color: var(--pp-dourado-escuro);\n  font-family: var(--pp-font-body);\n  font-size: var(--pp-home-section-action-size);\n  font-weight: 700;\n  white-space: nowrap;\n}\n.ds-section-header__action svg {\n  flex: none;\n}\n.ds-section-header__action:hover,\n.ds-section-header__action:focus-visible {\n  text-decoration: underline;\n  text-underline-offset: 4px;\n}\n.ds-section-header__action:focus-visible {\n  outline: 3px solid var(--pp-dourado-escuro);\n  outline-offset: 4px;\n}\n@media (max-width: 760px) {\n  .ds-section-header {\n    align-items: flex-start;\n    flex-direction: column;\n  }\n  .ds-section-header__action {\n    align-self: flex-end;\n  }\n}\n"
+    },
+    {
+      "name": "Adicionar ao carrinho",
+      "kind": "button",
+      "refersTo": "card-action",
+      "description": "Controle existente do card, com duas camadas para preservar contraste.",
+      "html": "<button class=\"ds-add ds-card-action\" aria-label=\"Adicionar produto\"><span class=\"ds-card-action__content\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg></span><span class=\"ds-card-action__fill\" aria-hidden=\"true\"><span class=\"ds-card-action__content\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg></span></span></button>",
+      "css": ".ds-add{width:42px;height:42px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:var(--pp-marrom);color:var(--pp-surface-card);cursor:pointer}.ds-add:disabled{opacity:.55}.ds-add:active:not(:disabled){transform:scale(.9)}/* Opt-in apenas nas ações dos cards da área do cliente. */\n.ds-card-action {\n  position: relative;\n  isolation: isolate;\n  overflow: hidden;\n}\n.ds-card-action__content {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: inherit;\n  pointer-events: none;\n}\n.ds-card-action__fill {\n  position: absolute;\n  inset: 0;\n  z-index: 1;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: inherit;\n  padding: inherit;\n  border-radius: inherit;\n  background: var(--pp-gold);\n  color: var(--pp-marrom);\n  clip-path: circle(0% at 50% 100%);\n  transition: clip-path 450ms var(--pp-ease);\n  pointer-events: none;\n}\n.ds-card-action--danger .ds-card-action__fill {\n  background: var(--pp-error-bg);\n  color: var(--student-danger);\n}\n.ds-card-action:focus-visible {\n  outline: 3px solid var(--pp-dourado-escuro);\n  outline-offset: 3px;\n}\n.ds-card-action:active:not(:disabled):not([aria-disabled=\"true\"]) {\n  filter: brightness(0.94);\n}\n.ds-card-action:is(:disabled, [aria-disabled=\"true\"], .is-loading) > .ds-card-action__fill {\n  clip-path: circle(0% at 50% 100%);\n  transition: none;\n}\n.ds-card-action:not(:disabled):not([aria-disabled=\"true\"]):not(.is-loading):focus-visible > .ds-card-action__fill,\n.ds-card-action-trigger:focus-visible .ds-card-action__fill {\n  clip-path: circle(var(--pp-card-action-radius, 120%) at 50% 100%);\n}\n@media (hover: hover) {\n  .ds-card-action:not(:disabled):not([aria-disabled=\"true\"]):not(.is-loading):hover > .ds-card-action__fill,\n  .ds-card-action-trigger:hover .ds-card-action__fill {\n    clip-path: circle(var(--pp-card-action-radius, 120%) at 50% 100%);\n  }\n}\n@media (prefers-reduced-motion: reduce) {\n  .ds-card-action__fill {\n    transition: none;\n  }\n}\n"
+    },
+    {
+      "name": "Busca do header",
+      "kind": "input",
+      "description": "Campo da navegação existente; não alterado nesta entrega.",
+      "html": "<label class=\"ds-search\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"8\"/><path d=\"m21 21-4.3-4.3\"/></svg><input type=\"search\" aria-label=\"Buscar produtos\" placeholder=\"Qual vai ser seu pedido?\"></label>",
+      "css": ".ds-search{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 14px;border:1px solid var(--pp-header-line);border-radius:14px;background:var(--pp-header-hover);color:var(--pp-header-text)}.ds-search input{min-width:0;width:100%;border:0;outline:0;background:transparent;color:inherit;font:13px var(--pp-font-body)}.ds-search input::placeholder{color:var(--pp-header-muted);opacity:1}.ds-search:focus-within{outline:2px solid var(--pp-header-accent);outline-offset:3px}"
+    },
+    {
+      "name": "Link da navegação",
+      "kind": "nav",
+      "description": "Estado selecionado do menu existente.",
+      "html": "<a class=\"ds-nav\" href=\"/\" aria-current=\"page\">Início</a>",
+      "css": ".ds-nav{position:relative;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 10px;border-radius:10px;background:transparent;color:var(--pp-header-accent);font:600 13px var(--pp-font-body);text-decoration:none}.ds-nav::after{content:\"\";position:absolute;bottom:1px;left:10px;right:10px;height:2px;border-radius:2px;background:var(--pp-header-accent)}.ds-nav:hover{background:var(--pp-header-hover)}.ds-nav:focus-visible{outline:2px solid var(--pp-header-accent);outline-offset:3px}"
+    },
+    {
+      "name": "Selo de oferta",
+      "kind": "chip",
+      "description": "Rótulo informativo existente do produto; não é um controle.",
+      "html": "<span class=\"ds-offer\">Oferta</span>",
+      "css": ".ds-offer{display:inline-flex;align-items:center;gap:4px;padding:5px 8px;border-radius:var(--pp-radius-full);background:var(--pp-dourado-escuro);color:var(--pp-creme);font:800 10px var(--pp-font-body);text-transform:uppercase;letter-spacing:.05em}"
+    },
+    {
+      "name": "Card de categoria: corpo",
+      "kind": "card",
+      "description": "Trecho de texto do card existente, sem mídia; o card inteiro é o link.",
+      "html": "<a class=\"ds-category\" href=\"/cardapio\"><h3>Salgados</h3><p>Escolha seu salgado</p><span>Ver salgados <svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M7 17 17 7M7 7h10v10\"/></svg></span></a>",
+      "css": ".ds-category{display:flex;flex-direction:column;padding:12px 20px 20px;border:1px solid var(--pp-creme-3);border-radius:var(--pp-radius-card-lg);background:var(--pp-surface-card);color:var(--pp-marrom);text-decoration:none}.ds-category h3{margin:0 0 6px;font:400 28px/1.2 var(--pp-font-titulo)}.ds-category p{margin:0 0 18px;color:var(--pp-texto-2);font:14px/1.5 var(--pp-font-body)}.ds-category span{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--pp-marrom-2);font:700 14px var(--pp-font-body)}.ds-category:hover,.ds-category:focus-visible{border-color:var(--pp-dourado-escuro);box-shadow:var(--pp-sombra-card)}.ds-category:focus-visible{outline:3px solid var(--pp-dourado-escuro);outline-offset:4px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Balcão creme",
+    "overview": "Identidade acolhedora de padaria, com superfícies creme, marrom nas chamadas e dourado nas ações. Anton dá presença às chamadas; Inter mantém a leitura e os controles claros; Caveat identifica anotações breves. Essa direção já foi aprovada no projeto e é preservada nesta documentação.",
+    "keyCharacteristics": [
+      "Chamadas condensadas em marrom sobre creme.",
+      "Anotações cursivas pontuais e ações secundárias discretas.",
+      "Conteúdo e produto reais do catálogo como centro da escolha.",
+      "Mesma anatomia para cabeçalhos de seções com a mesma função."
+    ],
+    "rules": [],
+    "dos": [
+      "Reutilizar HomeSectionHeader nos cabeçalhos de seção da Home.",
+      "Preservar textos, rotas, notas e estados existentes.",
+      "Validar estilos computados, foco, hover, quebra, ampliação e toque em desktop e celular.",
+      "Manter tokens CSS como fonte da implementação e atualizar esta documentação quando o contrato mudar."
+    ],
+    "donts": [
+      "Duplicar regras de título/ação em HomeView ou componentes de seção.",
+      "Aplicar o tamanho de chamada aos nomes de produto ou a todos os h2 da aplicação.",
+      "Adicionar textos auxiliares, fundos ou ornamentos para preencher espaço.",
+      "Trocar fontes, paleta ou comportamento de compra durante uma padronização de cabeçalhos."
+    ]
+  }
+}

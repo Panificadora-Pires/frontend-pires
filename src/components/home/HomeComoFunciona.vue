@@ -1,9 +1,6 @@
 <template>
   <section class="como-funciona" aria-labelledby="titulo-como-funciona">
-    <header class="como-funciona__topo">
-      <h2 id="titulo-como-funciona">Como funciona</h2>
-      <span class="como-funciona__nota" aria-hidden="true">três passos, sem fila</span>
-    </header>
+    <HomeSectionHeader title-id="titulo-como-funciona" title="Como funciona" note="três passos, sem fila" />
 
     <ol class="como-funciona__passos">
       <li
@@ -26,6 +23,7 @@
 <script setup>
 import { onBeforeUnmount, onMounted, useTemplateRef } from "vue";
 import { QrCode, ShoppingBag, WalletCards } from "lucide-vue-next";
+import HomeSectionHeader from "@/components/home/HomeSectionHeader.vue";
 
 const PASSOS = [
   {
@@ -95,23 +93,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.como-funciona__topo {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-  margin-bottom: 16px;
-}
-.como-funciona__topo h2 {
-  margin: 0;
-  font-size: 24px;
-}
-.como-funciona__nota {
-  color: var(--pp-dourado-escuro);
-  font-family: var(--pp-font-nota);
-  font-size: 22px;
-  font-weight: 700;
-}
 .como-funciona__passos {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
