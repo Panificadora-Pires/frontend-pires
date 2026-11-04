@@ -229,7 +229,13 @@ Direção "Balcão creme" (Fase 5): fundo creme, marrom nos textos, dourado nos 
 - **Ilustrações próprias:** o cardápio é fictício, então produto sem foto ganha um SVG próprio.
   - Componente `components/catalog/ProductIllustration.vue`; o tipo vem de `utils/ilustracaoProduto.js` (nome do produto e depois categoria).
   - Foto cadastrada no admin tem prioridade.
-- **Home:** saudação → banner (`components/home/HomeBanner.vue`) → categorias (`components/home/HomeCategories.vue`) → Destaques (`ProductCard`) → Como funciona (`components/home/HomeComoFunciona.vue`) → Promoções (se houver).
+- **Home:** saudação → banner (`components/home/HomeBanner.vue`) → categorias (`components/home/HomeCategories.vue`) → oito Destaques (`ProductCard`) → Do pedido ao balcão (`HomeComoFunciona`) → oferta disponível (`HomePromotionFeature`, se houver) → fechamento (`HomeFooter`).
+
+### Home após os destaques
+
+`HomeComoFunciona.vue` combina a foto autorizada de combo com os três passos existentes, incluindo Pix/cartão, dinheiro na retirada, aviso e QR Code. O CTA leva ao Cardápio. `HomePromotionFeature.vue` apresenta uma única oferta em faixa marrom, com imagem cadastrada ou fallback, preços da API e ações existentes de detalhes, favoritos e carrinho. Como a listagem não contém estoque, a Home consulta os detalhes dos candidatos vigentes na ordem atual até encontrar um produto ativo, em promoção e com estoque positivo. Falha ou ausência de disponibilidade não produz oferta. A compra consulta novamente os detalhes pelo handler existente; o backend continua validando preço e estoque no checkout.
+
+`HomeFooter.vue` fecha apenas esta rota com marca e links para Cardápio, Promoções e Meus pedidos. Header, banner, categorias e os oito destaques foram preservados. Fotos abaixo da grade usam carregamento lazy. Não há dependência ou endpoint novo. Provas, capturas e limitações em `../docs/prints/home-pos-destaques-2026-11-04/`.
 
 ### Cabeçalhos de seção da Home
 
@@ -247,7 +253,7 @@ Validação e capturas locais: `../docs/prints/categorias-v1-2026-10-30/`. Não 
 
 ### Cards de produtos da Home
 
-`ProductCard` recebe `variant="home"` somente nos destaques e promoções da página inicial. Essa variante acompanha as categorias: superfície branca, borda creme, nome em Anton, mídia até as bordas superiores e controles independentes de detalhes, favorito e adição ao carrinho. A grade, a largura dos cards e a altura da mídia são preservadas; nomes longos continuam sem truncamento. Cardápio, Favoritos e a página de Promoções mantêm a variante padrão.
+`ProductCard` recebe `variant="home"` nos destaques da página inicial. Essa variante acompanha as categorias: superfície branca, borda creme, nome em Anton, mídia até as bordas superiores e controles independentes de detalhes, favorito e adição ao carrinho. A grade, a largura dos cards e a altura da mídia são preservadas; nomes longos continuam sem truncamento. A oferta da Home usa a composição própria `HomePromotionFeature`; Cardápio, Favoritos e a página de Promoções mantêm a variante padrão.
 
 Foto cadastrada e ilustração de fallback continuam no `ProductImage`. Hover e foco ampliam somente a imagem em 6%, sem giro ou mudança no tamanho do card; movimento reduzido desativa o efeito. Preços, estados de carregamento, eventos e voo ao carrinho usam o fluxo existente.
 

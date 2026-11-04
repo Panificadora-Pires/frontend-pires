@@ -68,33 +68,20 @@
 
     <HomeComoFunciona class="home__secao" />
 
-    <section
-      v-if="produtosEmPromocao.length"
-      v-revelar
+    <HomePromotionFeature
+      v-if="promocaoEmDestaque"
+      :key="promocaoEmDestaque.id"
       class="home__secao"
-      aria-labelledby="titulo-promocoes"
-    >
-      <HomeSectionHeader
-        title-id="titulo-promocoes"
-        title="Promoções de hoje"
-        :action-to="{ name: 'promocoes' }"
-        action-label="Ver promoções"
-      />
-      <div class="home__grade">
-        <ProductCard
-          v-for="produto in produtosEmPromocao"
-          variant="home"
-          :key="produto.id"
-          :produto="produto"
-          :favorito="favorites.tem(produto.id)"
-          :favoritando="favorites.estaProcessando(produto.id)"
-          :adicionando="produtoAdicionando === produto.id"
-          @open="abrirProduto"
-          @favorite="alternarFavorito"
-          @add="adicionarAoCarrinho"
-        />
-      </div>
-    </section>
+      :produto="promocaoEmDestaque"
+      :favorito="favorites.tem(promocaoEmDestaque.id)"
+      :favoritando="favorites.estaProcessando(promocaoEmDestaque.id)"
+      :adicionando="produtoAdicionando === promocaoEmDestaque.id"
+      @open="abrirProduto"
+      @favorite="alternarFavorito"
+      @add="adicionarAoCarrinho"
+    />
+
+    <HomeFooter />
 
     <ProductDetailsModal
       :open="modalAberto"
@@ -120,7 +107,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { Check, CircleAlert, ShoppingBag } from "lucide-vue-next";
 
 import ProductCard from "@/components/catalog/ProductCard.vue";
@@ -128,6 +115,8 @@ import ProductDetailsModal from "@/components/catalog/ProductDetailsModal.vue";
 import HomeBanner from "@/components/home/HomeBanner.vue";
 import HomeCategories from "@/components/home/HomeCategories.vue";
 import HomeComoFunciona from "@/components/home/HomeComoFunciona.vue";
+import HomeFooter from "@/components/home/HomeFooter.vue";
+import HomePromotionFeature from "@/components/home/HomePromotionFeature.vue";
 import HomeSectionHeader from "@/components/home/HomeSectionHeader.vue";
 import catalogService, {
   promocaoEstaAtiva,
@@ -195,6 +184,28 @@ const produtosEmPromocao = computed(() => {
   return produtos.value.filter(
     (produto) => produto.em_promocao && vigentes.has(Number(produto.id)),
   );
+});
+
+// A listagem não traz estoque: confirmar pelo detalhe antes de oferecer a compra.
+const promocaoEmDestaque = ref(null);
+watch(produtosEmPromocao, async (candidatos, anterior, onCleanup) => {
+  let atual = true;
+  onCleanup(() => { atual = false; });
+  promocaoEmDestaque.value = null;
+
+  for (const produto of candidatos) {
+    try {
+      const detalhe = await catalogService.obterProduto(produto.id);
+      if (!atual) return;
+      if (detalhe.ativo && detalhe.em_promocao && Number(detalhe.estoque) > 0) {
+        promocaoEmDestaque.value = { ...produto, ...detalhe };
+        return;
+      }
+    } catch {
+      // Sem confirmar disponibilidade, tentar a próxima oferta vigente.
+      if (!atual) return;
+    }
+  }
 });
 
 // Comercial v3 aprovado, sem texto gravado; demais produtos mantêm foto/ilustração.

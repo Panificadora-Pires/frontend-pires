@@ -1,149 +1,114 @@
+<script setup>
+import { ArrowUpRight } from "lucide-vue-next";
+import HomeSectionHeader from "@/components/home/HomeSectionHeader.vue";
+import fotoCombo from "@/assets/images/categories/combos.webp";
+
+const PASSOS = [
+  { titulo: "Escolha", texto: "Monte o pedido pelo cardápio antes do intervalo." },
+  { titulo: "Pague", texto: "Pix ou cartão pelo app, ou dinheiro na retirada." },
+  { titulo: "Mostre o QR Code", texto: "Quando ficar pronto, você recebe o aviso e retira no balcão." },
+];
+</script>
+
 <template>
   <section class="como-funciona" aria-labelledby="titulo-como-funciona">
-    <HomeSectionHeader title-id="titulo-como-funciona" title="Como funciona" note="três passos, sem fila" />
-
-    <ol class="como-funciona__passos">
-      <li
-        v-for="(passo, indice) in PASSOS"
-        :key="passo.titulo"
-        ref="passos"
-        class="como-funciona__passo"
-      >
-        <span class="como-funciona__icone" aria-hidden="true">
-          <component :is="passo.icone" :size="26" />
-        </span>
-        <span class="como-funciona__numero" aria-hidden="true">{{ indice + 1 }}</span>
-        <h3>{{ passo.titulo }}</h3>
-        <p>{{ passo.texto }}</p>
-      </li>
-    </ol>
+    <img
+      class="como-funciona__foto"
+      :src="fotoCombo"
+      alt="Coxinha e suco de laranja"
+      width="800"
+      height="800"
+      loading="lazy"
+    />
+    <div class="como-funciona__conteudo">
+      <HomeSectionHeader
+        title-id="titulo-como-funciona"
+        title="Do pedido ao balcão"
+        note="três passos, sem fila"
+      />
+      <ol class="como-funciona__passos">
+        <li v-for="(passo, indice) in PASSOS" :key="passo.titulo" class="como-funciona__passo">
+          <span class="como-funciona__numero" aria-hidden="true">{{ indice + 1 }}</span>
+          <div>
+            <h3>{{ passo.titulo }}</h3>
+            <p>{{ passo.texto }}</p>
+          </div>
+        </li>
+      </ol>
+      <RouterLink :to="{ name: 'cardapio' }" class="como-funciona__acao">
+        Ver cardápio <ArrowUpRight :size="18" aria-hidden="true" />
+      </RouterLink>
+    </div>
   </section>
 </template>
 
-<script setup>
-import { onBeforeUnmount, onMounted, useTemplateRef } from "vue";
-import { QrCode, ShoppingBag, WalletCards } from "lucide-vue-next";
-import HomeSectionHeader from "@/components/home/HomeSectionHeader.vue";
-
-const PASSOS = [
-  {
-    icone: ShoppingBag,
-    titulo: "Escolha",
-    texto: "Monte o pedido pelo cardápio antes do intervalo.",
-  },
-  {
-    icone: WalletCards,
-    titulo: "Pague",
-    texto: "Pix ou cartão pelo app, ou dinheiro na retirada.",
-  },
-  {
-    icone: QrCode,
-    titulo: "Mostre o QR Code",
-    texto: "Quando ficar pronto, você recebe o aviso e retira no balcão.",
-  },
-];
-// Cada passo começa a subir um pouco depois do anterior (px de rolagem).
-const ATRASO_POR_PASSO_PX = 60;
-// Fração da altura da tela em que o passo termina de subir.
-const TRECHO_DA_TELA = 0.45;
-
-const passos = useTemplateRef("passos");
-let consultaMovimento = null;
-let quadroAgendado = false;
-
-// Os passos acompanham a rolagem (sobem ao descer, descem ao voltar), como a cena do banner.
-function atualizar() {
-  quadroAgendado = false;
-  const reduzido = Boolean(consultaMovimento?.matches);
-  // Sem promoções, esta é a última seção: no fim da página tudo precisa estar completo.
-  const fimDaPagina =
-    window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
-  (passos.value || []).forEach((passo, indice) => {
-    // Posição pela lista (que não se move), para o translate do próprio passo não distorcer o cálculo.
-    const lista = passo.parentElement;
-    const topo = lista.getBoundingClientRect().top + (passo.offsetTop - lista.offsetTop);
-    const progresso =
-      reduzido || fimDaPagina
-        ? 1
-        : (window.innerHeight - topo - indice * ATRASO_POR_PASSO_PX) /
-          (window.innerHeight * TRECHO_DA_TELA);
-    passo.style.setProperty("--q", Math.min(1, Math.max(0, progresso)).toFixed(3));
-  });
-}
-
-function agendar() {
-  if (quadroAgendado) return;
-  quadroAgendado = true;
-  window.requestAnimationFrame(atualizar);
-}
-
-onMounted(() => {
-  consultaMovimento = window.matchMedia?.("(prefers-reduced-motion: reduce)") || null;
-  consultaMovimento?.addEventListener?.("change", agendar);
-  window.addEventListener("scroll", agendar, { passive: true });
-  window.addEventListener("resize", agendar);
-  atualizar();
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener("scroll", agendar);
-  window.removeEventListener("resize", agendar);
-  consultaMovimento?.removeEventListener?.("change", agendar);
-});
-</script>
-
 <style scoped>
+.como-funciona {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(32px, 5vw, 72px);
+}
+.como-funciona__foto {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+  border-radius: var(--pp-radius-card-lg);
+}
+.como-funciona__conteudo { min-width: 0; }
 .como-funciona__passos {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
+  gap: var(--pp-space-4);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 .como-funciona__passo {
-  --q: 1;
-  position: relative;
-  padding: 22px;
-  border: 1px solid var(--student-border);
-  border-radius: var(--pp-radius-card-lg);
-  background: var(--student-surface);
-  opacity: var(--q);
-  transform: translateY(calc((1 - var(--q)) * 70px));
-}
-.como-funciona__icone {
-  position: absolute;
-  right: 20px;
-  top: 20px;
-  width: 52px;
-  height: 52px;
   display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--pp-creme-2);
-  color: var(--pp-dourado-escuro);
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: var(--pp-space-3);
 }
 .como-funciona__numero {
-  display: block;
-  color: var(--pp-gold);
+  color: var(--pp-dourado-escuro);
   font-family: var(--pp-font-titulo);
-  font-size: 46px;
-  line-height: 1;
+  font-size: 32px;
+  line-height: 1.2;
 }
 .como-funciona__passo h3 {
-  margin: 10px 0 6px;
+  margin: 0 0 4px;
   font-size: 18px;
+  line-height: 1.4;
 }
 .como-funciona__passo p {
+  max-width: 42ch;
   margin: 0;
-  color: var(--student-muted);
+  color: var(--pp-texto-2);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.como-funciona__acao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pp-space-1);
+  min-height: 48px;
+  margin-top: var(--pp-space-5);
+  padding: var(--pp-space-2) var(--pp-space-4);
+  border-radius: var(--pp-radius-full);
+  background: var(--pp-marrom);
+  color: var(--pp-creme);
   font-size: 14px;
-  line-height: 1.5;
+  font-weight: 700;
+}
+.como-funciona__acao:hover { background: var(--pp-marrom-2); }
+.como-funciona__acao:focus-visible {
+  outline: 3px solid var(--pp-dourado-escuro);
+  outline-offset: 4px;
 }
 @media (max-width: 760px) {
-  .como-funciona__passos {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
+  .como-funciona { grid-template-columns: minmax(0, 1fr); gap: var(--pp-space-4); }
+  .como-funciona__foto { max-height: 440px; }
 }
 </style>

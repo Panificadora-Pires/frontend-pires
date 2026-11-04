@@ -206,6 +206,14 @@ Fotos cadastradas têm prioridade e fallback preservado. Fotos de categorias sã
 
 Header mantém busca com rótulo acessível, foco próprio e navegação por rotas. Os estilos neutros desse contexto são uma exceção existente e não uma nova direção para os cabeçalhos da Home.
 
+### Final da Home — 04/11/2026
+
+Após os oito destaques, `HomeComoFunciona` usa foto quadrada de combo à esquerda e leitura à direita: cabeçalho canônico “Do pedido ao balcão”, nota existente, lista compacta dos três passos e CTA Cardápio. Os passos deixam de ser cards e não usam mais animação por rolagem. No celular, foto e conteúdo empilham nessa mesma ordem.
+
+`HomePromotionFeature` é a faixa marrom com uma única oferta disponível: cabeçalho canônico com título creme e link dourado, mídia do produto à esquerda e nome/preços/ações à direita. As cores locais da faixa usam os tokens existentes, incluindo título do produto explicitamente creme para prevalecer sobre o estilo global dos headings. O CTA dourado reutiliza o preenchimento circular com camada creme; favorito indica estado por coração preenchido e `aria-pressed`. Foto e texto empilham até 760px, sem truncar nome/descrição. `ProductImage` mantém o fallback próprio quando não há foto válida.
+
+O fechamento exclusivo da Home combina marca e três links existentes com separação de 1px creme. Nenhum dado institucional foi inventado. Alvos de ação têm no mínimo 44px, foco visível e movimento reduzido. Header, banner, categorias, destaques e tokens compartilhados permanecem intactos. Provas em `../docs/prints/home-pos-destaques-2026-11-04/`.
+
 ## Do's and Don'ts
 
 ### Do:
