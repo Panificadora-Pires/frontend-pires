@@ -11,6 +11,7 @@ colors:
   texto-secundario: "#6b5641"
   dourado-escuro: "#a0661d"
   dourado: "#e0a83e"
+  palco-promocao: "#110c09"
 typography:
   section-title:
     fontFamily: "Anton, Impact, Arial Narrow, sans-serif"
@@ -208,11 +209,15 @@ Header mantém busca com rótulo acessível, foco próprio e navegação por rot
 
 ### Final da Home — 04/11/2026
 
-Após os oito destaques, `HomeComoFunciona` usa foto quadrada de combo à esquerda e leitura à direita: cabeçalho canônico “Do pedido ao balcão”, nota existente, lista compacta dos três passos e CTA Cardápio. Os passos deixam de ser cards e não usam mais animação por rolagem. No celular, foto e conteúdo empilham nessa mesma ordem.
+Após os oito destaques, `HomeComoFunciona` usa a foto editorial `images/home/combo-balcao-runway.webp` (1100×1100), sem substituir a foto do card Combos. `contain`, dimensões reservadas e lazy loading mantêm copo, canudo e coxinha inteiros. À direita ficam o cabeçalho canônico “Do pedido ao balcão”, a nota existente, os três passos e o RouterLink Cardápio com `CardActionContent`. No celular, foto e conteúdo empilham nessa ordem.
 
-`HomePromotionFeature` é a faixa marrom com uma única oferta disponível: cabeçalho canônico com título creme e link dourado, mídia do produto à esquerda e nome/preços/ações à direita. As cores locais da faixa usam os tokens existentes, incluindo título do produto explicitamente creme para prevalecer sobre o estilo global dos headings. O CTA dourado reutiliza o preenchimento circular com camada creme; favorito indica estado por coração preenchido e `aria-pressed`. Foto e texto empilham até 760px, sem truncar nome/descrição. `ProductImage` mantém o fallback próprio quando não há foto válida.
+`HomePromotionFeature` é uma faixa editorial de duas colunas, sem card claro aninhado: palco `--pp-promotion-stage` à esquerda; cabeçalho canônico, link para todas as promoções, nome, descrição, preços e ações à direita. Creme e dourado mantêm contraste sobre #110c09. O CTA dourado reutiliza preenchimento circular creme; favorito usa coração preenchido e `aria-pressed`. Até 760px, mídia precede conteúdo, sem truncamento.
 
-O fechamento exclusivo da Home combina marca e três links existentes com separação de 1px creme. Nenhum dado institucional foi inventado. Alvos de ação têm no mínimo 44px, foco visível e movimento reduzido. Header, banner, categorias, destaques e tokens compartilhados permanecem intactos. Provas em `../docs/prints/home-pos-destaques-2026-11-04/`.
+Somente o produto id 1 (Coxinha de frango, confirmado na API local) recebe o clipe escuro 600×720, 24fps/4s, 96 quadros keyframes e sem áudio. `useScrollVideo` sincroniza `currentTime` com scroll nativo via RAF e agrupa seeks pendentes; subida reverte. O painel sticky fica abaixo do header e libera após o último quadro. Erro, metadados inválidos, movimento reduzido ou altura insuficiente usam o pôster, sem espaço extra. Outras ofertas usam `ProductImage`, inclusive seu fallback. O painel e as ações permanecem completos e acessíveis em todos os modos.
+
+`--pp-home-action-duration: 450ms` é herdado apenas por ações dentro da Home, com `--pp-ease`. Preenchimentos, links de ação e controles usam o mesmo tempo; loading/disabled interrompem o preenchimento imediatamente. Hover de ponteiro exige suporte; foco e toque independem dele. Movimento reduzido remove as transições. Classes compartilhadas mantêm os tempos anteriores nas outras rotas.
+
+O fechamento exclusivo da Home combina marca e três links existentes com separação de 1px creme. Nenhum dado institucional foi inventado. Alvos de ação têm no mínimo 44px e foco visível. Composição do topo e oito destaques preservados; apenas os hovers autorizados mudam. Provas da revisão em `../docs/prints/home-ajustes-2026-11-04/`; registro anterior em `../docs/prints/home-pos-destaques-2026-11-04/`.
 
 ## Do's and Don'ts
 

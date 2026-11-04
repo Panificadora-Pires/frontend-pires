@@ -1,7 +1,8 @@
 <script setup>
 import { ArrowUpRight } from "lucide-vue-next";
 import HomeSectionHeader from "@/components/home/HomeSectionHeader.vue";
-import fotoCombo from "@/assets/images/categories/combos.webp";
+import CardActionContent from "@/components/ui/CardActionContent.vue";
+import fotoCombo from "@/assets/images/home/combo-balcao-runway.webp";
 
 const PASSOS = [
   { titulo: "Escolha", texto: "Monte o pedido pelo cardápio antes do intervalo." },
@@ -16,9 +17,10 @@ const PASSOS = [
       class="como-funciona__foto"
       :src="fotoCombo"
       alt="Coxinha e suco de laranja"
-      width="800"
-      height="800"
+      width="1100"
+      height="1100"
       loading="lazy"
+      decoding="async"
     />
     <div class="como-funciona__conteudo">
       <HomeSectionHeader
@@ -35,8 +37,8 @@ const PASSOS = [
           </div>
         </li>
       </ol>
-      <RouterLink :to="{ name: 'cardapio' }" class="como-funciona__acao">
-        Ver cardápio <ArrowUpRight :size="18" aria-hidden="true" />
+      <RouterLink :to="{ name: 'cardapio' }" class="como-funciona__acao pp-card-action">
+        <CardActionContent>Ver cardápio <ArrowUpRight :size="18" aria-hidden="true" /></CardActionContent>
       </RouterLink>
     </div>
   </section>
@@ -102,7 +104,7 @@ const PASSOS = [
   font-size: 14px;
   font-weight: 700;
 }
-.como-funciona__acao:hover { background: var(--pp-marrom-2); }
+.como-funciona__acao { --pp-card-action-radius: 110%; }
 .como-funciona__acao:focus-visible {
   outline: 3px solid var(--pp-dourado-escuro);
   outline-offset: 4px;

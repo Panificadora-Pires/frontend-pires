@@ -5,6 +5,9 @@ import ProductImage from "@/components/catalog/ProductImage.vue";
 import HomeSectionHeader from "@/components/home/HomeSectionHeader.vue";
 import CardActionContent from "@/components/ui/CardActionContent.vue";
 import { registrarOrigemVoo } from "@/utils/vooAoCarrinho";
+import { useScrollVideo } from "@/composables/useScrollVideo";
+import clipeCoxinha from "@/assets/videos/coxinha-promocao-escura.mp4";
+import posterCoxinha from "@/assets/images/home/coxinha-promocao-poster.webp";
 
 const props = defineProps({
   produto: { type: Object, required: true },
@@ -14,6 +17,12 @@ const props = defineProps({
 });
 const emit = defineEmits(["open", "favorite", "add"]);
 const midia = useTemplateRef("midia");
+const container = useTemplateRef("container");
+const panel = useTemplateRef("panel");
+const video = useTemplateRef("video");
+// Identificador confirmado no catálogo local; não associar mídia pelo nome/categoria.
+const temClipe = computed(() => Number(props.produto.id) === 1);
+const { active: rolagemAtiva, distance: distancia, panelHeight: alturaPainel } = useScrollVideo(container, panel, video);
 const preco = computed(() => Number(props.produto.preco_atual ?? props.produto.preco));
 const temDesconto = computed(() => Number(props.produto.preco) > preco.value);
 const disponivel = computed(() => Number(props.produto.estoque) > 0);
@@ -26,14 +35,10 @@ function adicionar() {
 </script>
 
 <template>
-  <section class="home-promotion" aria-labelledby="titulo-promocoes">
-    <HomeSectionHeader
-      title-id="titulo-promocoes"
-      title="Promoções de hoje"
-      :action-to="{ name: 'promocoes' }"
-      action-label="Ver promoções"
-    />
-    <div class="home-promotion__oferta">
+  <section ref="container" class="home-promotion" :class="{ 'is-scrubbing': rolagemAtiva }"
+    :style="{ '--pp-promotion-panel-height': `${alturaPainel}px`, '--pp-promotion-distance': `${distancia}px` }"
+    aria-labelledby="titulo-promocoes">
+    <div ref="panel" class="home-promotion__painel">
       <button
         ref="midia"
         type="button"
@@ -41,9 +46,21 @@ function adicionar() {
         :aria-label="`Ver detalhes de ${produto.nome}`"
         @click="emit('open', produto)"
       >
-        <ProductImage :produto="produto" />
+        <template v-if="temClipe">
+          <img class="home-promotion__poster" :src="posterCoxinha" alt="" width="600" height="720" loading="lazy" />
+          <video ref="video" class="home-promotion__video" :class="{ 'is-visible': rolagemAtiva }"
+            :src="clipeCoxinha" :poster="posterCoxinha" width="600" height="720"
+            muted playsinline preload="metadata" aria-hidden="true" tabindex="-1" />
+        </template>
+        <ProductImage v-else :produto="produto" />
       </button>
       <div class="home-promotion__conteudo">
+        <HomeSectionHeader
+          title-id="titulo-promocoes"
+          title="Promoções de hoje"
+          :action-to="{ name: 'promocoes' }"
+          action-label="Ver promoções"
+        />
         <h3 class="home-promotion__nome">{{ produto.nome }}</h3>
         <p v-if="produto.descricao" class="home-promotion__descricao">{{ produto.descricao }}</p>
         <p class="home-promotion__precos">
@@ -88,32 +105,49 @@ function adicionar() {
 
 <style scoped>
 .home-promotion {
-  padding: clamp(24px, 4vw, 48px);
-  border-radius: var(--pp-radius-card-lg);
-  background: var(--pp-marrom);
   color: var(--pp-creme);
 }
+.home-promotion.is-scrubbing {
+  height: calc(var(--pp-promotion-panel-height) + var(--pp-promotion-distance));
+  /* Permite alcançar e liberar o último quadro mesmo com rodapé curto. */
+  padding-bottom: max(0px, calc(100vh - var(--pp-altura-topo) - var(--pp-space-3) - var(--pp-promotion-panel-height)));
+  box-sizing: content-box;
+}
+.home-promotion__painel {
+  position: static;
+  top: calc(var(--pp-altura-topo) + var(--pp-space-3));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  border-radius: var(--pp-radius-card-lg);
+  background: var(--pp-promotion-stage);
+}
+.is-scrubbing .home-promotion__painel { position: sticky; }
+.home-promotion :deep(.home-section-header) { flex-direction: column; align-items: flex-start; gap: 0; }
+.home-promotion :deep(.home-section-header__action) { align-self: flex-start; }
 .home-promotion :deep(.home-section-header__title) { color: var(--pp-creme); }
 .home-promotion :deep(.home-section-header__action) { color: var(--pp-gold); }
 .home-promotion :deep(.home-section-header__action:focus-visible) { outline-color: var(--pp-gold); }
-.home-promotion__oferta {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
-  align-items: center;
-  gap: clamp(24px, 5vw, 64px);
-}
 .home-promotion__midia {
+  position: relative;
   display: block;
   width: 100%;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: 1;
   padding: 0;
   border: 0;
   border-radius: var(--pp-radius-card-lg);
   overflow: hidden;
-  background: var(--pp-creme-2);
+  background: var(--pp-promotion-stage);
   cursor: pointer;
 }
-.home-promotion__midia :deep(.catalog-product-image) { aspect-ratio: 1; }
-.home-promotion__conteudo { min-width: 0; overflow-wrap: anywhere; }
+.home-promotion__midia :deep(.catalog-product-image) { aspect-ratio: 1; height: 100%; background: transparent; }
+.home-promotion__poster,
+.home-promotion__video { display: block; width: 100%; height: 100%; object-fit: contain; }
+.home-promotion__video { position: absolute; inset: 0; visibility: hidden; pointer-events: none; }
+.home-promotion__video.is-visible { visibility: visible; }
+.home-promotion__conteudo { min-width: 0; padding: clamp(24px, 4vw, 48px); overflow-wrap: anywhere; }
 .home-promotion__nome {
   margin: 0;
   color: var(--pp-creme);
@@ -168,8 +202,10 @@ function adicionar() {
   color: var(--pp-creme);
   cursor: pointer;
 }
-.home-promotion__favorito:hover,
 .home-promotion__favorito[aria-pressed="true"] { color: var(--pp-gold); border-color: var(--pp-gold); }
+@media (hover: hover) {
+  .home-promotion__favorito:hover:not(:disabled) { color: var(--pp-gold); border-color: var(--pp-gold); }
+}
 .home-promotion__detalhes {
   display: inline-flex;
   align-items: center;
@@ -189,8 +225,11 @@ function adicionar() {
 .home-promotion__spinner { flex-shrink: 0; animation: promotion-spin 0.7s linear infinite; }
 @keyframes promotion-spin { to { transform: rotate(360deg); } }
 @media (max-width: 760px) {
-  .home-promotion__oferta { grid-template-columns: minmax(0, 1fr); gap: var(--pp-space-3); }
-  .home-promotion__midia { max-width: 440px; justify-self: center; }
+  .home-promotion__painel { grid-template-columns: minmax(0, 1fr); }
+  .home-promotion__midia { aspect-ratio: 1.4; height: auto; }
+  .home-promotion__midia :deep(.catalog-product-image) { aspect-ratio: 1.4; }
+  .home-promotion__poster { height: auto; aspect-ratio: 1.4; }
+  .home-promotion__conteudo { padding: var(--pp-space-4); }
 }
 @media (prefers-reduced-motion: reduce) {
   .home-promotion__spinner { animation: none; }
