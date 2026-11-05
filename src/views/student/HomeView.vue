@@ -81,7 +81,7 @@
       @add="adicionarAoCarrinho"
     />
 
-    <HomeGallery class="home__secao" />
+    <HomeGallery class="home__secao" :fotos="fotosBalcao" />
     <HomeFaq class="home__secao" />
     <HomeFooter />
 
@@ -122,6 +122,9 @@ import HomeGallery from "@/components/home/HomeGallery.vue";
 import HomeFaq from "@/components/home/HomeFaq.vue";
 import HomePromotionFeature from "@/components/home/HomePromotionFeature.vue";
 import HomeSectionHeader from "@/components/home/HomeSectionHeader.vue";
+import preparoBalcao from "@/assets/images/home/galeria/preparo.webp";
+import vitrineBalcao from "@/assets/images/home/galeria/vitrine.webp";
+import retiradaBalcao from "@/assets/images/home/galeria/retirada.webp";
 import catalogService, {
   promocaoEstaAtiva,
   resolverUrlMidia,
@@ -134,6 +137,13 @@ import { ilustracaoParaProduto } from "@/utils/ilustracaoProduto";
 const MAXIMO_DESTAQUES = 4;
 const MAXIMO_PROMOCOES_NO_BANNER = 3;
 const MAXIMO_DESTAQUES_NO_BANNER = 2;
+
+// Ilustrações geradas com IA e fornecidas por Arthur; não são registros documentais da loja.
+const fotosBalcao = [
+  { id: "preparo", src: preparoBalcao, alt: "Coxinhas douradas em uma bandeja sobre o balcão.", legenda: "Coxinhas na bandeja", width: 1200, height: 896 },
+  { id: "vitrine", src: vitrineBalcao, alt: "Brigadeiros e pães de queijo em uma vitrine de vidro.", legenda: "Brigadeiros e pães de queijo", width: 1200, height: 896 },
+  { id: "retirada", src: retiradaBalcao, alt: "Coxinha no prato ao lado de um copo de suco de laranja.", legenda: "Coxinha com suco de laranja", width: 1200, height: 896 },
+];
 
 const auth = useAuthStore();
 const cart = useCartStore();

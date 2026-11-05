@@ -5,7 +5,7 @@ import HomeSectionHeader from "@/components/home/HomeSectionHeader.vue";
 import { movimentoReduzido } from "@/utils/vooAoCarrinho";
 
 const props = defineProps({
-  // Apenas fotografias documentais autorizadas. Não usar artes do catálogo como registro da loja.
+  // Imagens ilustrativas autorizadas, identificadas na seção; nunca como registro documental da loja.
   fotos: { type: Array, default: () => [] },
 });
 const fotosVisiveis = computed(() => props.fotos.slice(0, 3));
@@ -15,18 +15,27 @@ const trilha = useTemplateRef("trilha");
 const falhas = shallowRef([]);
 const emPrevia = import.meta.env.DEV;
 let frame = 0;
+let destino = null;
 
-function selecionar(novoIndice) {
+function selecionar(novoIndice, imediato = false) {
   indice.value = Math.max(0, Math.min(fotosVisiveis.value.length - 1, novoIndice));
   const alvo = trilha.value?.children[indice.value];
   if (alvo && trilha.value.clientWidth < trilha.value.scrollWidth) {
-    trilha.value.scrollTo({ left: alvo.offsetLeft, behavior: movimentoReduzido() ? "instant" : "smooth" });
+    // Preservar o destino durante o smooth scroll, inclusive em cliques consecutivos.
+    destino = indice.value;
+    trilha.value.scrollTo({ left: alvo.offsetLeft, behavior: imediato || movimentoReduzido() ? "instant" : "smooth" });
+  } else {
+    destino = null;
   }
 }
 function lerPosicao() {
   frame = 0;
   const lista = trilha.value;
   if (!lista || lista.scrollWidth <= lista.clientWidth) return;
+  if (destino !== null) {
+    if (Math.abs(lista.children[destino].offsetLeft - lista.scrollLeft) > 1) return;
+    destino = null;
+  }
   let proximo = 0;
   for (let i = 1; i < lista.children.length; i++) {
     if (Math.abs(lista.children[i].offsetLeft - lista.scrollLeft) < Math.abs(lista.children[proximo].offsetLeft - lista.scrollLeft)) proximo = i;
@@ -34,6 +43,8 @@ function lerPosicao() {
   indice.value = proximo;
 }
 function aoRolar() { if (!frame) frame = requestAnimationFrame(lerPosicao); }
+function liberarDestino() { destino = null; }
+function aoTerminarRolagem() { liberarDestino(); lerPosicao(); }
 function falhou(id) { falhas.value = [...falhas.value, id]; }
 function aoTeclar(event) {
   if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
@@ -43,13 +54,14 @@ function aoTeclar(event) {
   else selecionar(indice.value + (event.key === "ArrowRight" ? 1 : -1));
 }
 watch(() => props.fotos, () => {
+  destino = null;
   indice.value = 0;
   falhas.value = [];
   trilha.value?.scrollTo({ left: 0, behavior: "instant" });
 }, { flush: "post" });
 watch(trilha, (elemento, anterior, onCleanup) => {
   if (!elemento) return;
-  const observer = new ResizeObserver(() => selecionar(indice.value));
+  const observer = new ResizeObserver(() => selecionar(indice.value, true));
   observer.observe(elemento);
   onCleanup(() => observer.disconnect());
 }, { flush: "post" });
@@ -62,13 +74,13 @@ onBeforeUnmount(() => cancelAnimationFrame(frame));
     <div v-if="!fotosVisiveis.length" class="home-gallery__empty">
       <Camera :size="32" aria-hidden="true" />
       <div>
-        <p class="home-gallery__empty-title">Este espaço espera as fotos da Pires.</p>
-        <p>Prévia para revisão: faltam fotos distintas e autorizadas da loja. Nenhuma imagem ilustrativa foi usada como registro do balcão.</p>
+        <p class="home-gallery__empty-title">As imagens do balcão ainda não estão disponíveis.</p>
+        <p>Prévia para revisão: nenhuma imagem foi selecionada para a galeria.</p>
       </div>
     </div>
-    <div v-else class="home-gallery__body" role="region" aria-roledescription="carrossel" aria-label="Fotos da Pires">
-      <div ref="trilha" class="home-gallery__track" tabindex="0" aria-label="Fotos; use as setas para navegar"
-        @scroll.passive="aoRolar" @keydown="aoTeclar">
+    <div v-else class="home-gallery__body" role="region" aria-roledescription="carrossel" aria-label="Imagens ilustrativas do balcão">
+      <div ref="trilha" class="home-gallery__track" tabindex="0" aria-label="Imagens; use as setas, Home ou End para navegar"
+        @scroll.passive="aoRolar" @scrollend="aoTerminarRolagem" @pointerdown="liberarDestino" @wheel.passive="liberarDestino" @keydown="aoTeclar">
         <figure v-for="(foto, i) in fotosVisiveis" :key="foto.id" class="home-gallery__photo" :class="{ 'is-active': i === indice }">
           <div v-if="falhas.includes(foto.id)" class="home-gallery__unavailable"><Camera :size="32" aria-hidden="true" />Foto indisponível</div>
           <img v-else :src="foto.src" :alt="foto.alt" :width="foto.width" :height="foto.height" loading="lazy" @error="falhou(foto.id)" />
@@ -91,11 +103,13 @@ onBeforeUnmount(() => cancelAnimationFrame(frame));
         </div>
       </div>
     </div>
+    <p v-if="fotosVisiveis.length" class="home-gallery__credit">Fotos meramente ilustrativas</p>
   </section>
 </template>
 
 <style scoped>
 .home-gallery { min-width: 0; }
+.home-gallery__credit { margin: var(--pp-space-3) 0 0; color: var(--pp-texto-2); font-size: 13px; line-height: 1.5; }
 .home-gallery__empty { display: flex; align-items: center; gap: var(--pp-space-4); min-height: 200px; padding: var(--pp-space-5); border: 1px dashed var(--pp-creme-borda); color: var(--pp-texto-2); background: var(--pp-creme-2); }
 .home-gallery__empty > svg { flex: none; }
 .home-gallery__empty p { max-width: 65ch; margin: var(--pp-space-1) 0 0; font-size: 14px; line-height: 1.6; }

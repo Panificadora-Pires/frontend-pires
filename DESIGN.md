@@ -241,9 +241,13 @@ reduzido mantém a atualização estática. Falha, remoção e carga inicial nã
 
 `HomeGallery` usa foto principal 4:3 e miniaturas no desktop, moldura branca e legenda Caveat.
 Até 760px, a trilha usa scroll snap nativo, setas e controles manuais de 48px. Recebe no máximo
-três fotos documentais autorizadas, sem autoplay; erro de imagem mantém legenda e navegação.
-Ainda faltam essas fotos: a prévia DEV mostra a lacuna, e o build oculta a seção vazia. As imagens
-ilustrativas das provas não são conteúdo aprovado para essa seção.
+três imagens autorizadas, sem autoplay; erro de imagem mantém legenda e navegação. Desde 05/11,
+a Home importa os WebP fornecidos pelo Arthur: preparo, vitrine e retirada, todos 1200×896.
+A seção informa uma vez “Imagens ilustrativas geradas com IA”; nomes acessíveis não apresentam
+as cenas como fotos documentais da Pires. Vazia, a prévia DEV mostra a lacuna, e o build oculta a seção.
+A seleção preserva o destino durante a rolagem suave, sem aceitar posições intermediárias como
+novos comandos. Fim da rolagem ou gesto manual devolvem a leitura à posição nativa; resize alinha
+imediatamente a imagem selecionada. Setas, Home, End e movimento reduzido mantêm a navegação.
 
 A linha dourada da promoção ocupa 38% da largura do palco e reutiliza `progress` normalizado de
 `useScrollVideo`. Avanço, reversão e fim têm a mesma fonte do seek; não há polling/listener paralelo.
@@ -251,6 +255,7 @@ Modo estático, mobile, erro, altura insuficiente e outras ofertas não mostram 
 Nenhum recurso depende das animações para navegar ou comprar.
 
 Referências e evidências: `docs/prints/home-curadoria-2026-11-04/README.md` na pasta pai.
+Finalização da galeria e regressão A–F: `docs/prints/home-curadoria-final-2026-11-05/README.md` na pasta pai.
 
 ## Do's and Don'ts
 
