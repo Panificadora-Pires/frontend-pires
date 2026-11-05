@@ -33,6 +33,14 @@ O CTA reutiliza o preenchimento circular de 450ms e respeita movimento reduzido.
 
 O Cardápio reúne busca/ordenação, trilha de categorias e filtros compactos no celular.
 O acabamento dos cards é local à tela; busca, categoria, histórico e fluxos de compra permanecem.
+Na revisão de 05/11, a busca do header (desktop e menu mobile) fica oculta somente em `/cardapio`.
+O carrinho continua na navegação. Busca, categoria, filtro rápido e ordenação precedem a paginação
+de oito produtos; `busca`, `categoria`, `filtro`, `ordenacao` e `pagina` ficam na URL.
+Mudar os controles reinicia a página; recarga e histórico preservam a seleção. Páginas inválidas
+são normalizadas após carregar o catálogo; o paginador desaparece quando basta uma página.
+Categorias e páginas têm entrada curta de cards, imediata em movimento reduzido.
+Prévia desta revisão: `http://127.0.0.1:5173/cardapio-revisao-preview.html` (13 produtos fictícios;
+acrescente `?pagina=2` para os cinco últimos). [Capturas e verificações](../docs/prints/cardapio-revisao-2026-11-05/README.md).
 Para visualizar com `npm run dev` na 5173, abra
 `http://127.0.0.1:5173/detalhe-cardapio-preview.html` ou acrescente `?tela=home&detalhe=1`
 para abrir o detalhe pela Home. A prévia usa dados fictícios/API simulada; o HTML local é
@@ -258,7 +266,7 @@ Direção "Balcão creme" (Fase 5): fundo creme, marrom nos textos, dourado nos 
 - **Tokens** em `src/assets/styles/tokens.css`: paleta (`--pp-creme`, `--pp-marrom`, `--pp-dourado-escuro`…), fontes e cores das ilustrações (`--ilu-*`).
   - Os `--student-*` de `student.css` apontam para esses tokens.
   - **Anton** em chamadas do banner, da vitrine de categorias e nos produtos da Home, **Caveat** em anotações "à mão" e **Inter** no corpo e nas ações.
-- **Header flutuante:** barra de vidro neutro translúcido com margens externas, sempre visível na rolagem. Início, Cardápio, Promoções e Meus pedidos, busca (`/cardapio?busca=`), favoritos, notificações, conta e Carrinho com contador permanecem disponíveis.
+- **Header flutuante:** barra de vidro neutro translúcido com margens externas, sempre visível na rolagem. Início, Cardápio, Promoções e Meus pedidos, favoritos, notificações, conta e Carrinho com contador permanecem disponíveis. Busca (`/cardapio?busca=`) aparece nas outras rotas; no Cardápio, a busca fica na própria página.
   - `components/layout/StudentHeader.vue` cuida das interações; `StudentHeaderPanel.vue` apresenta os painéis. Categorias e promoções vêm de `stores/navigationCatalog.js` pelos serviços existentes, sem outro polling.
   - Cardápio abre categorias reais com filtro por `/cardapio?categoria=id`. Promoções lista apenas ofertas vigentes; quando não há ofertas, mantém o acesso ao cardápio. Pedidos aponta para acompanhamento/QR e notificações existentes.
   - Mouse, clique, ArrowDown e Escape; fechamento ao navegar, clicar fora ou sair com o foco. No tablet/celular (abaixo de 1180 px), painel com busca e grupos expansíveis por toque; navegação inferior preservada.

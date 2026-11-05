@@ -265,6 +265,8 @@ O diálogo nativo via Teleport ocupa a camada superior, recebe foco inicial em f
 
 No Cardápio, busca e ordenação compartilham a barra desktop; categorias ficam em trilha com indicador dourado e `aria-pressed`. Até 760px, busca ocupa a largura, categorias rolam e filtro/ordenação usam controles compactos. Cards mantêm fotos/fallback e ações existentes; acabamento branco, borda creme e nomes em Inter pertencem somente a essa view. No celular, preço e compra se alinham à esquerda para manter a ação livre do assistente à direita. Busca/categoria continuam ligadas à URL e ao histórico; carregamento, erro, catálogo vazio e busca sem resultados permanecem distintos. Plano e evidências: [detalhe e Cardápio](../docs/planos/detalhe-e-cardapio.md) e [relatório local](../docs/prints/detalhe-cardapio-2026-11-05/README.md).
 
+Revisão do Cardápio: uma busca própria, com busca do header omitida somente nesta rota. Controles mais próximos dos produtos e linha dourada contínua na categoria selecionada. Paginação de oito mantém anterior, números, próxima e resumo; grupo centralizado no desktop para ficar livre do chatbot, alinhado à esquerda no celular. Página ativa marrom/creme, foco dourado e alvos de pelo menos 44px. Categoria/página remontam a grade com entrada de 200ms, opacidade e deslocamento de 8px, sem atraso por card. Movimento reduzido remove entrada, deslizamento e rolagem suave. O feedback existente do carrinho só ocorre após adição confirmada. [Evidências da revisão](../docs/prints/cardapio-revisao-2026-11-05/README.md).
+
 ## Do's and Don'ts
 
 ### Do:
