@@ -4,6 +4,25 @@ Frontend do sistema de pedidos da Pires Panificadora, desenvolvido em Vue 3 + Vi
 
 O sistema possui área de cliente e área administrativa, integradas ao backend Django/DRF e aos serviços de autenticação Google e pagamento do Mercado Pago.
 
+## Curadoria da Home (prévia local)
+
+Curadoria A–F: dúvidas rápidas nativas, rodapé editorial com PIRES pontilhado e retorno ao topo,
+indicador da rota no header, confirmação breve no ícone/contador do carrinho, galeria manual e
+progresso do vídeo promocional ligado à rolagem existente. Sem biblioteca nova ou mudança de API.
+
+`HomeGallery` recebe até três imagens autorizadas por `fotos` (`id`, `src`, `alt`, `legenda`,
+`width`, `height`). A Home importa via Vite os WebP fornecidos pelo Arthur: preparo, vitrine e
+retirada, todos com 1200×896. A seção informa uma vez “Imagens ilustrativas geradas com IA”.
+As cenas não são apresentadas como registros documentais da loja. Vazia, a seção mostra a
+lacuna somente em desenvolvimento e fica oculta no build; falhas de imagem preservam legenda e controles.
+Seleção manual mantém seu destino durante a rolagem suave, inclusive em avanços e retornos rápidos.
+
+Plano, capturas, roteiro de validação e limites estão na pasta pai:
+`docs/planos/home-curadoria-aprovada.md` e `docs/prints/home-curadoria-final-2026-11-05/README.md`.
+Prévia com dados fictícios/API simulada: `http://127.0.0.1:5173/curadoria-preview.html`, enquanto
+`npm run dev` estiver ativo na porta 5173. Esse HTML é um artefato local não versionado, fora do build.
+Para testar o fluxo normal com backend local, use a raiz do servidor e uma conta local fictícia.
+
 ## Stack
 
 - Vue 3
@@ -219,7 +238,7 @@ Direção "Balcão creme" (Fase 5): fundo creme, marrom nos textos, dourado nos 
 
 - **Tokens** em `src/assets/styles/tokens.css`: paleta (`--pp-creme`, `--pp-marrom`, `--pp-dourado-escuro`…), fontes e cores das ilustrações (`--ilu-*`).
   - Os `--student-*` de `student.css` apontam para esses tokens.
-  - **Anton** em chamadas do banner e da vitrine de categorias, **Caveat** em anotações "à mão" e **Inter** no corpo e nas ações.
+  - **Anton** em chamadas do banner, da vitrine de categorias e nos produtos da Home, **Caveat** em anotações "à mão" e **Inter** no corpo e nas ações.
 - **Header flutuante:** barra de vidro neutro translúcido com margens externas, sempre visível na rolagem. Início, Cardápio, Promoções e Meus pedidos, busca (`/cardapio?busca=`), favoritos, notificações, conta e Carrinho com contador permanecem disponíveis.
   - `components/layout/StudentHeader.vue` cuida das interações; `StudentHeaderPanel.vue` apresenta os painéis. Categorias e promoções vêm de `stores/navigationCatalog.js` pelos serviços existentes, sem outro polling.
   - Cardápio abre categorias reais com filtro por `/cardapio?categoria=id`. Promoções lista apenas ofertas vigentes; quando não há ofertas, mantém o acesso ao cardápio. Pedidos aponta para acompanhamento/QR e notificações existentes.
@@ -229,7 +248,23 @@ Direção "Balcão creme" (Fase 5): fundo creme, marrom nos textos, dourado nos 
 - **Ilustrações próprias:** o cardápio é fictício, então produto sem foto ganha um SVG próprio.
   - Componente `components/catalog/ProductIllustration.vue`; o tipo vem de `utils/ilustracaoProduto.js` (nome do produto e depois categoria).
   - Foto cadastrada no admin tem prioridade.
-- **Home:** saudação → banner (`components/home/HomeBanner.vue`) → categorias (`components/home/HomeCategories.vue`) → Destaques (`ProductCard`) → Como funciona (`components/home/HomeComoFunciona.vue`) → Promoções (se houver).
+- **Home:** saudação → banner (`components/home/HomeBanner.vue`) → categorias (`components/home/HomeCategories.vue`) → quatro Destaques (`ProductCard`) → Do pedido ao balcão (`HomeComoFunciona`) → oferta disponível (`HomePromotionFeature`, se houver) → fechamento (`HomeFooter`).
+
+### Home após os destaques
+
+`HomeComoFunciona.vue` apresenta os três passos e CTA à esquerda e a foto editorial `src/assets/images/home/combo-balcao-runway.webp` à direita. No celular, a ordem é título, foto 3:2 com enquadramento do copo/coxinha, passos e CTA. Pix/cartão, dinheiro na retirada, aviso e QR Code permanecem. O asset do card Combos é preservado. `HomePromotionFeature.vue` apresenta uma única oferta em faixa escura até as bordas da tela, com miolo alinhado à Home. Como a listagem não contém estoque, a Home consulta os detalhes dos candidatos vigentes na ordem atual até encontrar um produto ativo, em promoção e com estoque positivo. Falha ou ausência de disponibilidade não produz oferta. A compra consulta novamente os detalhes pelo handler existente; o backend continua validando preço e estoque no checkout.
+
+Para a Coxinha de frango (id 1 confirmado na API local), o clipe `src/assets/videos/coxinha-promocao-escura.mp4` acompanha a rolagem nativa no desktop: avanço, reversão e liberação do painel sticky abaixo do header. `useScrollVideo` agenda por RAF e agrupa seeks; metadados, resize e pageshow sincronizam o quadro. O clipe não tem áudio, autoplay, loop ou controles. Até 760px, o vídeo não é montado nem solicitado: título/link, pôster de 180–220px, nome, preço e compra ficam no fluxo normal, sem distância extra. Movimento reduzido também impede montagem; erro, metadados inválidos ou altura insuficiente desativam sticky. Outras ofertas mantêm `ProductImage`. Preços, vigência, favorito, detalhes e compra continuam nos fluxos existentes.
+
+As transições visuais de ações da Home usam `--pp-home-action-duration: 450ms` e `--pp-ease`, sem atrasar clique, teclado ou loading. `CardActionContent` mede o raio até a borda arredondada real e acompanha mudanças de tamanho com `ResizeObserver`, evitando terminar visualmente antes do tempo em botões largos. A medição é restrita à Home, com hover condicionado ao dispositivo e transições removidas em movimento reduzido.
+
+`HomeFooter.vue` fecha apenas esta rota com marca e links para Cardápio, Promoções e Meus pedidos. Os quatro destaques mantêm prioridade/ordem e seleção separada do hero. Fotos abaixo da grade usam carregamento lazy. Não há dependência ou endpoint novo. Provas atuais em `../docs/prints/home-responsiva-2026-11-04/`; histórico em `../docs/prints/home-ajustes-2026-11-04/` e `../docs/prints/home-pos-destaques-2026-11-04/`.
+
+### Cabeçalhos de seção da Home
+
+`HomeSectionHeader.vue` é o padrão compartilhado por categorias, destaques, como funciona e promoções. A referência é “Seu intervalo, do seu jeito.” / “Ver cardápio”: Anton 400, `clamp(30px, 3.4vw, 48px)`, marrom, entrelinha 1.18 e tracking −.025em. Apoio Inter e notas Caveat mantêm papéis distintos; ações usam Inter 14/700, ArrowUpRight 18, gap 8, área mínima de 44px e hover sublinhado. No celular, as ações ficam abaixo e à direita.
+
+Os tokens `--pp-home-section-*` em `tokens.css` controlam a tipografia e o ritmo: seções após 48px/32px e cabeçalhos até conteúdo com 24px/16px (desktop/mobile). Usar esse componente em novos cabeçalhos da Home; não duplicar CSS nem aplicar o padrão aos títulos dos produtos. Sistema visual documentado em [DESIGN.md](DESIGN.md), com sidecar em `.impeccable/design.json`. Provas locais: `../docs/prints/cabecalhos-home-2026-11-02/`; dados fictícios e API simulada, sem infraestrutura npm test adicional.
 
 ### Vitrine de categorias V1
 
@@ -238,6 +273,28 @@ Salgados, Doces, Bebidas e Combos usam as quatro fotografias estáticas fornecid
 `HomeCategories.vue` reutiliza `useNavigationCatalogStore.carregarCategorias()`, compartilhado com o header. A apresentação encontra categorias ativas por slug ou nome normalizado e navega para `{ name: 'cardapio', query: { categoria: String(id) } }`, com o id retornado pela API. O filtro existente do cardápio mantém a seleção ao navegar e recarregar. Categorias ausentes/inativas não geram links; há estados de carregamento, erro com nova tentativa e vazio. Nenhum endpoint, filtro, dependência, header ou banner foi alterado.
 
 Validação e capturas locais: `../docs/prints/categorias-v1-2026-10-30/`. Não há script `npm test` neste projeto; foram usados build e verificações no Chrome DevTools MCP com dados fictícios/API local. A aprovação visual final cabe ao Arthur.
+
+### Cards de produtos da Home
+
+`ProductCard` recebe `variant="home"` nos destaques da página inicial. Essa variante acompanha as categorias: superfície branca, borda creme, nome em Anton, mídia até as bordas superiores e controles independentes de detalhes, favorito e adição ao carrinho. A grade, a largura dos cards e a altura da mídia são preservadas; nomes longos continuam sem truncamento. A oferta da Home usa a composição própria `HomePromotionFeature`; Cardápio, Favoritos e a página de Promoções mantêm a variante padrão.
+
+Foto cadastrada e ilustração de fallback continuam no `ProductImage`. Hover e foco ampliam somente a imagem em 6%, sem giro ou mudança no tamanho do card; movimento reduzido desativa o efeito. Preços, estados de carregamento, eventos e voo ao carrinho usam o fluxo existente.
+
+Provas locais em `../docs/prints/produtos-home-2026-10-30/`: verificações Playwright com Chrome, dados fictícios e API simulada no navegador, além de capturas pelo Chrome DevTools MCP. Isso não valida autenticação, checkout ou pagamento contra o backend real. O projeto continua sem script `npm test` e sem dependência nova de testes.
+
+### Ações dos cards: preenchimento circular
+
+As ações dos cards da área do cliente compartilham `assets/styles/card-actions.css` e `components/ui/CardActionContent.vue`. A classe opt-in `pp-card-action` recorta uma camada dourada por `clip-path: circle()`, expandindo do centro inferior em 450 ms com `--pp-ease` e retraindo na saída. A camada revela simultaneamente uma cópia visual do conteúdo em marrom, marcada com `aria-hidden`, mantendo o contraste durante a passagem do círculo. O nome acessível, os eventos e o estado continuam no botão original. Não há animação JavaScript nem dependência nova.
+
+Aplicação: adicionar/favorito do `ProductCard` (Home, Cardápio, Promoções e Favoritos), setas visuais do `HomeCategories`, adicionar nas recomendações do carrinho, Mensagens/QR do `OrderCard` e quantidade/remoção dos itens do carrinho. Nas categorias, `pp-card-action-trigger` acompanha hover/foco do RouterLink original, sem botão aninhado. A remoção usa fundo de alerta suave e ícone vermelho; favorito selecionado mantém coração preenchido e `aria-pressed`. QR conserva seu estado de sucesso original.
+
+Disabled/loading ocultam imediatamente o preenchimento e preservam o spinner; toque independe de hover, foco permanece visível e movimento reduzido troca o estado sem expansão/contração perceptível. O foco de quantidade fica dentro do grupo que recorta seu conteúdo. Zoom das fotos, bordas/sombras, voo ao carrinho, header e banner mantêm seus fluxos.
+
+Provas e gravação local: `../docs/prints/hover-cards-2026-11-01/`; plano: `../docs/planos/hover-circular-cards.md`. Testes de interface usam dados fictícios e API simulada no navegador; não validam checkout ou pagamento real. Admin, superfícies de detalhes/notificações, modal e demais botões externos aos cards não recebem a classe, com a extensão do banner descrita abaixo.
+
+Extensão solicitada ao banner: os CTAs de compra e navegação de `HomeBanner.vue` usam o mesmo componente/efeito. No comercial, o botão dourado recebe o círculo marrom com conteúdo creme; nos demais slides, o botão marrom recebe dourado. A variável local `--pp-card-action-radius: 75%` ajusta o recorte ao botão largo para a expansão permanecer perceptível (o padrão de 120% continua nos cards). Conteúdo, dimensões, vídeo, navegação e adição/voo ao carrinho são preservados.
+
+Correção de alinhamento do banner: etiqueta, título, descrição e CTA compartilham linhas de CSS Grid/subgrid entre todos os slides. A altura mínima é comum ao comercial, promoções e QR; conteúdos maiores ampliam o conjunto sem recorte. A troca mantém apenas o fade do slide, sem subida das chamadas. O hover circular continua independente. Evidências locais: `../docs/prints/banner-alinhamento-2026-11-02/` (73 verificações de layout/mídia e 21 de hover/ações, Chromium, dados fictícios).
 
 ### Comercial da coxinha no banner
 
@@ -253,7 +310,8 @@ Os destaques continuam vindo dos produtos e promoções cadastrados, com preço,
 |---|---|
 | Banner | Carrossel de 6 s com pausa no mouse ou foco, setas e indicadores com progresso. Conteúdo: promoções vigentes; sem promoção, destaques; e sempre o slide "Como funciona" |
 | Banner | Parallax: 3 camadas de "morros de massa" sobem em velocidades diferentes nos primeiros 320 px de rolagem |
-| Como funciona | Os 3 passos sobem acompanhando a rolagem |
+| Como funciona | Foto editorial, 3 passos estáticos e CTA com preenchimento circular |
+| Oferta da Home | Clipe escuro da coxinha acompanha scroll nativo em painel sticky; pôster sem espaço extra em fallback |
 | Cards | Zoom só na imagem ao passar o mouse (sem mudar o tamanho do card) |
 | Carrinho | O produto "voa" até o carrinho e o contador pula, **só depois** de `cart.adicionar` (`utils/vooAoCarrinho.js` + `StudentLayout`) |
 | Seções | Aparecem suavemente ao entrar na tela (diretiva `v-revelar`) |

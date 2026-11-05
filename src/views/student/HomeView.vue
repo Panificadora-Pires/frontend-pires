@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <header class="home__intro">
-      <h1>{{ saudacao }}, {{ primeiroNome }}!</h1>
+      <h1 id="inicio-home" tabindex="-1">{{ saudacao }}, {{ primeiroNome }}!</h1>
       <p>Peça agora e retire no balcão antes do sinal tocar.</p>
     </header>
 
@@ -15,15 +15,13 @@
     <HomeCategories />
 
     <section v-revelar class="home__secao" aria-labelledby="titulo-destaques">
-      <header class="home__secao-topo">
-        <div>
-          <h2 id="titulo-destaques">Destaques para você</h2>
-          <span class="home__nota" aria-hidden="true">escolha e adicione</span>
-        </div>
-        <RouterLink :to="{ name: 'cardapio' }" class="home__link">
-          Ver cardápio <ArrowRight :size="16" aria-hidden="true" />
-        </RouterLink>
-      </header>
+      <HomeSectionHeader
+        title-id="titulo-destaques"
+        title="Destaques para você"
+        note="escolha e adicione"
+        :action-to="{ name: 'cardapio' }"
+        action-label="Ver cardápio"
+      />
 
       <div
         v-if="carregandoProdutos"
@@ -55,6 +53,7 @@
       <div v-else class="home__grade">
         <ProductCard
           v-for="produto in destaques"
+          variant="home"
           :key="produto.id"
           :produto="produto"
           :favorito="favorites.tem(produto.id)"
@@ -69,34 +68,22 @@
 
     <HomeComoFunciona class="home__secao" />
 
-    <section
-      v-if="produtosEmPromocao.length"
-      v-revelar
+    <HomePromotionFeature
+      v-if="promocaoEmDestaque"
+      :key="promocaoEmDestaque.id"
       class="home__secao"
-      aria-labelledby="titulo-promocoes"
-    >
-      <header class="home__secao-topo">
-        <div>
-          <h2 id="titulo-promocoes">Promoções de hoje</h2>
-        </div>
-        <RouterLink :to="{ name: 'promocoes' }" class="home__link">
-          Ver promoções <ArrowRight :size="16" aria-hidden="true" />
-        </RouterLink>
-      </header>
-      <div class="home__grade">
-        <ProductCard
-          v-for="produto in produtosEmPromocao"
-          :key="produto.id"
-          :produto="produto"
-          :favorito="favorites.tem(produto.id)"
-          :favoritando="favorites.estaProcessando(produto.id)"
-          :adicionando="produtoAdicionando === produto.id"
-          @open="abrirProduto"
-          @favorite="alternarFavorito"
-          @add="adicionarAoCarrinho"
-        />
-      </div>
-    </section>
+      :produto="promocaoEmDestaque"
+      :favorito="favorites.tem(promocaoEmDestaque.id)"
+      :favoritando="favorites.estaProcessando(promocaoEmDestaque.id)"
+      :adicionando="produtoAdicionando === promocaoEmDestaque.id"
+      @open="abrirProduto"
+      @favorite="alternarFavorito"
+      @add="adicionarAoCarrinho"
+    />
+
+    <HomeGallery class="home__secao" :fotos="fotosBalcao" />
+    <HomeFaq class="home__secao" />
+    <HomeFooter />
 
     <ProductDetailsModal
       :open="modalAberto"
@@ -122,14 +109,22 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
-import { ArrowRight, Check, CircleAlert, ShoppingBag } from "lucide-vue-next";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { Check, CircleAlert, ShoppingBag } from "lucide-vue-next";
 
 import ProductCard from "@/components/catalog/ProductCard.vue";
 import ProductDetailsModal from "@/components/catalog/ProductDetailsModal.vue";
 import HomeBanner from "@/components/home/HomeBanner.vue";
 import HomeCategories from "@/components/home/HomeCategories.vue";
 import HomeComoFunciona from "@/components/home/HomeComoFunciona.vue";
+import HomeFooter from "@/components/home/HomeFooter.vue";
+import HomeGallery from "@/components/home/HomeGallery.vue";
+import HomeFaq from "@/components/home/HomeFaq.vue";
+import HomePromotionFeature from "@/components/home/HomePromotionFeature.vue";
+import HomeSectionHeader from "@/components/home/HomeSectionHeader.vue";
+import preparoBalcao from "@/assets/images/home/galeria/preparo.webp";
+import vitrineBalcao from "@/assets/images/home/galeria/vitrine.webp";
+import retiradaBalcao from "@/assets/images/home/galeria/retirada.webp";
 import catalogService, {
   promocaoEstaAtiva,
   resolverUrlMidia,
@@ -139,9 +134,16 @@ import { useCartStore } from "@/stores/cart";
 import { useFavoritesStore } from "@/stores/favorites";
 import { ilustracaoParaProduto } from "@/utils/ilustracaoProduto";
 
-const MAXIMO_DESTAQUES = 8;
+const MAXIMO_DESTAQUES = 4;
 const MAXIMO_PROMOCOES_NO_BANNER = 3;
 const MAXIMO_DESTAQUES_NO_BANNER = 2;
+
+// Ilustrações geradas com IA e fornecidas por Arthur; não são registros documentais da loja.
+const fotosBalcao = [
+  { id: "preparo", src: preparoBalcao, alt: "Coxinhas douradas em uma bandeja sobre o balcão.", legenda: "Coxinhas na bandeja", width: 1200, height: 896 },
+  { id: "vitrine", src: vitrineBalcao, alt: "Brigadeiros e pães de queijo em uma vitrine de vidro.", legenda: "Brigadeiros e pães de queijo", width: 1200, height: 896 },
+  { id: "retirada", src: retiradaBalcao, alt: "Coxinha no prato ao lado de um copo de suco de laranja.", legenda: "Coxinha com suco de laranja", width: 1200, height: 896 },
+];
 
 const auth = useAuthStore();
 const cart = useCartStore();
@@ -196,6 +198,28 @@ const produtosEmPromocao = computed(() => {
   return produtos.value.filter(
     (produto) => produto.em_promocao && vigentes.has(Number(produto.id)),
   );
+});
+
+// A listagem não traz estoque: confirmar pelo detalhe antes de oferecer a compra.
+const promocaoEmDestaque = ref(null);
+watch(produtosEmPromocao, async (candidatos, anterior, onCleanup) => {
+  let atual = true;
+  onCleanup(() => { atual = false; });
+  promocaoEmDestaque.value = null;
+
+  for (const produto of candidatos) {
+    try {
+      const detalhe = await catalogService.obterProduto(produto.id);
+      if (!atual) return;
+      if (detalhe.ativo && detalhe.em_promocao && Number(detalhe.estoque) > 0) {
+        promocaoEmDestaque.value = { ...produto, ...detalhe };
+        return;
+      }
+    } catch {
+      // Sem confirmar disponibilidade, tentar a próxima oferta vigente.
+      if (!atual) return;
+    }
+  }
 });
 
 // Comercial v3 aprovado, sem texto gravado; demais produtos mantêm foto/ilustração.
@@ -410,9 +434,39 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .home {
+  --pp-home-action-duration: 450ms;
   width: min(100%, 1240px);
   margin: 0 auto;
   color: var(--student-text);
+}
+/* Só os controles da Home herdam o tempo comum; conteúdo e outras rotas não mudam. */
+.home :deep(:is(button, a, .pp-card-action__fill)) {
+  transition-duration: var(--pp-home-action-duration);
+  transition-timing-function: var(--pp-ease);
+}
+.home :deep(:is(.home-promotion__favorito, .home-promotion__detalhes, .home__botao-secundario)) {
+  transition-property: color, border-color, background-color;
+}
+.home :deep(:is(.home-section-header__action, .home-footer__links a, .home-promotion__detalhes)) {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: transparent;
+  transition-property: text-decoration-color, color;
+}
+.home :deep(:is(.home-section-header__action, .home-footer__links a, .home-promotion__detalhes):focus-visible) {
+  text-decoration-color: currentColor;
+}
+@media (hover: hover) {
+  .home :deep(:is(.home-section-header__action, .home-footer__links a, .home-promotion__detalhes):hover) {
+    text-decoration-color: currentColor;
+  }
+}
+.home :deep(:is(button, a):is(:active, :disabled, [aria-disabled="true"], .is-loading)),
+.home :deep(.pp-card-action:is(:disabled, [aria-disabled="true"], .is-loading) > .pp-card-action__fill) {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .home :deep(:is(button, a, .pp-card-action__fill)) { transition: none; }
 }
 .home__intro {
   margin-bottom: 20px;
@@ -427,42 +481,7 @@ onBeforeUnmount(() => {
   font-size: 14px;
 }
 .home__secao {
-  margin-top: 44px;
-}
-.home__secao-topo {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-.home__secao-topo > div {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-}
-.home__secao-topo h2 {
-  margin: 0;
-  font-size: 24px;
-}
-.home__nota {
-  color: var(--pp-dourado-escuro);
-  font-family: var(--pp-font-nota);
-  font-size: 22px;
-  font-weight: 700;
-}
-.home__link {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--student-accent);
-  font-size: 14px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-.home__link:hover {
-  color: var(--student-accent-hover);
+  margin-top: var(--pp-home-section-space);
 }
 .home__grade {
   display: grid;
@@ -563,15 +582,6 @@ onBeforeUnmount(() => {
 @media (max-width: 760px) {
   .home__intro h1 {
     font-size: 23px;
-  }
-  .home__secao {
-    margin-top: 32px;
-  }
-  .home__secao-topo h2 {
-    font-size: 20px;
-  }
-  .home__nota {
-    font-size: 19px;
   }
   .home__grade {
     grid-template-columns: repeat(2, minmax(0, 1fr));

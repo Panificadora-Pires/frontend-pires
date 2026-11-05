@@ -1,6 +1,8 @@
 <script setup>
 import { computed, onMounted } from "vue";
-import { ArrowRight, ArrowUpRight } from "lucide-vue-next";
+import { ArrowRight } from "lucide-vue-next";
+import CardActionContent from "@/components/ui/CardActionContent.vue";
+import HomeSectionHeader from "@/components/home/HomeSectionHeader.vue";
 import { useNavigationCatalogStore } from "@/stores/navigationCatalog";
 import salgados from "@/assets/images/categories/salgados.webp";
 import doces from "@/assets/images/categories/doces.webp";
@@ -35,15 +37,13 @@ onMounted(() => catalogo.carregarCategorias());
 
 <template>
   <section class="home-categories" aria-labelledby="titulo-categorias">
-    <header class="home-categories__header">
-      <div>
-        <h2 id="titulo-categorias" class="home-categories__title">Seu intervalo, do seu jeito.</h2>
-        <p class="home-categories__intro">Comece por uma categoria e encontre o seu favorito.</p>
-      </div>
-      <RouterLink :to="{ name: 'cardapio' }" class="home-categories__all">
-        Ver cardápio <ArrowUpRight :size="18" aria-hidden="true" />
-      </RouterLink>
-    </header>
+    <HomeSectionHeader
+      title-id="titulo-categorias"
+      title="Seu intervalo, do seu jeito."
+      intro="Comece por uma categoria e encontre o seu favorito."
+      :action-to="{ name: 'cardapio' }"
+      action-label="Ver cardápio"
+    />
 
     <p v-if="!catalogo.categoriasInicializadas && !catalogo.erroCategorias" class="home-categories__state" role="status">
       Carregando categorias…
@@ -59,7 +59,7 @@ onMounted(() => catalogo.carregarCategorias());
     <div v-if="disponiveis.length" class="home-categories__grid">
       <RouterLink v-for="categoria in disponiveis" :key="categoria.slug"
         :to="{ name: 'cardapio', query: { categoria: String(categoria.id) } }"
-        class="home-categories__card">
+        class="home-categories__card pp-card-action-trigger">
         <div class="home-categories__media">
           <img :src="categoria.imagem" alt="" width="800" height="800" loading="lazy" decoding="async"
             class="home-categories__image" />
@@ -69,7 +69,7 @@ onMounted(() => catalogo.carregarCategorias());
           <p class="home-categories__description">{{ categoria.descricao }}</p>
           <span class="home-categories__cta">
             Ver {{ categoria.nome.toLocaleLowerCase('pt-BR') }}
-            <span class="home-categories__arrow"><ArrowRight :size="22" aria-hidden="true" /></span>
+            <span class="home-categories__arrow pp-card-action"><CardActionContent><ArrowRight :size="22" aria-hidden="true" /></CardActionContent></span>
           </span>
         </div>
       </RouterLink>
@@ -89,45 +89,10 @@ onMounted(() => catalogo.carregarCategorias());
 
 <style scoped>
 .home-categories {
-  margin-top: var(--pp-space-6);
+  margin-top: var(--pp-home-section-space);
   padding-bottom: var(--pp-space-3);
   border-bottom: 1px solid var(--pp-creme-3);
   color: var(--pp-marrom);
-}
-.home-categories__header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--pp-space-4);
-  margin-bottom: var(--pp-space-4);
-}
-.home-categories .home-categories__title {
-  margin: 0 0 8px;
-  font-family: var(--pp-font-titulo);
-  font-size: clamp(30px, 3.4vw, 48px);
-  font-weight: 400;
-  line-height: 1.18;
-  letter-spacing: -.025em;
-}
-.home-categories__intro {
-  margin: 0;
-  color: var(--pp-texto-2);
-  font-size: 17px;
-  line-height: 1.5;
-}
-.home-categories__all {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  flex: none;
-  color: var(--pp-dourado-escuro);
-  font-size: 14px;
-  font-weight: 700;
-}
-.home-categories__all:hover {
-  text-decoration: underline;
-  text-underline-offset: 4px;
 }
 .home-categories__grid {
   display: grid;
@@ -226,7 +191,7 @@ onMounted(() => catalogo.carregarCategorias());
   margin: 16px 0 0;
   color: var(--pp-dourado-escuro);
   font-family: var(--pp-font-nota);
-  font-size: 26px;
+  font-size: var(--pp-home-section-note-size);
   font-weight: 700;
 }
 .home-categories__note svg {
@@ -268,9 +233,6 @@ onMounted(() => catalogo.carregarCategorias());
   .home-categories__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 760px) {
-  .home-categories { margin-top: var(--pp-space-5); }
-  .home-categories__header { align-items: flex-start; flex-direction: column; gap: 4px; margin-bottom: 16px; }
-  .home-categories__intro { font-size: 14px; }
   .home-categories__grid { gap: 12px; }
   .home-categories__body { padding: 12px; }
   .home-categories .home-categories__name { font-size: 24px; }
@@ -278,7 +240,7 @@ onMounted(() => catalogo.carregarCategorias());
   .home-categories__cta { font-size: 12px; gap: 4px; }
   .home-categories__arrow { width: 32px; height: 32px; }
   .home-categories__arrow svg { width: 18px; height: 18px; }
-  .home-categories__note { font-size: 21px; gap: 6px; }
+  .home-categories__note { gap: 6px; }
   .home-categories__note svg { width: 40px; flex: none; }
 }
 @media (prefers-reduced-motion: reduce) {

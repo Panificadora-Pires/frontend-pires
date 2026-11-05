@@ -34,6 +34,9 @@ const catalogo = useNavigationCatalogStore();
 const route = useRoute();
 const router = useRouter();
 const raiz = ref(null);
+const navegacao = ref(null);
+const indicador = ref({ opacity: 0 });
+let observarNavegacao;
 const carrinho = ref(null);
 const botaoMobile = ref(null);
 const painel = ref(null);
@@ -79,7 +82,7 @@ watch(
 );
 watch(
   () => route.fullPath,
-  () => fechar(),
+  () => { fechar(); nextTick(atualizarIndicador); },
 );
 watch(
   () => auth.usuario?.avatar,
@@ -91,6 +94,13 @@ watch(
 function registrarGatilho(tipo, el) {
   if (el) gatilhos.set(tipo, el);
   else gatilhos.delete(tipo);
+}
+function atualizarIndicador() {
+  const ativo = navegacao.value?.querySelector(".is-active");
+  indicador.value = ativo ? {
+    opacity: 1,
+    transform: `translateX(${ativo.offsetLeft + 10}px) scaleX(${Math.max(0, ativo.offsetWidth - 20)})`,
+  } : { opacity: 0 };
 }
 function cancelarFechamento() {
   window.clearTimeout(timerFechamento);
@@ -194,9 +204,13 @@ onMounted(() => {
   consultaDesktop = window.matchMedia("(min-width: 1180px)");
   consultaDesktop.addEventListener("change", aoMudarLayout);
   document.addEventListener("pointerdown", clicarFora);
+  observarNavegacao = new ResizeObserver(atualizarIndicador);
+  observarNavegacao.observe(navegacao.value);
+  atualizarIndicador();
   if (auth.autenticado) catalogo.carregarPromocoes();
 });
 onBeforeUnmount(() => {
+  observarNavegacao?.disconnect();
   cancelarFechamento();
   consultaDesktop?.removeEventListener("change", aoMudarLayout);
   document.removeEventListener("pointerdown", clicarFora);
@@ -238,7 +252,8 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
       >
         <img src="/logo.png" alt="Pires Panificadora" />
       </RouterLink>
-      <nav class="student-header__nav" aria-label="Navegação principal">
+      <nav ref="navegacao" class="student-header__nav" aria-label="Navegação principal">
+        <span class="student-header__nav-indicator" :style="indicador" aria-hidden="true" />
         <RouterLink
           :to="{ name: 'home' }"
           class="student-header__nav-link"
@@ -258,6 +273,7 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
             'is-open': painel === item.tipo,
           }"
           :aria-expanded="painel === item.tipo"
+          :aria-current="route.name === item.tipo ? 'page' : undefined"
           :aria-controls="`painel-${item.tipo}`"
           @pointerenter="aoEntrar(item.tipo, $event)"
           @click="alternar(item.tipo, $event)"
@@ -329,7 +345,7 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
           ref="carrinho"
           :to="{ name: 'carrinho' }"
           class="student-header__cart"
-          :class="{ 'pp-pulo': carrinhoPulando }"
+          :class="{ 'is-added': carrinhoPulando }"
           :aria-label="rotuloCarrinho"
           @click="fechar()"
         >
@@ -412,6 +428,8 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
             <button
               type="button"
               class="student-header__mobile-link"
+              :class="{ 'is-active': route.name === item.tipo }"
+              :aria-current="route.name === item.tipo ? 'page' : undefined"
               :aria-expanded="painel === item.tipo"
               :aria-controls="`mobile-${item.tipo}`"
               @click="alternar(item.tipo, $event)"
@@ -509,6 +527,7 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
 }
 
 .student-header__nav {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 3px;
@@ -539,15 +558,29 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
   color: var(--pp-header-accent);
 }
 
-.student-header__nav-link.is-active::after {
-  content: "";
+.student-header__nav-indicator {
   position: absolute;
   bottom: 1px;
-  left: 10px;
-  right: 10px;
+  left: 0;
+  width: 1px;
   height: 2px;
   border-radius: 2px;
-  background: var(--pp-header-accent);
+  background: var(--pp-gold);
+  transform-origin: left;
+  pointer-events: none;
+  transition: transform 240ms var(--pp-ease), opacity 150ms var(--pp-ease);
+}
+
+.student-header__cart.is-added > svg { animation: cart-confirmed 400ms var(--pp-ease); }
+.student-header__cart.is-added .student-header__cart-count { animation: pp-pulo 400ms var(--pp-ease); }
+@keyframes cart-confirmed {
+  30% { transform: rotate(-12deg) translateY(-2px); }
+  65% { transform: rotate(6deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .student-header__nav-indicator { transition: none; }
+  .student-header__cart.is-added > svg,
+  .student-header__cart.is-added .student-header__cart-count { animation: none; }
 }
 
 .student-header__nav-link:hover,

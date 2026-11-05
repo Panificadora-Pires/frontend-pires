@@ -7,6 +7,7 @@ import revelar from './directives/revelar'
 import './assets/styles/tokens.css'
 import './assets/styles/auth-forms.css'
 import './assets/styles/student.css'
+import './assets/styles/card-actions.css'
 
 const app = createApp(App)
 

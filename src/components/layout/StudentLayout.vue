@@ -10,7 +10,7 @@ import { useChatStore } from "@/stores/chat";
 import { useChatbotStore } from "@/stores/chatbot";
 import { useNotificationsStore } from "@/stores/notifications";
 import { useOrdersStore } from "@/stores/orders";
-import { animarVooAoCarrinho } from "@/utils/vooAoCarrinho";
+import { animarVooAoCarrinho, movimentoReduzido } from "@/utils/vooAoCarrinho";
 
 const auth = useAuthStore();
 const cart = useCartStore();
@@ -24,6 +24,7 @@ const header = ref(null);
 const carrinhoPulando = ref(false);
 let timerPulo = null;
 let pararDeOuvirCarrinho = null;
+let montado = true;
 const mostrarChatbot = computed(() => route.name !== "checkout");
 const bottomNavItems = computed(() => [
   { name: "home", label: "Início", icon: Home },
@@ -36,9 +37,11 @@ function limitarBadge(valor) { return Number(valor || 0) > 99 ? "99+" : valor; }
 async function pularContador() {
   window.clearTimeout(timerPulo);
   carrinhoPulando.value = false;
+  if (movimentoReduzido()) return;
   await nextTick();
+  if (!montado) return;
   carrinhoPulando.value = true;
-  timerPulo = window.setTimeout(() => { carrinhoPulando.value = false; }, 500);
+  timerPulo = window.setTimeout(() => { carrinhoPulando.value = false; }, 400);
 }
 async function handleLogout() {
   chat.resetar();
@@ -56,11 +59,12 @@ onMounted(() => {
     if (name !== "adicionar") return;
     after(async () => {
       await animarVooAoCarrinho(header.value?.elementoCarrinho());
-      pularContador();
+      if (montado) pularContador();
     });
   });
 });
 onBeforeUnmount(() => {
+  montado = false;
   notifications.pararPolling();
   chat.pararPollingNaoLidas();
   pararDeOuvirCarrinho?.();
@@ -75,7 +79,7 @@ onBeforeUnmount(() => {
     <ChatbotWidget v-if="mostrarChatbot" />
     <nav class="student-layout__bottom-nav" aria-label="Navegação rápida">
       <RouterLink v-for="item in bottomNavItems" :key="item.name" :to="{ name: item.name }" class="student-layout__bottom-item" exact-active-class="is-active">
-        <span class="student-layout__bottom-icon-wrap">
+        <span class="student-layout__bottom-icon-wrap" :class="{ 'is-added': item.name === 'carrinho' && carrinhoPulando }">
           <component :is="item.icon" :size="20" aria-hidden="true" />
           <span v-if="item.badge" class="student-layout__badge-dot student-layout__badge-dot--bottom">{{ limitarBadge(item.badge) }}</span>
         </span>
@@ -101,6 +105,14 @@ onBeforeUnmount(() => {
 
 .student-layout__bottom-nav {
   display: none;
+}
+.student-layout__bottom-icon-wrap.is-added > svg,
+.student-layout__bottom-icon-wrap.is-added > .student-layout__badge-dot {
+  animation: pp-pulo 400ms var(--pp-ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .student-layout__bottom-icon-wrap.is-added > svg,
+  .student-layout__bottom-icon-wrap.is-added > .student-layout__badge-dot { animation: none; }
 }
 
 @media (max-width: 980px) {

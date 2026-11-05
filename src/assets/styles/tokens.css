@@ -7,6 +7,7 @@
 :root {
   /* --- Cores base --- */
   --pp-bg-dark: #241108;
+  --pp-promotion-stage: #110c09;
   --pp-bg-dark-soft: #2e1b0d;
   --pp-bg-card: #331f10;
   --pp-bg-input: #2a1810;
@@ -91,6 +92,16 @@
   /* Títulos condensados só em banners e chamadas; anotações "à mão" com moderação. */
   --pp-font-titulo: "Anton", Impact, "Arial Narrow", sans-serif;
   --pp-font-nota: "Caveat", "Comic Sans MS", cursive;
+  /* Cabeçalhos da Home: referência aprovada em HomeCategories. */
+  --pp-home-section-title-size: clamp(30px, 3.4vw, 48px);
+  --pp-home-section-title-leading: 1.18;
+  --pp-home-section-title-tracking: -.025em;
+  --pp-home-section-intro-size: 17px;
+  --pp-home-section-note-size: 26px;
+  --pp-home-section-action-size: 14px;
+  --pp-home-section-space: var(--pp-space-6);
+  --pp-home-section-header-gap: var(--pp-space-4);
+  --pp-home-section-header-after: var(--pp-space-4);
   --pp-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   --pp-radius-card-lg: 20px;
   /* Ocupação do topo: preserva os offsets existentes de foco e resumos sticky. */
@@ -147,6 +158,16 @@
     --pp-header-edge: 12px;
     --pp-header-height: 62px;
     --pp-header-radius: 20px;
+  }
+}
+
+@media (max-width: 760px) {
+  :root {
+    --pp-home-section-intro-size: 14px;
+    --pp-home-section-note-size: 21px;
+    --pp-home-section-space: var(--pp-space-5);
+    --pp-home-section-header-gap: 4px;
+    --pp-home-section-header-after: var(--pp-space-3);
   }
 }
 

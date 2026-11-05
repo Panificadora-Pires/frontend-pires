@@ -36,25 +36,29 @@
       <div class="order-card__footer-actions">
         <button
           type="button"
-          class="order-card__chat-button"
+          class="order-card__chat-button pp-card-action"
           :aria-label="rotuloChat"
           @click="abrirChat"
         >
-          <MessageCircle :size="16" aria-hidden="true" />
-          <span>Mensagens</span>
-          <span v-if="naoLidas" class="order-card__chat-badge" aria-hidden="true">
-            {{ naoLidas > 9 ? "9+" : naoLidas }}
-          </span>
+          <CardActionContent>
+            <MessageCircle :size="16" aria-hidden="true" />
+            <span>Mensagens</span>
+            <span v-if="naoLidas" class="order-card__chat-badge" aria-hidden="true">
+              {{ naoLidas > 9 ? "9+" : naoLidas }}
+            </span>
+          </CardActionContent>
         </button>
 
         <button
           v-if="pedido.status === 'pronto'"
           type="button"
-          class="order-card__qr-button"
+          class="order-card__qr-button pp-card-action"
           @click="abrirQRCode"
         >
-          <QrCode :size="16" aria-hidden="true" />
-          <span>Ver QR Code</span>
+          <CardActionContent>
+            <QrCode :size="16" aria-hidden="true" />
+            <span>Ver QR Code</span>
+          </CardActionContent>
         </button>
 
         <div class="order-card__total">
@@ -82,6 +86,7 @@ import {
 
 import OrderItemsPreview from "@/components/orders/OrderItemsPreview.vue";
 import OrderStatusBadge from "@/components/orders/OrderStatusBadge.vue";
+import CardActionContent from "@/components/ui/CardActionContent.vue";
 
 const props = defineProps({
   pedido: {
@@ -269,9 +274,6 @@ function formatarMoeda(valor) {
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-}
-.order-card__qr-button:hover {
-  background: #eef7e9;
 }
 .order-card__chat-button {
   position: relative;
