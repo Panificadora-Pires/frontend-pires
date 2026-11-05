@@ -444,9 +444,11 @@ onBeforeUnmount(() => {
     transform 0.18s var(--pp-ease),
     box-shadow 0.18s var(--pp-ease);
 }
-.home-banner__botao:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(42, 22, 11, 0.18);
+@media (hover: hover) {
+  .home-banner__botao:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(42, 22, 11, 0.18);
+  }
 }
 .home-banner__botao:active {
   transform: scale(0.98);

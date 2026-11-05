@@ -1,7 +1,8 @@
 <script setup>
 import { ArrowUpRight } from "lucide-vue-next";
 import HomeSectionHeader from "@/components/home/HomeSectionHeader.vue";
-import fotoCombo from "@/assets/images/categories/combos.webp";
+import CardActionContent from "@/components/ui/CardActionContent.vue";
+import fotoCombo from "@/assets/images/home/combo-balcao-runway.webp";
 
 const PASSOS = [
   { titulo: "Escolha", texto: "Monte o pedido pelo cardápio antes do intervalo." },
@@ -12,33 +13,33 @@ const PASSOS = [
 
 <template>
   <section class="como-funciona" aria-labelledby="titulo-como-funciona">
+    <HomeSectionHeader
+      class="como-funciona__cabecalho"
+      title-id="titulo-como-funciona"
+      title="Do pedido ao balcão"
+      note="três passos, sem fila"
+    />
     <img
       class="como-funciona__foto"
       :src="fotoCombo"
       alt="Coxinha e suco de laranja"
-      width="800"
-      height="800"
+      width="1100"
+      height="1100"
       loading="lazy"
+      decoding="async"
     />
-    <div class="como-funciona__conteudo">
-      <HomeSectionHeader
-        title-id="titulo-como-funciona"
-        title="Do pedido ao balcão"
-        note="três passos, sem fila"
-      />
-      <ol class="como-funciona__passos">
-        <li v-for="(passo, indice) in PASSOS" :key="passo.titulo" class="como-funciona__passo">
-          <span class="como-funciona__numero" aria-hidden="true">{{ indice + 1 }}</span>
-          <div>
-            <h3>{{ passo.titulo }}</h3>
-            <p>{{ passo.texto }}</p>
-          </div>
-        </li>
-      </ol>
-      <RouterLink :to="{ name: 'cardapio' }" class="como-funciona__acao">
-        Ver cardápio <ArrowUpRight :size="18" aria-hidden="true" />
-      </RouterLink>
-    </div>
+    <ol class="como-funciona__passos">
+      <li v-for="(passo, indice) in PASSOS" :key="passo.titulo" class="como-funciona__passo">
+        <span class="como-funciona__numero" aria-hidden="true">{{ indice + 1 }}</span>
+        <div>
+          <h3>{{ passo.titulo }}</h3>
+          <p>{{ passo.texto }}</p>
+        </div>
+      </li>
+    </ol>
+    <RouterLink :to="{ name: 'cardapio' }" class="como-funciona__acao pp-card-action">
+      <CardActionContent>Ver cardápio <ArrowUpRight :size="18" aria-hidden="true" /></CardActionContent>
+    </RouterLink>
   </section>
 </template>
 
@@ -46,10 +47,13 @@ const PASSOS = [
 .como-funciona {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: center;
-  gap: clamp(32px, 5vw, 72px);
+  grid-template-areas: "heading photo" "steps photo" "action photo";
+  grid-template-rows: 1fr auto 1fr;
+  column-gap: clamp(32px, 5vw, 72px);
 }
+.como-funciona__cabecalho { grid-area: heading; align-self: end; }
 .como-funciona__foto {
+  grid-area: photo;
   display: block;
   width: 100%;
   height: auto;
@@ -57,8 +61,8 @@ const PASSOS = [
   object-fit: contain;
   border-radius: var(--pp-radius-card-lg);
 }
-.como-funciona__conteudo { min-width: 0; }
 .como-funciona__passos {
+  grid-area: steps;
   display: grid;
   gap: var(--pp-space-4);
   margin: 0;
@@ -89,6 +93,9 @@ const PASSOS = [
   line-height: 1.6;
 }
 .como-funciona__acao {
+  grid-area: action;
+  align-self: start;
+  justify-self: start;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -102,13 +109,24 @@ const PASSOS = [
   font-size: 14px;
   font-weight: 700;
 }
-.como-funciona__acao:hover { background: var(--pp-marrom-2); }
 .como-funciona__acao:focus-visible {
   outline: 3px solid var(--pp-dourado-escuro);
   outline-offset: 4px;
 }
 @media (max-width: 760px) {
-  .como-funciona { grid-template-columns: minmax(0, 1fr); gap: var(--pp-space-4); }
-  .como-funciona__foto { max-height: 440px; }
+  .como-funciona {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "heading" "photo" "steps" "action";
+    grid-template-rows: auto;
+    gap: var(--pp-space-3);
+  }
+  .como-funciona__cabecalho { margin-bottom: 0; }
+  .como-funciona__foto {
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    object-position: center 80%;
+  }
+  .como-funciona__passos { gap: var(--pp-space-3); }
+  .como-funciona__acao { margin-top: 0; }
 }
 </style>

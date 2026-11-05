@@ -127,7 +127,7 @@ import { useCartStore } from "@/stores/cart";
 import { useFavoritesStore } from "@/stores/favorites";
 import { ilustracaoParaProduto } from "@/utils/ilustracaoProduto";
 
-const MAXIMO_DESTAQUES = 8;
+const MAXIMO_DESTAQUES = 4;
 const MAXIMO_PROMOCOES_NO_BANNER = 3;
 const MAXIMO_DESTAQUES_NO_BANNER = 2;
 
@@ -420,9 +420,39 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .home {
+  --pp-home-action-duration: 450ms;
   width: min(100%, 1240px);
   margin: 0 auto;
   color: var(--student-text);
+}
+/* Só os controles da Home herdam o tempo comum; conteúdo e outras rotas não mudam. */
+.home :deep(:is(button, a, .pp-card-action__fill)) {
+  transition-duration: var(--pp-home-action-duration);
+  transition-timing-function: var(--pp-ease);
+}
+.home :deep(:is(.home-promotion__favorito, .home-promotion__detalhes, .home__botao-secundario)) {
+  transition-property: color, border-color, background-color;
+}
+.home :deep(:is(.home-section-header__action, .home-footer__links a, .home-promotion__detalhes)) {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: transparent;
+  transition-property: text-decoration-color, color;
+}
+.home :deep(:is(.home-section-header__action, .home-footer__links a, .home-promotion__detalhes):focus-visible) {
+  text-decoration-color: currentColor;
+}
+@media (hover: hover) {
+  .home :deep(:is(.home-section-header__action, .home-footer__links a, .home-promotion__detalhes):hover) {
+    text-decoration-color: currentColor;
+  }
+}
+.home :deep(:is(button, a):is(:active, :disabled, [aria-disabled="true"], .is-loading)),
+.home :deep(.pp-card-action:is(:disabled, [aria-disabled="true"], .is-loading) > .pp-card-action__fill) {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .home :deep(:is(button, a, .pp-card-action__fill)) { transition: none; }
 }
 .home__intro {
   margin-bottom: 20px;

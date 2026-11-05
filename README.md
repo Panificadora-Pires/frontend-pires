@@ -229,13 +229,17 @@ Direção "Balcão creme" (Fase 5): fundo creme, marrom nos textos, dourado nos 
 - **Ilustrações próprias:** o cardápio é fictício, então produto sem foto ganha um SVG próprio.
   - Componente `components/catalog/ProductIllustration.vue`; o tipo vem de `utils/ilustracaoProduto.js` (nome do produto e depois categoria).
   - Foto cadastrada no admin tem prioridade.
-- **Home:** saudação → banner (`components/home/HomeBanner.vue`) → categorias (`components/home/HomeCategories.vue`) → oito Destaques (`ProductCard`) → Do pedido ao balcão (`HomeComoFunciona`) → oferta disponível (`HomePromotionFeature`, se houver) → fechamento (`HomeFooter`).
+- **Home:** saudação → banner (`components/home/HomeBanner.vue`) → categorias (`components/home/HomeCategories.vue`) → quatro Destaques (`ProductCard`) → Do pedido ao balcão (`HomeComoFunciona`) → oferta disponível (`HomePromotionFeature`, se houver) → fechamento (`HomeFooter`).
 
 ### Home após os destaques
 
-`HomeComoFunciona.vue` combina a foto autorizada de combo com os três passos existentes, incluindo Pix/cartão, dinheiro na retirada, aviso e QR Code. O CTA leva ao Cardápio. `HomePromotionFeature.vue` apresenta uma única oferta em faixa marrom, com imagem cadastrada ou fallback, preços da API e ações existentes de detalhes, favoritos e carrinho. Como a listagem não contém estoque, a Home consulta os detalhes dos candidatos vigentes na ordem atual até encontrar um produto ativo, em promoção e com estoque positivo. Falha ou ausência de disponibilidade não produz oferta. A compra consulta novamente os detalhes pelo handler existente; o backend continua validando preço e estoque no checkout.
+`HomeComoFunciona.vue` apresenta os três passos e CTA à esquerda e a foto editorial `src/assets/images/home/combo-balcao-runway.webp` à direita. No celular, a ordem é título, foto 3:2 com enquadramento do copo/coxinha, passos e CTA. Pix/cartão, dinheiro na retirada, aviso e QR Code permanecem. O asset do card Combos é preservado. `HomePromotionFeature.vue` apresenta uma única oferta em faixa escura até as bordas da tela, com miolo alinhado à Home. Como a listagem não contém estoque, a Home consulta os detalhes dos candidatos vigentes na ordem atual até encontrar um produto ativo, em promoção e com estoque positivo. Falha ou ausência de disponibilidade não produz oferta. A compra consulta novamente os detalhes pelo handler existente; o backend continua validando preço e estoque no checkout.
 
-`HomeFooter.vue` fecha apenas esta rota com marca e links para Cardápio, Promoções e Meus pedidos. Header, banner, categorias e os oito destaques foram preservados. Fotos abaixo da grade usam carregamento lazy. Não há dependência ou endpoint novo. Provas, capturas e limitações em `../docs/prints/home-pos-destaques-2026-11-04/`.
+Para a Coxinha de frango (id 1 confirmado na API local), o clipe `src/assets/videos/coxinha-promocao-escura.mp4` acompanha a rolagem nativa no desktop: avanço, reversão e liberação do painel sticky abaixo do header. `useScrollVideo` agenda por RAF e agrupa seeks; metadados, resize e pageshow sincronizam o quadro. O clipe não tem áudio, autoplay, loop ou controles. Até 760px, o vídeo não é montado nem solicitado: título/link, pôster de 180–220px, nome, preço e compra ficam no fluxo normal, sem distância extra. Movimento reduzido também impede montagem; erro, metadados inválidos ou altura insuficiente desativam sticky. Outras ofertas mantêm `ProductImage`. Preços, vigência, favorito, detalhes e compra continuam nos fluxos existentes.
+
+As transições visuais de ações da Home usam `--pp-home-action-duration: 450ms` e `--pp-ease`, sem atrasar clique, teclado ou loading. `CardActionContent` mede o raio até a borda arredondada real e acompanha mudanças de tamanho com `ResizeObserver`, evitando terminar visualmente antes do tempo em botões largos. A medição é restrita à Home, com hover condicionado ao dispositivo e transições removidas em movimento reduzido.
+
+`HomeFooter.vue` fecha apenas esta rota com marca e links para Cardápio, Promoções e Meus pedidos. Os quatro destaques mantêm prioridade/ordem e seleção separada do hero. Fotos abaixo da grade usam carregamento lazy. Não há dependência ou endpoint novo. Provas atuais em `../docs/prints/home-responsiva-2026-11-04/`; histórico em `../docs/prints/home-ajustes-2026-11-04/` e `../docs/prints/home-pos-destaques-2026-11-04/`.
 
 ### Cabeçalhos de seção da Home
 
@@ -287,7 +291,8 @@ Os destaques continuam vindo dos produtos e promoções cadastrados, com preço,
 |---|---|
 | Banner | Carrossel de 6 s com pausa no mouse ou foco, setas e indicadores com progresso. Conteúdo: promoções vigentes; sem promoção, destaques; e sempre o slide "Como funciona" |
 | Banner | Parallax: 3 camadas de "morros de massa" sobem em velocidades diferentes nos primeiros 320 px de rolagem |
-| Como funciona | Os 3 passos sobem acompanhando a rolagem |
+| Como funciona | Foto editorial, 3 passos estáticos e CTA com preenchimento circular |
+| Oferta da Home | Clipe escuro da coxinha acompanha scroll nativo em painel sticky; pôster sem espaço extra em fallback |
 | Cards | Zoom só na imagem ao passar o mouse (sem mudar o tamanho do card) |
 | Carrinho | O produto "voa" até o carrinho e o contador pula, **só depois** de `cart.adicionar` (`utils/vooAoCarrinho.js` + `StudentLayout`) |
 | Seções | Aparecem suavemente ao entrar na tela (diretiva `v-revelar`) |

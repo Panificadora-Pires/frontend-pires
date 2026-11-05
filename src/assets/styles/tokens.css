@@ -7,6 +7,7 @@
 :root {
   /* --- Cores base --- */
   --pp-bg-dark: #241108;
+  --pp-promotion-stage: #110c09;
   --pp-bg-dark-soft: #2e1b0d;
   --pp-bg-card: #331f10;
   --pp-bg-input: #2a1810;
