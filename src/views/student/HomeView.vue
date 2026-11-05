@@ -127,7 +127,7 @@ import { useCartStore } from "@/stores/cart";
 import { useFavoritesStore } from "@/stores/favorites";
 import { ilustracaoParaProduto } from "@/utils/ilustracaoProduto";
 
-const MAXIMO_DESTAQUES = 8;
+const MAXIMO_DESTAQUES = 4;
 const MAXIMO_PROMOCOES_NO_BANNER = 3;
 const MAXIMO_DESTAQUES_NO_BANNER = 2;
 

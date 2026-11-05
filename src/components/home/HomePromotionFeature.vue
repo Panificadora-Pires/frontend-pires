@@ -6,8 +6,10 @@ import HomeSectionHeader from "@/components/home/HomeSectionHeader.vue";
 import CardActionContent from "@/components/ui/CardActionContent.vue";
 import { registrarOrigemVoo } from "@/utils/vooAoCarrinho";
 import { useScrollVideo } from "@/composables/useScrollVideo";
-import clipeCoxinha from "@/assets/videos/coxinha-promocao-escura.mp4";
 import posterCoxinha from "@/assets/images/home/coxinha-promocao-poster.webp";
+
+// URL estática sem importar o MP4 como módulo: no celular nenhuma requisição é feita.
+const clipeCoxinha = new URL("../../assets/videos/coxinha-promocao-escura.mp4", import.meta.url).href;
 
 const props = defineProps({
   produto: { type: Object, required: true },
@@ -22,7 +24,7 @@ const panel = useTemplateRef("panel");
 const video = useTemplateRef("video");
 // Identificador confirmado no catálogo local; não associar mídia pelo nome/categoria.
 const temClipe = computed(() => Number(props.produto.id) === 1);
-const { active: rolagemAtiva, distance: distancia, panelHeight: alturaPainel } = useScrollVideo(container, panel, video);
+const { active: rolagemAtiva, distance: distancia, panelHeight: alturaPainel, canLoad: carregarVideo } = useScrollVideo(container, panel, video);
 const preco = computed(() => Number(props.produto.preco_atual ?? props.produto.preco));
 const temDesconto = computed(() => Number(props.produto.preco) > preco.value);
 const disponivel = computed(() => Number(props.produto.estoque) > 0);
@@ -39,6 +41,13 @@ function adicionar() {
     :style="{ '--pp-promotion-panel-height': `${alturaPainel}px`, '--pp-promotion-distance': `${distancia}px` }"
     aria-labelledby="titulo-promocoes">
     <div ref="panel" class="home-promotion__painel">
+      <HomeSectionHeader
+        class="home-promotion__cabecalho"
+        title-id="titulo-promocoes"
+        title="Promoções de hoje"
+        :action-to="{ name: 'promocoes' }"
+        action-label="Ver promoções"
+      />
       <button
         ref="midia"
         type="button"
@@ -48,19 +57,13 @@ function adicionar() {
       >
         <template v-if="temClipe">
           <img class="home-promotion__poster" :src="posterCoxinha" alt="" width="600" height="720" loading="lazy" />
-          <video ref="video" class="home-promotion__video" :class="{ 'is-visible': rolagemAtiva }"
+          <video v-if="carregarVideo" ref="video" class="home-promotion__video" :class="{ 'is-visible': rolagemAtiva }"
             :src="clipeCoxinha" :poster="posterCoxinha" width="600" height="720"
             muted playsinline preload="metadata" aria-hidden="true" tabindex="-1" />
         </template>
         <ProductImage v-else :produto="produto" />
       </button>
       <div class="home-promotion__conteudo">
-        <HomeSectionHeader
-          title-id="titulo-promocoes"
-          title="Promoções de hoje"
-          :action-to="{ name: 'promocoes' }"
-          action-label="Ver promoções"
-        />
         <h3 class="home-promotion__nome">{{ produto.nome }}</h3>
         <p v-if="produto.descricao" class="home-promotion__descricao">{{ produto.descricao }}</p>
         <p class="home-promotion__precos">
@@ -106,6 +109,10 @@ function adicionar() {
 <style scoped>
 .home-promotion {
   color: var(--pp-creme);
+  background: var(--pp-promotion-stage);
+  /* Faixa contínua sem usar 100vw (que inclui a barra de rolagem). */
+  box-shadow: 0 0 0 100vmax var(--pp-promotion-stage);
+  clip-path: inset(0 -100vmax);
 }
 .home-promotion.is-scrubbing {
   height: calc(var(--pp-promotion-panel-height) + var(--pp-promotion-distance));
@@ -118,9 +125,16 @@ function adicionar() {
   top: calc(var(--pp-altura-topo) + var(--pp-space-3));
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: center;
-  border-radius: var(--pp-radius-card-lg);
+  grid-template-areas: "media heading" "media content";
+  grid-template-rows: 1fr auto;
+  padding-block: var(--pp-space-5);
   background: var(--pp-promotion-stage);
+}
+.home-promotion__cabecalho {
+  grid-area: heading;
+  align-self: end;
+  margin: 0;
+  padding-inline: clamp(24px, 4vw, 48px);
 }
 .is-scrubbing .home-promotion__painel { position: sticky; }
 .home-promotion :deep(.home-section-header) { flex-direction: column; align-items: flex-start; gap: 0; }
@@ -129,6 +143,7 @@ function adicionar() {
 .home-promotion :deep(.home-section-header__action) { color: var(--pp-gold); }
 .home-promotion :deep(.home-section-header__action:focus-visible) { outline-color: var(--pp-gold); }
 .home-promotion__midia {
+  grid-area: media;
   position: relative;
   display: block;
   width: 100%;
@@ -137,7 +152,6 @@ function adicionar() {
   aspect-ratio: 1;
   padding: 0;
   border: 0;
-  border-radius: var(--pp-radius-card-lg);
   overflow: hidden;
   background: var(--pp-promotion-stage);
   cursor: pointer;
@@ -147,7 +161,13 @@ function adicionar() {
 .home-promotion__video { display: block; width: 100%; height: 100%; object-fit: contain; }
 .home-promotion__video { position: absolute; inset: 0; visibility: hidden; pointer-events: none; }
 .home-promotion__video.is-visible { visibility: visible; }
-.home-promotion__conteudo { min-width: 0; padding: clamp(24px, 4vw, 48px); overflow-wrap: anywhere; }
+.home-promotion__conteudo {
+  grid-area: content;
+  min-width: 0;
+  align-self: start;
+  padding: var(--pp-space-4) clamp(24px, 4vw, 48px) 0;
+  overflow-wrap: anywhere;
+}
 .home-promotion__nome {
   margin: 0;
   color: var(--pp-creme);
@@ -176,7 +196,6 @@ function adicionar() {
 .home-promotion__por { font-size: 14px; font-weight: 400; }
 .home-promotion__acoes { display: flex; flex-wrap: wrap; align-items: center; gap: var(--pp-space-2); }
 .home-promotion__adicionar {
-  --pp-card-action-radius: 110%;
   min-height: 48px;
   max-width: 100%;
   padding: var(--pp-space-2) var(--pp-space-4);
@@ -225,11 +244,39 @@ function adicionar() {
 .home-promotion__spinner { flex-shrink: 0; animation: promotion-spin 0.7s linear infinite; }
 @keyframes promotion-spin { to { transform: rotate(360deg); } }
 @media (max-width: 760px) {
-  .home-promotion__painel { grid-template-columns: minmax(0, 1fr); }
-  .home-promotion__midia { aspect-ratio: 1.4; height: auto; }
-  .home-promotion__midia :deep(.catalog-product-image) { aspect-ratio: 1.4; }
-  .home-promotion__poster { height: auto; aspect-ratio: 1.4; }
-  .home-promotion__conteudo { padding: var(--pp-space-4); }
+  .home-promotion__painel {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "heading" "media" "content";
+    grid-template-rows: auto;
+    padding-block: var(--pp-space-4);
+  }
+  .home-promotion__cabecalho { padding: 0; }
+  .home-promotion :deep(.home-section-header) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 var(--pp-space-2);
+    justify-content: space-between;
+  }
+  .home-promotion :deep(.home-section-header__action) { align-self: center; }
+  .home-promotion__midia { aspect-ratio: auto; height: clamp(180px, 52vw, 220px); }
+  .home-promotion__midia :deep(.catalog-product-image) { aspect-ratio: auto; }
+  .home-promotion__poster {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: auto;
+    max-width: none;
+    height: 135%;
+    transform: translate(-50%, -50%);
+  }
+  .home-promotion__conteudo { padding: var(--pp-space-2) 0 0; }
+  .home-promotion__descricao { margin-top: var(--pp-space-2); }
+  .home-promotion__precos { margin-block: var(--pp-space-3); }
+  /* Corredor livre para o botão flutuante de dúvidas, inclusive em telas de 320px. */
+  .home-promotion__acoes { flex-wrap: nowrap; padding-right: 64px; }
+  .home-promotion__adicionar { flex: 1; min-width: 0; padding-inline: var(--pp-space-2); }
+  .home-promotion__favorito { flex-shrink: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .home-promotion__spinner { animation: none; }

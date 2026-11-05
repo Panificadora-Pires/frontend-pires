@@ -6,11 +6,14 @@ export function useScrollVideo(container, panel, video) {
   const active = shallowRef(false);
   const distance = shallowRef(0);
   const panelHeight = shallowRef(0);
+  const canLoad = shallowRef(false);
   let frame = 0;
   let failed = false;
   let reducedMotion;
+  let desktop;
   let observer;
   let detachVideo = () => {};
+  let detachEligibility = () => {};
 
   function schedule() {
     if (!frame) frame = requestAnimationFrame(update);
@@ -31,7 +34,7 @@ export function useScrollVideo(container, panel, video) {
     const valid = element && !failed && !element.error && element.readyState >= 1 &&
       Number.isFinite(element.duration) && element.duration > 0 &&
       element.videoWidth > 0 && element.videoHeight > 0;
-    active.value = Boolean(valid && !reducedMotion?.matches && surface.offsetHeight <= available);
+    active.value = Boolean(valid && canLoad.value && surface.offsetHeight <= available);
     distance.value = active.value ? Math.max(window.innerHeight * 1.25, 720) : 0;
     if (!active.value) return;
 
@@ -67,7 +70,18 @@ export function useScrollVideo(container, panel, video) {
 
   onMounted(() => {
     reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    reducedMotion.addEventListener("change", schedule);
+    desktop = window.matchMedia("(min-width: 761px)");
+    const updateEligibility = () => {
+      canLoad.value = desktop.matches && !reducedMotion.matches;
+      schedule();
+    };
+    reducedMotion.addEventListener("change", updateEligibility);
+    desktop.addEventListener("change", updateEligibility);
+    detachEligibility = () => {
+      reducedMotion.removeEventListener("change", updateEligibility);
+      desktop.removeEventListener("change", updateEligibility);
+    };
+    updateEligibility();
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule);
     window.addEventListener("pageshow", schedule);
@@ -81,12 +95,12 @@ export function useScrollVideo(container, panel, video) {
   onBeforeUnmount(() => {
     detachVideo();
     observer?.disconnect();
-    reducedMotion?.removeEventListener("change", schedule);
+    detachEligibility();
     window.removeEventListener("scroll", schedule);
     window.removeEventListener("resize", schedule);
     window.removeEventListener("pageshow", schedule);
     cancelAnimationFrame(frame);
   });
 
-  return { active, distance, panelHeight };
+  return { active, distance, panelHeight, canLoad };
 }
