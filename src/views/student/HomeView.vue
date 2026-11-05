@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <header class="home__intro">
-      <h1>{{ saudacao }}, {{ primeiroNome }}!</h1>
+      <h1 id="inicio-home" tabindex="-1">{{ saudacao }}, {{ primeiroNome }}!</h1>
       <p>Peça agora e retire no balcão antes do sinal tocar.</p>
     </header>
 
@@ -81,6 +81,8 @@
       @add="adicionarAoCarrinho"
     />
 
+    <HomeGallery class="home__secao" />
+    <HomeFaq class="home__secao" />
     <HomeFooter />
 
     <ProductDetailsModal
@@ -116,6 +118,8 @@ import HomeBanner from "@/components/home/HomeBanner.vue";
 import HomeCategories from "@/components/home/HomeCategories.vue";
 import HomeComoFunciona from "@/components/home/HomeComoFunciona.vue";
 import HomeFooter from "@/components/home/HomeFooter.vue";
+import HomeGallery from "@/components/home/HomeGallery.vue";
+import HomeFaq from "@/components/home/HomeFaq.vue";
 import HomePromotionFeature from "@/components/home/HomePromotionFeature.vue";
 import HomeSectionHeader from "@/components/home/HomeSectionHeader.vue";
 import catalogService, {

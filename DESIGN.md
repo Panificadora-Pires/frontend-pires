@@ -221,6 +221,37 @@ Até 760px, título/link iniciam a promoção; seguem pôster de 180–220px, no
 
 O fechamento exclusivo da Home combina marca e três links existentes com separação de 1px creme. Nenhum dado institucional foi inventado. Ações editoriais e da oferta têm no mínimo 44px e foco visível. Provas da revisão responsiva em `../docs/prints/home-responsiva-2026-11-04/`; histórico em `../docs/prints/home-ajustes-2026-11-04/` e `../docs/prints/home-pos-destaques-2026-11-04/`.
 
+### Curadoria A–F da Home — prévia de 04/11/2026
+
+A sequência após a oferta é galeria, dúvidas e rodapé. A composição anterior e os quatro destaques
+permanecem. `HomeFaq` usa três disclosures nativos com nome compartilhado, leitura em Inter,
+divisores creme e título canônico em Anton; duas colunas no desktop e sequência linear até 760px.
+As respostas refletem acompanhamento em Meus pedidos, notificação no app e QR disponível no estado pronto.
+
+`HomeFooter` mantém os três links existentes e acrescenta retorno ao topo com foco na saudação.
+PIRES é um wordmark decorativo em Anton, grande e monocromático, impresso por pontos de 4px;
+não é texto informativo com gradiente. Aparece uma vez por montagem com blur de 3px/opacidade em
+400ms, nunca oculta conteúdo por padrão. Movimento reduzido mantém o elemento estático.
+
+O indicador único do header acompanha apenas a rota, com transform em 240ms. Hover e menu aberto
+continuam estados próprios; destinos e semântica existentes permanecem. No menu mobile,
+`aria-current` identifica a área sem exigir expansão do submenu. A confirmação existente do carrinho
+passa a atingir ícone/contador e barra inferior por 400ms, depois da ação de adição; movimento
+reduzido mantém a atualização estática. Falha, remoção e carga inicial não são sucesso de adição.
+
+`HomeGallery` usa foto principal 4:3 e miniaturas no desktop, moldura branca e legenda Caveat.
+Até 760px, a trilha usa scroll snap nativo, setas e controles manuais de 48px. Recebe no máximo
+três fotos documentais autorizadas, sem autoplay; erro de imagem mantém legenda e navegação.
+Ainda faltam essas fotos: a prévia DEV mostra a lacuna, e o build oculta a seção vazia. As imagens
+ilustrativas das provas não são conteúdo aprovado para essa seção.
+
+A linha dourada da promoção ocupa 38% da largura do palco e reutiliza `progress` normalizado de
+`useScrollVideo`. Avanço, reversão e fim têm a mesma fonte do seek; não há polling/listener paralelo.
+Modo estático, mobile, erro, altura insuficiente e outras ofertas não mostram esse indicador.
+Nenhum recurso depende das animações para navegar ou comprar.
+
+Referências e evidências: `docs/prints/home-curadoria-2026-11-04/README.md` na pasta pai.
+
 ## Do's and Don'ts
 
 ### Do:
