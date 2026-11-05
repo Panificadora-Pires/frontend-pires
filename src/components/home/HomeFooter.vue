@@ -25,8 +25,7 @@ onBeforeUnmount(() => observer?.disconnect());
   <footer class="home-footer">
     <div class="home-footer__top">
       <div class="home-footer__marca">
-        <img src="/logo.png" alt="Pires Panificadora" width="64" height="64" loading="lazy" />
-        <span>Pires Panificadora</span>
+        <img src="/logo.png" alt="Pires Panificadora" width="128" height="64" loading="lazy" />
       </div>
       <nav class="home-footer__links" aria-label="Explore a Pires">
         <RouterLink :to="{ name: 'cardapio' }">Cardápio</RouterLink>
