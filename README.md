@@ -4,6 +4,25 @@ Frontend do sistema de pedidos da Pires Panificadora, desenvolvido em Vue 3 + Vi
 
 O sistema possui área de cliente e área administrativa, integradas ao backend Django/DRF e aos serviços de autenticação Google e pagamento do Mercado Pago.
 
+## Curadoria da Home (prévia local)
+
+Curadoria A–F: dúvidas rápidas nativas, rodapé editorial com PIRES pontilhado e retorno ao topo,
+indicador da rota no header, confirmação breve no ícone/contador do carrinho, galeria manual e
+progresso do vídeo promocional ligado à rolagem existente. Sem biblioteca nova ou mudança de API.
+
+`HomeGallery` recebe até três imagens autorizadas por `fotos` (`id`, `src`, `alt`, `legenda`,
+`width`, `height`). A Home importa via Vite os WebP fornecidos pelo Arthur: preparo, vitrine e
+retirada, todos com 1200×896. A seção informa uma vez “Imagens ilustrativas geradas com IA”.
+As cenas não são apresentadas como registros documentais da loja. Vazia, a seção mostra a
+lacuna somente em desenvolvimento e fica oculta no build; falhas de imagem preservam legenda e controles.
+Seleção manual mantém seu destino durante a rolagem suave, inclusive em avanços e retornos rápidos.
+
+Plano, capturas, roteiro de validação e limites estão na pasta pai:
+`docs/planos/home-curadoria-aprovada.md` e `docs/prints/home-curadoria-final-2026-11-05/README.md`.
+Prévia com dados fictícios/API simulada: `http://127.0.0.1:5173/curadoria-preview.html`, enquanto
+`npm run dev` estiver ativo na porta 5173. Esse HTML é um artefato local não versionado, fora do build.
+Para testar o fluxo normal com backend local, use a raiz do servidor e uma conta local fictícia.
+
 ## Stack
 
 - Vue 3

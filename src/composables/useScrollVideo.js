@@ -7,6 +7,7 @@ export function useScrollVideo(container, panel, video) {
   const distance = shallowRef(0);
   const panelHeight = shallowRef(0);
   const canLoad = shallowRef(false);
+  const progress = shallowRef(0);
   let frame = 0;
   let failed = false;
   let reducedMotion;
@@ -36,11 +37,11 @@ export function useScrollVideo(container, panel, video) {
       element.videoWidth > 0 && element.videoHeight > 0;
     active.value = Boolean(valid && canLoad.value && surface.offsetHeight <= available);
     distance.value = active.value ? Math.max(window.innerHeight * 1.25, 720) : 0;
-    if (!active.value) return;
+    if (!active.value) { progress.value = 0; return; }
 
-    const progress = Math.min(1, Math.max(0, (top - section.getBoundingClientRect().top) / distance.value));
+    progress.value = Math.min(1, Math.max(0, (top - section.getBoundingClientRect().top) / distance.value));
     // O clipe local tem 24fps. O último quadro começa antes do fim da duração.
-    const target = progress * Math.max(0, element.duration - 1 / 24);
+    const target = progress.value * Math.max(0, element.duration - 1 / 24);
     // Enquanto há um seek pendente, preservar apenas a posição mais recente do scroll.
     // seeked agenda uma nova leitura, inclusive quando o usuário já parou de rolar.
     if (!element.seeking && Math.abs(element.currentTime - target) > 1 / 96) {
@@ -102,5 +103,5 @@ export function useScrollVideo(container, panel, video) {
     cancelAnimationFrame(frame);
   });
 
-  return { active, distance, panelHeight, canLoad };
+  return { active, distance, panelHeight, canLoad, progress };
 }

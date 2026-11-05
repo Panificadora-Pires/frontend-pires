@@ -24,7 +24,7 @@ const panel = useTemplateRef("panel");
 const video = useTemplateRef("video");
 // Identificador confirmado no catálogo local; não associar mídia pelo nome/categoria.
 const temClipe = computed(() => Number(props.produto.id) === 1);
-const { active: rolagemAtiva, distance: distancia, panelHeight: alturaPainel, canLoad: carregarVideo } = useScrollVideo(container, panel, video);
+const { active: rolagemAtiva, distance: distancia, panelHeight: alturaPainel, canLoad: carregarVideo, progress: progresso } = useScrollVideo(container, panel, video);
 const preco = computed(() => Number(props.produto.preco_atual ?? props.produto.preco));
 const temDesconto = computed(() => Number(props.produto.preco) > preco.value);
 const disponivel = computed(() => Number(props.produto.estoque) > 0);
@@ -63,6 +63,9 @@ function adicionar() {
         </template>
         <ProductImage v-else :produto="produto" />
       </button>
+      <div v-if="rolagemAtiva" class="home-promotion__progress" aria-hidden="true">
+        <span :style="{ transform: `scaleX(${progresso})` }" />
+      </div>
       <div class="home-promotion__conteudo">
         <h3 class="home-promotion__nome">{{ produto.nome }}</h3>
         <p v-if="produto.descricao" class="home-promotion__descricao">{{ produto.descricao }}</p>
@@ -130,6 +133,19 @@ function adicionar() {
   padding-block: var(--pp-space-5);
   background: var(--pp-promotion-stage);
 }
+.home-promotion__progress {
+  grid-area: media;
+  align-self: end;
+  justify-self: center;
+  z-index: 1;
+  width: 38%;
+  height: 2px;
+  margin-bottom: var(--pp-space-3);
+  overflow: hidden;
+  background: var(--pp-marrom-2);
+  pointer-events: none;
+}
+.home-promotion__progress span { display: block; width: 100%; height: 100%; background: var(--pp-gold); transform-origin: left; }
 .home-promotion__cabecalho {
   grid-area: heading;
   align-self: end;

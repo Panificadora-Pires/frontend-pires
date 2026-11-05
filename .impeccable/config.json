@@ -8,6 +8,15 @@
         "value": "inter",
         "createdAt": "2026-11-03T01:33:24.621Z",
         "reason": "Arthur: AGENTS.md, Visual e mídia, aprova Anton em chamadas, Caveat em anotações e Inter no corpo; preservar identidade confirmada."
+      },
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "src/components/home/HomeFooter.vue"
+        ],
+        "createdAt": "2026-11-05T02:37:24.946Z",
+        "reason": "Arthur aprovou B no prompt-curadoria-aprovada.md: wordmark PIRES com trama pontilhada. radial-gradient desenha pontos, sem gradiente cromatico no texto informativo."
       }
     ]
   }
