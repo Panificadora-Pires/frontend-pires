@@ -257,6 +257,14 @@ Nenhum recurso depende das animações para navegar ou comprar.
 Referências e evidências: `docs/prints/home-curadoria-2026-11-04/README.md` na pasta pai.
 Finalização da galeria e regressão A–F: `docs/prints/home-curadoria-final-2026-11-05/README.md` na pasta pai.
 
+### Detalhe compartilhado e Cardápio — 05/11/2026
+
+`ProductDetailsModal` mantém o Balcão creme: foto ou ilustração à esquerda, conteúdo creme à direita, nome em Anton e leitura/controles em Inter. O favorito tem alvo separado; fechar fica fora do painel no desktop amplo e em cabeçalho próprio quando a largura diminui. No celular, imagem e texto rolam no miolo; quantidade, subtotal e compra permanecem visíveis na base do painel, com espaço para a área segura.
+
+O diálogo nativo via Teleport ocupa a camada superior, recebe foco inicial em fechar, contém Tab/Shift+Tab e devolve o foco ao gatilho. Escape e clique iniciado e concluído no fundo fecham. Bloqueia a rolagem da página somente aberto e restaura valor e prioridade anteriores de `overflow`. Quantidade acompanha o estoque recebido; carregamento, falha, indisponibilidade e adição pendente têm estados próprios. Feedback opcional fica dentro do diálogo para permanecer visível nessa camada; as quatro telas limpam a mensagem ao abrir, permitindo repetir o mesmo aviso. O CTA reutiliza o círculo de 450ms com raio medido por `CardActionContent`, habilitado por `data-card-action-radius` mesmo fora da Home; movimento reduzido suprime a transição.
+
+No Cardápio, busca e ordenação compartilham a barra desktop; categorias ficam em trilha com indicador dourado e `aria-pressed`. Até 760px, busca ocupa a largura, categorias rolam e filtro/ordenação usam controles compactos. Cards mantêm fotos/fallback e ações existentes; acabamento branco, borda creme e nomes em Inter pertencem somente a essa view. No celular, preço e compra se alinham à esquerda para manter a ação livre do assistente à direita. Busca/categoria continuam ligadas à URL e ao histórico; carregamento, erro, catálogo vazio e busca sem resultados permanecem distintos. Plano e evidências: [detalhe e Cardápio](../docs/planos/detalhe-e-cardapio.md) e [relatório local](../docs/prints/detalhe-cardapio-2026-11-05/README.md).
+
 ## Do's and Don'ts
 
 ### Do:

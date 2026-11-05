@@ -12,6 +12,7 @@ const props = defineProps({
   adding: { type: Boolean, default: false },
   favorito: { type: Boolean, default: false },
   favoritando: { type: Boolean, default: false },
+  feedback: { type: String, default: "" },
 });
 const emit = defineEmits(["close", "favorite", "add"]);
 const dialogo = useTemplateRef("dialogo");
@@ -21,6 +22,7 @@ const tituloId = useId();
 const quantidadeId = useId();
 const quantidade = shallowRef(1);
 const solicitando = shallowRef(false);
+const mensagemFeedback = shallowRef("");
 const enviando = computed(() => props.adding || solicitando.value);
 const estoque = computed(() => Math.max(0, Math.floor(Number(props.produto?.estoque) || 0)));
 const limiteQuantidade = computed(() => Math.max(1, estoque.value));
@@ -64,6 +66,9 @@ watch([() => props.open, dialogo], ([aberto, elemento]) => {
   }
 }, { immediate: true, flush: "post" });
 watch(() => [props.open, props.produto?.id], () => { quantidade.value = 1; });
+watch([() => props.open, () => props.feedback], ([aberto, mensagem], [estavaAberto]) => {
+  mensagemFeedback.value = aberto && estavaAberto ? mensagem : "";
+});
 watch(limiteQuantidade, (limite) => { quantidade.value = Math.min(quantidade.value, limite); });
 onBeforeUnmount(() => { dialogo.value?.close(); restaurarPagina(); });
 
@@ -144,6 +149,7 @@ async function adicionar() {
               </div>
               <div class="product-modal__subtotal"><span>Subtotal</span><strong>{{ subtotal }}</strong></div>
             </div>
+            <p v-if="mensagemFeedback" class="product-modal__feedback" role="status" aria-live="polite" aria-atomic="true">{{ mensagemFeedback }}</p>
             <button type="button" class="product-modal__add pp-card-action" data-card-action-radius :class="{ 'is-loading': enviando }"
               :disabled="!statusEstoque.disponivel || enviando" :aria-busy="enviando" @click="adicionar">
               <CardActionContent>
@@ -222,6 +228,7 @@ async function adicionar() {
 .product-modal__quantity output { text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
 .product-modal__subtotal { text-align: right; }
 .product-modal__subtotal strong { font-size: 20px; font-variant-numeric: tabular-nums; }
+.product-modal__feedback { margin: var(--pp-space-3) 0 0; color: var(--pp-marrom); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
 .product-modal__add { display: flex; justify-content: center; align-items: center; gap: var(--pp-space-2); width: 100%; min-height: 52px; margin-top: var(--pp-space-4); padding: var(--pp-space-2) var(--pp-space-3); border: 0; border-radius: var(--pp-radius-full); background: var(--pp-marrom); color: var(--pp-creme); font: 600 15px/1.5 var(--pp-font-body); cursor: pointer; }
 .product-modal button:disabled { opacity: .5; cursor: default; }
 .product-modal button:focus-visible { outline: 3px solid var(--pp-dourado-escuro); outline-offset: 3px; }

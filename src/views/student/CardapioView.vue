@@ -3,230 +3,128 @@
     <header class="menu-page__header">
       <div>
         <h1>Cardápio</h1>
-        <p>Encontre produtos, filtre por categoria e adicione ao carrinho.</p>
+        <p>Escolha seu lanche. A gente prepara.</p>
       </div>
-
       <RouterLink :to="{ name: 'carrinho' }" class="menu-page__cart-summary">
-        <span class="menu-page__cart-icon">
-          <ShoppingCart :size="20" />
-          <span v-if="cart.totalItens" class="menu-page__cart-badge">{{
-            limitarBadge(cart.totalItens)
-          }}</span>
-        </span>
-        <span>
-          <small>Meu carrinho</small>
-          <strong>{{
-            cart.totalItens
-              ? `${cart.totalItens} ${cart.totalItens === 1 ? "item" : "itens"}`
-              : "Está vazio"
-          }}</strong>
-        </span>
-        <ChevronRight :size="18" />
+        <ShoppingCart :size="20" aria-hidden="true" />
+        <span>Meu carrinho <strong>{{ cart.totalItens ? limitarBadge(cart.totalItens) : "vazio" }}</strong></span>
+        <ChevronRight :size="18" aria-hidden="true" />
       </RouterLink>
     </header>
 
     <section class="menu-page__toolbar" aria-label="Busca e filtros">
       <label class="menu-page__search">
-        <Search :size="19" aria-hidden="true" />
-        <input
-          v-model="busca"
-          type="search"
-          placeholder="Buscar por produto ou categoria..."
-          autocomplete="off"
-        />
-        <button
-          v-if="busca"
-          type="button"
-          aria-label="Limpar busca"
-          @click="busca = ''"
-        >
-          <X :size="16" />
+        <Search :size="20" aria-hidden="true" />
+        <input v-model="busca" type="search" aria-label="Buscar no cardápio"
+          placeholder="Qual vai ser o seu pedido?" autocomplete="off" />
+        <button v-if="busca" type="button" aria-label="Limpar busca" @click="busca = ''">
+          <X :size="18" aria-hidden="true" />
         </button>
       </label>
-
-      <div class="menu-page__sort">
-        <SlidersHorizontal :size="17" aria-hidden="true" />
+      <label class="menu-page__sort">
+        <SlidersHorizontal :size="18" aria-hidden="true" />
         <select v-model="ordenacao" aria-label="Ordenar produtos">
           <option value="relevancia">Relevância</option>
           <option value="nome">Nome A–Z</option>
           <option value="menor-preco">Menor preço</option>
           <option value="maior-preco">Maior preço</option>
         </select>
-        <ChevronDown :size="15" aria-hidden="true" />
+        <ChevronDown :size="16" aria-hidden="true" />
+      </label>
+
+      <div ref="categoriasTrilha" class="menu-page__categories" role="group" aria-label="Filtrar por categoria">
+        <div class="menu-page__category-track">
+          <button type="button" :class="{ 'is-active': categoriaAtiva === null }"
+            :aria-pressed="categoriaAtiva === null" @click="categoriaAtiva = null">Todos</button>
+          <button v-for="categoria in categorias" :key="categoria.id" type="button"
+            :class="{ 'is-active': categoriaAtiva === categoria.id }"
+            :aria-pressed="categoriaAtiva === categoria.id" @click="categoriaAtiva = categoria.id">
+            {{ categoria.nome }}
+          </button>
+          <span class="menu-page__category-indicator" :style="indicadorCategoria" aria-hidden="true" />
+        </div>
+      </div>
+
+      <div class="menu-page__filter-row">
+        <div class="menu-page__quick-filters" role="group" aria-label="Filtros rápidos">
+          <button type="button" :class="{ 'is-active': filtroRapido === 'todos' }"
+            :aria-pressed="filtroRapido === 'todos'" @click="filtroRapido = 'todos'">Todos os produtos</button>
+          <button type="button" :class="{ 'is-active': filtroRapido === 'promocao' }"
+            :aria-pressed="filtroRapido === 'promocao'" @click="filtroRapido = 'promocao'">
+            <Tag :size="15" aria-hidden="true" /> Em promoção
+          </button>
+          <button type="button" :class="{ 'is-active': filtroRapido === 'destaque' }"
+            :aria-pressed="filtroRapido === 'destaque'" @click="filtroRapido = 'destaque'">
+            <Sparkles :size="15" aria-hidden="true" /> Destaques
+          </button>
+        </div>
+        <label class="menu-page__mobile-filter">
+          <select v-model="filtroRapido" aria-label="Filtrar produtos">
+            <option value="todos">Todos</option>
+            <option value="promocao">Em promoção</option>
+            <option value="destaque">Destaques</option>
+          </select>
+          <ChevronDown :size="16" aria-hidden="true" />
+        </label>
       </div>
     </section>
 
-    <nav class="menu-page__categories" aria-label="Filtrar por categoria">
-      <button
-        type="button"
-        :class="{ 'is-active': categoriaAtiva === null }"
-        @click="categoriaAtiva = null"
-      >
-        <LayoutGrid :size="17" />
-        Todos
-      </button>
-
-      <button
-        v-for="categoria in categorias"
-        :key="categoria.id"
-        type="button"
-        :class="{ 'is-active': categoriaAtiva === categoria.id }"
-        @click="categoriaAtiva = categoria.id"
-      >
-        {{ categoria.nome }}
-      </button>
-    </nav>
-
-    <div class="menu-page__filter-row">
-      <div class="menu-page__quick-filters" aria-label="Filtros rápidos">
-        <button
-          type="button"
-          :class="{ 'is-active': filtroRapido === 'todos' }"
-          @click="filtroRapido = 'todos'"
-        >
-          Todos os produtos
-        </button>
-        <button
-          type="button"
-          :class="{ 'is-active': filtroRapido === 'promocao' }"
-          @click="filtroRapido = 'promocao'"
-        >
-          <Tag :size="14" /> Em promoção
-        </button>
-        <button
-          type="button"
-          :class="{ 'is-active': filtroRapido === 'destaque' }"
-          @click="filtroRapido = 'destaque'"
-        >
-          <Sparkles :size="14" /> Destaques
-        </button>
-      </div>
-
-      <button
-        v-if="temFiltros"
-        type="button"
-        class="menu-page__clear"
-        @click="limparFiltros"
-      >
-        Limpar filtros
-      </button>
-    </div>
-
-    <section
-      class="menu-page__content"
-      aria-labelledby="menu-page-products-title"
-    >
+    <section class="menu-page__content" aria-labelledby="menu-page-products-title" :aria-busy="carregando">
       <div class="menu-page__content-head">
         <div>
           <h2 id="menu-page-products-title">{{ tituloResultados }}</h2>
-          <p v-if="!carregando">{{ textoContagem }}</p>
+          <p v-if="!carregando && !erro" role="status">{{ textoContagem }}</p>
         </div>
-
-        <span
-          v-if="!carregando && produtosFiltrados.length"
-          class="menu-page__result-badge"
-        >
-          {{ produtosFiltrados.length }}
-        </span>
+        <button v-if="temFiltros" type="button" class="menu-page__clear" @click="limparFiltros">Limpar filtros</button>
       </div>
 
-      <div
-        v-if="carregando"
-        class="menu-page__grid"
-        aria-label="Carregando cardápio"
-      >
-        <div
-          v-for="index in 10"
-          :key="index"
-          class="menu-page__skeleton"
-          aria-hidden="true"
-        >
-          <div />
-          <span />
-          <span />
-        </div>
+      <div v-if="carregando" class="menu-page__grid" aria-label="Carregando cardápio">
+        <div v-for="index in 8" :key="index" class="menu-page__skeleton" aria-hidden="true"><div /><span /><span /></div>
       </div>
-
-      <div
-        v-else-if="erro"
-        class="menu-page__state menu-page__state--error"
-        role="alert"
-      >
-        <span class="menu-page__state-icon"><CircleAlert :size="28" /></span>
-        <div>
-          <h2>Não conseguimos carregar o cardápio.</h2>
-          <p>Verifique sua conexão e tente novamente.</p>
-        </div>
+      <div v-else-if="erro" class="menu-page__state" role="alert">
+        <CircleAlert :size="28" aria-hidden="true" />
+        <h2>Não conseguimos carregar o cardápio.</h2>
+        <p>Verifique sua conexão e tente novamente.</p>
         <button type="button" @click="tentarNovamente">Tentar novamente</button>
       </div>
-
-      <div v-else-if="!produtosFiltrados.length" class="menu-page__state">
-        <span class="menu-page__state-icon"><SearchX :size="28" /></span>
-        <div>
-          <h2>Nenhum produto encontrado.</h2>
-          <p>Tente outra busca ou remova alguns filtros.</p>
-        </div>
-        <button v-if="temFiltros" type="button" @click="limparFiltros">
-          Ver todos os produtos
-        </button>
+      <div v-else-if="!produtos.length" class="menu-page__state">
+        <ShoppingCart :size="28" aria-hidden="true" />
+        <h2>O cardápio de hoje ainda não foi publicado.</h2>
+        <p>Os produtos aparecem aqui assim que a padaria liberar.</p>
       </div>
-
+      <div v-else-if="!produtosFiltrados.length" class="menu-page__state">
+        <SearchX :size="28" aria-hidden="true" />
+        <h2>Nenhum produto encontrado.</h2>
+        <p>Tente outra busca ou remova alguns filtros.</p>
+        <button v-if="temFiltros" type="button" @click="limparFiltros">Ver todos os produtos</button>
+      </div>
       <div v-else class="menu-page__grid">
-        <ProductCard
-          v-for="produto in produtosFiltrados"
-          :key="produto.id"
-          :produto="produto"
-          :favorito="favorites.tem(produto.id)"
-          :favoritando="favorites.estaProcessando(produto.id)"
+        <ProductCard v-for="produto in produtosFiltrados" :key="produto.id" :produto="produto"
+          :favorito="favorites.tem(produto.id)" :favoritando="favorites.estaProcessando(produto.id)"
           :adicionando="produtoAdicionando === produto.id"
-          @open="abrirProduto"
-          @favorite="alternarFavorito"
-          @add="adicionarRapido"
-        />
+          @open="abrirProduto" @favorite="alternarFavorito" @add="adicionarRapido" />
       </div>
     </section>
 
-    <ProductDetailsModal
-      :open="modalAberto"
-      :produto="produtoDetalhado"
-      :loading="carregandoDetalhe"
-      :adding="adicionandoModal"
-      :favorito="
-        Boolean(produtoDetalhado && favorites.tem(produtoDetalhado.id))
-      "
-      :favoritando="
-        Boolean(
-          produtoDetalhado && favorites.estaProcessando(produtoDetalhado.id),
-        )
-      "
-      @close="fecharModal"
-      @favorite="alternarFavorito"
-      @add="adicionarDoModal"
-    />
-
+    <ProductDetailsModal :open="modalAberto" :produto="produtoDetalhado" :loading="carregandoDetalhe" :adding="adicionandoModal" :feedback="toast"
+      :favorito="Boolean(produtoDetalhado && favorites.tem(produtoDetalhado.id))"
+      :favoritando="Boolean(produtoDetalhado && favorites.estaProcessando(produtoDetalhado.id))"
+      @close="fecharModal" @favorite="alternarFavorito" @add="adicionarDoModal" />
     <Transition name="menu-toast">
-      <div
-        v-if="toast"
-        class="menu-page__toast"
-        role="status"
-        aria-live="polite"
-      >
-        <CheckCircle2 :size="18" />
-        {{ toast }}
+      <div v-if="toast" class="menu-page__toast" role="status" aria-live="polite">
+        <CheckCircle2 :size="18" aria-hidden="true" />{{ toast }}
       </div>
     </Transition>
   </div>
 </template>
-
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   CheckCircle2,
   ChevronDown,
   ChevronRight,
   CircleAlert,
-  LayoutGrid,
   Search,
   SearchX,
   ShoppingCart,
@@ -242,6 +140,7 @@ import { useAutoRefresh } from "@/composables/useAutoRefresh";
 import catalogService from "@/services/catalog.service";
 import { useCartStore } from "@/stores/cart";
 import { useFavoritesStore } from "@/stores/favorites";
+import { movimentoReduzido } from "@/utils/vooAoCarrinho";
 
 const cart = useCartStore();
 const favorites = useFavoritesStore();
@@ -278,6 +177,21 @@ watch([busca, categoriaAtiva], ([valor, categoria]) => {
 });
 const filtroRapido = ref("todos");
 const ordenacao = ref("relevancia");
+const categoriasTrilha = useTemplateRef("categoriasTrilha");
+const indicadorCategoria = shallowRef({ width: "0px", transform: "translateX(0px)" });
+let observerCategorias;
+function alinharCategoria(revelar = false) {
+  const trilha = categoriasTrilha.value;
+  const ativo = trilha?.querySelector('[aria-pressed="true"]');
+  indicadorCategoria.value = { width: `${ativo?.offsetWidth || 0}px`, transform: `translateX(${ativo?.offsetLeft || 0}px)` };
+  if (!ativo || !revelar) return;
+  const inicio = ativo.offsetLeft;
+  const fim = inicio + ativo.offsetWidth;
+  if (inicio < trilha.scrollLeft || fim > trilha.scrollLeft + trilha.clientWidth) {
+    trilha.scrollTo({ left: inicio - (trilha.clientWidth - ativo.offsetWidth) / 2, behavior: movimentoReduzido() ? "instant" : "smooth" });
+  }
+}
+watch([categoriaAtiva, categorias], async () => { await nextTick(); alinharCategoria(true); }, { flush: "post" });
 const detalhesCache = new Map();
 
 const carregando = ref(true);
@@ -447,6 +361,7 @@ async function obterDetalhes(produto) {
 }
 
 async function abrirProduto(produto) {
+  toast.value = "";
   modalAberto.value = true;
   carregandoDetalhe.value = true;
   produtoDetalhado.value = null;
@@ -536,809 +451,114 @@ function mostrarToast(mensagem) {
 
 onMounted(() => {
   favorites.carregar().catch(() => {});
+  observerCategorias = new ResizeObserver(() => alinharCategoria());
+  observerCategorias.observe(categoriasTrilha.value);
+  document.fonts.ready.then(() => alinharCategoria());
+  alinharCategoria();
 });
 
 onBeforeUnmount(() => {
   window.clearTimeout(toastTimer);
+  observerCategorias?.disconnect();
 });
 </script>
-
 <style scoped>
-.menu-page {
-  width: min(100%, 1320px);
-  margin: 0 auto;
-  color: var(--pp-text-dark);
-}
-
-.menu-page__header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 28px;
-  margin-bottom: 24px;
-}
-
-.menu-page__eyebrow {
-  display: block;
-  margin-bottom: 6px;
-  color: #bd7c14;
-  font-size: 12px;
-  font-weight: 850;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.menu-page__header h1 {
-  margin: 0;
-  color: #241e19;
-  font-size: clamp(28px, 3.1vw, 42px);
-  line-height: 1;
-  letter-spacing: -0.045em;
-}
-
-.menu-page__header p {
-  margin: 8px 0 0;
-  color: #746b63;
-  font-size: 13px;
-}
-
-.menu-page__cart-summary {
-  min-width: 190px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 10px;
-  border: 1px solid rgba(49, 33, 22, 0.075);
-  border-radius: 15px;
-  background: rgba(255, 255, 255, 0.82);
-  color: #382f28;
-  box-shadow: 0 7px 22px rgba(48, 32, 21, 0.04);
-}
-
-.menu-page__cart-icon {
-  width: 38px;
-  height: 38px;
-  position: relative;
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  border-radius: 11px;
-  background: #fff4dc;
-  color: #bd7a10;
-}
-
-.menu-page__cart-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  min-width: 17px;
-  height: 17px;
-  display: grid;
-  place-items: center;
-  padding: 0 4px;
-  border: 2px solid #fff;
-  border-radius: 999px;
-  background: #d99b2f;
-  color: #2b180c;
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.menu-page__cart-summary > span:nth-child(2) {
-  min-width: 0;
-  flex: 1;
-}
-
-.menu-page__cart-summary small,
-.menu-page__cart-summary strong {
-  display: block;
-}
-
-.menu-page__cart-summary small {
-  color: #91877e;
-  font-size: 12px;
-}
-
-.menu-page__cart-summary strong {
-  margin-top: 2px;
-  font-size: 11.5px;
-}
-
-.menu-page__toolbar {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 180px;
-  gap: 12px;
-  margin-bottom: 15px;
-}
-
-.menu-page__search,
-.menu-page__sort {
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  border: 1px solid rgba(50, 33, 22, 0.085);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.94);
-  color: #827970;
-  box-shadow: 0 5px 17px rgba(48, 32, 21, 0.025);
-}
-
-.menu-page__search {
-  gap: 10px;
-  padding: 0 15px;
-}
-
-.menu-page__search input {
-  min-width: 0;
-  flex: 1;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: #302923;
-  font: inherit;
-  font-size: 12px;
-}
-
-.menu-page__search input::placeholder {
-  color: #9d958d;
-}
-
-.menu-page__search button {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: #f5f1ec;
-  color: #80776f;
-  cursor: pointer;
-}
-
-.menu-page__sort {
-  position: relative;
-  gap: 8px;
-  padding: 0 12px;
-}
-
-.menu-page__sort select {
-  min-width: 0;
-  flex: 1;
-  appearance: none;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: #51483f;
-  font: inherit;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.menu-page__categories {
-  display: flex;
-  gap: 9px;
-  padding: 2px 0 9px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.menu-page__categories::-webkit-scrollbar,
-.menu-page__quick-filters::-webkit-scrollbar {
-  display: none;
-}
-
-.menu-page__categories button {
-  min-height: 40px;
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 0 17px;
-  border: 1px solid rgba(49, 33, 22, 0.08);
-  border-radius: 12px;
-  background: #fff;
-  color: #51483f;
-  font: inherit;
-  font-size: 11px;
-  font-weight: 720;
-  cursor: pointer;
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    color 160ms ease;
-}
-
-.menu-page__categories button.is-active {
-  border-color: #2d1d14;
-  background: #2d211a;
-  color: #fff4e5;
-}
-
-.menu-page__filter-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  margin: 8px 0 27px;
-}
-
-.menu-page__quick-filters {
-  display: flex;
-  gap: 7px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.menu-page__quick-filters button,
-.menu-page__clear {
-  min-height: 31px;
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 0 11px;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  background: transparent;
-  color: #847a71;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 720;
-  cursor: pointer;
-}
-
-.menu-page__quick-filters button.is-active {
-  border-color: #eadfce;
-  background: #fff8ec;
-  color: #a56b0e;
-}
-
-.menu-page__clear {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.menu-page__content-head {
-  min-height: 46px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 14px;
-}
-
-.menu-page__content-head h2 {
-  margin: 0;
-  color: #29231e;
-  font-size: 17px;
-  letter-spacing: -0.02em;
-}
-
-.menu-page__content-head p {
-  margin: 4px 0 0;
-  color: #928981;
-  font-size: 10.5px;
-}
-
-.menu-page__result-badge {
-  min-width: 30px;
-  height: 30px;
-  display: grid;
-  place-items: center;
-  padding: 0 8px;
-  border-radius: 999px;
-  background: #efe5d8;
-  color: #755020;
-  font-size: 12px;
-  font-weight: 850;
-}
-
-.menu-page__grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.menu-page__skeleton {
-  min-height: 290px;
-  padding: 10px;
-  border-radius: 18px;
-  background: #fff;
-  overflow: hidden;
-}
-
-.menu-page__skeleton div,
-.menu-page__skeleton span {
-  display: block;
-  border-radius: 12px;
-  background: linear-gradient(90deg, #eee9e3 25%, #f6f2ed 45%, #eee9e3 65%);
-  background-size: 250% 100%;
-  animation: menu-shimmer 1.3s linear infinite;
-}
-
-.menu-page__skeleton div {
-  aspect-ratio: 1.2 / 1;
-}
-
-.menu-page__skeleton span {
-  width: 72%;
-  height: 12px;
-  margin-top: 13px;
-}
-
-.menu-page__skeleton span:last-child {
-  width: 45%;
-  height: 9px;
-  margin-top: 8px;
-}
-
-@keyframes menu-shimmer {
-  to {
-    background-position: -150% 0;
-  }
-}
-
-.menu-page__state {
-  min-height: 330px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 32px;
-  border: 1px dashed #dfd5cb;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.56);
-  text-align: center;
-}
-
-.menu-page__state-icon {
-  width: 54px;
-  height: 54px;
-  display: grid;
-  place-items: center;
-  border-radius: 15px;
-  background: #f7efe3;
-  color: #c18423;
-}
-
-.menu-page__state h2 {
-  margin: 5px 0 0;
-  font-size: 16px;
-}
-
-.menu-page__state p {
-  margin: 5px 0 0;
-  color: #877e76;
-  font-size: 11px;
-}
-
-.menu-page__state button {
-  min-height: 38px;
-  margin-top: 5px;
-  padding: 0 16px;
-  border: 0;
-  border-radius: 9px;
-  background: #dfa438;
-  color: #29170b;
-  font: inherit;
-  font-size: 11px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.menu-page__toast {
-  position: fixed;
-  right: 26px;
-  bottom: 26px;
-  z-index: 120;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  max-width: min(380px, calc(100vw - 32px));
-  min-height: 46px;
-  padding: 0 15px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  background: #2f1c11;
-  color: #f8ebd9;
-  box-shadow: 0 16px 40px rgba(35, 20, 11, 0.22);
-  font-size: 11.5px;
-  font-weight: 650;
-}
-
-.menu-toast-enter-active,
-.menu-toast-leave-active {
-  transition:
-    opacity 180ms ease,
-    transform 180ms ease;
-}
-
-.menu-toast-enter-from,
-.menu-toast-leave-to {
-  opacity: 0;
-  transform: translateY(8px);
-}
-
-@media (max-width: 1260px) {
-  .menu-page__grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 1024px) {
-  .menu-page__header {
-    align-items: center;
-  }
-
-  .menu-page__cart-summary {
-    min-width: 176px;
-  }
-
-  .menu-page__grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 820px) {
-  .menu-page__grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 680px) {
-  .menu-page__header {
-    align-items: flex-start;
-    margin-bottom: 17px;
-  }
-
-  .menu-page__eyebrow {
-    margin-bottom: 4px;
-    font-size: 8.5px;
-  }
-
-  .menu-page__header h1 {
-    font-size: 29px;
-  }
-
-  .menu-page__header p {
-    max-width: 250px;
-    margin-top: 5px;
-    font-size: 10.5px;
-    line-height: 1.45;
-  }
-
-  .menu-page__cart-summary {
-    min-width: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-  }
-
-  .menu-page__cart-summary > span:nth-child(2),
-  .menu-page__cart-summary > svg {
-    display: none;
-  }
-
-  .menu-page__cart-icon {
-    width: 40px;
-    height: 40px;
-    background: #fff;
-    box-shadow: 0 5px 15px rgba(45, 29, 18, 0.06);
-  }
-
-  .menu-page__toolbar {
-    grid-template-columns: minmax(0, 1fr) 45px;
-    gap: 8px;
-    margin-bottom: 11px;
-  }
-
-  .menu-page__search,
-  .menu-page__sort {
-    min-height: 44px;
-    border-radius: 12px;
-  }
-
-  .menu-page__search {
-    padding-inline: 12px;
-  }
-
-  .menu-page__search input {
-    font-size: 10.5px;
-  }
-
-  .menu-page__sort {
-    justify-content: center;
-    padding: 0;
-  }
-
-  .menu-page__sort select {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-  }
-
-  .menu-page__sort > svg:last-child {
-    display: none;
-  }
-
-  .menu-page__categories {
-    gap: 7px;
-    margin-inline: 0;
-    padding: 2px 16px 8px;
-  }
-
-  .menu-page__categories button {
-    min-height: 36px;
-    padding-inline: 13px;
-    border-radius: 11px;
-    font-size: 9.5px;
-  }
-
-  .menu-page__filter-row {
-    margin: 5px 0 19px;
-  }
-
-  .menu-page__quick-filters {
-    margin-right: -16px;
-    padding-right: 16px;
-  }
-
-  .menu-page__quick-filters button {
-    min-height: 28px;
-    font-size: 12px;
-  }
-
-  .menu-page__clear {
-    display: none;
-  }
-
-  .menu-page__content-head {
-    min-height: 39px;
-    margin-bottom: 10px;
-  }
-
-  .menu-page__content-head h2 {
-    font-size: 14px;
-  }
-
-  .menu-page__content-head p {
-    font-size: 9.5px;
-  }
-
-  .menu-page__result-badge {
-    min-width: 27px;
-    height: 27px;
-    font-size: 12px;
-  }
-
-  .menu-page__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 9px;
-  }
-
-  .menu-page__skeleton {
-    min-height: 232px;
-    padding: 7px;
-    border-radius: 15px;
-  }
-
-  .menu-page__state {
-    min-height: 300px;
-    padding: 24px 18px;
-  }
-
-  .menu-page__toast {
-    left: 16px;
-    right: 16px;
-    bottom: 82px;
-    justify-content: center;
-  }
-}
-.menu-page {
-  width: min(100%, 1280px);
-}
-
-.menu-page__header {
-  align-items: center;
-  margin-bottom: 22px;
-}
-
-.menu-page__header h1 {
-  font-size: 30px;
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-}
-
-.menu-page__header p {
-  margin-top: 6px;
-  color: #77706a;
-  font-size: 13px;
-}
-
-.menu-page__cart-summary {
-  min-width: 184px;
-  padding: 8px 10px;
-  border-color: #e1ddd8;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: none;
-}
-
-.menu-page__cart-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: #f4efe7;
-  color: #8d5d17;
-}
-
-.menu-page__toolbar {
-  grid-template-columns: minmax(0, 1fr) 176px;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.menu-page__search,
-.menu-page__sort {
-  min-height: 44px;
-  border-color: #dedad5;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: none;
-}
-
-.menu-page__search:focus-within,
-.menu-page__sort:focus-within {
-  border-color: #aa7a35;
-  box-shadow: 0 0 0 3px rgba(167, 107, 23, 0.08);
-}
-
-.menu-page__search {
-  padding: 0 13px;
-}
-
-.menu-page__search input {
-  font-size: 12.5px;
-}
-
-.menu-page__search button {
-  border-radius: 7px;
-  background: #f4f1ed;
-}
-
-.menu-page__sort {
-  padding: 0 11px;
-}
-
-.menu-page__categories {
-  gap: 24px;
-  padding: 0 0 1px;
-  border-bottom: 1px solid #e3dfda;
-}
-
-.menu-page__categories button {
-  min-height: 40px;
-  gap: 0;
-  padding: 0 2px 10px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
-  background: transparent;
-  color: #6f6963;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.menu-page__categories button svg {
-  display: none;
-}
-
-.menu-page__categories button:hover {
-  color: #2d2824;
-}
-
-.menu-page__categories button.is-active {
-  border-color: #a76b17;
-  background: transparent;
-  color: #2b241f;
-  font-weight: 750;
-}
-
-.menu-page__filter-row {
-  margin: 12px 0 26px;
-}
-
-.menu-page__quick-filters {
-  gap: 8px;
-}
-
-.menu-page__quick-filters button,
-.menu-page__clear {
-  min-height: 34px;
-  padding: 0 12px;
-  border: 1px solid #ddd9d4;
-  border-radius: 8px;
-  background: #fff;
-  color: #5e5852;
-  font-size: 10.5px;
-  font-weight: 650;
-}
-
-.menu-page__quick-filters button svg {
-  display: none;
-}
-
-.menu-page__quick-filters button:hover {
-  border-color: #bcb5ae;
-}
-
-.menu-page__quick-filters button.is-active {
-  border-color: #2c1e16;
-  background: #2c1e16;
-  color: #fff;
-}
-
-.menu-page__clear {
-  border-color: transparent;
-  background: transparent;
-  color: #7c736c;
-  text-decoration: none;
-}
-
-.menu-page__clear:hover {
-  color: #2d2824;
-}
-
-.menu-page__content-head {
-  align-items: flex-end;
-}
-
-.menu-page__content-head h2 {
-  font-size: 18px;
-}
-
-.menu-page__result-badge {
-  min-width: auto;
-  height: auto;
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
-  color: #7d756e;
-  font-size: 11px;
-  font-weight: 650;
-}
-
-@media (max-width: 680px) {
-  .menu-page__header h1 {
-    font-size: 26px;
-  }
-
-  .menu-page__toolbar {
-    gap: 8px;
-  }
-
-  .menu-page__categories {
-    gap: 20px;
-    margin-inline: 0;
-    padding-inline: 16px;
-  }
-
-  .menu-page__categories button {
-    min-height: 38px;
-    padding-bottom: 9px;
-    font-size: 11px;
-  }
-
-  .menu-page__quick-filters button {
-    min-height: 32px;
-    font-size: 12px;
-  }
+.menu-page { --pp-home-action-duration: 450ms; width: min(100%, 1240px); margin: 0 auto; color: var(--pp-marrom); }
+.menu-page__header { display: flex; align-items: end; justify-content: space-between; gap: var(--pp-space-4); margin-bottom: var(--pp-space-5); }
+.menu-page__header h1 { margin: 0; color: var(--pp-marrom); font: 400 var(--pp-home-section-title-size)/1.18 var(--pp-font-titulo); letter-spacing: -.025em; }
+.menu-page__header p { margin: var(--pp-space-1) 0 0; color: var(--pp-texto-2); font-size: 16px; line-height: 1.5; }
+.menu-page__cart-summary { display: inline-flex; flex: none; align-items: center; gap: var(--pp-space-2); min-height: 44px; color: var(--pp-marrom); font-size: 14px; }
+.menu-page__cart-summary strong { margin-left: var(--pp-space-1); font-weight: 600; }
+.menu-page__toolbar { display: grid; grid-template-columns: minmax(0, 1fr) 210px; grid-template-areas: "search sort" "categories categories" "quick quick"; gap: var(--pp-space-3) var(--pp-space-4); margin-bottom: var(--pp-space-5); }
+.menu-page__search, .menu-page__sort, .menu-page__mobile-filter { display: flex; align-items: center; gap: var(--pp-space-2); min-width: 0; min-height: 52px; padding-inline: var(--pp-space-3); border: 1px solid var(--pp-creme-borda); border-radius: var(--pp-radius-btn); background: var(--pp-surface-card); color: var(--pp-texto-2); }
+.menu-page__search { grid-area: search; }
+.menu-page__search > svg, .menu-page__sort > svg, .menu-page__mobile-filter > svg { flex: none; }
+.menu-page__search input { flex: 1; width: 100%; min-width: 0; min-height: 50px; padding: 0; border: 0; outline: 0; background: transparent; color: var(--pp-marrom); font: 400 16px/1.5 var(--pp-font-body); }
+.menu-page__search input::placeholder { color: var(--pp-texto-2); opacity: 1; }
+.menu-page__search input::-webkit-search-cancel-button { display: none; }
+.menu-page__search button { display: grid; place-items: center; flex: none; width: 44px; height: 44px; margin-right: -12px; padding: 0; border: 0; border-radius: var(--pp-radius-full); background: transparent; color: var(--pp-marrom); cursor: pointer; }
+.menu-page__sort { grid-area: sort; position: relative; }
+.menu-page__sort select, .menu-page__mobile-filter select { width: 100%; min-width: 0; min-height: 50px; border: 0; outline: 0; appearance: none; background: transparent; color: var(--pp-marrom); font: 500 14px/1.5 var(--pp-font-body); cursor: pointer; }
+.menu-page__sort > svg:last-child, .menu-page__mobile-filter > svg { pointer-events: none; }
+.menu-page__categories { grid-area: categories; min-width: 0; padding-top: var(--pp-space-1); overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--pp-dourado-escuro) var(--pp-creme-2); }
+.menu-page__category-track { position: relative; display: flex; gap: var(--pp-space-5); width: max-content; min-width: 100%; border-bottom: 1px solid var(--pp-creme-borda); }
+.menu-page__categories button { flex: none; min-height: 52px; padding: 0 var(--pp-space-1) var(--pp-space-2); border: 0; background: transparent; color: var(--pp-texto-2); font: 500 17px/1.5 var(--pp-font-body); cursor: pointer; }
+.menu-page__categories button.is-active { color: var(--pp-marrom); font-weight: 700; }
+.menu-page__category-indicator { position: absolute; bottom: 0; left: 0; height: 3px; background: var(--pp-dourado-escuro); pointer-events: none; transition: transform 220ms var(--pp-ease), width 220ms var(--pp-ease); }
+.menu-page__filter-row { grid-area: quick; min-width: 0; }
+.menu-page__quick-filters { display: flex; flex-wrap: wrap; gap: var(--pp-space-2); }
+.menu-page__quick-filters button { display: flex; align-items: center; gap: var(--pp-space-1); min-height: 44px; padding: 0 var(--pp-space-3); border: 1px solid transparent; border-radius: var(--pp-radius-full); background: transparent; color: var(--pp-texto-2); font: 500 14px/1.5 var(--pp-font-body); cursor: pointer; }
+.menu-page__quick-filters button.is-active { border-color: var(--pp-creme-borda); background: var(--pp-creme-2); color: var(--pp-marrom); }
+.menu-page__mobile-filter { display: none; }
+.menu-page__content { min-width: 0; }
+.menu-page__content-head { display: flex; justify-content: space-between; align-items: center; gap: var(--pp-space-3); min-width: 0; margin-bottom: var(--pp-space-4); }
+.menu-page__content-head h2 { margin: 0; font: 600 22px/1.4 var(--pp-font-body); overflow-wrap: anywhere; }
+.menu-page__content-head p { margin: 4px 0 0; color: var(--pp-texto-2); font-size: 14px; line-height: 1.5; }
+.menu-page__clear { flex: none; min-height: 44px; padding: 0; border: 0; background: transparent; color: var(--pp-dourado-profundo); font: 600 14px/1.5 var(--pp-font-body); text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+.menu-page__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: stretch; gap: var(--pp-space-4); }
+/* Acabamento restrito ao Cardápio; Home e demais consumidores preservam suas variantes. */
+.menu-page :deep(.product-card) { padding: 0; border-color: var(--pp-creme-borda); border-radius: 16px; background: var(--pp-surface-card); color: var(--pp-marrom); box-shadow: none; }
+.menu-page :deep(.product-card__media-button) { border-radius: 15px 15px 0 0; }
+.menu-page :deep(.product-card__copy) { padding: var(--pp-space-3) var(--pp-space-3) var(--pp-space-1); }
+.menu-page :deep(.product-card__category) { font-size: 12px; font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--pp-texto-2); }
+.menu-page :deep(.product-card h2) { font: 600 18px/1.35 var(--pp-font-body); letter-spacing: 0; min-height: 2.7em; overflow-wrap: anywhere; }
+.menu-page :deep(.product-card__footer) { padding: var(--pp-space-2) var(--pp-space-3) var(--pp-space-3); }
+.menu-page :deep(.product-card__prices strong) { font-size: 20px; color: var(--pp-marrom); }
+.menu-page :deep(.product-card__old-price) { color: var(--pp-texto-2); }
+.menu-page :deep(.product-card__favorite) { width: 44px; height: 44px; top: var(--pp-space-1); right: var(--pp-space-1); border: 0; box-shadow: none; }
+.menu-page :deep(.product-card__add) { width: 44px; height: 44px; flex: none; background: var(--pp-marrom); color: var(--pp-creme); }
+.menu-page :deep(.product-card__badge) { left: var(--pp-space-1); top: var(--pp-space-1); max-width: calc(100% - 60px); font-size: 10px; padding: 5px 7px; }
+.menu-page__skeleton { overflow: hidden; border: 1px solid var(--pp-creme-borda); border-radius: 16px; padding-bottom: var(--pp-space-3); }
+.menu-page__skeleton div { aspect-ratio: 1.18; background: var(--pp-creme-2); }
+.menu-page__skeleton span { display: block; height: 14px; margin: var(--pp-space-3); background: var(--pp-creme-2); }
+.menu-page__skeleton span:last-child { width: 45%; }
+.menu-page__state { display: flex; flex-direction: column; align-items: center; gap: var(--pp-space-3); padding: var(--pp-space-6) var(--pp-space-4); text-align: center; }
+.menu-page__state > svg { color: var(--pp-texto-2); }
+.menu-page__state h2 { margin: 0; font: 600 22px/1.4 var(--pp-font-body); }
+.menu-page__state p { max-width: 65ch; margin: 0; color: var(--pp-texto-2); font-size: 16px; line-height: 1.6; }
+.menu-page__state button { min-height: 44px; padding: var(--pp-space-2) var(--pp-space-4); border: 1px solid var(--pp-creme-borda); border-radius: var(--pp-radius-full); background: var(--pp-creme-2); color: var(--pp-marrom); font: 600 14px/1.5 var(--pp-font-body); cursor: pointer; }
+.menu-page__toast { position: fixed; z-index: 90; bottom: 28px; left: 50%; display: flex; align-items: center; gap: var(--pp-space-1); width: max-content; max-width: calc(100vw - 32px); padding: var(--pp-space-2) var(--pp-space-4); border-radius: var(--pp-radius-btn); background: var(--pp-marrom); color: var(--pp-creme); font-size: 14px; line-height: 1.5; transform: translateX(-50%); }
+.menu-page button:focus-visible, .menu-page a:focus-visible, .menu-page :deep(.product-card button:focus-visible) { outline: 3px solid var(--pp-dourado-escuro); outline-offset: 3px; }
+.menu-page__categories button:focus-visible { outline-offset: -3px; }
+.menu-page__search:focus-within, .menu-page__sort:focus-within, .menu-page__mobile-filter:focus-within { outline: 3px solid var(--pp-dourado-escuro); outline-offset: 2px; }
+.menu-toast-enter-active, .menu-toast-leave-active { transition: opacity 180ms var(--pp-ease); }
+.menu-toast-enter-from, .menu-toast-leave-to { opacity: 0; }
+@media (hover: hover) {
+  .menu-page__categories button:hover { color: var(--pp-marrom); }
+  .menu-page__quick-filters button:hover { background: var(--pp-creme-2); }
+  .menu-page :deep(.product-card:hover) { border-color: var(--pp-dourado-escuro); }
+}
+@media (max-width: 1100px) { .menu-page__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 760px) {
+  .menu-page__header { align-items: flex-start; margin-bottom: var(--pp-space-3); }
+  .menu-page__header p { font-size: 14px; }
+  .menu-page__cart-summary { display: none; }
+  .menu-page__toolbar { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "search search" "categories categories" "quick sort"; gap: var(--pp-space-1); margin-bottom: var(--pp-space-3); }
+  .menu-page__search { padding-inline: var(--pp-space-2); }
+  .menu-page__search, .menu-page__sort, .menu-page__mobile-filter { min-height: 48px; }
+  .menu-page__sort { padding-inline: var(--pp-space-2); gap: var(--pp-space-1); }
+  .menu-page__sort > svg:first-child { display: none; }
+  .menu-page__sort select, .menu-page__mobile-filter select { min-height: 46px; font-size: 13px; }
+  .menu-page__category-track { gap: var(--pp-space-3); }
+  .menu-page__categories { padding-bottom: var(--pp-space-1); }
+  .menu-page__categories button { min-height: 48px; padding-inline: var(--pp-space-1); font-size: 15px; }
+  .menu-page__quick-filters { display: none; }
+  .menu-page__mobile-filter { display: flex; padding-inline: var(--pp-space-2); gap: var(--pp-space-1); }
+  .menu-page__content-head { margin-bottom: var(--pp-space-2); }
+  .menu-page__content-head h2 { font-size: 19px; }
+  .menu-page__content-head p { font-size: 13px; }
+  .menu-page__clear { font-size: 12px; }
+  .menu-page__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--pp-space-2); }
+  .menu-page :deep(.product-card__copy) { padding: var(--pp-space-2) var(--pp-space-2) 4px; }
+  .menu-page :deep(.product-card h2) { font-size: 16px; }
+  .menu-page :deep(.product-card__footer) { padding: var(--pp-space-1) var(--pp-space-2) var(--pp-space-2); }
+  /* A coluna de compra fica à esquerda, livre do assistente fixo à direita. */
+  .menu-page :deep(.product-card__footer) { flex-direction: column; align-items: flex-start; gap: var(--pp-space-1); }
+  .menu-page :deep(.product-card__prices strong) { font-size: 17px; }
+  .menu-page__toast { bottom: calc(64px + 80px + env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu-page__category-indicator, .menu-toast-enter-active, .menu-toast-leave-active { transition: none; }
+  .menu-page :deep(.product-card), .menu-page :deep(.product-card__media-button img), .menu-page :deep(.product-card__media-button svg) { transition: none; transform: none; }
 }
 </style>

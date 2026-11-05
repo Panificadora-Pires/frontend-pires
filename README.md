@@ -23,6 +23,25 @@ Prévia com dados fictícios/API simulada: `http://127.0.0.1:5173/curadoria-prev
 `npm run dev` estiver ativo na porta 5173. Esse HTML é um artefato local não versionado, fora do build.
 Para testar o fluxo normal com backend local, use a raiz do servidor e uma conta local fictícia.
 
+## Detalhe compartilhado e Cardápio (prévia local)
+
+Home, Cardápio, Promoções e Favoritos compartilham o detalhe com foto, conteúdo creme,
+favorito separado, quantidade limitada ao estoque e subtotal. No celular, o miolo rola e a
+compra permanece na base do diálogo. Foco, Escape, retorno ao gatilho e restauração da
+rolagem acompanham o diálogo nativo; avisos de favorito/estoque aparecem dentro dele.
+O CTA reutiliza o preenchimento circular de 450ms e respeita movimento reduzido.
+
+O Cardápio reúne busca/ordenação, trilha de categorias e filtros compactos no celular.
+O acabamento dos cards é local à tela; busca, categoria, histórico e fluxos de compra permanecem.
+Para visualizar com `npm run dev` na 5173, abra
+`http://127.0.0.1:5173/detalhe-cardapio-preview.html` ou acrescente `?tela=home&detalhe=1`
+para abrir o detalhe pela Home. A prévia usa dados fictícios/API simulada; o HTML local é
+ignorado pelo Git e fica fora do build. No fluxo normal, abra `/cardapio` com backend local
+na porta 8000 e uma conta fictícia.
+
+[Plano](../docs/planos/detalhe-e-cardapio.md) e
+[relatório, capturas e limites](../docs/prints/detalhe-cardapio-2026-11-05/README.md) ficam na pasta pai.
+
 ## Stack
 
 - Vue 3
@@ -256,7 +275,7 @@ Direção "Balcão creme" (Fase 5): fundo creme, marrom nos textos, dourado nos 
 
 Para a Coxinha de frango (id 1 confirmado na API local), o clipe `src/assets/videos/coxinha-promocao-escura.mp4` acompanha a rolagem nativa no desktop: avanço, reversão e liberação do painel sticky abaixo do header. `useScrollVideo` agenda por RAF e agrupa seeks; metadados, resize e pageshow sincronizam o quadro. O clipe não tem áudio, autoplay, loop ou controles. Até 760px, o vídeo não é montado nem solicitado: título/link, pôster de 180–220px, nome, preço e compra ficam no fluxo normal, sem distância extra. Movimento reduzido também impede montagem; erro, metadados inválidos ou altura insuficiente desativam sticky. Outras ofertas mantêm `ProductImage`. Preços, vigência, favorito, detalhes e compra continuam nos fluxos existentes.
 
-As transições visuais de ações da Home usam `--pp-home-action-duration: 450ms` e `--pp-ease`, sem atrasar clique, teclado ou loading. `CardActionContent` mede o raio até a borda arredondada real e acompanha mudanças de tamanho com `ResizeObserver`, evitando terminar visualmente antes do tempo em botões largos. A medição é restrita à Home, com hover condicionado ao dispositivo e transições removidas em movimento reduzido.
+As transições visuais de ações da Home usam `--pp-home-action-duration: 450ms` e `--pp-ease`, sem atrasar clique, teclado ou loading. `CardActionContent` mede o raio até a borda arredondada real e acompanha mudanças de tamanho com `ResizeObserver`, evitando terminar visualmente antes do tempo em botões largos. A medição é restrita à Home e ao opt-in explícito `data-card-action-radius` do detalhe compartilhado, com hover condicionado ao dispositivo e transições removidas em movimento reduzido.
 
 `HomeFooter.vue` fecha apenas esta rota com marca e links para Cardápio, Promoções e Meus pedidos. Os quatro destaques mantêm prioridade/ordem e seleção separada do hero. Fotos abaixo da grade usam carregamento lazy. Não há dependência ou endpoint novo. Provas atuais em `../docs/prints/home-responsiva-2026-11-04/`; histórico em `../docs/prints/home-ajustes-2026-11-04/` e `../docs/prints/home-pos-destaques-2026-11-04/`.
 
@@ -290,7 +309,7 @@ Aplicação: adicionar/favorito do `ProductCard` (Home, Cardápio, Promoções e
 
 Disabled/loading ocultam imediatamente o preenchimento e preservam o spinner; toque independe de hover, foco permanece visível e movimento reduzido troca o estado sem expansão/contração perceptível. O foco de quantidade fica dentro do grupo que recorta seu conteúdo. Zoom das fotos, bordas/sombras, voo ao carrinho, header e banner mantêm seus fluxos.
 
-Provas e gravação local: `../docs/prints/hover-cards-2026-11-01/`; plano: `../docs/planos/hover-circular-cards.md`. Testes de interface usam dados fictícios e API simulada no navegador; não validam checkout ou pagamento real. Admin, superfícies de detalhes/notificações, modal e demais botões externos aos cards não recebem a classe, com a extensão do banner descrita abaixo.
+Provas e gravação local: `../docs/prints/hover-cards-2026-11-01/`; plano: `../docs/planos/hover-circular-cards.md`. Testes de interface usam dados fictícios e API simulada no navegador; não validam checkout ou pagamento real. Fora dos cards, as extensões explícitas são o banner descrito abaixo e o CTA do detalhe compartilhado descrito acima. Admin e notificações preservam seus estilos.
 
 Extensão solicitada ao banner: os CTAs de compra e navegação de `HomeBanner.vue` usam o mesmo componente/efeito. No comercial, o botão dourado recebe o círculo marrom com conteúdo creme; nos demais slides, o botão marrom recebe dourado. A variável local `--pp-card-action-radius: 75%` ajusta o recorte ao botão largo para a expansão permanecer perceptível (o padrão de 120% continua nos cards). Conteúdo, dimensões, vídeo, navegação e adição/voo ao carrinho são preservados.
 
