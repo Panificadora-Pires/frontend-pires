@@ -90,6 +90,7 @@
       :produto="produtoDetalhado"
       :loading="carregandoDetalhe"
       :adding="adicionandoModal"
+      :feedback="toast"
       :favorito="Boolean(produtoDetalhado && favorites.tem(produtoDetalhado.id))"
       :favoritando="
         Boolean(produtoDetalhado && favorites.estaProcessando(produtoDetalhado.id))
@@ -317,6 +318,7 @@ async function obterDetalhes(produto) {
 
 async function abrirProduto(produto) {
   if (!produto?.id) return;
+  toast.value = "";
   modalAberto.value = true;
   carregandoDetalhe.value = true;
   produtoDetalhado.value = null;

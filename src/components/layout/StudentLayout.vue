@@ -11,6 +11,10 @@ import { useChatbotStore } from "@/stores/chatbot";
 import { useNotificationsStore } from "@/stores/notifications";
 import { useOrdersStore } from "@/stores/orders";
 import { animarVooAoCarrinho, movimentoReduzido } from "@/utils/vooAoCarrinho";
+import { useCatalogTransitions } from "@/composables/useCatalogTransitions";
+import "@/assets/styles/catalog-transitions.css";
+
+useCatalogTransitions();
 
 const auth = useAuthStore();
 const cart = useCartStore();

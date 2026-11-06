@@ -43,6 +43,7 @@ const painel = ref(null);
 const mobileAberto = ref(false);
 const avatarComErro = ref(false);
 const termoBusca = ref("");
+const mostrarBusca = computed(() => route.name !== "cardapio");
 const gatilhos = new Map();
 let consultaDesktop;
 let timerFechamento;
@@ -222,7 +223,7 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
   <header
     ref="raiz"
     class="student-header"
-    :class="{ 'is-expanded': painel || mobileAberto }"
+    :class="{ 'is-expanded': painel || mobileAberto, 'student-header--without-search': !mostrarBusca }"
     @keydown.esc="aoEscape"
     @focusout="sairFoco"
     @pointerleave="agendarFechamento"
@@ -284,6 +285,7 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
         </button>
       </nav>
       <form
+        v-if="mostrarBusca"
         class="student-header__search student-header__search--desktop"
         role="search"
         @submit.prevent="buscar"
@@ -393,6 +395,7 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
         class="student-header__mobile-panel student-header__glass"
       >
         <form
+          v-if="mostrarBusca"
           class="student-header__search"
           role="search"
           @submit.prevent="buscar"
@@ -657,6 +660,7 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
   gap: 6px;
   flex: none;
 }
+.student-header--without-search .student-header__actions { margin-left: auto; }
 
 .student-header__icon {
   position: relative;

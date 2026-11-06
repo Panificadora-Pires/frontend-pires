@@ -1,195 +1,8 @@
-<template>
-  <Teleport to="body">
-    <Transition name="product-modal">
-      <div
-        v-if="open"
-        class="product-modal"
-        role="presentation"
-        @mousedown.self="$emit('close')"
-      >
-        <section
-          class="product-modal__dialog"
-          role="dialog"
-          aria-modal="true"
-          :aria-labelledby="produto ? `produto-modal-${produto.id}` : undefined"
-        >
-          <button
-            type="button"
-            class="product-modal__close"
-            aria-label="Fechar detalhes"
-            @click="$emit('close')"
-          >
-            <X :size="20" />
-          </button>
-
-          <div v-if="loading" class="product-modal__loading" aria-live="polite">
-            <LoaderCircle :size="30" />
-            <span>Carregando detalhes...</span>
-          </div>
-
-          <template v-else-if="produto">
-            <div ref="midia" class="product-modal__media">
-              <ProductImage :produto="produto" variant="modal" loading="eager">
-                <span v-if="produto.em_promocao" class="product-modal__offer">
-                  <Tag :size="13" /> Em promoção
-                </span>
-              </ProductImage>
-            </div>
-
-            <div class="product-modal__content">
-              <div class="product-modal__topline">
-                <span class="product-modal__category">{{
-                  produto.categoria_nome || "Produto"
-                }}</span>
-                <button
-                  type="button"
-                  class="product-modal__favorite"
-                  :class="{ 'is-active': favorito, 'is-loading': favoritando }"
-                  :disabled="favoritando"
-                  :aria-label="
-                    favorito
-                      ? 'Remover dos favoritos'
-                      : 'Adicionar aos favoritos'
-                  "
-                  @click="$emit('favorite', produto)"
-                >
-                  <LoaderCircle
-                    v-if="favoritando"
-                    :size="18"
-                    class="product-modal__spinner"
-                  />
-                  <Heart
-                    v-else
-                    :size="19"
-                    :fill="favorito ? 'currentColor' : 'none'"
-                  />
-                </button>
-              </div>
-
-              <h2 :id="`produto-modal-${produto.id}`">{{ produto.nome }}</h2>
-
-              <p class="product-modal__description">
-                {{
-                  produto.descricao ||
-                  "Produto disponível para reserva na Pires Panificadora."
-                }}
-              </p>
-
-              <div class="product-modal__price-row">
-                <div class="product-modal__prices">
-                  <span
-                    v-if="produto.em_promocao"
-                    class="product-modal__old-price"
-                  >
-                    {{ formatarPreco(produto.preco) }}
-                  </span>
-                  <strong>{{
-                    formatarPreco(produto.preco_atual ?? produto.preco)
-                  }}</strong>
-                </div>
-
-                <span
-                  class="product-modal__stock"
-                  :class="statusEstoque.classe"
-                >
-                  <CircleCheck v-if="statusEstoque.disponivel" :size="15" />
-                  <CircleX v-else :size="15" />
-                  {{ statusEstoque.texto }}
-                </span>
-              </div>
-
-              <div class="product-modal__divider" />
-
-              <div class="product-modal__purchase">
-                <div>
-                  <span class="product-modal__label">Quantidade</span>
-                  <div
-                    class="product-modal__quantity"
-                    aria-label="Quantidade do produto"
-                  >
-                    <button
-                      type="button"
-                      :disabled="quantidade <= 1"
-                      aria-label="Diminuir quantidade"
-                      @click="diminuir"
-                    >
-                      <Minus :size="17" />
-                    </button>
-                    <strong>{{ quantidade }}</strong>
-                    <button
-                      type="button"
-                      :disabled="
-                        !statusEstoque.disponivel ||
-                        quantidade >= limiteQuantidade
-                      "
-                      aria-label="Aumentar quantidade"
-                      @click="aumentar"
-                    >
-                      <Plus :size="17" />
-                    </button>
-                  </div>
-                </div>
-
-                <div class="product-modal__subtotal">
-                  <span>Subtotal</span>
-                  <strong>{{ subtotal }}</strong>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                class="product-modal__add"
-                :disabled="!statusEstoque.disponivel || adding"
-                @click="adicionar"
-              >
-                <LoaderCircle
-                  v-if="adding"
-                  :size="19"
-                  class="product-modal__spinner"
-                />
-                <ShoppingCart v-else :size="19" />
-                {{
-                  statusEstoque.disponivel
-                    ? "Adicionar ao carrinho"
-                    : "Produto indisponível"
-                }}
-              </button>
-
-              <p class="product-modal__hint">
-                <Clock3 :size="14" />
-                Reserve agora e retire no balcão no intervalo.
-              </p>
-            </div>
-          </template>
-
-          <div v-else class="product-modal__error">
-            <CircleAlert :size="30" />
-            <strong>Não foi possível carregar este produto.</strong>
-            <button type="button" @click="$emit('close')">Fechar</button>
-          </div>
-        </section>
-      </div>
-    </Transition>
-  </Teleport>
-</template>
-
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from "vue";
-import {
-  CircleAlert,
-  CircleCheck,
-  CircleX,
-  Clock3,
-  Heart,
-  LoaderCircle,
-  Minus,
-  Plus,
-  ShoppingCart,
-  Tag,
-  X,
-} from "lucide-vue-next";
-
+import { computed, nextTick, onBeforeUnmount, shallowRef, useId, useTemplateRef, watch } from "vue";
+import { CircleAlert, Heart, LoaderCircle, Minus, Plus, ShoppingCart, X } from "lucide-vue-next";
 import ProductImage from "@/components/catalog/ProductImage.vue";
+import CardActionContent from "@/components/ui/CardActionContent.vue";
 import { registrarOrigemVoo } from "@/utils/vooAoCarrinho";
 
 const props = defineProps({
@@ -199,705 +12,256 @@ const props = defineProps({
   adding: { type: Boolean, default: false },
   favorito: { type: Boolean, default: false },
   favoritando: { type: Boolean, default: false },
+  feedback: { type: String, default: "" },
 });
-
 const emit = defineEmits(["close", "favorite", "add"]);
+const dialogo = useTemplateRef("dialogo");
+const fechar = useTemplateRef("fechar");
+const midia = useTemplateRef("midia");
+const tituloId = useId();
+const quantidadeId = useId();
+const quantidade = shallowRef(1);
+const solicitando = shallowRef(false);
+const mensagemFeedback = shallowRef("");
+const enviando = computed(() => props.adding || solicitando.value);
+const estoque = computed(() => Math.max(0, Math.floor(Number(props.produto?.estoque) || 0)));
+const limiteQuantidade = computed(() => Math.max(1, estoque.value));
+const preco = computed(() => Number(props.produto?.preco_atual ?? props.produto?.preco ?? 0));
+const temDesconto = computed(() => props.produto?.em_promocao && Number(props.produto.preco) > preco.value);
+const statusEstoque = computed(() => {
+  if (!estoque.value) return { disponivel: false, texto: "Sem estoque" };
+  if (estoque.value <= 5) return { disponivel: true, texto: estoque.value === 1 ? "Só 1 unidade disponível" : `Só ${estoque.value} unidades disponíveis` };
+  return { disponivel: true, texto: "Disponível para pedir" };
+});
+const moeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const subtotal = computed(() => moeda.format(preco.value * quantidade.value));
+let overflowAnterior = null;
+let gatilho = null;
+let fundoPressionado = false;
 
-const midia = ref(null);
+function restaurarPagina() {
+  if (overflowAnterior !== null) {
+    const { valor, prioridade } = overflowAnterior;
+    if (valor) document.body.style.setProperty("overflow", valor, prioridade);
+    else document.body.style.removeProperty("overflow");
+    overflowAnterior = null;
+  }
+  if (gatilho?.isConnected) gatilho.focus({ preventScroll: true });
+  gatilho = null;
+}
+watch([() => props.open, dialogo], ([aberto, elemento]) => {
+  if (!elemento) return;
+  if (aberto && !elemento.open) {
+    gatilho = document.activeElement;
+    overflowAnterior = {
+      valor: document.body.style.getPropertyValue("overflow"),
+      prioridade: document.body.style.getPropertyPriority("overflow"),
+    };
+    document.body.style.setProperty("overflow", "hidden");
+    elemento.showModal();
+    fechar.value?.focus({ preventScroll: true });
+  } else if (!aberto && elemento.open) {
+    elemento.close();
+    restaurarPagina();
+  }
+}, { immediate: true, flush: "post" });
+watch(() => [props.open, props.produto?.id], () => { quantidade.value = 1; });
+watch([() => props.open, () => props.feedback], ([aberto, mensagem], [estavaAberto]) => {
+  mensagemFeedback.value = aberto && estavaAberto ? mensagem : "";
+});
+watch(limiteQuantidade, (limite) => { quantidade.value = Math.min(quantidade.value, limite); });
+onBeforeUnmount(() => { dialogo.value?.close(); restaurarPagina(); });
 
+function conterTab(event) {
+  if (event.key !== "Tab") return;
+  const controles = [...dialogo.value.querySelectorAll('button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), [tabindex="0"]')]
+    .filter((elemento) => elemento.getClientRects().length);
+  const primeiro = controles[0];
+  const ultimo = controles.at(-1);
+  if (event.shiftKey && document.activeElement === primeiro) {
+    event.preventDefault(); ultimo?.focus();
+  } else if (!event.shiftKey && document.activeElement === ultimo) {
+    event.preventDefault(); primeiro?.focus();
+  }
+}
+function marcarFundo(event) { fundoPressionado = event.target === dialogo.value; }
+function fecharPeloFundo(event) {
+  if (fundoPressionado && event.target === dialogo.value) emit("close");
+  fundoPressionado = false;
+}
+function diminuir() { if (!enviando.value) quantidade.value = Math.max(1, quantidade.value - 1); }
+function aumentar() { if (!enviando.value) quantidade.value = Math.min(limiteQuantidade.value, quantidade.value + 1); }
 // O voo até o carrinho parte da imagem do modal (só acontece se o item entrar no carrinho).
-function adicionar() {
+async function adicionar() {
+  if (!props.open || props.loading || !props.produto || !statusEstoque.value.disponivel || enviando.value) return;
+  solicitando.value = true;
   registrarOrigemVoo(midia.value);
   emit("add", { produto: props.produto, quantidade: quantidade.value });
-}
-const quantidade = ref(1);
-
-watch(
-  () => [props.open, props.produto?.id],
-  ([aberto]) => {
-    quantidade.value = 1;
-    document.body.style.overflow = aberto ? "hidden" : "";
-  },
-  { immediate: true },
-);
-
-onBeforeUnmount(() => {
-  document.body.style.overflow = "";
-});
-
-function onKeydown(event) {
-  if (event.key === "Escape" && props.open) emit("close");
-}
-
-if (typeof window !== "undefined") {
-  window.addEventListener("keydown", onKeydown);
-  onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
-}
-
-const estoque = computed(() => Number(props.produto?.estoque ?? 0));
-const limiteQuantidade = computed(() => Math.max(1, estoque.value));
-
-const statusEstoque = computed(() => {
-  if (estoque.value <= 0) {
-    return { disponivel: false, classe: "is-empty", texto: "Sem estoque" };
-  }
-
-  if (estoque.value <= 5) {
-    return {
-      disponivel: true,
-      classe: "is-low",
-      texto: `Só ${estoque.value} disponíveis`,
-    };
-  }
-
-  return { disponivel: true, classe: "is-available", texto: "Disponível" };
-});
-
-const subtotal = computed(() => {
-  const preco = Number(props.produto?.preco_atual ?? props.produto?.preco ?? 0);
-  return formatarPreco(preco * quantidade.value);
-});
-
-function diminuir() {
-  quantidade.value = Math.max(1, quantidade.value - 1);
-}
-
-function aumentar() {
-  quantidade.value = Math.min(limiteQuantidade.value, quantidade.value + 1);
-}
-
-function formatarPreco(valor) {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(Number(valor || 0));
+  await nextTick();
+  solicitando.value = false;
 }
 </script>
 
+<template>
+  <Teleport to="body">
+    <dialog ref="dialogo" class="product-modal" :aria-labelledby="tituloId" aria-modal="true"
+      @cancel.prevent="emit('close')" @keydown="conterTab" @pointerdown="marcarFundo" @click="fecharPeloFundo">
+      <div class="product-modal__dialog">
+        <header class="product-modal__header">
+          <button ref="fechar" type="button" class="product-modal__close" aria-label="Fechar detalhes" autofocus @click="emit('close')">
+            <X :size="22" aria-hidden="true" />
+          </button>
+        </header>
+        <div v-if="loading" class="product-modal__loading" role="status">
+          <LoaderCircle :size="28" class="product-modal__spinner" aria-hidden="true" />
+          <h2 :id="tituloId">Carregando detalhes do produto…</h2>
+        </div>
+        <template v-else-if="produto">
+          <div class="product-modal__body">
+            <div ref="midia" class="product-modal__media"><ProductImage :produto="produto" variant="modal" loading="eager" /></div>
+            <div class="product-modal__content">
+              <div class="product-modal__topline">
+                <span class="product-modal__category">{{ produto.categoria_nome || "Produto" }}</span>
+                <button type="button" class="product-modal__favorite" :class="{ 'is-active': favorito }" :disabled="favoritando" :aria-pressed="favorito"
+                  :aria-label="favorito ? 'Remover dos favoritos' : 'Adicionar aos favoritos'" @click="emit('favorite', produto)">
+                  <LoaderCircle v-if="favoritando" :size="20" class="product-modal__spinner" aria-hidden="true" />
+                  <Heart v-else :size="22" :fill="favorito ? 'currentColor' : 'none'" aria-hidden="true" />
+                </button>
+              </div>
+              <h2 :id="tituloId">{{ produto.nome }}</h2>
+              <p class="product-modal__description">{{ produto.descricao || "Produto disponível para reserva na Pires Panificadora." }}</p>
+              <div class="product-modal__prices">
+                <s v-if="temDesconto" class="product-modal__old-price">{{ moeda.format(Number(produto.preco)) }}</s>
+                <strong>{{ moeda.format(preco) }}</strong>
+              </div>
+              <p class="product-modal__stock" role="status">{{ statusEstoque.texto }}</p>
+            </div>
+          </div>
+          <div class="product-modal__purchase-area">
+            <div class="product-modal__purchase">
+              <div>
+                <span :id="quantidadeId" class="product-modal__label">Quantidade</span>
+                <div class="product-modal__quantity" role="group" :aria-labelledby="quantidadeId">
+                  <button type="button" :disabled="quantidade <= 1 || !statusEstoque.disponivel || enviando" aria-label="Diminuir quantidade" @click="diminuir"><Minus :size="18" aria-hidden="true" /></button>
+                  <output aria-live="polite" aria-label="Quantidade">{{ quantidade }}</output>
+                  <button type="button" :disabled="!statusEstoque.disponivel || quantidade >= limiteQuantidade || enviando" aria-label="Aumentar quantidade" @click="aumentar"><Plus :size="18" aria-hidden="true" /></button>
+                </div>
+              </div>
+              <div class="product-modal__subtotal"><span>Subtotal</span><strong>{{ subtotal }}</strong></div>
+            </div>
+            <p v-if="mensagemFeedback" class="product-modal__feedback" role="status" aria-live="polite" aria-atomic="true">{{ mensagemFeedback }}</p>
+            <button type="button" class="product-modal__add pp-card-action" data-card-action-radius :class="{ 'is-loading': enviando }"
+              :disabled="!statusEstoque.disponivel || enviando" :aria-busy="enviando" @click="adicionar">
+              <CardActionContent>
+                <LoaderCircle v-if="enviando" :size="20" class="product-modal__spinner" aria-hidden="true" />
+                <ShoppingCart v-else :size="20" aria-hidden="true" />
+                {{ enviando ? "Adicionando…" : statusEstoque.disponivel ? "Adicionar ao carrinho" : "Produto indisponível" }}
+              </CardActionContent>
+            </button>
+          </div>
+        </template>
+        <div v-else class="product-modal__error" role="alert">
+          <CircleAlert :size="30" aria-hidden="true" />
+          <h2 :id="tituloId">Não foi possível carregar este produto.</h2>
+          <p>Feche os detalhes e tente abrir o produto novamente.</p>
+          <button type="button" @click="emit('close')">Fechar</button>
+        </div>
+      </div>
+    </dialog>
+  </Teleport>
+</template>
+
 <style scoped>
 .product-modal {
+  --pp-home-action-duration: 450ms;
   position: fixed;
   inset: 0;
-  z-index: 100;
-  display: grid;
-  place-items: center;
-  padding: 26px;
-  background: rgba(27, 16, 9, 0.52);
-  backdrop-filter: blur(5px);
-}
-
-.product-modal__dialog {
-  width: min(900px, 94vw);
-  min-height: 500px;
-  max-height: min(720px, 90vh);
-  position: relative;
-  overflow: hidden;
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 24px;
-  background: #fff;
-  color: #29241f;
-  box-shadow: 0 30px 80px rgba(26, 15, 8, 0.28);
-}
-
-.product-modal__close {
-  width: 38px;
-  height: 38px;
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 4;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 1px solid rgba(36, 17, 8, 0.08);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.94);
-  color: #5b5148;
-  box-shadow: 0 7px 18px rgba(28, 16, 9, 0.08);
-  cursor: pointer;
-}
-
-.product-modal__media {
-  min-width: 0;
-  min-height: 500px;
-  background: #f5f1ec;
-}
-
-.product-modal__offer {
-  position: absolute;
-  left: 22px;
-  top: 22px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 28px;
-  padding: 0 11px;
-  border-radius: 999px;
-  background: rgba(183, 105, 8, 0.94);
-  color: #fff8e9;
-  font-size: 10.5px;
-  font-weight: 800;
-}
-
-.product-modal__content {
-  min-width: 0;
-  overflow-y: auto;
-  padding: 46px 38px 34px;
-}
-
-.product-modal__topline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.product-modal__category {
-  display: inline-flex;
-  align-items: center;
-  min-height: 27px;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: #f7f2eb;
-  color: #9a6818;
-  font-size: 10.5px;
-  font-weight: 800;
-}
-
-.product-modal__favorite {
-  width: 36px;
-  height: 36px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 1px solid #eee7df;
-  border-radius: 50%;
-  background: #fff;
-  color: #81786e;
-  cursor: pointer;
-}
-
-.product-modal__favorite.is-active {
-  border-color: #f0d9c9;
-  background: #fff7ef;
-  color: #b96834;
-}
-
-.product-modal h2 {
-  margin: 17px 0 9px;
-  color: #251f1a;
-  font-size: clamp(27px, 3vw, 38px);
-  line-height: 1.06;
-  letter-spacing: -0.035em;
-}
-
-.product-modal__description {
-  min-height: 48px;
-  margin: 0;
-  color: #726960;
-  font-size: 13px;
-  line-height: 1.65;
-}
-
-.product-modal__price-row {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 18px;
-  margin-top: 25px;
-}
-
-.product-modal__prices {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.product-modal__prices strong {
-  color: #b67816;
-  font-size: 27px;
-  letter-spacing: -0.025em;
-}
-
-.product-modal__old-price {
-  color: #a49a91;
-  font-size: 11px;
-  text-decoration: line-through;
-}
-
-.product-modal__stock {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 30px;
-  padding: 0 10px;
-  border-radius: 999px;
-  font-size: 10.5px;
-  font-weight: 750;
-}
-
-.product-modal__stock.is-available {
-  background: #edf7ef;
-  color: #4c7655;
-}
-
-.product-modal__stock.is-low {
-  background: #fff5df;
-  color: #9b6a19;
-}
-
-.product-modal__stock.is-empty {
-  background: #f9ecea;
-  color: #a8534c;
-}
-
-.product-modal__divider {
-  height: 1px;
-  margin: 27px 0 23px;
-  background: #eee8e1;
-}
-
-.product-modal__purchase {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
-}
-
-.product-modal__label,
-.product-modal__subtotal span {
-  display: block;
-  margin-bottom: 8px;
-  color: #8d8379;
-  font-size: 10.5px;
-  font-weight: 700;
-}
-
-.product-modal__quantity {
-  display: grid;
-  grid-template-columns: 38px 48px 38px;
-  align-items: center;
-  min-height: 40px;
-  border: 1px solid #e8e0d7;
-  border-radius: 12px;
-  background: #faf8f5;
-}
-
-.product-modal__quantity button {
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #5e554d;
-  cursor: pointer;
-}
-
-.product-modal__quantity button:disabled {
-  color: #c7c0b9;
-  cursor: not-allowed;
-}
-
-.product-modal__quantity strong {
-  text-align: center;
-  font-size: 13px;
-}
-
-.product-modal__subtotal {
-  text-align: right;
-}
-
-.product-modal__subtotal strong {
-  color: #2b241e;
-  font-size: 18px;
-}
-
-.product-modal__add {
   width: 100%;
-  min-height: 50px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-  margin-top: 24px;
-  padding: 0 18px;
-  border: 0;
-  border-radius: 12px;
-  background: linear-gradient(95deg, #e1a536, #efb541);
-  color: #29170b;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 850;
-  box-shadow: 0 10px 24px rgba(224, 168, 62, 0.2);
-  cursor: pointer;
-}
-
-.product-modal__add:disabled {
-  background: #e6e1dc;
-  color: #99918a;
-  box-shadow: none;
-  cursor: not-allowed;
-}
-
-.product-modal__hint {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin: 12px 0 0;
-  color: #938a81;
-  font-size: 12px;
-}
-
-.product-modal__loading,
-.product-modal__error {
-  grid-column: 1 / -1;
-  min-height: 500px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  color: #7d746c;
-}
-
-.product-modal__loading svg,
-.product-modal__spinner {
-  animation: modal-spin 800ms linear infinite;
-}
-
-.product-modal__error strong {
-  color: #40362e;
-}
-
-.product-modal__error button {
-  min-height: 38px;
-  padding: 0 16px;
-  border: 0;
-  border-radius: 9px;
-  background: #e1a536;
-  color: #28160b;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-@keyframes modal-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.product-modal-enter-active,
-.product-modal-leave-active {
-  transition: opacity 180ms ease;
-}
-
-.product-modal-enter-active .product-modal__dialog,
-.product-modal-leave-active .product-modal__dialog {
-  transition:
-    transform 220ms ease,
-    opacity 220ms ease;
-}
-
-.product-modal-enter-from,
-.product-modal-leave-to {
-  opacity: 0;
-}
-
-.product-modal-enter-from .product-modal__dialog,
-.product-modal-leave-to .product-modal__dialog {
-  opacity: 0;
-  transform: translateY(12px) scale(0.985);
-}
-
-@media (max-width: 760px) {
-  .product-modal {
-    place-items: end center;
-    padding: 0;
-  }
-
-  .product-modal__dialog {
-    width: 100%;
-    max-height: 92dvh;
-    min-height: 0;
-    grid-template-columns: 1fr;
-    grid-template-rows: 220px auto;
-    border-radius: 24px 24px 0 0;
-  }
-
-  .product-modal__media {
-    min-height: 220px;
-  }
-
-  .product-modal__content {
-    padding: 25px 20px max(26px, env(safe-area-inset-bottom));
-  }
-
-  .product-modal__close {
-    top: 12px;
-    right: 12px;
-  }
-
-  .product-modal__offer {
-    left: 14px;
-    top: 14px;
-  }
-
-  .product-modal h2 {
-    margin-top: 13px;
-    font-size: 25px;
-  }
-
-  .product-modal__description {
-    min-height: auto;
-  }
-
-  .product-modal__price-row {
-    margin-top: 18px;
-  }
-
-  .product-modal__divider {
-    margin: 20px 0;
-  }
-}
-
-@media (max-width: 420px) {
-  .product-modal__purchase {
-    gap: 12px;
-  }
-
-  .product-modal__quantity {
-    grid-template-columns: 34px 40px 34px;
-  }
-
-  .product-modal__quantity button {
-    width: 34px;
-  }
-}
-.product-modal {
-  padding: 24px;
-  background: rgba(18, 15, 13, 0.58);
-  backdrop-filter: blur(3px);
-}
-
-.product-modal__dialog {
-  width: min(980px, 95vw);
-  min-height: 520px;
-  max-height: min(760px, 92vh);
-  grid-template-columns: minmax(430px, 1.02fr) minmax(420px, 0.98fr);
-  border: 1px solid #ded9d3;
-  border-radius: 16px;
-  box-shadow: 0 24px 70px rgba(20, 15, 12, 0.24);
-}
-
-.product-modal__close {
-  width: 40px;
-  height: 40px;
-  top: 14px;
-  right: 14px;
-  border-color: #ded9d3;
-  background: #fff;
-  color: #39322d;
-  box-shadow: none;
-}
-
-.product-modal__media {
-  min-height: 520px;
-  background: #f4f1ed;
-}
-
-.product-modal__offer {
-  left: 18px;
-  top: 18px;
-  min-height: 27px;
-  padding: 0 10px;
-  border-radius: 7px;
-  background: #9d6517;
-  color: #fff;
-  font-size: 12px;
-}
-
-.product-modal__content {
-  padding: 50px 42px 36px;
-}
-
-.product-modal__category {
-  min-height: auto;
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
-  color: #756d66;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.product-modal__favorite {
-  width: 38px;
-  height: 38px;
-  border-color: #ded9d3;
-  color: #625b55;
-}
-
-.product-modal__favorite.is-active {
-  border-color: #e6cfc1;
-  background: #fff7f2;
-  color: #a44f2d;
-}
-
-.product-modal h2 {
-  margin: 14px 0 10px;
-  color: #1f1b18;
-  font-size: clamp(29px, 3vw, 38px);
-  line-height: 1.08;
-  font-weight: 750;
-  letter-spacing: -0.03em;
-}
-
-.product-modal__description {
-  min-height: 0;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
   margin: 0;
-  color: #69625c;
-  font-size: 13px;
-  line-height: 1.55;
+  padding: var(--pp-space-5) 80px;
+  border: 0;
+  overflow: auto;
+  background: transparent;
+  color: var(--pp-marrom);
+  font-family: var(--pp-font-body);
+  overscroll-behavior: contain;
 }
-
-.product-modal__price-row {
-  align-items: center;
-  margin-top: 24px;
+.product-modal[open] { display: grid; place-items: center; }
+.product-modal:not([open]) { display: none; }
+.product-modal::backdrop { background: var(--pp-overlay); }
+.product-modal__dialog {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  width: min(1040px, 100%);
+  height: min(680px, calc(100dvh - 64px));
+  min-height: 0;
+  border-radius: var(--pp-radius-card);
+  background: var(--pp-creme);
+  box-shadow: var(--pp-shadow-elevation);
 }
-
-.product-modal__prices {
-  gap: 4px;
+.product-modal__header { position: absolute; top: 0; right: -64px; }
+.product-modal__close, .product-modal__favorite { display: grid; place-items: center; width: 48px; height: 48px; padding: 0; border: 0; border-radius: var(--pp-radius-full); background: var(--pp-creme); color: var(--pp-marrom); cursor: pointer; }
+.product-modal__favorite { flex: none; background: transparent; color: var(--pp-texto-2); }
+.product-modal__favorite.is-active { color: var(--pp-marrom); }
+.product-modal__body { display: contents; }
+.product-modal__media { grid-column: 1; grid-row: 1 / 3; min-width: 0; min-height: 0; overflow: hidden; border-radius: var(--pp-radius-card) 0 0 var(--pp-radius-card); background: var(--pp-creme-2); }
+.product-modal__media :deep(.catalog-product-image--modal) { min-height: 0; height: 100%; }
+.product-modal__content { grid-column: 2; min-width: 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--pp-space-5) var(--pp-space-5) var(--pp-space-3); }
+.product-modal__topline { display: flex; align-items: center; justify-content: space-between; gap: var(--pp-space-3); }
+.product-modal__category { color: var(--pp-texto-2); font-size: 14px; line-height: 1.5; }
+.product-modal__content h2 { margin: var(--pp-space-3) 0 var(--pp-space-4); color: var(--pp-marrom); font: 400 clamp(32px, 3.2vw, 44px)/1.15 var(--pp-font-titulo); letter-spacing: -.025em; overflow-wrap: anywhere; }
+.product-modal__description { max-width: 65ch; margin: 0; color: var(--pp-texto-2); font-size: 16px; line-height: 1.65; overflow-wrap: anywhere; }
+.product-modal__prices { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--pp-space-2); margin-top: var(--pp-space-4); }
+.product-modal__prices strong { font-size: 30px; font-weight: 700; line-height: 1.3; }
+.product-modal__old-price { color: var(--pp-texto-2); font-size: 15px; }
+.product-modal__stock { margin: var(--pp-space-2) 0 0; color: var(--pp-texto-2); font-size: 14px; line-height: 1.5; }
+.product-modal__purchase-area { grid-column: 2; min-width: 0; padding: var(--pp-space-4) var(--pp-space-5) var(--pp-space-5); }
+.product-modal__purchase { display: flex; align-items: end; justify-content: space-between; gap: var(--pp-space-3); }
+.product-modal__label, .product-modal__subtotal span { display: block; margin-bottom: var(--pp-space-1); color: var(--pp-texto-2); font-size: 13px; line-height: 1.5; }
+.product-modal__quantity { display: grid; grid-template-columns: 44px 40px 44px; align-items: center; border: 1px solid var(--pp-creme-borda); border-radius: var(--pp-radius-full); }
+.product-modal__quantity button { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: var(--pp-radius-full); background: transparent; color: var(--pp-marrom); cursor: pointer; }
+.product-modal__quantity output { text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+.product-modal__subtotal { text-align: right; }
+.product-modal__subtotal strong { font-size: 20px; font-variant-numeric: tabular-nums; }
+.product-modal__feedback { margin: var(--pp-space-3) 0 0; color: var(--pp-marrom); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.product-modal__add { display: flex; justify-content: center; align-items: center; gap: var(--pp-space-2); width: 100%; min-height: 52px; margin-top: var(--pp-space-4); padding: var(--pp-space-2) var(--pp-space-3); border: 0; border-radius: var(--pp-radius-full); background: var(--pp-marrom); color: var(--pp-creme); font: 600 15px/1.5 var(--pp-font-body); cursor: pointer; }
+.product-modal button:disabled { opacity: .5; cursor: default; }
+.product-modal button:focus-visible { outline: 3px solid var(--pp-dourado-escuro); outline-offset: 3px; }
+.product-modal__loading, .product-modal__error { grid-column: 1 / -1; grid-row: 1 / -1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: var(--pp-space-3); min-height: 0; padding: var(--pp-space-4); overflow-y: auto; text-align: center; }
+.product-modal__loading h2, .product-modal__error h2 { margin: 0; font: 600 20px/1.5 var(--pp-font-body); }
+.product-modal__error p { margin: 0; color: var(--pp-texto-2); line-height: 1.6; }
+.product-modal__error button { min-height: 44px; padding: var(--pp-space-2) var(--pp-space-4); border: 1px solid var(--pp-creme-borda); border-radius: var(--pp-radius-full); background: transparent; color: var(--pp-marrom); font: inherit; cursor: pointer; }
+.product-modal__spinner { animation: modal-spin 800ms linear infinite; }
+@keyframes modal-spin { to { transform: rotate(360deg); } }
+@media (hover: hover) { .product-modal__close:hover, .product-modal__favorite:hover, .product-modal__quantity button:hover:not(:disabled) { background: var(--pp-creme-2); } }
+@media (max-width: 1120px) {
+  .product-modal { padding: var(--pp-space-4); }
+  .product-modal__dialog { grid-template-rows: auto minmax(0, 1fr) auto; height: min(720px, calc(100dvh - 48px)); }
+  .product-modal__header { position: static; grid-column: 1 / -1; display: flex; justify-content: flex-end; padding: var(--pp-space-1); }
+  .product-modal__media { grid-row: 2 / 4; border-top-left-radius: 0; }
+  .product-modal__content { grid-row: 2; }
+  .product-modal__purchase-area { grid-row: 3; }
+  .product-modal__content, .product-modal__purchase-area { padding-inline: var(--pp-space-4); }
+  .product-modal__loading, .product-modal__error { grid-row: 2 / -1; }
 }
-
-.product-modal__prices strong {
-  color: #211c18;
-  font-size: 28px;
-  font-weight: 800;
-}
-
-.product-modal__old-price {
-  color: #8e8780;
-  font-size: 11.5px;
-}
-
-.product-modal__stock {
-  min-height: 30px;
-  gap: 7px;
-  padding: 0 10px;
-  border-radius: 8px;
-  font-size: 10.5px;
-  font-weight: 700;
-}
-
-.product-modal__divider {
-  margin: 26px 0 22px;
-  background: #e3dfda;
-}
-
-.product-modal__purchase {
-  align-items: center;
-  gap: 24px;
-}
-
-.product-modal__label,
-.product-modal__subtotal span {
-  margin-bottom: 7px;
-  color: #756e67;
-  font-size: 10.5px;
-  font-weight: 650;
-}
-
-.product-modal__quantity {
-  grid-template-columns: 38px 48px 38px;
-  min-height: 42px;
-  border-color: #dcd7d1;
-  border-radius: 8px;
-  background: #fff;
-}
-
-.product-modal__quantity button {
-  height: 40px;
-  color: #302a26;
-}
-
-.product-modal__subtotal strong {
-  color: #201b18;
-  font-size: 18px;
-}
-
-.product-modal__add {
-  min-height: 48px;
-  margin-top: 22px;
-  border-radius: 8px;
-  background: #2b1d15;
-  color: #fff;
-  box-shadow: none;
-  font-size: 12.5px;
-  font-weight: 750;
-}
-
-.product-modal__add:hover:not(:disabled) {
-  background: #1f1510;
-}
-
-.product-modal__hint {
-  justify-content: flex-start;
-  margin-top: 11px;
-  color: #857e78;
-  font-size: 12px;
-}
-
-@media (max-width: 900px) {
-  .product-modal__dialog {
-    grid-template-columns: minmax(0, 1fr) minmax(350px, 0.95fr);
-  }
-
-  .product-modal__content {
-    padding-inline: 32px;
-  }
-}
-
 @media (max-width: 760px) {
-  .product-modal {
-    padding: 0;
-  }
-
-  .product-modal__dialog {
-    width: 100%;
-    min-height: 0;
-    max-height: 94dvh;
-    grid-template-columns: 1fr;
-    grid-template-rows: 230px auto;
-    border: 0;
-    border-radius: 18px 18px 0 0;
-  }
-
-  .product-modal__media {
-    min-height: 230px;
-  }
-
-  .product-modal__content {
-    padding: 24px 20px max(26px, env(safe-area-inset-bottom));
-  }
-
-  .product-modal h2 {
-    margin-top: 12px;
-    font-size: 25px;
-  }
-
-  .product-modal__price-row {
-    margin-top: 18px;
-  }
-
-  .product-modal__divider {
-    margin: 20px 0;
-  }
+  .product-modal { padding: max(var(--pp-space-2), env(safe-area-inset-top)) var(--pp-space-1) max(var(--pp-space-1), env(safe-area-inset-bottom)); }
+  .product-modal__dialog { display: flex; flex-direction: column; height: calc(100dvh - max(var(--pp-space-2), env(safe-area-inset-top)) - max(var(--pp-space-1), env(safe-area-inset-bottom))); border-radius: var(--pp-radius-card); }
+  .product-modal__header { flex: none; padding: 4px var(--pp-space-1); }
+  .product-modal__body { display: block; flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  .product-modal__media { height: clamp(150px, 30dvh, 280px); min-height: 0; border-radius: 0; }
+  .product-modal__content { overflow: visible; padding: var(--pp-space-3) var(--pp-space-4) var(--pp-space-4); }
+  .product-modal__content h2 { margin-top: var(--pp-space-1); font-size: 32px; }
+  .product-modal__description { font-size: 15px; }
+  .product-modal__prices { margin-top: var(--pp-space-3); }
+  .product-modal__purchase-area { flex: none; padding: var(--pp-space-3) var(--pp-space-4) var(--pp-space-4); box-shadow: 0 -1px 0 var(--pp-creme-borda); }
+  .product-modal__add { margin-top: var(--pp-space-3); }
+  .product-modal__loading, .product-modal__error { flex: 1; }
 }
+@media (prefers-reduced-motion: reduce) { .product-modal__spinner { animation: none; } }
 </style>

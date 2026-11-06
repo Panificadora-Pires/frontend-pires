@@ -257,6 +257,28 @@ Nenhum recurso depende das animações para navegar ou comprar.
 Referências e evidências: `docs/prints/home-curadoria-2026-11-04/README.md` na pasta pai.
 Finalização da galeria e regressão A–F: `docs/prints/home-curadoria-final-2026-11-05/README.md` na pasta pai.
 
+### Detalhe compartilhado e Cardápio — 05/11/2026
+
+`ProductDetailsModal` mantém o Balcão creme: foto ou ilustração à esquerda, conteúdo creme à direita, nome em Anton e leitura/controles em Inter. O favorito tem alvo separado; fechar fica fora do painel no desktop amplo e em cabeçalho próprio quando a largura diminui. No celular, imagem e texto rolam no miolo; quantidade, subtotal e compra permanecem visíveis na base do painel, com espaço para a área segura.
+
+O diálogo nativo via Teleport ocupa a camada superior, recebe foco inicial em fechar, contém Tab/Shift+Tab e devolve o foco ao gatilho. Escape e clique iniciado e concluído no fundo fecham. Bloqueia a rolagem da página somente aberto e restaura valor e prioridade anteriores de `overflow`. Quantidade acompanha o estoque recebido; carregamento, falha, indisponibilidade e adição pendente têm estados próprios. Feedback opcional fica dentro do diálogo para permanecer visível nessa camada; as quatro telas limpam a mensagem ao abrir, permitindo repetir o mesmo aviso. O CTA reutiliza o círculo de 450ms com raio medido por `CardActionContent`, habilitado por `data-card-action-radius` mesmo fora da Home; movimento reduzido suprime a transição.
+
+Histórico do detalhe compartilhado: [plano](../docs/planos/detalhe-e-cardapio.md) e [relatório local](../docs/prints/detalhe-cardapio-2026-11-05/README.md). A [primeira revisão do Cardápio](../docs/prints/cardapio-revisao-2026-11-05/README.md) registra a composição anterior, substituída pela extensão editorial abaixo.
+
+### Cardápio editorial — 05/11/2026
+
+Extensão local do Balcão creme aprovada no [protótipo](../docs/prototipos/cardapio-editorial.html) e nas referências desktop/mobile antes da implementação. `CardapioView.vue` usa contêiner de até 1160px; o título Anton 400 mede `clamp(50px, 7vw, 92px)`, entrelinha 1.08 e tracking −.025em. A anotação Caveat 700 tem 28px, reduzida a 23px até 760px. A busca sublinhada acompanha a introdução no desktop e fica abaixo da anotação no celular. A busca do header é omitida somente nessa rota.
+
+Categorias usam trilha horizontal, `aria-pressed`, alvo mínimo de 44px e indicador dourado de 2px; seleção também muda o peso do texto. Filtro rápido e ordenação são selects compactos nos dois tamanhos. A ordem no DOM e no Tab é categorias → filtro → ordenação, acompanhando a composição. Até 1100px, categorias ocupam a primeira linha; até 760px, busca e introdução seguem em coluna. Foco é visível em dourado, inclusive na busca, selects e categorias que rolam.
+
+O acabamento dos produtos é restrito à view: superfície transparente, cantos retos, sem caixa/sombra e separação inferior creme. Mídia com proporção 1.18; grade de quatro colunas, três entre 761–1000px e duas até 760px. Nome Inter 700 de 15px/1.45 (14px no celular), preço de 14px/400 e adição com contorno e alvo de 44px. Favorito preserva alvo separado de 44px; fotos da API, fallback, badges e ações existentes continuam. Esses estilos locais não substituem as variantes da Home ou de outros consumidores de `ProductCard`.
+
+Busca, categoria, filtro rápido e ordenação antecedem o corte de oito produtos e ficam na URL com `pagina`. Mudanças de controle reiniciam a página; histórico e recarga preservam as seleções. O paginador mantém anterior, números, próxima e resumo, com página ativa sublinhada em dourado e `aria-current`. Grupo centralizado no desktop para ficar livre do chatbot, alinhado à esquerda no celular; controles de pelo menos 44px. Carregamento, falha inicial, catálogo vazio e nenhum resultado permanecem distintos; falha de atualização silenciosa preserva os produtos. O feedback do carrinho ocorre após adição confirmada.
+
+`useCatalogTransitions` coordena Router e View Transitions API somente entre Home/Cardápio ou quando a única query alterada é `pagina`. Na troca de rota, o alvo é o conteúdo principal; na paginação, somente a grade. Header e controles ficam estáveis. Saída de 160ms/14px e entrada de 300ms/18px com `--pp-ease`; retorno inverte a direção. Uma navegação nova cancela a captura anterior; busca e filtros não iniciam captura. Router e DOM do Vue determinam a atualização, sem aguardar a animação terminar. Página oculta, API ausente e movimento reduzido usam navegação direta; reduce também remove o deslizamento das categorias. O Router restaura a posição salva no histórico e preserva a rolagem em alterações de query; paginação alinha e foca os resultados. Entre telas, gatilho desmontado leva foco ao novo título; links persistentes mantêm foco.
+
+[Evidências atuais](../docs/prints/cardapio-editorial-2026-11-05/README.md) incluem capturas desktop/celular, gravação Chrome e verificações de interface, URL/histórico, foco, interrupção, fallback, estados e detalhe compartilhado. As capturas da aplicação normal usam 13 produtos da API local com as 13 fotos carregadas no Chrome MCP; o relatório separa essa prova dos testes com API simulada e dos limites do headless. Não comprova autenticação de produção, checkout ou pagamento.
+
 ## Do's and Don'ts
 
 ### Do:

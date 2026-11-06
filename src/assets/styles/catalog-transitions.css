@@ -1,0 +1,20 @@
+/* Capturas isoladas: header, navegação e controles não participam da troca da grade. */
+:root[data-pp-transition="route"] .student-layout__main { view-transition-name: pp-content; }
+:root[data-pp-transition="grid"] .menu-page__grid--products { view-transition-name: pp-grid; }
+:root[data-pp-transition]::view-transition { pointer-events: none; }
+:root[data-pp-transition]::view-transition-old(root) { animation: none; opacity: 0; }
+:root[data-pp-transition]::view-transition-new(root) { animation: none; }
+::view-transition-group(pp-content), ::view-transition-group(pp-grid) { animation: none; }
+::view-transition-old(pp-content), ::view-transition-old(pp-grid) {
+  height: auto;
+  animation: pp-content-out 160ms var(--pp-ease) both;
+}
+::view-transition-new(pp-content), ::view-transition-new(pp-grid) {
+  height: auto;
+  animation: pp-content-in 300ms var(--pp-ease) both;
+}
+@keyframes pp-content-out { to { opacity: 0; transform: translateX(calc(var(--pp-nav-direction, 1) * -14px)); } }
+@keyframes pp-content-in { from { opacity: 0; transform: translateX(calc(var(--pp-nav-direction, 1) * 18px)); } }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
