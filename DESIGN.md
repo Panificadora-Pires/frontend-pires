@@ -279,6 +279,48 @@ Busca, categoria, filtro rápido e ordenação antecedem o corte de oito produto
 
 [Evidências atuais](../docs/prints/cardapio-editorial-2026-11-05/README.md) incluem capturas desktop/celular, gravação Chrome e verificações de interface, URL/histórico, foco, interrupção, fallback, estados e detalhe compartilhado. As capturas da aplicação normal usam 13 produtos da API local com as 13 fotos carregadas no Chrome MCP; o relatório separa essa prova dos testes com API simulada e dos limites do headless. Não comprova autenticação de produção, checkout ou pagamento.
 
+### Promoções editoriais — 06/11/2026
+
+Extensão local do Balcão creme em `PromocoesView` e `PromotionCampaign`, herdando as fontes,
+paleta e controles existentes. A introdução usa Anton 400 (`clamp(50px, 7vw, 88px)`, entrelinha 1.1,
+tracking −.025em); a anotação breve usa Caveat 700 (27px, 24px até 767px); Inter mantém busca,
+categorias, ordenação, validade e ações legíveis. A campanha dá protagonismo ao produto sobre
+o palco marrom escuro existente, com conteúdo creme e economia em dourado. Essas medidas e essa
+composição pertencem à rota, sem substituir a hierarquia da Home ou do Cardápio.
+
+O contêiner chega a 1160px. Busca sublinhada, categorias horizontais e ordenação compacta antecedem
+as ofertas. A categoria ativa combina peso de texto, `aria-pressed` e linha dourada de 2px, que se
+realinha ao carregar fontes ou redimensionar. Quatro ordens e os filtros alcançam inclusive o
+destaque. Sem ofertas, o vazio editorial encaminha ao Cardápio; uma oferta ocupa a campanha ampla;
+duas combinam destaque e segunda oferta mais estreita/deslocada no desktop; três ou mais deixam
+somente a primeira no destaque e as restantes na grade. A grade usa três colunas, duas até 1000px
+e uma até 767px. Com exatamente quatro ofertas secundárias, usa 2×2 também no desktop a partir
+de 1001px. No celular, mídia e conteúdo seguem no fluxo; ações reservam espaço para dúvidas.
+
+A fotografia cadastrada e o fallback existente atendem as ofertas comuns. Só o produto id 1
+confirmado no catálogo, enquanto destaque ativo, usa o pôster e o clipe escuro existente (600×720,
+4s, aproximadamente 2,41MB). A partir de 768px, sem movimento reduzido ou economia de dados, entrar
+em vista habilita a solicitação do vídeo mudo, inline e em loop. O controle manual permite pausar;
+saída da tela ou aba oculta também pausam. Erro conserva o pôster; celular e movimento reduzido
+não montam nem solicitam o vídeo. Observers e listeners são removidos ao desmontar. Esse comportamento
+é próprio da campanha de Promoções e não altera o vídeo dirigido pela rolagem da Home.
+
+O CTA de compra reutiliza `CardActionContent`, círculo dourado, cópia visual de contraste e raio
+medido por opt-in, com duração local de 450ms. Na campanha escura, a base creme mantém texto marrom;
+o preenchimento dourado preserva esse contraste. Favorito e detalhes continuam controles separados,
+com foco visível e nomes acessíveis. Entrada em CSS (350ms), troca do conjunto via `Transition`
+(250ms) e revelação existente da faixa final respeitam movimento reduzido. Nenhuma ação de compra
+ou leitura depende dessas animações. O fechamento apresenta os três passos do fluxo real e um link
+ao Cardápio, sem urgência ou prova comercial inventada.
+
+Validade exibe a data real no calendário da Pires; carregamento, falha inicial, ausência de ofertas
+e busca sem resultado têm apresentações distintas. Uma atualização silenciosa falha sem apagar
+ofertas já carregadas. O detalhe compartilhado mantém sua apresentação; a view consulta dados
+frescos antes de cada compra e comunica mudanças de disponibilidade/preço, sem anunciar sucesso
+antes da adição. [Plano](../docs/planos/promocoes-editoriais.md) e
+[evidências e limites](../docs/prints/promocoes-editoriais-2026-11-06/README.md) registram a validação
+local. Não houve nova mídia, biblioteca ou token global nesta extensão.
+
 ## Do's and Don'ts
 
 ### Do:
