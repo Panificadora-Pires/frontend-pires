@@ -23,7 +23,7 @@ Prévia com dados fictícios/API simulada: `http://127.0.0.1:5173/curadoria-prev
 `npm run dev` estiver ativo na porta 5173. Esse HTML é um artefato local não versionado, fora do build.
 Para testar o fluxo normal com backend local, use a raiz do servidor e uma conta local fictícia.
 
-## Detalhe compartilhado e Cardápio (prévia local)
+## Detalhe compartilhado e Cardápio
 
 Home, Cardápio, Promoções e Favoritos compartilham o detalhe com foto, conteúdo creme,
 favorito separado, quantidade limitada ao estoque e subtotal. No celular, o miolo rola e a
@@ -31,24 +31,37 @@ compra permanece na base do diálogo. Foco, Escape, retorno ao gatilho e restaur
 rolagem acompanham o diálogo nativo; avisos de favorito/estoque aparecem dentro dele.
 O CTA reutiliza o preenchimento circular de 450ms e respeita movimento reduzido.
 
-O Cardápio reúne busca/ordenação, trilha de categorias e filtros compactos no celular.
-O acabamento dos cards é local à tela; busca, categoria, histórico e fluxos de compra permanecem.
-Na revisão de 05/11, a busca do header (desktop e menu mobile) fica oculta somente em `/cardapio`.
-O carrinho continua na navegação. Busca, categoria, filtro rápido e ordenação precedem a paginação
-de oito produtos; `busca`, `categoria`, `filtro`, `ordenacao` e `pagina` ficam na URL.
-Mudar os controles reinicia a página; recarga e histórico preservam a seleção. Páginas inválidas
-são normalizadas após carregar o catálogo; o paginador desaparece quando basta uma página.
-Categorias e páginas têm entrada curta de cards, imediata em movimento reduzido.
-Prévia desta revisão: `http://127.0.0.1:5173/cardapio-revisao-preview.html` (13 produtos fictícios;
-acrescente `?pagina=2` para os cinco últimos). [Capturas e verificações](../docs/prints/cardapio-revisao-2026-11-05/README.md).
-Para visualizar com `npm run dev` na 5173, abra
-`http://127.0.0.1:5173/detalhe-cardapio-preview.html` ou acrescente `?tela=home&detalhe=1`
-para abrir o detalhe pela Home. A prévia usa dados fictícios/API simulada; o HTML local é
-ignorado pelo Git e fica fora do build. No fluxo normal, abra `/cardapio` com backend local
-na porta 8000 e uma conta fictícia.
+O Cardápio editorial de 05/11 estende o Balcão creme: título Anton, anotação Caveat, busca
+sublinhada junto à introdução e categorias com linha dourada. Filtro rápido e ordenação usam
+selects compactos no desktop e no celular. Fotos retangulares, nomes/preços em Inter e compra
+com contorno compõem uma grade de quatro/duas colunas; os cards transparentes são locais à tela.
+Favoritos, ofertas, detalhes e compra continuam nos fluxos existentes. A busca do header fica
+oculta somente em `/cardapio`; o carrinho permanece na navegação.
+
+Busca, categoria, filtro rápido e ordenação precedem a paginação de oito produtos;
+`busca`, `categoria`, `filtro`, `ordenacao` e `pagina` ficam na URL. Mudar os controles reinicia
+a página; recarga e histórico preservam a seleção. Páginas inválidas são normalizadas após
+carregar o catálogo; o paginador desaparece quando basta uma página. A página ativa usa
+sublinhado dourado, com o grupo centralizado no desktop e alinhado à esquerda no celular.
+
+A View Transitions API captura o conteúdo somente entre Home/Cardápio e a grade quando muda
+apenas `pagina`. Header e controles permanecem estáveis. A navegação segue após confirmação
+do Router e atualização do DOM; não espera o fim da animação. Busca e filtros são imediatos e
+cancelam uma captura em andamento. Movimento reduzido, página oculta ou ausência da API usam
+navegação direta. Histórico restaura a rolagem; foco acompanha os resultados e o título quando
+o gatilho da troca de tela deixa de existir.
+
+Com `npm run dev` na 5173, backend local na 8000 e uma conta fictícia, abra
+[Cardápio](http://localhost:5173/cardapio) ou [página 2](http://localhost:5173/cardapio?pagina=2).
+[Capturas, gravação e verificações](../docs/prints/cardapio-editorial-2026-11-05/README.md)
+registram a aplicação normal com 13 produtos da API local; as 13 fotos carregaram no Chrome MCP.
+O relatório distingue testes com API simulada, API local e limites do ambiente. Isso não valida
+checkout, pagamentos ou produção.
 
 [Plano](../docs/planos/detalhe-e-cardapio.md) e
-[relatório, capturas e limites](../docs/prints/detalhe-cardapio-2026-11-05/README.md) ficam na pasta pai.
+[histórico do detalhe compartilhado](../docs/prints/detalhe-cardapio-2026-11-05/README.md) ficam na pasta pai.
+A [revisão anterior do Cardápio](../docs/prints/cardapio-revisao-2026-11-05/README.md) preserva
+as evidências da composição anterior; seus HTMLs locais de prévia ficam fora do build.
 
 ## Stack
 
