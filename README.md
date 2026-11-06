@@ -63,6 +63,45 @@ checkout, pagamentos ou produção.
 A [revisão anterior do Cardápio](../docs/prints/cardapio-revisao-2026-11-05/README.md) preserva
 as evidências da composição anterior; seus HTMLs locais de prévia ficam fora do build.
 
+## Promoções editoriais — 06/11/2026
+
+`/promocoes` estende o Balcão creme com título Anton, anotação Caveat, fotografia do produto,
+campanha escura e ações em creme/dourado. Busca por produto/categoria, categorias reais com linha
+dourada e quatro ordens (maior desconto, menor preço, validade e nome) definem todo o conjunto,
+inclusive o destaque. Sem ofertas, há acesso ao Cardápio; uma ocupa a campanha ampla; duas formam
+uma composição assimétrica; três ou mais usam destaque seguido da grade, sem repetir produtos.
+A grade passa de três para duas e uma coluna conforme a largura. Carregamento, falha inicial,
+nenhuma oferta e nenhum resultado são distintos; falha de atualização silenciosa preserva as ofertas.
+
+`PromocoesView.vue` coordena os serviços e os stores existentes; `PromotionCampaign.vue` apresenta
+a oferta e emite as ações; `utils/promocoes.js` seleciona ofertas vigentes no calendário
+`America/Sao_Paulo`, com datas inclusivas, e elimina duplicatas compatíveis com a flag e o preço
+escolhidos pela API. A validade aparece como data real. O detalhe é consultado ao abrir e novamente
+antes de cada adição, inclusive pelo modal. A soma com a quantidade já no carrinho não pode superar
+o estoque recebido; mudança de oferta/preço interrompe a tentativa e atualiza a listagem.
+O backend continua sendo a fonte de verdade e valida o checkout.
+
+Somente o produto id 1 confirmado no catálogo, quando ocupa o destaque, recebe o clipe existente
+`coxinha-promocao-escura.mp4` (600×720, 4 s, aproximadamente 2,41 MB). A partir de 768px, sem
+movimento reduzido ou economia de dados, o vídeo é solicitado ao entrar em vista e reproduz em loop,
+mudo e inline. Pausa manual, saída da tela e aba oculta interrompem a reprodução; erro mantém o
+pôster. No celular ou com movimento reduzido, fica apenas o pôster, sem solicitar o MP4. Outros
+produtos usam `ProductImage` com foto da API e fallback. Essa reprodução pertence a Promoções;
+a sincronização por rolagem da Home mantém seu contrato próprio. Nenhuma mídia foi criada nesta etapa.
+
+Compra reutiliza `CardActionContent`, preenchimento circular de 450ms com raio medido, foco visível
+e contraste preservado. Favorito e detalhes têm controles separados. CSS, `Transition` do Vue e
+`v-revelar` existente dão os movimentos, suprimidos quando reduzidos. A faixa final explica escolher,
+concluir o pedido e acompanhar/retirar pelo QR Code real. Sem dependências ou mudanças em backend,
+stores, Home, Cardápio, `ProductCard` ou `ProductDetailsModal`.
+
+Com Vite na 5173, backend local na 8000 e conta fictícia, abra
+[Promoções](http://localhost:5173/promocoes). [Plano](../docs/planos/promocoes-editoriais.md) e
+[relatório, capturas e gravações](../docs/prints/promocoes-editoriais-2026-11-06/README.md)
+separam verificações de domínio, comportamento e mídia/responsividade com API simulada da integração
+com API local. Build e verificações de interface foram executados; o relatório registra os resultados
+e limites. Isso não comprova checkout, pagamentos ou produção. A entrega permanece local para revisão.
+
 ## Stack
 
 - Vue 3
@@ -296,7 +335,7 @@ Direção "Balcão creme" (Fase 5): fundo creme, marrom nos textos, dourado nos 
 
 Para a Coxinha de frango (id 1 confirmado na API local), o clipe `src/assets/videos/coxinha-promocao-escura.mp4` acompanha a rolagem nativa no desktop: avanço, reversão e liberação do painel sticky abaixo do header. `useScrollVideo` agenda por RAF e agrupa seeks; metadados, resize e pageshow sincronizam o quadro. O clipe não tem áudio, autoplay, loop ou controles. Até 760px, o vídeo não é montado nem solicitado: título/link, pôster de 180–220px, nome, preço e compra ficam no fluxo normal, sem distância extra. Movimento reduzido também impede montagem; erro, metadados inválidos ou altura insuficiente desativam sticky. Outras ofertas mantêm `ProductImage`. Preços, vigência, favorito, detalhes e compra continuam nos fluxos existentes.
 
-As transições visuais de ações da Home usam `--pp-home-action-duration: 450ms` e `--pp-ease`, sem atrasar clique, teclado ou loading. `CardActionContent` mede o raio até a borda arredondada real e acompanha mudanças de tamanho com `ResizeObserver`, evitando terminar visualmente antes do tempo em botões largos. A medição é restrita à Home e ao opt-in explícito `data-card-action-radius` do detalhe compartilhado, com hover condicionado ao dispositivo e transições removidas em movimento reduzido.
+As transições visuais de ações da Home usam `--pp-home-action-duration: 450ms` e `--pp-ease`, sem atrasar clique, teclado ou loading. `CardActionContent` mede o raio até a borda arredondada real e acompanha mudanças de tamanho com `ResizeObserver`, evitando terminar visualmente antes do tempo em botões largos. A medição é restrita à Home e ao opt-in explícito `data-card-action-radius`, usado no detalhe compartilhado e na compra de Promoções, com hover condicionado ao dispositivo e transições removidas em movimento reduzido.
 
 `HomeFooter.vue` fecha apenas esta rota com marca e links para Cardápio, Promoções e Meus pedidos. Os quatro destaques mantêm prioridade/ordem e seleção separada do hero. Fotos abaixo da grade usam carregamento lazy. Não há dependência ou endpoint novo. Provas atuais em `../docs/prints/home-responsiva-2026-11-04/`; histórico em `../docs/prints/home-ajustes-2026-11-04/` e `../docs/prints/home-pos-destaques-2026-11-04/`.
 
@@ -316,7 +355,7 @@ Validação e capturas locais: `../docs/prints/categorias-v1-2026-10-30/`. Não 
 
 ### Cards de produtos da Home
 
-`ProductCard` recebe `variant="home"` nos destaques da página inicial. Essa variante acompanha as categorias: superfície branca, borda creme, nome em Anton, mídia até as bordas superiores e controles independentes de detalhes, favorito e adição ao carrinho. A grade, a largura dos cards e a altura da mídia são preservadas; nomes longos continuam sem truncamento. A oferta da Home usa a composição própria `HomePromotionFeature`; Cardápio, Favoritos e a página de Promoções mantêm a variante padrão.
+`ProductCard` recebe `variant="home"` nos destaques da página inicial. Essa variante acompanha as categorias: superfície branca, borda creme, nome em Anton, mídia até as bordas superiores e controles independentes de detalhes, favorito e adição ao carrinho. A grade, a largura dos cards e a altura da mídia são preservadas; nomes longos continuam sem truncamento. A oferta da Home usa a composição própria `HomePromotionFeature`; Cardápio e Favoritos mantêm a variante padrão. Promoções usa `PromotionCampaign`, descrito acima.
 
 Foto cadastrada e ilustração de fallback continuam no `ProductImage`. Hover e foco ampliam somente a imagem em 6%, sem giro ou mudança no tamanho do card; movimento reduzido desativa o efeito. Preços, estados de carregamento, eventos e voo ao carrinho usam o fluxo existente.
 
@@ -326,7 +365,7 @@ Provas locais em `../docs/prints/produtos-home-2026-10-30/`: verificações Play
 
 As ações dos cards da área do cliente compartilham `assets/styles/card-actions.css` e `components/ui/CardActionContent.vue`. A classe opt-in `pp-card-action` recorta uma camada dourada por `clip-path: circle()`, expandindo do centro inferior em 450 ms com `--pp-ease` e retraindo na saída. A camada revela simultaneamente uma cópia visual do conteúdo em marrom, marcada com `aria-hidden`, mantendo o contraste durante a passagem do círculo. O nome acessível, os eventos e o estado continuam no botão original. Não há animação JavaScript nem dependência nova.
 
-Aplicação: adicionar/favorito do `ProductCard` (Home, Cardápio, Promoções e Favoritos), setas visuais do `HomeCategories`, adicionar nas recomendações do carrinho, Mensagens/QR do `OrderCard` e quantidade/remoção dos itens do carrinho. Nas categorias, `pp-card-action-trigger` acompanha hover/foco do RouterLink original, sem botão aninhado. A remoção usa fundo de alerta suave e ícone vermelho; favorito selecionado mantém coração preenchido e `aria-pressed`. QR conserva seu estado de sucesso original.
+Aplicação: adicionar/favorito do `ProductCard` (Home, Cardápio e Favoritos), setas visuais do `HomeCategories`, adicionar nas recomendações do carrinho, Mensagens/QR do `OrderCard` e quantidade/remoção dos itens do carrinho. Promoções reutiliza o preenchimento na compra de `PromotionCampaign`; seu favorito mantém botão próprio. Nas categorias, `pp-card-action-trigger` acompanha hover/foco do RouterLink original, sem botão aninhado. A remoção usa fundo de alerta suave e ícone vermelho; favorito selecionado mantém coração preenchido e `aria-pressed`. QR conserva seu estado de sucesso original.
 
 Disabled/loading ocultam imediatamente o preenchimento e preservam o spinner; toque independe de hover, foco permanece visível e movimento reduzido troca o estado sem expansão/contração perceptível. O foco de quantidade fica dentro do grupo que recorta seu conteúdo. Zoom das fotos, bordas/sombras, voo ao carrinho, header e banner mantêm seus fluxos.
 
