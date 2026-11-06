@@ -294,7 +294,8 @@ realinha ao carregar fontes ou redimensionar. Quatro ordens e os filtros alcanç
 destaque. Sem ofertas, o vazio editorial encaminha ao Cardápio; uma oferta ocupa a campanha ampla;
 duas combinam destaque e segunda oferta mais estreita/deslocada no desktop; três ou mais deixam
 somente a primeira no destaque e as restantes na grade. A grade usa três colunas, duas até 1000px
-e uma até 767px. No celular, mídia e conteúdo seguem no fluxo; ações reservam espaço para dúvidas.
+e uma até 767px. Com exatamente quatro ofertas secundárias, usa 2×2 também no desktop a partir
+de 1001px. No celular, mídia e conteúdo seguem no fluxo; ações reservam espaço para dúvidas.
 
 A fotografia cadastrada e o fallback existente atendem as ofertas comuns. Só o produto id 1
 confirmado no catálogo, enquanto destaque ativo, usa o pôster e o clipe escuro existente (600×720,

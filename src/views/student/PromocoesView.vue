@@ -148,7 +148,7 @@ onBeforeUnmount(() => { montado = false; requisicaoDetalhe++; clearTimeout(toast
       <Transition v-else name="offers" @leave="(_element, concluir) => concluir()">
         <div :key="assinatura" class="promotions-page__showcase" :class="{ 'promotions-page__showcase--pair': demais.length === 1 }">
           <PromotionCampaign :key="destaque.produto.id" :item="destaque" featured :favorito="favorites.tem(destaque.produto.id)" :favoritando="favorites.estaProcessando(destaque.produto.id)" :adicionando="produtoAdicionando === destaque.produto.id" @open="abrirProduto" @favorite="alternarFavorito" @add="adicionar" />
-          <section v-if="demais.length" class="promotions-page__more" aria-labelledby="more-offers"><h2 id="more-offers">{{ demais.length === 1 ? 'Também em oferta' : 'Mais ofertas para escolher' }}</h2><div class="promotions-page__grid"><PromotionCampaign v-for="item in demais" :key="item.produto.id" :item="item" :favorito="favorites.tem(item.produto.id)" :favoritando="favorites.estaProcessando(item.produto.id)" :adicionando="produtoAdicionando === item.produto.id" @open="abrirProduto" @favorite="alternarFavorito" @add="adicionar" /></div></section>
+          <section v-if="demais.length" class="promotions-page__more" aria-labelledby="more-offers"><h2 id="more-offers">{{ demais.length === 1 ? 'Também em oferta' : 'Mais ofertas para escolher' }}</h2><div class="promotions-page__grid" :class="{ 'promotions-page__grid--four': demais.length === 4 }"><PromotionCampaign v-for="item in demais" :key="item.produto.id" :item="item" :favorito="favorites.tem(item.produto.id)" :favoritando="favorites.estaProcessando(item.produto.id)" :adicionando="produtoAdicionando === item.produto.id" @open="abrirProduto" @favorite="alternarFavorito" @add="adicionar" /></div></section>
         </div>
       </Transition>
     </section>
@@ -194,6 +194,7 @@ onBeforeUnmount(() => { montado = false; requisicaoDetalhe++; clearTimeout(toast
 .promotions-page__showcase--pair .promotions-page__more { margin-top: 72px; }
 .promotions-page__showcase--pair .promotions-page__more > h2 { font: 600 16px/1.5 var(--pp-font-body); }
 .promotions-page__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px 24px; }
+@media (min-width: 1001px) { .promotions-page__grid--four { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .promotions-page__showcase--pair .promotions-page__grid { grid-template-columns: minmax(0, 1fr); }
 .promotions-page__loading { display: grid; grid-template-columns: 1.5fr 1fr; gap: 32px; }
 .promotions-page__skeleton { min-height: 400px; background: var(--pp-creme-2); }

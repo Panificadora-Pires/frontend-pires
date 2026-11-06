@@ -70,7 +70,8 @@ campanha escura e ações em creme/dourado. Busca por produto/categoria, categor
 dourada e quatro ordens (maior desconto, menor preço, validade e nome) definem todo o conjunto,
 inclusive o destaque. Sem ofertas, há acesso ao Cardápio; uma ocupa a campanha ampla; duas formam
 uma composição assimétrica; três ou mais usam destaque seguido da grade, sem repetir produtos.
-A grade passa de três para duas e uma coluna conforme a largura. Carregamento, falha inicial,
+A grade passa de três para duas e uma coluna conforme a largura; exatamente quatro ofertas secundárias
+usam 2×2 no desktop. Carregamento, falha inicial,
 nenhuma oferta e nenhum resultado são distintos; falha de atualização silenciosa preserva as ofertas.
 
 `PromocoesView.vue` coordena os serviços e os stores existentes; `PromotionCampaign.vue` apresenta
