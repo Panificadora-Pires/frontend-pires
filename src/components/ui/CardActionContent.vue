@@ -6,7 +6,7 @@ let observer;
 
 onMounted(() => {
   const element = fill.value;
-  const action = element.closest(".home .pp-card-action");
+  const action = element.closest(".home .pp-card-action, .pp-card-action[data-card-action-radius]");
   if (!action) return;
 
   function ajustarRaio() {

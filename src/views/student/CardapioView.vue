@@ -3,236 +3,120 @@
     <header class="menu-page__header">
       <div>
         <h1>Cardápio</h1>
-        <p>Encontre produtos, filtre por categoria e adicione ao carrinho.</p>
+        <p>Escolha seu lanche</p>
       </div>
-
-      <RouterLink :to="{ name: 'carrinho' }" class="menu-page__cart-summary">
-        <span class="menu-page__cart-icon">
-          <ShoppingCart :size="20" />
-          <span v-if="cart.totalItens" class="menu-page__cart-badge">{{
-            limitarBadge(cart.totalItens)
-          }}</span>
-        </span>
-        <span>
-          <small>Meu carrinho</small>
-          <strong>{{
-            cart.totalItens
-              ? `${cart.totalItens} ${cart.totalItens === 1 ? "item" : "itens"}`
-              : "Está vazio"
-          }}</strong>
-        </span>
-        <ChevronRight :size="18" />
-      </RouterLink>
+      <label class="menu-page__search">
+        <Search :size="20" aria-hidden="true" />
+        <input v-model="busca" type="search" aria-label="Buscar no cardápio"
+          placeholder="Buscar no cardápio" autocomplete="off" />
+        <button v-if="busca" type="button" aria-label="Limpar busca" @click="busca = ''">
+          <X :size="18" aria-hidden="true" />
+        </button>
+      </label>
     </header>
 
     <section class="menu-page__toolbar" aria-label="Busca e filtros">
-      <label class="menu-page__search">
-        <Search :size="19" aria-hidden="true" />
-        <input
-          v-model="busca"
-          type="search"
-          placeholder="Buscar por produto ou categoria..."
-          autocomplete="off"
-        />
-        <button
-          v-if="busca"
-          type="button"
-          aria-label="Limpar busca"
-          @click="busca = ''"
-        >
-          <X :size="16" />
-        </button>
-      </label>
+      <div ref="categoriasTrilha" class="menu-page__categories" role="group" aria-label="Filtrar por categoria">
+        <div class="menu-page__category-track">
+          <button type="button" :class="{ 'is-active': categoriaAtiva === null }"
+            :aria-pressed="categoriaAtiva === null" @click="categoriaAtiva = null">Todos</button>
+          <button v-for="categoria in categorias" :key="categoria.id" type="button"
+            :class="{ 'is-active': categoriaAtiva === categoria.id }"
+            :aria-pressed="categoriaAtiva === categoria.id" @click="categoriaAtiva = categoria.id">
+            {{ categoria.nome }}
+          </button>
+          <span class="menu-page__category-indicator" :style="indicadorCategoria" aria-hidden="true" />
+        </div>
+      </div>
 
-      <div class="menu-page__sort">
-        <SlidersHorizontal :size="17" aria-hidden="true" />
+      <div class="menu-page__filter-row">
+        <label class="menu-page__mobile-filter">
+          <select v-model="filtroRapido" aria-label="Filtrar produtos">
+            <option value="todos">Todos</option>
+            <option value="promocao">Em promoção</option>
+            <option value="destaque">Destaques</option>
+          </select>
+          <ChevronDown :size="16" aria-hidden="true" />
+        </label>
+      </div>
+      <label class="menu-page__sort">
         <select v-model="ordenacao" aria-label="Ordenar produtos">
           <option value="relevancia">Relevância</option>
           <option value="nome">Nome A–Z</option>
           <option value="menor-preco">Menor preço</option>
           <option value="maior-preco">Maior preço</option>
         </select>
-        <ChevronDown :size="15" aria-hidden="true" />
-      </div>
+        <ChevronDown :size="16" aria-hidden="true" />
+      </label>
     </section>
 
-    <nav class="menu-page__categories" aria-label="Filtrar por categoria">
-      <button
-        type="button"
-        :class="{ 'is-active': categoriaAtiva === null }"
-        @click="categoriaAtiva = null"
-      >
-        <LayoutGrid :size="17" />
-        Todos
-      </button>
-
-      <button
-        v-for="categoria in categorias"
-        :key="categoria.id"
-        type="button"
-        :class="{ 'is-active': categoriaAtiva === categoria.id }"
-        @click="categoriaAtiva = categoria.id"
-      >
-        {{ categoria.nome }}
-      </button>
-    </nav>
-
-    <div class="menu-page__filter-row">
-      <div class="menu-page__quick-filters" aria-label="Filtros rápidos">
-        <button
-          type="button"
-          :class="{ 'is-active': filtroRapido === 'todos' }"
-          @click="filtroRapido = 'todos'"
-        >
-          Todos os produtos
-        </button>
-        <button
-          type="button"
-          :class="{ 'is-active': filtroRapido === 'promocao' }"
-          @click="filtroRapido = 'promocao'"
-        >
-          <Tag :size="14" /> Em promoção
-        </button>
-        <button
-          type="button"
-          :class="{ 'is-active': filtroRapido === 'destaque' }"
-          @click="filtroRapido = 'destaque'"
-        >
-          <Sparkles :size="14" /> Destaques
-        </button>
-      </div>
-
-      <button
-        v-if="temFiltros"
-        type="button"
-        class="menu-page__clear"
-        @click="limparFiltros"
-      >
-        Limpar filtros
-      </button>
-    </div>
-
-    <section
-      class="menu-page__content"
-      aria-labelledby="menu-page-products-title"
-    >
+    <section class="menu-page__content" aria-labelledby="menu-page-products-title" :aria-busy="carregando">
       <div class="menu-page__content-head">
         <div>
-          <h2 id="menu-page-products-title">{{ tituloResultados }}</h2>
-          <p v-if="!carregando">{{ textoContagem }}</p>
+          <h2 ref="tituloProdutos" id="menu-page-products-title" tabindex="-1">{{ temFiltros ? tituloResultados : (textoContagem || 'Produtos') }}</h2>
+          <p v-if="temFiltros && !carregando && !erro" role="status">{{ textoContagem }}</p>
         </div>
-
-        <span
-          v-if="!carregando && produtosFiltrados.length"
-          class="menu-page__result-badge"
-        >
-          {{ produtosFiltrados.length }}
-        </span>
+        <button v-if="temFiltros" type="button" class="menu-page__clear" @click="limparFiltros">Limpar filtros</button>
       </div>
 
-      <div
-        v-if="carregando"
-        class="menu-page__grid"
-        aria-label="Carregando cardápio"
-      >
-        <div
-          v-for="index in 10"
-          :key="index"
-          class="menu-page__skeleton"
-          aria-hidden="true"
-        >
-          <div />
-          <span />
-          <span />
-        </div>
+      <div v-if="carregando" class="menu-page__grid" aria-label="Carregando cardápio">
+        <div v-for="index in 8" :key="index" class="menu-page__skeleton" aria-hidden="true"><div /><span /><span /></div>
       </div>
-
-      <div
-        v-else-if="erro"
-        class="menu-page__state menu-page__state--error"
-        role="alert"
-      >
-        <span class="menu-page__state-icon"><CircleAlert :size="28" /></span>
-        <div>
-          <h2>Não conseguimos carregar o cardápio.</h2>
-          <p>Verifique sua conexão e tente novamente.</p>
-        </div>
+      <div v-else-if="erro" class="menu-page__state" role="alert">
+        <CircleAlert :size="28" aria-hidden="true" />
+        <h2>Não conseguimos carregar o cardápio.</h2>
+        <p>Verifique sua conexão e tente novamente.</p>
         <button type="button" @click="tentarNovamente">Tentar novamente</button>
       </div>
-
+      <div v-else-if="!produtos.length" class="menu-page__state">
+        <ShoppingCart :size="28" aria-hidden="true" />
+        <h2>O cardápio de hoje ainda não foi publicado.</h2>
+        <p>Os produtos aparecem aqui assim que a padaria liberar.</p>
+      </div>
       <div v-else-if="!produtosFiltrados.length" class="menu-page__state">
-        <span class="menu-page__state-icon"><SearchX :size="28" /></span>
-        <div>
-          <h2>Nenhum produto encontrado.</h2>
-          <p>Tente outra busca ou remova alguns filtros.</p>
-        </div>
-        <button v-if="temFiltros" type="button" @click="limparFiltros">
-          Ver todos os produtos
-        </button>
+        <SearchX :size="28" aria-hidden="true" />
+        <h2>Nenhum produto encontrado.</h2>
+        <p>Tente outra busca ou remova alguns filtros.</p>
+        <button v-if="temFiltros" type="button" @click="limparFiltros">Ver todos os produtos</button>
       </div>
-
-      <div v-else class="menu-page__grid">
-        <ProductCard
-          v-for="produto in produtosFiltrados"
-          :key="produto.id"
-          :produto="produto"
-          :favorito="favorites.tem(produto.id)"
-          :favoritando="favorites.estaProcessando(produto.id)"
+      <div v-else :key="`${categoriaAtiva ?? 'todos'}-${paginaAtual}`" class="menu-page__grid menu-page__grid--products">
+        <ProductCard v-for="produto in produtosPagina" :key="produto.id" :produto="produto"
+          :favorito="favorites.tem(produto.id)" :favoritando="favorites.estaProcessando(produto.id)"
           :adicionando="produtoAdicionando === produto.id"
-          @open="abrirProduto"
-          @favorite="alternarFavorito"
-          @add="adicionarRapido"
-        />
+          @open="abrirProduto" @favorite="alternarFavorito" @add="adicionarRapido" />
       </div>
+      <nav v-if="!carregando && !erro && totalPaginas > 1" class="menu-page__pagination" aria-label="Páginas do cardápio">
+        <p role="status" aria-atomic="true">{{ resumoPagina }}</p>
+        <div class="menu-page__pages">
+          <button type="button" :disabled="paginaAtual === 1" @click="mudarPagina(paginaAtual - 1)">Anterior</button>
+          <button v-for="numero in totalPaginas" :key="numero" type="button" :aria-label="`Página ${numero}`"
+            :aria-current="paginaAtual === numero ? 'page' : undefined" @click="mudarPagina(numero)">{{ numero }}</button>
+          <button type="button" :disabled="paginaAtual === totalPaginas" @click="mudarPagina(paginaAtual + 1)">Próxima</button>
+        </div>
+      </nav>
     </section>
 
-    <ProductDetailsModal
-      :open="modalAberto"
-      :produto="produtoDetalhado"
-      :loading="carregandoDetalhe"
-      :adding="adicionandoModal"
-      :favorito="
-        Boolean(produtoDetalhado && favorites.tem(produtoDetalhado.id))
-      "
-      :favoritando="
-        Boolean(
-          produtoDetalhado && favorites.estaProcessando(produtoDetalhado.id),
-        )
-      "
-      @close="fecharModal"
-      @favorite="alternarFavorito"
-      @add="adicionarDoModal"
-    />
-
+    <ProductDetailsModal :open="modalAberto" :produto="produtoDetalhado" :loading="carregandoDetalhe" :adding="adicionandoModal" :feedback="toast"
+      :favorito="Boolean(produtoDetalhado && favorites.tem(produtoDetalhado.id))"
+      :favoritando="Boolean(produtoDetalhado && favorites.estaProcessando(produtoDetalhado.id))"
+      @close="fecharModal" @favorite="alternarFavorito" @add="adicionarDoModal" />
     <Transition name="menu-toast">
-      <div
-        v-if="toast"
-        class="menu-page__toast"
-        role="status"
-        aria-live="polite"
-      >
-        <CheckCircle2 :size="18" />
-        {{ toast }}
+      <div v-if="toast" class="menu-page__toast" role="status" aria-live="polite">
+        <CheckCircle2 :size="18" aria-hidden="true" />{{ toast }}
       </div>
     </Transition>
   </div>
 </template>
-
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   CheckCircle2,
   ChevronDown,
-  ChevronRight,
   CircleAlert,
-  LayoutGrid,
   Search,
   SearchX,
   ShoppingCart,
-  SlidersHorizontal,
-  Sparkles,
-  Tag,
   X,
 } from "lucide-vue-next";
 
@@ -242,42 +126,67 @@ import { useAutoRefresh } from "@/composables/useAutoRefresh";
 import catalogService from "@/services/catalog.service";
 import { useCartStore } from "@/stores/cart";
 import { useFavoritesStore } from "@/stores/favorites";
+import { movimentoReduzido } from "@/utils/vooAoCarrinho";
 
 const cart = useCartStore();
 const favorites = useFavoritesStore();
 
 // Estoque e disponibilidade mudam a cada pedido; o cardápio confere a cada minuto.
 const INTERVALO_CARDAPIO_MS = 60_000;
+const PRODUTOS_POR_PAGINA = 8;
 
 const categorias = ref([]);
 const produtos = ref([]);
 const route = useRoute();
 // A busca do menu do topo chega por /cardapio?busca=termo.
-const busca = ref(String(route.query.busca || ""));
 const router = useRouter();
+const tituloProdutos = useTemplateRef("tituloProdutos");
+function textoDaUrl(valor) { return typeof valor === "string" ? valor : ""; }
+const busca = computed({
+  get: () => textoDaUrl(route.query.busca),
+  set: (valor) => atualizarFiltros({ busca: valor.trim() }, true),
+});
 // O mega menu usa o filtro existente por id, sem criar uma nova página.
 function categoriaDaUrl(valor) {
   const numero = Number(valor);
   return Number.isSafeInteger(numero) && numero > 0 ? numero : null;
 }
-const categoriaAtiva = ref(categoriaDaUrl(route.query.categoria));
-watch(() => [route.query.busca, route.query.categoria], ([termo, categoria]) => {
-  busca.value = String(termo || "");
-  categoriaAtiva.value = categoriaDaUrl(categoria);
+const categoriaAtiva = computed({
+  get: () => categoriaDaUrl(route.query.categoria),
+  set: (valor) => atualizarFiltros({ categoria: valor ? String(valor) : undefined }),
 });
 // Um único replace evita que limpar os dois filtros restaure parte da URL anterior.
-watch([busca, categoriaAtiva], ([valor, categoria]) => {
-  const termo = valor.trim();
-  if (termo === String(route.query.busca || "") && categoria === categoriaDaUrl(route.query.categoria)) return;
-  const query = { ...route.query };
-  if (termo) query.busca = termo;
-  else delete query.busca;
-  if (categoria) query.categoria = String(categoria);
-  else delete query.categoria;
-  router.replace({ query });
+function atualizarFiltros(alteracoes, substituir = false) {
+  const query = { ...route.query, ...alteracoes };
+  delete query.pagina;
+  for (const chave of Object.keys(query)) {
+    if (query[chave] === undefined || query[chave] === null || query[chave] === "") delete query[chave];
+  }
+  return substituir ? router.replace({ query }) : router.push({ query });
+}
+const filtroRapido = computed({
+  get: () => ["promocao", "destaque"].includes(route.query.filtro) ? route.query.filtro : "todos",
+  set: (valor) => atualizarFiltros({ filtro: valor === "todos" ? undefined : valor }),
 });
-const filtroRapido = ref("todos");
-const ordenacao = ref("relevancia");
+const ordenacao = computed({
+  get: () => ["nome", "menor-preco", "maior-preco"].includes(route.query.ordenacao) ? route.query.ordenacao : "relevancia",
+  set: (valor) => atualizarFiltros({ ordenacao: valor === "relevancia" ? undefined : valor }),
+});
+const categoriasTrilha = useTemplateRef("categoriasTrilha");
+const indicadorCategoria = shallowRef({ width: "0px", transform: "translateX(0px)" });
+let observerCategorias;
+function alinharCategoria(revelar = false) {
+  const trilha = categoriasTrilha.value;
+  const ativo = trilha?.querySelector('[aria-pressed="true"]');
+  indicadorCategoria.value = { width: `${ativo?.offsetWidth || 0}px`, transform: `translateX(${ativo?.offsetLeft || 0}px)` };
+  if (!ativo || !revelar) return;
+  const inicio = ativo.offsetLeft;
+  const fim = inicio + ativo.offsetWidth;
+  if (inicio < trilha.scrollLeft || fim > trilha.scrollLeft + trilha.clientWidth) {
+    trilha.scrollTo({ left: inicio - (trilha.clientWidth - ativo.offsetWidth) / 2, behavior: movimentoReduzido() ? "instant" : "smooth" });
+  }
+}
+watch([categoriaAtiva, categorias], async () => { await nextTick(); alinharCategoria(true); }, { flush: "post" });
 const detalhesCache = new Map();
 
 const carregando = ref(true);
@@ -346,6 +255,40 @@ const produtosFiltrados = computed(() => {
   return lista;
 });
 
+function paginaDaUrl(valor) {
+  if (typeof valor !== "string" || !/^[1-9]\d*$/.test(valor)) return 1;
+  const numero = Number(valor);
+  return Number.isSafeInteger(numero) ? numero : 1;
+}
+const totalPaginas = computed(() => Math.max(1, Math.ceil(produtosFiltrados.value.length / PRODUTOS_POR_PAGINA)));
+const paginaAtual = computed(() => Math.min(paginaDaUrl(route.query.pagina), totalPaginas.value));
+const inicioPagina = computed(() => (paginaAtual.value - 1) * PRODUTOS_POR_PAGINA);
+const produtosPagina = computed(() => produtosFiltrados.value.slice(inicioPagina.value, inicioPagina.value + PRODUTOS_POR_PAGINA));
+const resumoPagina = computed(() => `${inicioPagina.value + 1}–${Math.min(inicioPagina.value + PRODUTOS_POR_PAGINA, produtosFiltrados.value.length)} de ${produtosFiltrados.value.length}`);
+
+// Só limitar uma entrada quando a listagem já confirmou a quantidade de resultados.
+watch([() => route.query.pagina, totalPaginas, carregando, erro], () => {
+  if (carregando.value || erro.value || route.query.pagina === undefined) return;
+  const canonica = paginaAtual.value > 1 ? String(paginaAtual.value) : undefined;
+  if (route.query.pagina === canonica) return;
+  const query = { ...route.query };
+  if (canonica) query.pagina = canonica;
+  else delete query.pagina;
+  router.replace({ query });
+}, { immediate: true });
+
+async function mudarPagina(numero) {
+  if (numero < 1 || numero > totalPaginas.value || numero === paginaAtual.value) return;
+  // Alinhar a grade antes da captura evita somar rolagem suave à transição horizontal.
+  tituloProdutos.value?.scrollIntoView({ block: "start", behavior: "instant" });
+  const query = { ...route.query };
+  if (numero > 1) query.pagina = String(numero);
+  else delete query.pagina;
+  await router.push({ query });
+  await nextTick();
+  tituloProdutos.value?.focus({ preventScroll: true });
+}
+
 const tituloResultados = computed(() => {
   const categoria = categorias.value.find(
     (item) => item.id === categoriaAtiva.value,
@@ -361,7 +304,7 @@ const tituloResultados = computed(() => {
 const textoContagem = computed(() => {
   const total = produtosFiltrados.value.length;
   if (!total) return "";
-  return `${total} ${total === 1 ? "produto encontrado" : "produtos encontrados"}`;
+  return `${total} ${total === 1 ? "produto" : "produtos"}`;
 });
 
 function normalizarTexto(valor) {
@@ -374,11 +317,6 @@ function normalizarTexto(valor) {
 
 function precoProduto(produto) {
   return Number(produto?.preco_atual ?? produto?.preco ?? 0);
-}
-
-function limitarBadge(valor) {
-  const numero = Number(valor || 0);
-  return numero > 99 ? "99+" : numero;
 }
 
 async function alternarFavorito(produto) {
@@ -447,6 +385,7 @@ async function obterDetalhes(produto) {
 }
 
 async function abrirProduto(produto) {
+  toast.value = "";
   modalAberto.value = true;
   carregandoDetalhe.value = true;
   produtoDetalhado.value = null;
@@ -520,10 +459,7 @@ async function adicionarDoModal({ produto, quantidade }) {
 }
 
 function limparFiltros() {
-  busca.value = "";
-  categoriaAtiva.value = null;
-  filtroRapido.value = "todos";
-  ordenacao.value = "relevancia";
+  atualizarFiltros({ busca: undefined, categoria: undefined, filtro: undefined, ordenacao: undefined }, true);
 }
 
 function mostrarToast(mensagem) {
@@ -536,809 +472,104 @@ function mostrarToast(mensagem) {
 
 onMounted(() => {
   favorites.carregar().catch(() => {});
+  observerCategorias = new ResizeObserver(() => alinharCategoria());
+  observerCategorias.observe(categoriasTrilha.value);
+  document.fonts.ready.then(() => alinharCategoria());
+  alinharCategoria();
 });
 
 onBeforeUnmount(() => {
   window.clearTimeout(toastTimer);
+  observerCategorias?.disconnect();
 });
 </script>
-
 <style scoped>
-.menu-page {
-  width: min(100%, 1320px);
-  margin: 0 auto;
-  color: var(--pp-text-dark);
-}
-
-.menu-page__header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 28px;
-  margin-bottom: 24px;
-}
-
-.menu-page__eyebrow {
-  display: block;
-  margin-bottom: 6px;
-  color: #bd7c14;
-  font-size: 12px;
-  font-weight: 850;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.menu-page__header h1 {
-  margin: 0;
-  color: #241e19;
-  font-size: clamp(28px, 3.1vw, 42px);
-  line-height: 1;
-  letter-spacing: -0.045em;
-}
-
-.menu-page__header p {
-  margin: 8px 0 0;
-  color: #746b63;
-  font-size: 13px;
-}
-
-.menu-page__cart-summary {
-  min-width: 190px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 10px;
-  border: 1px solid rgba(49, 33, 22, 0.075);
-  border-radius: 15px;
-  background: rgba(255, 255, 255, 0.82);
-  color: #382f28;
-  box-shadow: 0 7px 22px rgba(48, 32, 21, 0.04);
-}
-
-.menu-page__cart-icon {
-  width: 38px;
-  height: 38px;
-  position: relative;
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  border-radius: 11px;
-  background: #fff4dc;
-  color: #bd7a10;
-}
-
-.menu-page__cart-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  min-width: 17px;
-  height: 17px;
-  display: grid;
-  place-items: center;
-  padding: 0 4px;
-  border: 2px solid #fff;
-  border-radius: 999px;
-  background: #d99b2f;
-  color: #2b180c;
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.menu-page__cart-summary > span:nth-child(2) {
-  min-width: 0;
-  flex: 1;
-}
-
-.menu-page__cart-summary small,
-.menu-page__cart-summary strong {
-  display: block;
-}
-
-.menu-page__cart-summary small {
-  color: #91877e;
-  font-size: 12px;
-}
-
-.menu-page__cart-summary strong {
-  margin-top: 2px;
-  font-size: 11.5px;
-}
-
-.menu-page__toolbar {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 180px;
-  gap: 12px;
-  margin-bottom: 15px;
-}
-
-.menu-page__search,
-.menu-page__sort {
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  border: 1px solid rgba(50, 33, 22, 0.085);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.94);
-  color: #827970;
-  box-shadow: 0 5px 17px rgba(48, 32, 21, 0.025);
-}
-
-.menu-page__search {
-  gap: 10px;
-  padding: 0 15px;
-}
-
-.menu-page__search input {
-  min-width: 0;
-  flex: 1;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: #302923;
-  font: inherit;
-  font-size: 12px;
-}
-
-.menu-page__search input::placeholder {
-  color: #9d958d;
-}
-
-.menu-page__search button {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: #f5f1ec;
-  color: #80776f;
-  cursor: pointer;
-}
-
-.menu-page__sort {
-  position: relative;
-  gap: 8px;
-  padding: 0 12px;
-}
-
-.menu-page__sort select {
-  min-width: 0;
-  flex: 1;
-  appearance: none;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: #51483f;
-  font: inherit;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.menu-page__categories {
-  display: flex;
-  gap: 9px;
-  padding: 2px 0 9px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.menu-page__categories::-webkit-scrollbar,
-.menu-page__quick-filters::-webkit-scrollbar {
-  display: none;
-}
-
-.menu-page__categories button {
-  min-height: 40px;
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 0 17px;
-  border: 1px solid rgba(49, 33, 22, 0.08);
-  border-radius: 12px;
-  background: #fff;
-  color: #51483f;
-  font: inherit;
-  font-size: 11px;
-  font-weight: 720;
-  cursor: pointer;
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    color 160ms ease;
-}
-
-.menu-page__categories button.is-active {
-  border-color: #2d1d14;
-  background: #2d211a;
-  color: #fff4e5;
-}
-
-.menu-page__filter-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  margin: 8px 0 27px;
-}
-
-.menu-page__quick-filters {
-  display: flex;
-  gap: 7px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.menu-page__quick-filters button,
-.menu-page__clear {
-  min-height: 31px;
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 0 11px;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  background: transparent;
-  color: #847a71;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 720;
-  cursor: pointer;
-}
-
-.menu-page__quick-filters button.is-active {
-  border-color: #eadfce;
-  background: #fff8ec;
-  color: #a56b0e;
-}
-
-.menu-page__clear {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.menu-page__content-head {
-  min-height: 46px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 14px;
-}
-
-.menu-page__content-head h2 {
-  margin: 0;
-  color: #29231e;
-  font-size: 17px;
-  letter-spacing: -0.02em;
-}
-
-.menu-page__content-head p {
-  margin: 4px 0 0;
-  color: #928981;
-  font-size: 10.5px;
-}
-
-.menu-page__result-badge {
-  min-width: 30px;
-  height: 30px;
-  display: grid;
-  place-items: center;
-  padding: 0 8px;
-  border-radius: 999px;
-  background: #efe5d8;
-  color: #755020;
-  font-size: 12px;
-  font-weight: 850;
-}
-
-.menu-page__grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.menu-page__skeleton {
-  min-height: 290px;
-  padding: 10px;
-  border-radius: 18px;
-  background: #fff;
-  overflow: hidden;
-}
-
-.menu-page__skeleton div,
-.menu-page__skeleton span {
-  display: block;
-  border-radius: 12px;
-  background: linear-gradient(90deg, #eee9e3 25%, #f6f2ed 45%, #eee9e3 65%);
-  background-size: 250% 100%;
-  animation: menu-shimmer 1.3s linear infinite;
-}
-
-.menu-page__skeleton div {
-  aspect-ratio: 1.2 / 1;
-}
-
-.menu-page__skeleton span {
-  width: 72%;
-  height: 12px;
-  margin-top: 13px;
-}
-
-.menu-page__skeleton span:last-child {
-  width: 45%;
-  height: 9px;
-  margin-top: 8px;
-}
-
-@keyframes menu-shimmer {
-  to {
-    background-position: -150% 0;
-  }
-}
-
-.menu-page__state {
-  min-height: 330px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 32px;
-  border: 1px dashed #dfd5cb;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.56);
-  text-align: center;
-}
-
-.menu-page__state-icon {
-  width: 54px;
-  height: 54px;
-  display: grid;
-  place-items: center;
-  border-radius: 15px;
-  background: #f7efe3;
-  color: #c18423;
-}
-
-.menu-page__state h2 {
-  margin: 5px 0 0;
-  font-size: 16px;
-}
-
-.menu-page__state p {
-  margin: 5px 0 0;
-  color: #877e76;
-  font-size: 11px;
-}
-
-.menu-page__state button {
-  min-height: 38px;
-  margin-top: 5px;
-  padding: 0 16px;
-  border: 0;
-  border-radius: 9px;
-  background: #dfa438;
-  color: #29170b;
-  font: inherit;
-  font-size: 11px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.menu-page__toast {
-  position: fixed;
-  right: 26px;
-  bottom: 26px;
-  z-index: 120;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  max-width: min(380px, calc(100vw - 32px));
-  min-height: 46px;
-  padding: 0 15px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  background: #2f1c11;
-  color: #f8ebd9;
-  box-shadow: 0 16px 40px rgba(35, 20, 11, 0.22);
-  font-size: 11.5px;
-  font-weight: 650;
-}
-
-.menu-toast-enter-active,
-.menu-toast-leave-active {
-  transition:
-    opacity 180ms ease,
-    transform 180ms ease;
-}
-
-.menu-toast-enter-from,
-.menu-toast-leave-to {
-  opacity: 0;
-  transform: translateY(8px);
-}
-
-@media (max-width: 1260px) {
-  .menu-page__grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 1024px) {
-  .menu-page__header {
-    align-items: center;
-  }
-
-  .menu-page__cart-summary {
-    min-width: 176px;
-  }
-
-  .menu-page__grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 820px) {
-  .menu-page__grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 680px) {
-  .menu-page__header {
-    align-items: flex-start;
-    margin-bottom: 17px;
-  }
-
-  .menu-page__eyebrow {
-    margin-bottom: 4px;
-    font-size: 8.5px;
-  }
-
-  .menu-page__header h1 {
-    font-size: 29px;
-  }
-
-  .menu-page__header p {
-    max-width: 250px;
-    margin-top: 5px;
-    font-size: 10.5px;
-    line-height: 1.45;
-  }
-
-  .menu-page__cart-summary {
-    min-width: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-  }
-
-  .menu-page__cart-summary > span:nth-child(2),
-  .menu-page__cart-summary > svg {
-    display: none;
-  }
-
-  .menu-page__cart-icon {
-    width: 40px;
-    height: 40px;
-    background: #fff;
-    box-shadow: 0 5px 15px rgba(45, 29, 18, 0.06);
-  }
-
-  .menu-page__toolbar {
-    grid-template-columns: minmax(0, 1fr) 45px;
-    gap: 8px;
-    margin-bottom: 11px;
-  }
-
-  .menu-page__search,
-  .menu-page__sort {
-    min-height: 44px;
-    border-radius: 12px;
-  }
-
-  .menu-page__search {
-    padding-inline: 12px;
-  }
-
-  .menu-page__search input {
-    font-size: 10.5px;
-  }
-
-  .menu-page__sort {
-    justify-content: center;
-    padding: 0;
-  }
-
-  .menu-page__sort select {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-  }
-
-  .menu-page__sort > svg:last-child {
-    display: none;
-  }
-
-  .menu-page__categories {
-    gap: 7px;
-    margin-inline: 0;
-    padding: 2px 16px 8px;
-  }
-
-  .menu-page__categories button {
-    min-height: 36px;
-    padding-inline: 13px;
-    border-radius: 11px;
-    font-size: 9.5px;
-  }
-
-  .menu-page__filter-row {
-    margin: 5px 0 19px;
-  }
-
-  .menu-page__quick-filters {
-    margin-right: -16px;
-    padding-right: 16px;
-  }
-
-  .menu-page__quick-filters button {
-    min-height: 28px;
-    font-size: 12px;
-  }
-
-  .menu-page__clear {
-    display: none;
-  }
-
-  .menu-page__content-head {
-    min-height: 39px;
-    margin-bottom: 10px;
-  }
-
-  .menu-page__content-head h2 {
-    font-size: 14px;
-  }
-
-  .menu-page__content-head p {
-    font-size: 9.5px;
-  }
-
-  .menu-page__result-badge {
-    min-width: 27px;
-    height: 27px;
-    font-size: 12px;
-  }
-
-  .menu-page__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 9px;
-  }
-
-  .menu-page__skeleton {
-    min-height: 232px;
-    padding: 7px;
-    border-radius: 15px;
-  }
-
-  .menu-page__state {
-    min-height: 300px;
-    padding: 24px 18px;
-  }
-
-  .menu-page__toast {
-    left: 16px;
-    right: 16px;
-    bottom: 82px;
-    justify-content: center;
-  }
-}
-.menu-page {
-  width: min(100%, 1280px);
-}
-
-.menu-page__header {
-  align-items: center;
-  margin-bottom: 22px;
-}
-
-.menu-page__header h1 {
-  font-size: 30px;
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-}
-
-.menu-page__header p {
-  margin-top: 6px;
-  color: #77706a;
-  font-size: 13px;
-}
-
-.menu-page__cart-summary {
-  min-width: 184px;
-  padding: 8px 10px;
-  border-color: #e1ddd8;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: none;
-}
-
-.menu-page__cart-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: #f4efe7;
-  color: #8d5d17;
-}
-
-.menu-page__toolbar {
-  grid-template-columns: minmax(0, 1fr) 176px;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.menu-page__search,
-.menu-page__sort {
-  min-height: 44px;
-  border-color: #dedad5;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: none;
-}
-
-.menu-page__search:focus-within,
-.menu-page__sort:focus-within {
-  border-color: #aa7a35;
-  box-shadow: 0 0 0 3px rgba(167, 107, 23, 0.08);
-}
-
-.menu-page__search {
-  padding: 0 13px;
-}
-
-.menu-page__search input {
-  font-size: 12.5px;
-}
-
-.menu-page__search button {
-  border-radius: 7px;
-  background: #f4f1ed;
-}
-
-.menu-page__sort {
-  padding: 0 11px;
-}
-
-.menu-page__categories {
-  gap: 24px;
-  padding: 0 0 1px;
-  border-bottom: 1px solid #e3dfda;
-}
-
-.menu-page__categories button {
-  min-height: 40px;
-  gap: 0;
-  padding: 0 2px 10px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
-  background: transparent;
-  color: #6f6963;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.menu-page__categories button svg {
-  display: none;
-}
-
-.menu-page__categories button:hover {
-  color: #2d2824;
-}
-
-.menu-page__categories button.is-active {
-  border-color: #a76b17;
-  background: transparent;
-  color: #2b241f;
-  font-weight: 750;
-}
-
-.menu-page__filter-row {
-  margin: 12px 0 26px;
-}
-
-.menu-page__quick-filters {
-  gap: 8px;
-}
-
-.menu-page__quick-filters button,
-.menu-page__clear {
-  min-height: 34px;
-  padding: 0 12px;
-  border: 1px solid #ddd9d4;
-  border-radius: 8px;
-  background: #fff;
-  color: #5e5852;
-  font-size: 10.5px;
-  font-weight: 650;
-}
-
-.menu-page__quick-filters button svg {
-  display: none;
-}
-
-.menu-page__quick-filters button:hover {
-  border-color: #bcb5ae;
-}
-
-.menu-page__quick-filters button.is-active {
-  border-color: #2c1e16;
-  background: #2c1e16;
-  color: #fff;
-}
-
-.menu-page__clear {
-  border-color: transparent;
-  background: transparent;
-  color: #7c736c;
-  text-decoration: none;
-}
-
-.menu-page__clear:hover {
-  color: #2d2824;
-}
-
-.menu-page__content-head {
-  align-items: flex-end;
-}
-
-.menu-page__content-head h2 {
-  font-size: 18px;
-}
-
-.menu-page__result-badge {
-  min-width: auto;
-  height: auto;
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
-  color: #7d756e;
-  font-size: 11px;
-  font-weight: 650;
-}
-
-@media (max-width: 680px) {
-  .menu-page__header h1 {
-    font-size: 26px;
-  }
-
-  .menu-page__toolbar {
-    gap: 8px;
-  }
-
-  .menu-page__categories {
-    gap: 20px;
-    margin-inline: 0;
-    padding-inline: 16px;
-  }
-
-  .menu-page__categories button {
-    min-height: 38px;
-    padding-bottom: 9px;
-    font-size: 11px;
-  }
-
-  .menu-page__quick-filters button {
-    min-height: 32px;
-    font-size: 12px;
-  }
+.menu-page { --pp-home-action-duration: 450ms; width: min(100%, 1160px); margin: 0 auto; color: var(--pp-marrom); }
+.menu-page__header { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--pp-space-4); margin-bottom: var(--pp-space-4); }
+.menu-page__header h1 { margin: 0; font: 400 clamp(50px, 7vw, 92px)/1.08 var(--pp-font-titulo); letter-spacing: -.025em; }
+.menu-page__header p { margin: 7px 0 0; color: var(--pp-dourado-profundo); font: 700 28px/1.2 var(--pp-font-nota); }
+.menu-page__search { display: flex; align-items: center; gap: 10px; width: min(310px, 100%); min-height: 48px; padding: 5px 0; border-bottom: 1px solid var(--pp-texto-3); color: var(--pp-texto-2); }
+.menu-page__search > svg { flex: none; }
+.menu-page__search input { width: 100%; min-width: 0; flex: 1; min-height: 38px; padding: 4px 2px; border: 0; outline: 0; background: transparent; color: var(--pp-marrom); font: 400 15px/1.5 var(--pp-font-body); }
+.menu-page__search input::placeholder { color: var(--pp-texto-2); opacity: 1; }
+.menu-page__search input::-webkit-search-cancel-button { display: none; }
+.menu-page__search button { display: grid; place-items: center; flex: none; width: 44px; height: 44px; margin-block: -3px; padding: 0; border: 0; background: transparent; color: var(--pp-marrom); cursor: pointer; }
+.menu-page__toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "categories quick sort"; gap: 8px 20px; align-items: center; border-bottom: 1px solid var(--pp-creme-borda); }
+.menu-page__categories { grid-area: categories; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.menu-page__categories::-webkit-scrollbar { display: none; }
+.menu-page__category-track { position: relative; display: flex; gap: clamp(16px, 3vw, 38px); width: max-content; min-width: 100%; }
+.menu-page__categories button { flex: none; min-height: 44px; padding: 0 3px; border: 0; background: transparent; color: var(--pp-marrom); font: 400 15px/1.5 var(--pp-font-body); cursor: pointer; }
+.menu-page__categories button.is-active { font-weight: 700; }
+.menu-page__category-indicator { position: absolute; bottom: 0; left: 0; height: 2px; background: var(--pp-dourado-escuro); pointer-events: none; transition: transform 220ms var(--pp-ease), width 220ms var(--pp-ease); }
+.menu-page__sort, .menu-page__mobile-filter { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 44px; }
+.menu-page__sort { grid-area: sort; }
+.menu-page__sort select, .menu-page__mobile-filter select { width: 100%; min-width: 0; min-height: 44px; border: 0; outline: 0; appearance: none; background: transparent; color: var(--pp-marrom); font: 400 14px/1.5 var(--pp-font-body); cursor: pointer; }
+.menu-page__sort > svg, .menu-page__mobile-filter > svg { flex: none; pointer-events: none; }
+.menu-page__filter-row { grid-area: quick; min-width: 0; }
+.menu-page__content { min-width: 0; }
+.menu-page__content-head { display: flex; justify-content: space-between; align-items: center; gap: var(--pp-space-2); min-width: 0; min-height: 48px; }
+.menu-page__content-head > div { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; min-width: 0; }
+.menu-page__content-head h2 { margin: 0; font: 400 14px/1.5 var(--pp-font-body); color: var(--pp-texto-2); overflow-wrap: anywhere; scroll-margin-top: calc(var(--pp-altura-topo) + var(--pp-space-3)); }
+.menu-page__content-head p { margin: 0; color: var(--pp-texto-2); font-size: 14px; line-height: 1.5; }
+.menu-page__clear { flex: none; min-height: 44px; padding: 0; border: 0; background: transparent; color: var(--pp-dourado-profundo); font: 600 13px/1.5 var(--pp-font-body); text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+.menu-page__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: stretch; gap: 24px 16px; }
+/* Acabamento restrito ao Card?pio; Home e demais consumidores preservam suas variantes. */
+.menu-page :deep(.product-card) { display: grid; grid-template-columns: minmax(0, 1fr) 44px; grid-template-rows: auto 1fr auto; column-gap: 10px; row-gap: 4px; padding: 0 0 12px; border: 0; border-bottom: 1px solid var(--pp-creme-borda); border-radius: 0; background: transparent; color: var(--pp-marrom); box-shadow: none; }
+.menu-page :deep(.product-card__media-button) { grid-column: 1 / -1; grid-row: 1; border-radius: 0; }
+.menu-page :deep(.catalog-product-image--card) { aspect-ratio: 1.18; }
+.menu-page :deep(.product-card__copy) { grid-column: 1; grid-row: 2; align-self: start; padding: 7px 0 0; }
+.menu-page :deep(.product-card__category) { display: none; }
+.menu-page :deep(.product-card h2) { margin: 0; min-height: 0; font: 700 15px/1.45 var(--pp-font-body); letter-spacing: 0; overflow-wrap: anywhere; }
+.menu-page :deep(.product-card__footer) { display: contents; }
+.menu-page :deep(.product-card__prices) { grid-column: 1; grid-row: 3; align-self: end; }
+.menu-page :deep(.product-card__prices strong) { font-size: 14px; font-weight: 400; line-height: 1.5; color: var(--pp-texto-2); }
+.menu-page :deep(.product-card__old-price) { color: var(--pp-texto-2); font-size: 12px; }
+.menu-page :deep(.product-card__favorite) { width: 44px; height: 44px; top: 4px; right: 4px; border: 0; box-shadow: none; }
+.menu-page :deep(.product-card__add) { grid-column: 2; grid-row: 2 / 4; align-self: start; width: 44px; height: 44px; margin-top: 7px; border: 1px solid var(--pp-texto-3); background: transparent; color: var(--pp-marrom); }
+.menu-page :deep(.product-card__badge) { left: 4px; top: 4px; max-width: calc(100% - 56px); font-size: 10px; padding: 5px 7px; }
+.menu-page__pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px; margin-top: 24px; }
+.menu-page__pagination p { margin: 0; color: var(--pp-texto-2); font-size: 14px; font-variant-numeric: tabular-nums; }
+.menu-page__pages { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.menu-page__pages button { min-width: 44px; min-height: 44px; padding: 0 6px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: var(--pp-marrom); font: 400 14px/1.5 var(--pp-font-body); cursor: pointer; }
+.menu-page__pages button[aria-current="page"] { border-bottom-color: var(--pp-dourado-escuro); font-weight: 700; }
+.menu-page__pages button:disabled { opacity: .45; cursor: default; }
+.menu-page__skeleton { padding-bottom: 12px; }
+.menu-page__skeleton div { aspect-ratio: 1.18; background: var(--pp-creme-2); }
+.menu-page__skeleton span { display: block; height: 14px; margin: 12px 0; background: var(--pp-creme-2); }
+.menu-page__skeleton span:last-child { width: 45%; }
+.menu-page__state { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 48px 24px; text-align: center; }
+.menu-page__state > svg { color: var(--pp-texto-2); }
+.menu-page__state h2 { margin: 0; font: 600 22px/1.4 var(--pp-font-body); }
+.menu-page__state p { max-width: 65ch; margin: 0; color: var(--pp-texto-2); font-size: 16px; line-height: 1.6; }
+.menu-page__state button { min-height: 44px; padding: 12px 24px; border: 1px solid var(--pp-creme-borda); border-radius: var(--pp-radius-btn); background: var(--pp-creme-2); color: var(--pp-marrom); font: 600 14px/1.5 var(--pp-font-body); cursor: pointer; }
+.menu-page__toast { position: fixed; z-index: 90; bottom: 28px; left: 50%; display: flex; align-items: center; gap: 8px; width: max-content; max-width: calc(100vw - 32px); padding: 12px 24px; border-radius: var(--pp-radius-btn); background: var(--pp-marrom); color: var(--pp-creme); font-size: 14px; line-height: 1.5; transform: translateX(-50%); }
+.menu-page button:focus-visible, .menu-page a:focus-visible, .menu-page :deep(.product-card button:focus-visible), .menu-page__content-head h2:focus-visible { outline: 3px solid var(--pp-dourado-escuro); outline-offset: 3px; }
+.menu-page__categories button:focus-visible { outline-offset: -3px; }
+.menu-page__search:focus-within, .menu-page__sort:focus-within, .menu-page__mobile-filter:focus-within { outline: 3px solid var(--pp-dourado-escuro); outline-offset: 2px; }
+.menu-toast-enter-active, .menu-toast-leave-active { transition: opacity 180ms var(--pp-ease); }
+.menu-toast-enter-from, .menu-toast-leave-to { opacity: 0; }
+@media (hover: hover) {
+  .menu-page :deep(.product-card__copy:hover h2) { text-decoration: underline; text-underline-offset: 3px; }
+  .menu-page__pages button:hover:not(:disabled):not([aria-current="page"]) { border-bottom-color: var(--pp-creme-borda); }
+}
+@media (max-width: 1100px) { .menu-page__toolbar { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "categories categories" "quick sort"; gap: 0 12px; } }
+@media (min-width: 761px) and (max-width: 1000px) { .menu-page__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 760px) {
+  .menu-page__header { display: grid; gap: 12px; margin-bottom: 10px; }
+  .menu-page__header h1 { font-size: clamp(50px, 12vw, 70px); }
+  .menu-page__header p { font-size: 23px; }
+  .menu-page__search { width: 100%; }
+  .menu-page__category-track { gap: 17px; }
+  .menu-page__content-head { min-height: 48px; }
+  .menu-page__clear { font-size: 12px; }
+  .menu-page__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 10px; }
+  .menu-page :deep(.product-card) { column-gap: 6px; }
+  .menu-page :deep(.product-card h2) { font-size: 14px; }
+  .menu-page__toast { bottom: calc(64px + 80px + env(safe-area-inset-bottom)); }
+  .menu-page__pagination { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu-page__category-indicator, .menu-toast-enter-active, .menu-toast-leave-active { transition: none; }
+  .menu-page :deep(.product-card), .menu-page :deep(.product-card__media-button img), .menu-page :deep(.product-card__media-button svg) { transition: none; transform: none; }
 }
 </style>
