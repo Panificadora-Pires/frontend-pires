@@ -1,338 +1,347 @@
+<script setup>
+import { computed, ref } from "vue";
+import { motion, useReducedMotion } from "motion-v";
+import { ChevronDown, PackageCheck } from "lucide-vue-next";
+import OrderStatusBadge from "@/components/orders/OrderStatusBadge.vue";
+import OrderProgress from "@/components/orders/OrderProgress.vue";
+import OrderActions from "@/components/orders/OrderActions.vue";
+import { dataPedido, moedaPedido, informacaoStatus } from "@/utils/orders";
+
+const props = defineProps({
+  pedido: { type: Object, required: true },
+  naoLidas: { type: Number, default: 0 },
+  destaque: { type: Boolean, default: false },
+});
+const emit = defineEmits(["ver-qrcode", "abrir-chat"]);
+const aberto = ref(false);
+const reduzir = useReducedMotion();
+const info = computed(() => informacaoStatus(props.pedido.status));
+const totalItens = computed(() =>
+  (props.pedido.itens || []).reduce(
+    (soma, item) => soma + Number(item.quantidade || 0),
+    0,
+  ),
+);
+</script>
+
 <template>
   <article
     class="order-card"
-    :class="`order-card--${pedido.status || 'neutro'}`"
+    :class="{
+      'order-card--featured': destaque,
+      'order-card--ready': pedido.status === 'pronto',
+    }"
+    :aria-label="`Pedido #${pedido.id}`"
   >
-    <header class="order-card__header">
-      <div class="order-card__identity">
-        <span class="order-card__icon">
-          <Package :size="20" aria-hidden="true" />
-        </span>
+    <div class="order-card__tracking">
+      <header class="order-card__header">
         <div>
-          <strong>Pedido #{{ pedido.id }}</strong>
-          <span>
-            <CalendarDays :size="13" aria-hidden="true" />
-            {{ formatarData(pedido.data) }}
-          </span>
+          <h3>Pedido #{{ pedido.id }}</h3>
+          <time :datetime="pedido.data">{{ dataPedido(pedido.data) }}</time>
         </div>
-      </div>
-
-      <OrderStatusBadge
-        :status="pedido.status"
-        :label="pedido.status_display"
-      />
-    </header>
-
-    <div class="order-card__body">
-      <OrderItemsPreview :itens="pedido.itens || []" />
+        <OrderStatusBadge
+          :status="pedido.status"
+          :label="pedido.status_display"
+        />
+      </header>
+      <template v-if="destaque">
+        <div class="order-card__message" aria-live="polite" aria-atomic="true">
+          <PackageCheck
+            v-if="pedido.status === 'pronto'"
+            :size="28"
+            aria-hidden="true"
+          />
+          <h4>{{ info.titulo }}</h4>
+          <p>{{ info.texto }}</p>
+        </div>
+        <OrderActions
+          :pedido="pedido"
+          :nao-lidas="naoLidas"
+          @ver-qrcode="emit('ver-qrcode', $event)"
+          @abrir-chat="emit('abrir-chat', $event)"
+        />
+        <OrderProgress :status="pedido.status" />
+      </template>
+      <p v-else class="order-card__copy">{{ info.texto }}</p>
     </div>
-
-    <footer class="order-card__footer">
-      <div class="order-card__status-copy">
-        <component :is="statusInfo.icon" :size="16" aria-hidden="true" />
-        <span>{{ statusInfo.texto }}</span>
+    <div class="order-card__receipt">
+      <button
+        v-if="!destaque"
+        type="button"
+        class="order-card__expand"
+        :aria-expanded="aberto"
+        :aria-controls="`itens-pedido-${pedido.id}`"
+        @click="aberto = !aberto"
+      >
+        {{
+          aberto
+            ? "Ocultar produtos"
+            : `Ver ${totalItens} ${totalItens === 1 ? "item" : "itens"}`
+        }}<ChevronDown
+          :size="17"
+          :class="{ 'is-open': aberto }"
+          aria-hidden="true"
+        />
+      </button>
+      <motion.div
+        :id="`itens-pedido-${pedido.id}`"
+        :initial="false"
+        :animate="{
+          height: destaque || aberto ? 'auto' : 0,
+          opacity: destaque || aberto ? 1 : 0,
+        }"
+        :transition="{ duration: reduzir ? 0 : 0.24 }"
+        :inert="!destaque && !aberto"
+        class="order-card__items-wrap"
+      >
+        <ul class="order-card__items" aria-label="Produtos do pedido">
+          <li v-for="item in pedido.itens || []" :key="item.id || item.produto">
+            <span class="order-card__quantity">{{ item.quantidade }}×</span
+            ><span
+              >{{ item.produto_nome
+              }}<small>{{ moedaPedido(item.preco_unitario) }} cada</small></span
+            ><strong>{{ moedaPedido(item.subtotal) }}</strong>
+          </li>
+        </ul>
+      </motion.div>
+      <div class="order-card__total">
+        <span>Total do pedido</span
+        ><strong>{{ moedaPedido(pedido.total) }}</strong>
       </div>
-
-      <div class="order-card__footer-actions">
-        <button
-          type="button"
-          class="order-card__chat-button pp-card-action"
-          :aria-label="rotuloChat"
-          @click="abrirChat"
-        >
-          <CardActionContent>
-            <MessageCircle :size="16" aria-hidden="true" />
-            <span>Mensagens</span>
-            <span v-if="naoLidas" class="order-card__chat-badge" aria-hidden="true">
-              {{ naoLidas > 9 ? "9+" : naoLidas }}
-            </span>
-          </CardActionContent>
-        </button>
-
-        <button
-          v-if="pedido.status === 'pronto'"
-          type="button"
-          class="order-card__qr-button pp-card-action"
-          @click="abrirQRCode"
-        >
-          <CardActionContent>
-            <QrCode :size="16" aria-hidden="true" />
-            <span>Ver QR Code</span>
-          </CardActionContent>
-        </button>
-
-        <div class="order-card__total">
-          <span>Total</span>
-          <strong>{{ formatarMoeda(pedido.total) }}</strong>
-        </div>
-      </div>
-    </footer>
+      <OrderActions
+        v-if="!destaque"
+        :pedido="pedido"
+        :nao-lidas="naoLidas"
+        @ver-qrcode="emit('ver-qrcode', $event)"
+        @abrir-chat="emit('abrir-chat', $event)"
+      />
+    </div>
   </article>
 </template>
 
-<script setup>
-import { computed } from "vue";
-import {
-  BadgeCheck,
-  CalendarDays,
-  CircleCheckBig,
-  CircleX,
-  Clock3,
-  MessageCircle,
-  Package,
-  PackageCheck,
-  QrCode,
-} from "lucide-vue-next";
-
-import OrderItemsPreview from "@/components/orders/OrderItemsPreview.vue";
-import OrderStatusBadge from "@/components/orders/OrderStatusBadge.vue";
-import CardActionContent from "@/components/ui/CardActionContent.vue";
-
-const props = defineProps({
-  pedido: {
-    type: Object,
-    required: true,
-  },
-  naoLidas: {
-    type: Number,
-    default: 0,
-  },
-});
-
-const emit = defineEmits(["ver-qrcode", "abrir-chat"]);
-
-function abrirQRCode() {
-  emit("ver-qrcode", props.pedido);
-}
-
-function abrirChat() {
-  emit("abrir-chat", props.pedido);
-}
-
-const rotuloChat = computed(() => {
-  if (!props.naoLidas) return `Mensagens do pedido #${props.pedido.id}`;
-  const novas = props.naoLidas === 1 ? "1 mensagem nova" : `${props.naoLidas} mensagens novas`;
-  return `Mensagens do pedido #${props.pedido.id}: ${novas}`;
-});
-
-const statusInfo = computed(() => {
-  const mapa = {
-    pendente: {
-      icon: Clock3,
-      texto: "Seu pedido foi recebido e aguarda confirmação.",
-    },
-    confirmado: {
-      icon: BadgeCheck,
-      texto: "A panificadora confirmou seu pedido.",
-    },
-    pronto: {
-      icon: PackageCheck,
-      texto: "Seu pedido está pronto para retirada no balcão.",
-    },
-    retirado: {
-      icon: CircleCheckBig,
-      texto: "Pedido retirado com sucesso.",
-    },
-    cancelado: {
-      icon: CircleX,
-      texto: "Este pedido foi cancelado.",
-    },
-  };
-
-  return (
-    mapa[props.pedido.status] || {
-      icon: Clock3,
-      texto: "Acompanhe aqui as atualizações do seu pedido.",
-    }
-  );
-});
-
-function formatarData(valor) {
-  const data = new Date(valor);
-  if (Number.isNaN(data.getTime())) return "Data indisponível";
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(data);
-}
-
-function formatarMoeda(valor) {
-  const numero = Number(valor || 0);
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(Number.isFinite(numero) ? numero : 0);
-}
-</script>
-
 <style scoped>
 .order-card {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid var(--student-border);
-  border-radius: 10px;
-  background: #fff;
-  transition: border-color 0.15s ease;
+  padding: 24px 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  column-gap: 48px;
+  border-bottom: 1px solid var(--pp-creme-borda);
+  color: var(--pp-marrom);
+  font-variant-numeric: tabular-nums;
 }
-.order-card:hover {
-  border-color: #d6cbbf;
-}
-.order-card--pronto {
-  border-left: 3px solid #719055;
+.order-card__tracking,
+.order-card__receipt {
+  min-width: 0;
 }
 .order-card__header {
-  min-height: 58px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  padding: 11px 15px;
-  border-bottom: 1px solid var(--student-border);
-}
-.order-card__identity {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.order-card__icon {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  border-radius: 7px;
-  background: #f2eee8;
-  color: #76572b;
-}
-.order-card--pronto .order-card__icon {
-  background: #eef5e9;
-  color: #5d7a47;
-}
-.order-card__identity > div {
-  min-width: 0;
-}
-.order-card__identity strong {
-  display: block;
-  font-size: 12px;
-}
-.order-card__identity span:not(.order-card__icon) {
-  display: block;
-  margin-top: 2px;
-  color: var(--student-muted);
-  font-size: 12px;
-}
-.order-card__body {
-  padding: 5px 15px;
-}
-.order-card__footer {
-  min-height: 58px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 10px 15px;
-  border-top: 1px solid var(--student-border);
-  background: #fcfbf9;
-}
-.order-card__status-copy {
-  display: flex;
   align-items: flex-start;
-  gap: 6px;
-  color: var(--student-muted);
-  font-size: 12px;
-  line-height: 1.45;
+  gap: 14px;
 }
-.order-card__status-copy svg {
-  flex: 0 0 auto;
-  margin-top: 1px;
-  color: #8a8178;
-}
-.order-card--pronto .order-card__status-copy {
-  color: #547045;
-}
-.order-card__footer-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-left: auto;
-}
-.order-card__qr-button {
-  min-height: 34px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 10px;
-  border: 1px solid #78945f;
-  border-radius: 7px;
-  background: #f5faf2;
-  color: #4f6d3d;
-  font-size: 12px;
+.order-card__header h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
   font-weight: 700;
-  cursor: pointer;
 }
-.order-card__chat-button {
-  position: relative;
-  min-height: 34px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 10px;
-  border: 1px solid var(--student-border-strong);
-  border-radius: 7px;
-  background: var(--student-surface);
-  color: var(--student-text);
+.order-card__header time {
   font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
+  color: var(--pp-texto-2);
 }
-.order-card__chat-badge {
-  min-width: 18px;
-  height: 18px;
+.order-card__copy {
+  color: var(--pp-texto-2);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 14px 0 0;
+  max-width: 44ch;
+}
+.order-card__message {
+  margin-top: 32px;
+  max-width: 47ch;
+}
+.order-card__message > svg {
+  color: var(--pp-verde);
+  margin-bottom: 10px;
+}
+.order-card__message h4 {
+  font-family: var(--pp-font-titulo);
+  font-size: clamp(32px, 3vw, 44px);
+  font-weight: 400;
+  line-height: 1.12;
+  margin: 0 0 12px;
+}
+.order-card__message p {
+  color: var(--pp-texto-2);
+  font-size: 14px;
+  line-height: 1.65;
+  margin: 0;
+}
+.order-card__items-wrap {
+  overflow: hidden;
+}
+.order-card__items {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.order-card__items li {
   display: grid;
-  place-items: center;
-  padding: 0 5px;
-  border-radius: var(--pp-radius-full);
-  background: var(--student-accent-hover);
-  color: var(--student-surface);
-  font-size: 12px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--pp-creme-3);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.order-card__items small {
+  display: block;
+  color: var(--pp-texto-3);
+  font-size: 11px;
+  margin-top: 2px;
+}
+.order-card__quantity {
+  color: var(--pp-texto-3);
 }
 .order-card__total {
-  text-align: right;
-}
-.order-card__total span {
-  display: block;
-  color: var(--student-muted);
-  font-size: 11px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 0;
+  font-size: 12px;
+  color: var(--pp-texto-2);
 }
 .order-card__total strong {
-  font-size: 14px;
+  font-size: 22px;
+  color: var(--pp-marrom);
+}
+.order-card__expand {
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--pp-texto-2);
+  cursor: pointer;
+  text-align: left;
+}
+.order-card__expand svg {
+  transition: transform 220ms var(--pp-ease);
+}
+.order-card__expand .is-open {
+  transform: rotate(180deg);
+}
+.order-card--featured {
+  padding: 36px;
+  border: 1px solid var(--pp-creme-borda);
+  border-radius: 16px;
+  background: var(--pp-creme-2);
+  column-gap: 60px;
+  row-gap: 0;
+  grid-template-areas: "heading receipt" "message receipt" "progress actions";
+}
+.order-card--featured .order-card__receipt {
+  border-left: 1px solid var(--pp-creme-borda);
+  padding-left: 36px;
+}
+.order-card--featured .order-card__total {
+  margin: 26px 0 24px;
+}
+.order-card--featured .order-card__total strong {
+  font-size: 30px;
+}
+.order-card--featured .order-card__actions {
+  flex-direction: column;
+}
+.order-card :is(button):focus-visible {
+  outline: 3px solid var(--pp-dourado-escuro);
+  outline-offset: 4px;
+}
+
+.order-card--featured .order-card__tracking {
+  display: contents;
+}
+.order-card--featured .order-card__header {
+  grid-area: heading;
+}
+.order-card--featured .order-card__message {
+  grid-area: message;
+}
+.order-card--featured .order-progress {
+  grid-area: progress;
+}
+.order-card--featured .order-card__receipt {
+  grid-area: receipt;
+}
+.order-card--featured .order-card__actions {
+  grid-area: actions;
+  margin-left: 36px;
+}
+
+@media (hover: hover) {
+  .order-card__actions button:hover {
+    border-color: var(--pp-dourado-escuro);
+  }
+}
+@media (max-width: 800px) {
+  .order-card {
+    gap: 24px;
+  }
+  .order-card--featured {
+    padding: 26px;
+    gap: 28px;
+  }
+  .order-card--featured .order-card__receipt {
+    padding-left: 24px;
+  }
 }
 @media (max-width: 620px) {
+  .order-card {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 24px 0;
+  }
+  .order-card--featured {
+    padding: 24px 20px;
+    gap: 26px;
+  }
+  .order-card--featured .order-card__receipt {
+    border-left: 0;
+    border-top: 1px solid var(--pp-creme-borda);
+    padding: 12px 0 0;
+  }
+  .order-card--featured {
+    grid-template-areas: "heading" "message" "actions" "progress" "receipt";
+    gap: 0;
+  }
+  .order-card--featured .order-card__actions {
+    margin: 20px 0 0;
+  }
+  .order-card--featured .order-card__receipt {
+    margin-top: 26px;
+  }
   .order-card__header {
-    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
   }
-  .order-card__footer {
-    align-items: flex-start;
-    flex-direction: column;
+  .order-card__message {
+    margin-top: 24px;
   }
-  .order-card__footer-actions {
-    width: 100%;
-    margin-left: 0;
-    justify-content: space-between;
+  .order-card__message h4 {
+    font-size: 36px;
   }
-  .order-card__qr-button,
-  .order-card__chat-button {
-    flex: 1;
-    justify-content: center;
+  .order-card--featured .order-card__total {
+    margin: 20px 0;
   }
-  .order-card__total {
-    text-align: right;
-    margin-left: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  .order-card__expand svg {
+    transition: none;
   }
 }
 </style>

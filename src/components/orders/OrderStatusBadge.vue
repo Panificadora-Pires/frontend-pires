@@ -88,7 +88,7 @@ const config = computed(() => {
 .order-status--pendente {
   border-color: rgba(224, 168, 62, 0.2);
   background: #fff6e5;
-  color: #a86a0d;
+  color: var(--pp-dourado-profundo);
 }
 
 .order-status--confirmado {
@@ -100,7 +100,7 @@ const config = computed(() => {
 .order-status--pronto {
   border-color: rgba(111, 163, 111, 0.18);
   background: #edf7ec;
-  color: #527e50;
+  color: var(--pp-verde);
 }
 
 .order-status--retirado {
