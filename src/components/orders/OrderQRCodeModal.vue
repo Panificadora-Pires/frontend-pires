@@ -1,80 +1,5 @@
-<template>
-  <Teleport to="body">
-    <div
-      class="qr-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="qr-modal-title"
-      @click.self="fechar"
-    >
-      <section class="qr-modal__card">
-        <button
-          type="button"
-          class="qr-modal__close"
-          aria-label="Fechar QR Code"
-          @click="fechar"
-        >
-          <X :size="19" aria-hidden="true" />
-        </button>
-
-        <header class="qr-modal__header">
-          <span class="qr-modal__icon">
-            <QrCode :size="23" aria-hidden="true" />
-          </span>
-
-          <div>
-            <span class="qr-modal__eyebrow">Retirada no balcão</span>
-            <h2 id="qr-modal-title">Pedido #{{ pedido.id }}</h2>
-            <p>Apresente este QR Code quando for retirar seu pedido.</p>
-          </div>
-        </header>
-
-        <div v-if="carregando" class="qr-modal__loading" aria-live="polite">
-          <LoaderCircle
-            :size="30"
-            class="qr-modal__spinner"
-            aria-hidden="true"
-          />
-          <span>Carregando QR Code...</span>
-        </div>
-
-        <div v-else-if="erro" class="qr-modal__error" role="alert">
-          <CircleAlert :size="28" aria-hidden="true" />
-          <strong>Não foi possível carregar o QR Code</strong>
-          <p>{{ erro }}</p>
-          <button type="button" @click="carregarQRCode">
-            Tentar novamente
-          </button>
-        </div>
-
-        <div v-else-if="dados" class="qr-modal__content">
-          <div class="qr-modal__qr">
-            <img
-              :src="dados.qrcode_base64"
-              :alt="`QR Code de retirada do pedido #${pedido.id}`"
-            />
-          </div>
-
-          <div class="qr-modal__code">
-            <span>Código de retirada</span>
-            <strong>{{ dados.codigo_retirada }}</strong>
-          </div>
-
-          <div class="qr-modal__notice">
-            <PackageCheck :size="18" aria-hidden="true" />
-            <p>
-              Seu pedido está pronto. O QR Code identifica este pedido no fluxo
-              de retirada.
-            </p>
-          </div>
-        </div>
-      </section>
-    </div>
-  </Teleport>
-</template>
-
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from "vue";
+import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 import {
   CircleAlert,
   LoaderCircle,
@@ -82,239 +7,281 @@ import {
   QrCode,
   X,
 } from "lucide-vue-next";
-
 import orderService from "@/services/order.service";
+import { useOrderDialog } from "@/composables/useOrderDialog";
 
-const props = defineProps({
-  pedido: {
-    type: Object,
-    required: true,
-  },
-});
-
+const props = defineProps({ pedido: { type: Object, required: true } });
 const emit = defineEmits(["close"]);
-
-const carregando = ref(false);
+const dialogo = ref(null);
+const carregando = ref(true);
 const erro = ref("");
 const dados = ref(null);
-let overflowAnterior = "";
-
-function extrairMensagemErro(error) {
-  const detalhe = error?.response?.data?.detail;
-  if (typeof detalhe === "string" && detalhe.trim()) return detalhe;
-
-  if (error?.response?.status === 404) {
-    return "O pedido não foi encontrado ou não pertence a esta conta.";
-  }
-
-  return "Verifique sua conexão e tente novamente.";
-}
+const { fechar, fecharNoFundo } = useOrderDialog(dialogo, () => emit("close"));
+let ativo = true;
+let consulta = 0;
 
 async function carregarQRCode() {
+  const atual = ++consulta;
+  const id = props.pedido.id;
+  if (props.pedido.status !== "pronto") {
+    emit("close");
+    return;
+  }
   carregando.value = true;
+  dados.value = null;
   erro.value = "";
-
   try {
-    const { data } = await orderService.obterQRCode(props.pedido.id);
-
+    const { data } = await orderService.obterQRCode(id);
+    if (
+      !ativo ||
+      atual !== consulta ||
+      props.pedido.id !== id ||
+      props.pedido.status !== "pronto"
+    )
+      return;
     if (
       !data?.codigo_retirada ||
       typeof data?.qrcode_base64 !== "string" ||
       !data.qrcode_base64.startsWith("data:image/png;base64,")
-    ) {
-      throw new Error("Resposta de QR Code inválida.");
-    }
-
+    )
+      throw new Error("Resposta inválida");
     dados.value = data;
   } catch (error) {
-    console.error(
-      `Erro ao carregar QR Code do pedido #${props.pedido.id}:`,
-      error,
-    );
-    dados.value = null;
-    erro.value = extrairMensagemErro(error);
+    if (!ativo || atual !== consulta) return;
+    // Não registrar o objeto Axios: ele pode conter o código de retirada.
+    erro.value =
+      error?.response?.status === 404
+        ? "O pedido não foi encontrado ou não pertence a esta conta."
+        : "Verifique sua conexão e tente novamente.";
   } finally {
-    carregando.value = false;
+    if (ativo && atual === consulta) carregando.value = false;
   }
 }
-
-function fechar() {
-  emit("close");
-}
-
-function tratarTecla(event) {
-  if (event.key === "Escape") fechar();
-}
-
-onMounted(() => {
-  overflowAnterior = document.body.style.overflow;
-  document.body.style.overflow = "hidden";
-  window.addEventListener("keydown", tratarTecla);
-  carregarQRCode();
-});
-
+watch(
+  () => [props.pedido.id, props.pedido.status],
+  () => {
+    ++consulta;
+    dados.value = null;
+    if (props.pedido.status !== "pronto") emit("close");
+    else carregarQRCode();
+  },
+);
+onMounted(carregarQRCode);
 onBeforeUnmount(() => {
-  document.body.style.overflow = overflowAnterior;
-  window.removeEventListener("keydown", tratarTecla);
+  ativo = false;
+  ++consulta;
+  dados.value = null;
 });
 </script>
+
+<template>
+  <Teleport to="body">
+    <dialog
+      ref="dialogo"
+      class="qr-modal"
+      aria-labelledby="qr-modal-title"
+      aria-describedby="qr-modal-description"
+      @cancel.prevent="fechar"
+      @click="fecharNoFundo"
+    >
+      <button
+        type="button"
+        autofocus
+        class="qr-modal__close"
+        aria-label="Fechar QR Code"
+        @click="fechar"
+      >
+        <X :size="20" aria-hidden="true" />
+      </button>
+      <header class="qr-modal__header">
+        <QrCode :size="28" aria-hidden="true" />
+        <h2 id="qr-modal-title">Seu pedido está pronto.</h2>
+        <p id="qr-modal-description">
+          Apresente este QR Code no balcão para retirar o pedido
+          <strong>#{{ pedido.id }}</strong
+          >.
+        </p>
+      </header>
+      <div v-if="carregando" class="qr-modal__state" role="status">
+        <LoaderCircle :size="28" aria-hidden="true" />
+        <p>Carregando QR Code…</p>
+      </div>
+      <div v-else-if="erro" class="qr-modal__state" role="alert">
+        <CircleAlert :size="28" aria-hidden="true" /><strong
+          >Não foi possível carregar o QR Code</strong
+        >
+        <p>{{ erro }}</p>
+        <button type="button" @click="carregarQRCode">Tentar novamente</button>
+      </div>
+      <div v-else-if="dados" class="qr-modal__content">
+        <div class="qr-modal__qr">
+          <img
+            :src="dados.qrcode_base64"
+            :alt="`QR Code de retirada do pedido #${pedido.id}`"
+            width="280"
+            height="280"
+            @error="
+              dados = null;
+              erro = 'A imagem não carregou. Tente novamente.';
+            "
+          />
+        </div>
+        <div class="qr-modal__code">
+          <span>Código de retirada</span
+          ><strong>{{ dados.codigo_retirada }}</strong>
+        </div>
+        <p class="qr-modal__notice">
+          <PackageCheck :size="20" aria-hidden="true" /><span
+            >Mostre o código à equipe. A retirada será confirmada pelo
+            balcão.</span
+          >
+        </p>
+      </div>
+    </dialog>
+  </Teleport>
+</template>
 
 <style scoped>
 .qr-modal {
   position: fixed;
-  inset: 0;
-  z-index: 130;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  background: rgba(26, 21, 17, 0.58);
-}
-.qr-modal__card {
-  position: relative;
-  width: min(430px, 100%);
-  max-height: 90vh;
+  margin: auto;
+  width: min(460px, calc(100% - 24px));
+  max-height: calc(100dvh - 24px);
   overflow: auto;
-  padding: 24px;
-  border-radius: 12px;
-  background: #fff;
-  color: var(--student-text);
-  box-shadow: 0 24px 70px rgba(20, 16, 12, 0.25);
+  padding: 34px 30px 24px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--pp-creme);
+  color: var(--pp-marrom);
+  box-shadow: var(--pp-shadow-soft);
+  font-family: var(--pp-font-body);
+  animation: qr-enter 220ms var(--pp-ease);
+}
+.qr-modal::backdrop {
+  background: var(--pp-overlay);
 }
 .qr-modal__close {
   position: absolute;
-  right: 12px;
   top: 12px;
-  width: 34px;
-  height: 34px;
+  right: 12px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--student-border);
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--pp-creme-borda);
   border-radius: 50%;
-  background: #fff;
-  color: #5d554e;
+  background: transparent;
+  color: var(--pp-marrom);
   cursor: pointer;
 }
 .qr-modal__header {
-  text-align: center;
-  padding: 8px 30px 18px;
+  padding-top: 20px;
 }
-.qr-modal__icon {
-  width: 48px;
-  height: 48px;
-  display: grid;
-  place-items: center;
-  margin: 0 auto 10px;
-  border-radius: 50%;
-  background: #eef5e9;
-  color: #567343;
+.qr-modal__header > svg {
+  color: var(--pp-dourado-profundo);
 }
-.qr-modal__eyebrow {
-  display: none;
-}
-.qr-modal__header h2 {
-  margin: 0;
-  font-size: 19px;
+.qr-modal h2 {
+  font: 400 36px/1.15 var(--pp-font-titulo);
+  letter-spacing: -0.02em;
+  margin: 18px 0 12px;
 }
 .qr-modal__header p {
-  margin: 6px 0 0;
-  color: var(--student-muted);
-  font-size: 12px;
-  line-height: 1.5;
-}
-.qr-modal__loading,
-.qr-modal__error {
-  min-height: 230px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  color: var(--student-muted);
-  font-size: 12px;
-}
-.qr-modal__spinner {
-  animation: qr-spin 0.7s linear infinite;
-}
-.qr-modal__error strong {
-  color: var(--student-text);
-  font-size: 12px;
-}
-.qr-modal__error p {
-  margin: 6px 0 12px;
-}
-.qr-modal__error button {
-  min-height: 35px;
-  padding: 0 12px;
-  border: 1px solid var(--student-border-strong);
-  border-radius: 7px;
-  background: #fff;
-  font-size: 12px;
-  font-weight: 700;
-}
-.qr-modal__content {
-  display: grid;
-  gap: 12px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--pp-texto-2);
+  margin: 0 0 24px;
 }
 .qr-modal__qr {
-  width: 240px;
-  max-width: 100%;
   margin: 0 auto;
-  padding: 10px;
-  border: 1px solid var(--student-border);
-  border-radius: 8px;
-  background: #fff;
+  padding: 16px;
+  width: min(100%, 312px);
+  background: var(--pp-surface-card);
 }
 .qr-modal__qr img {
-  width: 100%;
   display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
 }
 .qr-modal__code {
-  padding: 11px;
-  border: 1px solid var(--student-border);
-  border-radius: 8px;
-  background: #faf8f5;
+  padding: 18px 0;
   text-align: center;
 }
 .qr-modal__code span {
   display: block;
-  color: var(--student-muted);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 12px;
+  color: var(--pp-texto-2);
 }
 .qr-modal__code strong {
   display: block;
-  margin-top: 5px;
+  font-size: 13px;
+  line-height: 1.6;
   overflow-wrap: anywhere;
-  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  margin-top: 8px;
 }
 .qr-modal__notice {
   display: flex;
   align-items: flex-start;
-  gap: 7px;
-  padding: 10px;
-  border-radius: 7px;
-  background: #f3f6f0;
-  color: #536748;
-}
-.qr-modal__notice p {
-  margin: 0;
+  gap: 10px;
   font-size: 12px;
-  line-height: 1.5;
+  line-height: 1.6;
+  color: var(--pp-texto-2);
+  border-top: 1px solid var(--pp-creme-borda);
+  padding-top: 18px;
+  margin: 0;
 }
-@keyframes qr-spin {
+.qr-modal__notice svg {
+  flex-shrink: 0;
+}
+.qr-modal__state {
+  min-height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.qr-modal__state p {
+  color: var(--pp-texto-2);
+  margin: 0;
+}
+.qr-modal__state button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--pp-marrom);
+  color: var(--pp-creme);
+  cursor: pointer;
+}
+.qr-modal button:focus-visible {
+  outline: 3px solid var(--pp-dourado-escuro);
+  outline-offset: 3px;
+}
+@keyframes qr-enter {
+  from {
+    opacity: 0;
+  }
   to {
-    transform: rotate(360deg);
+    opacity: 1;
   }
 }
-@media (max-width: 520px) {
+@media (max-width: 390px) {
   .qr-modal {
-    padding: 10px;
-    align-items: end;
+    padding: 28px 20px 20px;
   }
-  .qr-modal__card {
-    padding: 20px 16px 18px;
-    border-radius: 12px 12px 0 0;
+  .qr-modal h2 {
+    font-size: 32px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .qr-modal {
+    animation: none;
   }
 }
 </style>

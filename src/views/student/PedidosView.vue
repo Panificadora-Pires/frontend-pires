@@ -1,280 +1,66 @@
-<template>
-  <div class="orders-page">
-    <header class="orders-page__header">
-      <div>
-        <span class="orders-page__eyebrow">Acompanhamento</span>
-        <h1>Meus pedidos</h1>
-        <p>Consulte pedidos em andamento e seu histórico.</p>
-      </div>
-
-      <div
-        v-if="orders.inicializado"
-        class="orders-page__summary"
-        aria-label="Resumo dos pedidos"
-      >
-        <div>
-          <span>Em andamento</span>
-          <strong>{{ orders.emAndamento.length }}</strong>
-        </div>
-        <div class="is-ready">
-          <span>Prontos</span>
-          <strong>{{ orders.prontos.length }}</strong>
-        </div>
-        <div>
-          <span>Finalizados</span>
-          <strong>{{ orders.finalizados.length }}</strong>
-        </div>
-      </div>
-    </header>
-
-    <div class="orders-page__toolbar">
-      <div
-        class="orders-page__tabs"
-        role="tablist"
-        aria-label="Filtrar pedidos"
-      >
-        <button
-          v-for="item in filtros"
-          :key="item.valor"
-          type="button"
-          role="tab"
-          :aria-selected="filtro === item.valor"
-          :class="{ 'is-active': filtro === item.valor }"
-          @click="filtro = item.valor"
-        >
-          {{ item.label }}
-          <span v-if="quantidadeFiltro(item.valor)">
-            {{ quantidadeFiltro(item.valor) }}
-          </span>
-        </button>
-      </div>
-
-      <div class="orders-page__tools">
-        <label class="orders-page__search">
-          <Search :size="16" aria-hidden="true" />
-          <input
-            v-model.trim="busca"
-            type="search"
-            placeholder="Buscar pedido ou produto"
-            aria-label="Buscar pedido ou produto"
-          />
-          <button
-            v-if="busca"
-            type="button"
-            aria-label="Limpar busca"
-            @click="busca = ''"
-          >
-            <X :size="14" />
-          </button>
-        </label>
-
-        <button
-          type="button"
-          class="orders-page__refresh"
-          :disabled="atualizando"
-          aria-label="Atualizar pedidos"
-          title="Atualizar"
-          @click="atualizar"
-        >
-          <RefreshCw
-            :size="17"
-            :class="{ 'is-spinning': atualizando }"
-            aria-hidden="true"
-          />
-        </button>
-      </div>
-    </div>
-
-    <div
-      v-if="!orders.inicializado && !orders.erro"
-      class="orders-page__list"
-      aria-label="Carregando pedidos"
-    >
-      <div
-        v-for="index in 4"
-        :key="index"
-        class="orders-page__skeleton"
-        aria-hidden="true"
-      >
-        <div class="orders-page__skeleton-head">
-          <span />
-          <div>
-            <strong />
-            <small />
-          </div>
-          <em />
-        </div>
-        <div class="orders-page__skeleton-lines">
-          <i />
-          <i />
-          <i />
-        </div>
-        <div class="orders-page__skeleton-foot">
-          <i />
-          <strong />
-        </div>
-      </div>
-    </div>
-
-    <section
-      v-else-if="orders.erro && !orders.inicializado"
-      class="orders-page__state orders-page__state--error"
-      role="alert"
-    >
-      <span class="orders-page__state-icon">
-        <CircleAlert :size="30" />
-      </span>
-      <h2>Não conseguimos carregar seus pedidos.</h2>
-      <p>Verifique sua conexão e tente novamente.</p>
-      <button type="button" @click="atualizar">Tentar novamente</button>
-    </section>
-
-    <section v-else-if="!orders.itens.length" class="orders-page__state">
-      <span class="orders-page__state-icon">
-        <ShoppingBag :size="30" />
-      </span>
-      <h2>Você ainda não fez nenhum pedido</h2>
-      <p>
-        Escolha seus produtos favoritos no cardápio e seu próximo pedido
-        aparecerá aqui.
-      </p>
-      <RouterLink :to="{ name: 'cardapio' }">Ver cardápio</RouterLink>
-    </section>
-
-    <section
-      v-else-if="!pedidosFiltrados.length"
-      class="orders-page__state orders-page__state--compact"
-    >
-      <span class="orders-page__state-icon">
-        <SearchX :size="30" />
-      </span>
-      <h2>Nenhum pedido encontrado</h2>
-      <p>Não encontramos pedidos com os filtros ou a busca informados.</p>
-      <button type="button" @click="limparFiltros">Limpar filtros</button>
-    </section>
-
-    <div v-else class="orders-page__content">
-      <div class="orders-page__result-info">
-        <span>
-          {{ pedidosFiltrados.length }}
-          {{
-            pedidosFiltrados.length === 1
-              ? "pedido encontrado"
-              : "pedidos encontrados"
-          }}
-        </span>
-        <BaseRefreshStatus
-          class="orders-page__sync"
-          :ultima-atualizacao="ultimaAtualizacao"
-          :atualizando="atualizando"
-          :erro="erroAtualizacao"
-        />
-      </div>
-
-      <div class="orders-page__list">
-        <OrderCard
-          v-for="pedido in pedidosFiltrados"
-          :key="pedido.id"
-          :pedido="pedido"
-          :nao-lidas="chat.naoLidasDoPedido(pedido.id)"
-          @ver-qrcode="abrirQRCode"
-          @abrir-chat="abrirChat"
-        />
-      </div>
-    </div>
-
-    <OrderQRCodeModal
-      v-if="pedidoQRCode"
-      :pedido="pedidoQRCode"
-      @close="fecharQRCode"
-    />
-
-    <OrderChatDrawer
-      v-if="pedidoChat"
-      :pedido="pedidoChat"
-      @close="pedidoChat = null"
-    />
-  </div>
-</template>
-
 <script setup>
 import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { motion, useReducedMotion } from "motion-v";
 import {
-  CircleAlert,
-  RefreshCw,
+  ArrowUpRight,
   Search,
-  SearchX,
+  RotateCw,
   ShoppingBag,
-  X,
+  CircleAlert,
 } from "lucide-vue-next";
-
-import OrderChatDrawer from "@/components/chat/OrderChatDrawer.vue";
 import OrderCard from "@/components/orders/OrderCard.vue";
 import OrderQRCodeModal from "@/components/orders/OrderQRCodeModal.vue";
+import OrderChatDrawer from "@/components/chat/OrderChatDrawer.vue";
 import BaseRefreshStatus from "@/components/ui/BaseRefreshStatus.vue";
-import { useAutoRefresh } from "@/composables/useAutoRefresh";
-import { useChatStore } from "@/stores/chat";
 import { useOrdersStore } from "@/stores/orders";
+import { useChatStore } from "@/stores/chat";
+import { useAutoRefresh } from "@/composables/useAutoRefresh";
+import { filtrarPedidos } from "@/utils/orders";
 
-// Com pedido em andamento o cliente espera o "pronto": atualiza mais rápido.
-const INTERVALO_COM_PEDIDO_ATIVO_MS = 10_000;
-const INTERVALO_SEM_PEDIDO_ATIVO_MS = 60_000;
-
-const orders = useOrdersStore();
-const chat = useChatStore();
 const route = useRoute();
 const router = useRouter();
-
+const orders = useOrdersStore();
+const chat = useChatStore();
+const reduzir = useReducedMotion();
 const filtro = ref("todos");
 const busca = ref("");
-const pedidoQRCode = ref(null);
+const pedidoQRCodeId = ref(null);
 const pedidoChat = ref(null);
-
 const filtros = [
   { valor: "todos", label: "Todos" },
   { valor: "andamento", label: "Em andamento" },
   { valor: "finalizados", label: "Finalizados" },
 ];
-
-const pedidosFiltrados = computed(() => {
-  let lista = orders.itens;
-
-  if (filtro.value === "andamento") {
-    lista = lista.filter((pedido) =>
-      ["pendente", "confirmado", "pronto"].includes(pedido.status),
-    );
-  } else if (filtro.value === "finalizados") {
-    lista = lista.filter((pedido) =>
-      ["retirado", "cancelado"].includes(pedido.status),
-    );
-  }
-
-  const termo = busca.value.toLocaleLowerCase("pt-BR");
-  if (!termo) return lista;
-
-  return lista.filter((pedido) => {
-    const id = String(pedido.id || "");
-    const status = String(
-      pedido.status_display || pedido.status || "",
-    ).toLocaleLowerCase("pt-BR");
-    const produtos = (pedido.itens || [])
-      .map((item) => item.produto_nome || "")
-      .join(" ")
-      .toLocaleLowerCase("pt-BR");
-
-    return (
-      id.includes(termo) || status.includes(termo) || produtos.includes(termo)
-    );
-  });
-});
+const pedidosFiltrados = computed(() =>
+  filtrarPedidos(orders.itens, filtro.value, busca.value),
+);
+const destaque = computed(() =>
+  pedidosFiltrados.value.find((pedido) =>
+    ["pendente", "confirmado", "pronto"].includes(pedido.status),
+  ),
+);
+const colecao = computed(() =>
+  pedidosFiltrados.value.filter((pedido) => pedido.id !== destaque.value?.id),
+);
+const pedidoQRCode = computed(
+  () =>
+    orders.itens.find(
+      (pedido) =>
+        pedido.id === pedidoQRCodeId.value && pedido.status === "pronto",
+    ) || null,
+);
+const filtrosAtivos = computed(
+  () => filtro.value !== "todos" || busca.value.trim(),
+);
 
 function quantidadeFiltro(valor) {
-  if (valor === "todos") return orders.itens.length;
-  if (valor === "andamento") return orders.emAndamento.length;
-  return orders.finalizados.length;
+  return valor === "todos"
+    ? orders.itens.length
+    : valor === "andamento"
+      ? orders.emAndamento.length
+      : orders.finalizados.length;
 }
-
 const {
   atualizando,
   ultimaAtualizacao,
@@ -282,56 +68,31 @@ const {
   atualizarAgora,
   reagendar,
 } = useAutoRefresh(
-  () =>
-    orders.carregar({
-      force: true,
-      silencioso: orders.inicializado,
-    }),
-  {
-    intervalo: () =>
-      orders.emAndamento.length
-        ? INTERVALO_COM_PEDIDO_ATIVO_MS
-        : INTERVALO_SEM_PEDIDO_ATIVO_MS,
-  },
+  () => orders.carregar({ force: true, silencioso: orders.inicializado }),
+  { intervalo: () => (orders.emAndamento.length ? 10_000 : 60_000) },
 );
-
 // Um pedido novo ou finalizado muda o ritmo das atualizações.
 watch(
   () => orders.emAndamento.length,
   () => reagendar(),
 );
-
-function atualizar() {
-  atualizarAgora();
-}
-
+// Quando o balcão confirma a retirada, o QR deixa de valer: fecha o modal sozinho.
+// A ausência na lista atualizada também encerra a exibição e invalida respostas em voo.
+watch(pedidoQRCode, (pedido) => {
+  if (!pedido) pedidoQRCodeId.value = null;
+});
 function limparFiltros() {
   filtro.value = "todos";
   busca.value = "";
 }
-
 function abrirQRCode(pedido) {
-  if (!pedido || pedido.status !== "pronto") return;
-  pedidoQRCode.value = pedido;
+  if (pedido?.status === "pronto") {
+    pedidoChat.value = null;
+    pedidoQRCodeId.value = pedido.id;
+  }
 }
-
-// Quando o balcão confirma a retirada, o QR deixa de valer: fecha o modal sozinho.
-watch(
-  () => orders.itens,
-  (itens) => {
-    if (!pedidoQRCode.value) return;
-    const atual = itens.find(
-      (pedido) => Number(pedido.id) === Number(pedidoQRCode.value.id),
-    );
-    if (atual && atual.status !== "pronto") pedidoQRCode.value = null;
-  },
-);
-
-function fecharQRCode() {
-  pedidoQRCode.value = null;
-}
-
 function abrirChat(pedido) {
+  pedidoQRCodeId.value = null;
   pedidoChat.value = pedido;
 }
 
@@ -349,307 +110,488 @@ watch(
   },
   { immediate: true },
 );
-
 </script>
+
+<template>
+  <div class="orders-page">
+    <header class="orders-page__intro">
+      <div>
+        <h1>
+          Meus pedidos<span class="orders-page__note">Da Pires pra você.</span>
+        </h1>
+        <p>Seus pedidos, do preparo à retirada.</p>
+      </div>
+      <RouterLink :to="{ name: 'cardapio' }"
+        >Escolher meu próximo lanche
+        <ArrowUpRight :size="18" aria-hidden="true"
+      /></RouterLink>
+    </header>
+    <div
+      v-if="!orders.inicializado && !orders.erro"
+      class="orders-page__loading"
+      role="status"
+    >
+      <span>Buscando seus pedidos…</span>
+      <div class="orders-page__skeleton" />
+    </div>
+    <section
+      v-else-if="orders.erro && !orders.inicializado"
+      class="orders-page__state"
+      role="alert"
+    >
+      <CircleAlert :size="32" aria-hidden="true" />
+      <h2>Não foi possível carregar seus pedidos</h2>
+      <p>Verifique sua conexão e tente novamente.</p>
+      <button type="button" @click="atualizarAgora">Tentar novamente</button>
+    </section>
+    <section v-else-if="!orders.itens.length" class="orders-page__state">
+      <ShoppingBag :size="40" aria-hidden="true" />
+      <h2>Seu próximo lanche começa aqui.</h2>
+      <p>
+        Quando fizer um pedido, você acompanha cada etapa e a retirada nesta
+        página.
+      </p>
+      <RouterLink :to="{ name: 'cardapio' }"
+        >Explorar o Cardápio <ArrowUpRight :size="18" aria-hidden="true"
+      /></RouterLink>
+    </section>
+    <template v-else>
+      <div class="orders-page__summary">
+        <p>
+          <strong
+            >{{ orders.emAndamento.length }}
+            {{
+              orders.emAndamento.length === 1
+                ? "pedido ativo"
+                : "pedidos ativos"
+            }}</strong
+          ><span v-if="orders.prontos.length"
+            >,
+            {{
+              orders.prontos.length === 1
+                ? "sendo 1 pronto"
+                : `sendo ${orders.prontos.length} prontos`
+            }}
+            para retirada</span
+          ><span v-else>. Acompanhe as atualizações por aqui.</span>
+        </p>
+        <button
+          type="button"
+          class="orders-page__refresh"
+          :disabled="atualizando"
+          @click="atualizarAgora"
+        >
+          <RotateCw :size="15" aria-hidden="true" />{{
+            atualizando ? "Atualizando…" : "Atualizar"
+          }}
+        </button>
+      </div>
+      <BaseRefreshStatus
+        :ultima-atualizacao="ultimaAtualizacao"
+        :atualizando="atualizando"
+        :erro="erroAtualizacao"
+      />
+      <div class="orders-page__toolbar">
+        <div
+          class="orders-page__filters"
+          role="group"
+          aria-label="Filtrar pedidos"
+        >
+          <button
+            v-for="item in filtros"
+            :key="item.valor"
+            type="button"
+            :aria-pressed="filtro === item.valor"
+            @click="filtro = item.valor"
+          >
+            {{ item.label }} <span>{{ quantidadeFiltro(item.valor) }}</span
+            ><motion.span
+              v-if="filtro === item.valor"
+              class="orders-page__indicator"
+              layout-id="orders-filter"
+              :transition="{ duration: reduzir ? 0 : 0.22 }"
+            />
+          </button>
+        </div>
+        <label class="orders-page__search"
+          ><Search :size="18" aria-hidden="true" /><input
+            v-model="busca"
+            type="search"
+            aria-label="Buscar pedido por número ou produto"
+            placeholder="Número ou produto"
+        /></label>
+      </div>
+      <div class="orders-page__results" role="status" aria-live="polite">
+        {{ pedidosFiltrados.length }}
+        {{
+          pedidosFiltrados.length === 1
+            ? "pedido encontrado"
+            : "pedidos encontrados"
+        }}<button v-if="filtrosAtivos" type="button" @click="limparFiltros">
+          Limpar filtros
+        </button>
+      </div>
+      <section v-if="!pedidosFiltrados.length" class="orders-page__state">
+        <Search :size="30" aria-hidden="true" />
+        <h2>Nenhum pedido por aqui.</h2>
+        <p>Tente outro número, produto ou filtro.</p>
+        <button type="button" @click="limparFiltros">Limpar filtros</button>
+      </section>
+      <template v-else>
+        <motion.section
+          v-if="destaque"
+          :key="destaque.id"
+          class="orders-page__featured"
+          aria-labelledby="current-order-title"
+          :initial="reduzir ? false : { opacity: 0, y: 12 }"
+          :animate="{ opacity: 1, y: 0 }"
+          :transition="{ duration: reduzir ? 0 : 0.36, ease: 'easeOut' }"
+        >
+          <h2 id="current-order-title">
+            {{
+              destaque.status === "pronto"
+                ? "Aguardando sua retirada"
+                : "Acompanhe seu pedido"
+            }}
+          </h2>
+          <OrderCard
+            :pedido="destaque"
+            destaque
+            :nao-lidas="chat.naoLidasDoPedido(destaque.id)"
+            @ver-qrcode="abrirQRCode"
+            @abrir-chat="abrirChat"
+          />
+        </motion.section>
+        <motion.section
+          v-if="colecao.length"
+          :key="filtro"
+          class="orders-page__collection"
+          aria-labelledby="order-collection-title"
+          :initial="reduzir ? false : { opacity: 0.5 }"
+          :animate="{ opacity: 1 }"
+          :transition="{ duration: reduzir ? 0 : 0.2 }"
+        >
+          <div class="orders-page__collection-heading">
+            <h2 id="order-collection-title">
+              {{ destaque ? "Outros pedidos e histórico" : "Seu histórico" }}
+            </h2>
+            <p v-if="!orders.emAndamento.length">
+              Todos os seus pedidos foram finalizados. Os detalhes continuam
+              aqui.
+            </p>
+            <p v-else>Produtos, mensagens e detalhes de cada pedido.</p>
+          </div>
+          <OrderCard
+            v-for="pedido in colecao"
+            :key="pedido.id"
+            :pedido="pedido"
+            :nao-lidas="chat.naoLidasDoPedido(pedido.id)"
+            @ver-qrcode="abrirQRCode"
+            @abrir-chat="abrirChat"
+          />
+        </motion.section>
+      </template>
+    </template>
+    <OrderQRCodeModal
+      v-if="pedidoQRCode"
+      :key="pedidoQRCode.id"
+      :pedido="pedidoQRCode"
+      @close="pedidoQRCodeId = null"
+    />
+    <OrderChatDrawer
+      v-if="pedidoChat"
+      :key="pedidoChat.id"
+      :pedido="pedidoChat"
+      @close="pedidoChat = null"
+    />
+  </div>
+</template>
 
 <style scoped>
 .orders-page {
-  width: min(100%, 1080px);
-  margin: 0 auto;
-  color: var(--student-text);
+  max-width: 1120px;
+  margin: 12px auto 0;
+  padding-bottom: 64px;
+  color: var(--pp-marrom);
 }
-.orders-page__header {
+.orders-page__intro {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
+  gap: 32px;
+  padding-bottom: 30px;
+}
+.orders-page__intro h1 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
   gap: 22px;
-  margin-bottom: 18px;
+  font-family: var(--pp-font-titulo);
+  font-size: clamp(44px, 5vw, 64px);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  margin: 0 0 14px;
 }
-.orders-page__eyebrow {
-  display: none;
+.orders-page__note {
+  display: inline-block;
+  font-family: var(--pp-font-nota);
+  color: var(--pp-dourado-profundo);
+  font-weight: 600;
+  font-size: 26px;
+  letter-spacing: 0;
+  transform: rotate(-4deg);
+  white-space: nowrap;
 }
-.orders-page__header h1 {
+.orders-page__intro p {
+  color: var(--pp-texto-2);
+  font-size: 15px;
   margin: 0;
-  font-size: 30px;
 }
-.orders-page__header p {
-  margin: 6px 0 0;
-  color: var(--student-muted);
+.orders-page__intro a {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
   font-size: 13px;
+  font-weight: 600;
+  color: var(--pp-marrom);
+  text-decoration: underline;
+  text-underline-offset: 5px;
 }
 .orders-page__summary {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(108px, auto));
-  overflow: hidden;
-  border: 1px solid var(--student-border);
-  border-radius: 8px;
-  background: #fff;
-}
-.orders-page__summary div {
-  min-height: 52px;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 0 11px;
-  border-right: 1px solid var(--student-border);
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  border-top: 1px solid var(--pp-creme-borda);
 }
-.orders-page__summary div:last-child {
-  border-right: 0;
-}
-.orders-page__summary span {
-  color: var(--student-muted);
-  font-size: 11px;
+.orders-page__summary p {
+  margin: 18px 0;
+  color: var(--pp-texto-2);
+  font-size: 13px;
+  line-height: 1.6;
 }
 .orders-page__summary strong {
-  margin-top: 2px;
-  font-size: 15px;
+  color: var(--pp-marrom);
 }
-.orders-page__summary .is-ready strong {
-  color: #6c8a50;
+.orders-page__refresh {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--pp-texto-2);
+  font-size: 12px;
+  cursor: pointer;
 }
 .orders-page__toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 20px;
 }
-.orders-page__tabs {
+.orders-page__filters {
   display: flex;
-  gap: 4px;
-  padding: 3px;
-  border: 1px solid var(--student-border);
-  border-radius: 8px;
-  background: #fff;
+  gap: 24px;
 }
-.orders-page__tabs button {
-  min-height: 32px;
-  padding: 0 10px;
+.orders-page__filters button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 0 12px;
+  min-height: 44px;
   border: 0;
-  border-radius: 6px;
   background: transparent;
-  color: #766e66;
-  font-size: 12px;
+  font-size: 13px;
+  color: var(--pp-texto-2);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.orders-page__filters button[aria-pressed="true"] {
+  color: var(--pp-marrom);
   font-weight: 700;
 }
-.orders-page__tabs button.is-active {
-  background: #2a211b;
-  color: #fff;
+.orders-page__filters button > span:not(.orders-page__indicator) {
+  font-size: 11px;
+  font-weight: 500;
 }
-.orders-page__tabs span {
-  margin-left: 4px;
-  opacity: 0.7;
-}
-.orders-page__tools {
-  display: flex;
-  gap: 7px;
+.orders-page__indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--pp-gold);
 }
 .orders-page__search {
-  height: 38px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 0 10px;
-  border: 1px solid var(--student-border);
-  border-radius: 8px;
-  background: #fff;
-  color: #8c847c;
-}
-.orders-page__search:focus-within {
-  border-color: #c9a466;
-}
-.orders-page__search input {
-  width: 210px;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--student-text);
-  font-size: 12px;
-}
-.orders-page__search button {
-  border: 0;
-  background: transparent;
-  color: #8c847c;
-}
-.orders-page__refresh {
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--student-border);
-  border-radius: 8px;
-  background: #fff;
-  color: #716960;
-}
-.orders-page__refresh:disabled {
-  opacity: 0.5;
-}
-.orders-page__content {
-  display: grid;
-  gap: 8px;
-}
-.orders-page__result-info {
-  display: flex;
-  justify-content: space-between;
-  color: var(--student-muted);
-  font-size: 12px;
-}
-.orders-page__sync {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.orders-page__list {
-  display: grid;
-  gap: 9px;
-}
-.orders-page__state {
-  min-height: 290px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 28px;
-  border: 1px solid var(--student-border);
-  border-radius: 10px;
-  background: #fff;
-}
-.orders-page__state--compact {
-  min-height: 220px;
-}
-.orders-page__state-icon {
-  width: 50px;
-  height: 50px;
-  display: grid;
-  place-items: center;
-  margin-bottom: 12px;
-  border-radius: 50%;
-  background: #f2eee8;
-  color: #82602c;
-}
-.orders-page__state h2 {
-  margin: 0;
-  font-size: 17px;
-}
-.orders-page__state p {
-  margin: 6px 0 14px;
-  color: var(--student-muted);
-  font-size: 11px;
-}
-.orders-page__state a,
-.orders-page__state button {
-  min-height: 36px;
-  display: inline-flex;
-  align-items: center;
-  padding: 0 12px;
-  border: 1px solid var(--student-border-strong);
-  border-radius: 7px;
-  background: #fff;
-  color: var(--student-text);
-  font-size: 12px;
-  font-weight: 700;
-}
-.orders-page__skeleton {
-  min-height: 170px;
-  border: 1px solid var(--student-border);
-  border-radius: 10px;
-  background: #fff;
-  padding: 16px;
-}
-.orders-page__skeleton-head,
-.orders-page__skeleton-foot {
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 260px;
+  min-height: 44px;
+  border-bottom: 1px solid var(--pp-creme-borda);
+  color: var(--pp-texto-2);
 }
-.orders-page__skeleton-head > span {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: #eeeae5;
+.orders-page__search input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  outline: none;
+  color: var(--pp-marrom);
+  font-size: 14px;
 }
-.orders-page__skeleton-head div {
-  flex: 1;
+.orders-page__search:focus-within {
+  outline: 2px solid var(--pp-dourado-escuro);
+  outline-offset: 4px;
 }
-.orders-page__skeleton-head strong,
-.orders-page__skeleton-head small,
-.orders-page__skeleton-lines i,
-.orders-page__skeleton-foot i,
-.orders-page__skeleton-foot strong {
-  display: block;
-  height: 10px;
-  border-radius: 4px;
-  background: #eeeae5;
+.orders-page__search input::placeholder {
+  color: var(--pp-texto-3);
 }
-.orders-page__skeleton-head strong {
-  width: 120px;
+.orders-page__results {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 52px;
+  color: var(--pp-texto-3);
+  font-size: 12px;
 }
-.orders-page__skeleton-head small {
-  width: 80px;
-  margin-top: 7px;
+.orders-page__results button {
+  min-height: 44px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--pp-dourado-profundo);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
 }
-.orders-page__skeleton-head em {
-  width: 74px;
-  height: 24px;
-  border-radius: 6px;
-  background: #eeeae5;
+.orders-page__featured > h2 {
+  font-size: 14px;
+  margin: 4px 0 14px;
+  font-weight: 600;
 }
-.orders-page__skeleton-lines {
-  display: grid;
-  gap: 7px;
-  margin: 18px 0;
+.orders-page__collection {
+  margin-top: 44px;
 }
-.orders-page__skeleton-lines i:nth-child(2) {
-  width: 70%;
+.orders-page__collection-heading {
+  border-bottom: 1px solid var(--pp-creme-borda);
+  padding-bottom: 18px;
 }
-.orders-page__skeleton-lines i:nth-child(3) {
-  width: 55%;
+.orders-page__collection-heading h2 {
+  font-family: var(--pp-font-titulo);
+  font-size: 30px;
+  font-weight: 400;
+  margin: 0 0 8px;
 }
-.orders-page__skeleton-foot {
-  justify-content: space-between;
+.orders-page__collection-heading p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--pp-texto-2);
+  line-height: 1.6;
 }
-.orders-page__skeleton-foot i {
-  width: 130px;
+.orders-page__state {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 18px;
+  padding: 50px 0 70px;
+  max-width: 60ch;
 }
-.orders-page__skeleton-foot strong {
-  width: 90px;
+.orders-page__state h2 {
+  font-family: var(--pp-font-titulo);
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 400;
+  margin: 0;
 }
-.is-spinning {
-  animation: orders-spin 0.7s linear infinite;
+.orders-page__state p {
+  color: var(--pp-texto-2);
+  margin: 0;
+  line-height: 1.7;
+  font-size: 15px;
 }
-@keyframes orders-spin {
-  to {
-    transform: rotate(360deg);
-  }
+.orders-page__state :is(a, button) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 18px;
+  min-height: 46px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--pp-marrom);
+  color: var(--pp-creme);
+  text-decoration: none;
+  cursor: pointer;
+}
+.orders-page__loading {
+  padding: 36px 0;
+  color: var(--pp-texto-2);
+  font-size: 14px;
+}
+.orders-page__skeleton {
+  height: 350px;
+  border-radius: 16px;
+  background: var(--pp-creme-2);
+  margin-top: 22px;
+}
+.orders-page :is(button, a):focus-visible {
+  outline: 3px solid var(--pp-dourado-escuro);
+  outline-offset: 4px;
 }
 @media (max-width: 760px) {
-  .orders-page__header {
+  .orders-page {
+    margin-top: 0;
+  }
+  .orders-page__intro {
     align-items: flex-start;
     flex-direction: column;
+    gap: 14px;
+    padding-bottom: 18px;
   }
-  .orders-page__header h1 {
-    font-size: 25px;
+  .orders-page__intro h1 {
+    font-size: 48px;
+    gap: 12px;
   }
-  .orders-page__summary {
-    width: 100%;
-    grid-template-columns: repeat(3, 1fr);
+  .orders-page__note {
+    font-size: 23px;
   }
   .orders-page__toolbar {
-    align-items: stretch;
-    flex-direction: column;
-  }
-  .orders-page__tabs {
-    overflow: auto;
-  }
-  .orders-page__tools {
-    width: 100%;
+    gap: 10px;
   }
   .orders-page__search {
-    flex: 1;
-  }
-  .orders-page__search input {
     width: 100%;
+    order: -1;
+  }
+}
+@media (max-width: 390px) {
+  .orders-page__intro h1 {
+    font-size: 44px;
+  }
+  .orders-page__note {
+    font-size: 21px;
+  }
+  .orders-page__filters {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .orders-page__filters button {
+    font-size: 12px;
+    gap: 5px;
+  }
+  .orders-page__summary {
+    gap: 12px;
+  }
+  .orders-page__summary p {
+    font-size: 12px;
   }
 }
 </style>

@@ -103,6 +103,45 @@ separam verificações de domínio, comportamento e mídia/responsividade com AP
 com API local. Build e verificações de interface foram executados; o relatório registra os resultados
 e limites. Isso não comprova checkout, pagamentos ou produção. A entrega permanece local para revisão.
 
+## Meus pedidos editorial — 06/11/2026
+
+`/pedidos` estende o Balcão creme para acompanhar e retirar o lanche: introdução compacta,
+pedido ativo em destaque e coleção com produtos expansíveis. Anton conduz as chamadas,
+Inter mantém dados e controles legíveis e Caveat aparece apenas na anotação inicial.
+A extensão reutiliza os tokens e a identidade existentes, sem mudanças globais de direção.
+
+Prontos lideram, seguidos de confirmados e pendentes; dentro de cada estado ativo, o mais
+antigo vem primeiro, com ID como desempate. O histórico segue do mais recente ao mais antigo.
+Busca e filtros incluem o destaque, que não se repete na coleção. Ativos incluem prontos:
+o resumo explicita quantos desse total aguardam retirada. O progresso representa somente
+os estados reais, sem estimativas ou percentuais de preparo.
+
+`PedidosView.vue` coordena seleção, filtros, URL e atualização; `utils/orders.js` concentra
+ordenação, busca e apresentação dos estados. `OrderCard`, `OrderActions` e `OrderProgress`
+apresentam pedido, próxima ação e etapas. `useAutoRefresh` conserva bases de 10s com ativos
+e 60s sem ativos, jitter e recuperação existentes; atualizações silenciosas preservam os dados.
+Backend, stores, serviços e layouts mantêm seus contratos.
+
+No celular, o destaque tem um único controle de QR Code, logo após a mensagem de estado e
+antes das etapas. Ele só aparece para pedido pronto. `OrderQRCodeModal` usa o serviço existente
+e invalida consultas em andamento ao fechar, trocar o pedido ou sair de pronto; ausência do
+pedido na lista atualizada também fecha o diálogo. `OrderChatDrawer` mantém `OrderChatPanel`
+e o acesso por `/pedidos?chat=ID`, removendo apenas esse parâmetro após tratar o link.
+QR e conversa usam `<dialog>` nativo e `useOrderDialog`: foco inicial, contenção de Tab/Shift+Tab,
+Escape, bloqueio/restauração da rolagem e retorno de foco. Serviços e fluxo de mensagens permanecem.
+
+Motion for Vue (`motion-v` 2.11.1, MIT) anima entrada do destaque, filtros, expansão e mudança
+de estado; chaves estáveis evitam reanimar a cada polling. O lock inclui o peer `@vueuse/core`
+15.0.0; React e Tailwind não foram instalados. QR usa apenas opacidade, preservando sua geometria.
+Com movimento reduzido, as mudanças são imediatas e os diálogos não têm entrada/saída animada.
+
+Testes de domínio: `node --test tests/orders.test.mjs` (sem script `npm test`).
+[Plano](../docs/planos/pedidos-editoriais.md) e
+[capturas, gravação e resultados locais](../docs/prints/pedidos-editoriais-2026-11-06/)
+separam fixtures da leitura da API local. Revisão posterior focou a prioridade mobile e teve
+o ajuste P2 resolvido. Essas evidências não comprovam checkout, pagamentos ou produção.
+Para visualizar, inicie frontend e backend locais e abra `/pedidos` com uma conta fictícia.
+
 ## Stack
 
 - Vue 3
