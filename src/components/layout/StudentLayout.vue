@@ -69,7 +69,7 @@ onMounted(() => {
 });
 onBeforeUnmount(() => {
   montado = false;
-  notifications.pararPolling();
+  notifications.resetar();
   chat.pararPollingNaoLidas();
   pararDeOuvirCarrinho?.();
   window.clearTimeout(timerPulo);

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { motion, useReducedMotion } from "motion-v";
 import {
@@ -27,6 +27,8 @@ const filtro = ref("todos");
 const busca = ref("");
 const pedidoQRCodeId = ref(null);
 const pedidoChat = ref(null);
+const avisoPedido = ref("");
+let pedidoLocalizado = null;
 const filtros = [
   { valor: "todos", label: "Todos" },
   { valor: "andamento", label: "Em andamento" },
@@ -75,6 +77,62 @@ const {
 watch(
   () => orders.emAndamento.length,
   () => reagendar(),
+);
+
+// Entrada da central de avisos: consultar o estado atual antes de localizar o pedido.
+// Não abrir QR nem presumir que o evento antigo ainda representa uma retirada disponível.
+watch(
+  () => route.query.pedido,
+  () => {
+    pedidoLocalizado = null;
+    avisoPedido.value = "";
+    if (route.query.pedido && ultimaAtualizacao.value) atualizarAgora();
+  },
+);
+watch(
+  [
+    () => route.query.pedido,
+    ultimaAtualizacao,
+    atualizando,
+    () => orders.carregando || orders.atualizandoSilenciosamente,
+  ],
+  async ([valor, atualizacao, sincronizando, carregando], _, onCleanup) => {
+    const id = Number(valor);
+    if (
+      !/^\d+$/.test(String(valor)) ||
+      !Number.isSafeInteger(id) ||
+      id <= 0 ||
+      pedidoLocalizado === id ||
+      !atualizacao ||
+      sincronizando ||
+      carregando ||
+      erroAtualizacao.value ||
+      pedidoChat.value ||
+      pedidoQRCode.value
+    )
+      return;
+    let cancelado = false;
+    onCleanup(() => {
+      cancelado = true;
+    });
+    pedidoLocalizado = id;
+    filtro.value = "todos";
+    busca.value = "";
+    await nextTick();
+    if (cancelado) return;
+    const elemento = document.getElementById(`pedido-${id}`);
+    if (!elemento) {
+      avisoPedido.value =
+        "Não encontramos esse pedido nesta lista. Confira os pedidos disponíveis abaixo.";
+      return;
+    }
+    elemento.focus({ preventScroll: true });
+    elemento.scrollIntoView({
+      behavior: reduzir.value ? "instant" : "smooth",
+      block: "start",
+    });
+  },
+  { immediate: true },
 );
 // Quando o balcão confirma a retirada, o QR deixa de valer: fecha o modal sozinho.
 // A ausência na lista atualizada também encerra a exibição e invalida respostas em voo.
@@ -191,6 +249,9 @@ watch(
         :atualizando="atualizando"
         :erro="erroAtualizacao"
       />
+      <p v-if="avisoPedido" class="orders-page__target-notice" role="status">
+        {{ avisoPedido }}
+      </p>
       <div class="orders-page__toolbar">
         <div
           class="orders-page__filters"
@@ -255,6 +316,8 @@ watch(
             }}
           </h2>
           <OrderCard
+            :id="`pedido-${destaque.id}`"
+            tabindex="-1"
             :pedido="destaque"
             destaque
             :nao-lidas="chat.naoLidasDoPedido(destaque.id)"
@@ -284,6 +347,8 @@ watch(
           <OrderCard
             v-for="pedido in colecao"
             :key="pedido.id"
+            :id="`pedido-${pedido.id}`"
+            tabindex="-1"
             :pedido="pedido"
             :nao-lidas="chat.naoLidasDoPedido(pedido.id)"
             @ver-qrcode="abrirQRCode"
@@ -313,6 +378,19 @@ watch(
   margin: 12px auto 0;
   padding-bottom: 64px;
   color: var(--pp-marrom);
+}
+.orders-page :deep(.order-card) {
+  scroll-margin-top: calc(var(--pp-altura-topo) + 24px);
+}
+.orders-page :deep(.order-card:focus-visible) {
+  outline: 2px solid var(--pp-dourado-escuro);
+  outline-offset: 4px;
+}
+.orders-page__target-notice {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--pp-texto-2);
+  margin: 16px 0;
 }
 .orders-page__intro {
   display: flex;

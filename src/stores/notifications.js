@@ -14,6 +14,9 @@ export const useNotificationsStore = defineStore("notifications", {
     atualizandoSilenciosamente: false,
     ultimaAtualizacao: null,
     erroAtualizacao: null,
+    idsEmLeitura: [],
+    marcandoTodas: false,
+    geracaoSessao: 0,
   }),
 
   getters: {
@@ -24,6 +27,7 @@ export const useNotificationsStore = defineStore("notifications", {
     async carregar({ force = false, silencioso = false } = {}) {
       if (this.carregando || this.atualizandoSilenciosamente) return;
       if (this.inicializado && !force && !silencioso) return;
+      const geracao = this.geracaoSessao;
 
       if (silencioso) {
         this.atualizandoSilenciosamente = true;
@@ -34,42 +38,95 @@ export const useNotificationsStore = defineStore("notifications", {
       this.erro = null;
 
       try {
-        this.itens = await notificationService.listar();
+        const recebidas = await notificationService.listar();
+        if (geracao !== this.geracaoSessao) return;
+        // Leitura é monotônica neste contrato: não existe marcar novamente como não lida.
+        // Um GET iniciado antes do PATCH não pode desfazer uma confirmação posterior.
+        const lidas = new Set(
+          this.itens.filter((item) => item.lida).map((item) => String(item.id)),
+        );
+        const unicas = new Map();
+        for (const item of recebidas) {
+          const id = String(item.id);
+          if (!unicas.has(id))
+            unicas.set(id, {
+              ...item,
+              lida: Boolean(item.lida || lidas.has(id)),
+            });
+          else if (item.lida) unicas.get(id).lida = true;
+        }
+        this.itens = [...unicas.values()];
         this.inicializado = true;
+        this.ultimaAtualizacao = new Date();
+        this.erroAtualizacao = null;
       } catch (error) {
+        if (geracao !== this.geracaoSessao) return;
         if (!silencioso) {
           this.erro = "Não foi possível carregar suas notificações.";
-        }
+        } else
+          this.erroAtualizacao =
+            "Não foi possível sincronizar suas notificações.";
         throw error;
       } finally {
-        this.carregando = false;
-        this.atualizandoSilenciosamente = false;
+        if (geracao === this.geracaoSessao) {
+          this.carregando = false;
+          this.atualizandoSilenciosamente = false;
+        }
       }
     },
 
     async marcarLida(id) {
       const atual = this.itens.find((item) => Number(item.id) === Number(id));
-      if (!atual || atual.lida) return atual;
-
-      const { data } = await notificationService.marcarLida(id);
-      this.itens = this.itens.map((item) =>
-        Number(item.id) === Number(id) ? data : item,
-      );
-      return data;
+      if (
+        !atual ||
+        atual.lida ||
+        this.marcandoTodas ||
+        this.idsEmLeitura.includes(String(id))
+      )
+        return false;
+      const geracao = this.geracaoSessao;
+      this.idsEmLeitura.push(String(id));
+      try {
+        const { data } = await notificationService.marcarLida(id);
+        if (geracao !== this.geracaoSessao) return false;
+        if (String(data?.id) !== String(id) || data?.lida !== true)
+          throw new Error("A API não confirmou a leitura.");
+        this.itens = this.itens.map((item) =>
+          String(item.id) === String(id) ? { ...item, ...data } : item,
+        );
+        return data;
+      } finally {
+        if (geracao === this.geracaoSessao)
+          this.idsEmLeitura = this.idsEmLeitura.filter(
+            (item) => item !== String(id),
+          );
+      }
     },
 
     async marcarTodasLidas() {
-      if (!this.naoLidas) return;
-
-      await notificationService.marcarTodasLidas();
-      this.itens = this.itens.map((item) => ({
-        ...item,
-        lida: true,
-      }));
+      if (!this.naoLidas || this.marcandoTodas || this.idsEmLeitura.length)
+        return false;
+      const geracao = this.geracaoSessao;
+      const ids = new Set(
+        this.itens.filter((item) => !item.lida).map((item) => String(item.id)),
+      );
+      this.marcandoTodas = true;
+      try {
+        await notificationService.marcarTodasLidas();
+        if (geracao !== this.geracaoSessao) return false;
+        // A resposta não informa corte temporal. Não confirmar avisos que chegaram durante o POST.
+        this.itens = this.itens.map((item) =>
+          ids.has(String(item.id)) ? { ...item, lida: true } : item,
+        );
+        return true;
+      } finally {
+        if (geracao === this.geracaoSessao) this.marcandoTodas = false;
+      }
     },
 
     iniciarPolling(intervaloMs = 30_000) {
       if (!autoRefresh) {
+        const geracao = this.geracaoSessao;
         autoRefresh = createAutoRefresh(
           () =>
             this.carregar({
@@ -79,8 +136,11 @@ export const useNotificationsStore = defineStore("notifications", {
           {
             intervalo: intervaloMs,
             onEstado: (estado) => {
+              if (geracao !== this.geracaoSessao) return;
               this.ultimaAtualizacao = estado.ultimaAtualizacao;
-              this.erroAtualizacao = estado.erro;
+              this.erroAtualizacao = estado.erro
+                ? "Não foi possível sincronizar suas notificações."
+                : null;
             },
           },
         );
@@ -98,6 +158,7 @@ export const useNotificationsStore = defineStore("notifications", {
     },
 
     resetar() {
+      this.geracaoSessao += 1;
       this.pararPolling();
       autoRefresh = null;
       this.ultimaAtualizacao = null;
@@ -107,6 +168,8 @@ export const useNotificationsStore = defineStore("notifications", {
       this.inicializado = false;
       this.erro = null;
       this.atualizandoSilenciosamente = false;
+      this.idsEmLeitura = [];
+      this.marcandoTodas = false;
     },
   },
 });
