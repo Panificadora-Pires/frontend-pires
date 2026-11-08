@@ -1,92 +1,205 @@
+<script setup>
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from "vue";
+import { motion, useReducedMotion } from "motion-v";
+import {
+  ArrowUpRight,
+  Bell,
+  CheckCheck,
+  CircleAlert,
+  RefreshCw,
+  Search,
+} from "lucide-vue-next";
+import BaseRefreshStatus from "@/components/ui/BaseRefreshStatus.vue";
+import NotificationItem from "@/components/notifications/NotificationItem.vue";
+import { useNotificationsStore } from "@/stores/notifications";
+import {
+  agruparNotificacoes,
+  filtrarNotificacoes,
+} from "@/utils/notifications";
+
+const notifications = useNotificationsStore();
+const reduzir = useReducedMotion();
+const filtro = ref("todas");
+const busca = ref("");
+const agora = ref(new Date());
+const sucesso = ref("");
+const erroAcao = ref("");
+const novasIds = ref(new Set());
+const idsVistos = new Set();
+let listaInicializada = false;
+let montado = true;
+let timerDia;
+const atualizando = computed(
+  () => notifications.carregando || notifications.atualizandoSilenciosamente,
+);
+const acaoPendente = computed(
+  () => notifications.marcandoTodas || notifications.idsEmLeitura.length > 0,
+);
+const filtradas = computed(() =>
+  filtrarNotificacoes(notifications.itens, filtro.value, busca.value),
+);
+const grupos = computed(() =>
+  agruparNotificacoes(filtradas.value, agora.value),
+);
+const filtrosAtivos = computed(
+  () => filtro.value !== "todas" || busca.value.trim(),
+);
+const todasLidas = computed(
+  () =>
+    notifications.inicializado &&
+    notifications.itens.length > 0 &&
+    notifications.naoLidas === 0,
+);
+
+// O StudentLayout mantém as notificações atualizadas; esta tela só exibe o estado.
+// Este relógio apenas troca Hoje/Ontem na meia-noite local, sem consultar a API.
+function atualizarCalendario() {
+  agora.value = new Date();
+  clearTimeout(timerDia);
+  const dia = agora.value;
+  const proximo = new Date(
+    dia.getFullYear(),
+    dia.getMonth(),
+    dia.getDate() + 1,
+  );
+  timerDia = setTimeout(
+    atualizarCalendario,
+    proximo.getTime() - dia.getTime() + 50,
+  );
+}
+function aoRetomar() {
+  if (document.visibilityState !== "hidden") atualizarCalendario();
+}
+onMounted(() => {
+  atualizarCalendario();
+  document.addEventListener("visibilitychange", aoRetomar);
+});
+onBeforeUnmount(() => {
+  montado = false;
+  clearTimeout(timerDia);
+  document.removeEventListener("visibilitychange", aoRetomar);
+});
+
+watch(
+  () => notifications.itens,
+  (itens) => {
+    const novas = listaInicializada
+      ? itens
+          .filter((item) => !idsVistos.has(String(item.id)))
+          .map((item) => String(item.id))
+      : [];
+    itens.forEach((item) => idsVistos.add(String(item.id)));
+    novasIds.value = new Set(novas);
+    if (notifications.inicializado) listaInicializada = true;
+  },
+  { immediate: true },
+);
+function concluirEntrada(id) {
+  if (!novasIds.value.has(String(id))) return;
+  const restantes = new Set(novasIds.value);
+  restantes.delete(String(id));
+  novasIds.value = restantes;
+}
+function limparFiltros() {
+  busca.value = "";
+  filtro.value = "todas";
+}
+async function atualizar() {
+  try {
+    await notifications.atualizarAgora();
+  } catch {
+    /* O estado de erro já aparece na tela. */
+  }
+}
+
+async function recuperarFoco(origem, id) {
+  await nextTick();
+  // Não roubar foco de quem já continuou a navegar durante a requisição.
+  if (
+    !montado ||
+    origem?.isConnected ||
+    document.activeElement !== document.body
+  )
+    return;
+  const item = document.getElementById(`notificacao-${id}`);
+  const alvo =
+    item?.querySelector("a, button:not([disabled])") ||
+    item ||
+    document.querySelector(
+      '.notifications-page__filters button[aria-pressed="true"]',
+    );
+  alvo?.focus({ preventScroll: true });
+}
+async function marcarLida(id) {
+  if (acaoPendente.value) return;
+  const origem = document.activeElement;
+  erroAcao.value = "";
+  sucesso.value = "";
+  try {
+    const confirmada = await notifications.marcarLida(id);
+    if (montado && confirmada) {
+      sucesso.value = "Notificação marcada como lida.";
+      await recuperarFoco(origem, id);
+    }
+  } catch {
+    if (montado)
+      erroAcao.value =
+        "Não foi possível marcar esta notificação como lida. Ela continua não lida. Tente novamente.";
+  }
+}
+async function marcarTodas() {
+  if (acaoPendente.value || !notifications.naoLidas) return;
+  const origem = document.activeElement;
+  erroAcao.value = "";
+  sucesso.value = "";
+  try {
+    const confirmadas = await notifications.marcarTodasLidas();
+    if (montado && confirmadas) {
+      sucesso.value = notifications.naoLidas
+        ? "Leitura confirmada. Novos avisos continuam não lidos."
+        : "Notificações marcadas como lidas.";
+      await recuperarFoco(origem);
+    }
+  } catch {
+    if (montado)
+      erroAcao.value =
+        "Não foi possível marcar todas como lidas. Os avisos foram mantidos. Tente novamente.";
+  }
+}
+</script>
+
 <template>
   <div class="notifications-page">
-    <header class="notifications-page__header">
+    <motion.header
+      class="notifications-page__header"
+      :initial="reduzir ? false : { opacity: 0.7, y: 8 }"
+      :animate="{ opacity: 1, y: 0 }"
+      :transition="{ duration: reduzir ? 0 : 0.3, ease: 'easeOut' }"
+    >
       <div>
-        <span class="notifications-page__eyebrow"></span>
         <h1>Notificações</h1>
-        <p>Atualizações de pedidos e avisos da sua conta.</p>
+        <p>Novidades dos seus pedidos, em um só lugar.</p>
       </div>
-
-      <button
-        v-if="notifications.naoLidas"
-        type="button"
-        class="notifications-page__mark-all"
-        :disabled="marcandoTodas"
-        @click="marcarTodas"
-      >
-        <LoaderCircle
-          v-if="marcandoTodas"
-          :size="17"
-          class="notifications-page__spinner"
-        />
-        <CheckCheck v-else :size="17" />
-        Marcar todas como lidas
-      </button>
-    </header>
-
-    <div class="notifications-page__toolbar">
-      <div
-        class="notifications-page__tabs"
-        role="tablist"
-        aria-label="Filtrar notificações"
-      >
-        <button
-          type="button"
-          role="tab"
-          :aria-selected="filtro === 'todas'"
-          :class="{ 'is-active': filtro === 'todas' }"
-          @click="filtro = 'todas'"
-        >
-          Todas
-          <span v-if="notifications.itens.length">
-            {{ notifications.itens.length }}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          role="tab"
-          :aria-selected="filtro === 'nao-lidas'"
-          :class="{ 'is-active': filtro === 'nao-lidas' }"
-          @click="filtro = 'nao-lidas'"
-        >
-          Não lidas
-          <span v-if="notifications.naoLidas">
-            {{ notifications.naoLidas }}
-          </span>
-        </button>
-      </div>
-
-      <div class="notifications-page__sync">
-        <BaseRefreshStatus
-          :ultima-atualizacao="notifications.ultimaAtualizacao"
-          :atualizando="atualizando"
-          :erro="notifications.inicializado ? notifications.erroAtualizacao : null"
-        />
-        <button
-          type="button"
-          class="notifications-page__refresh"
-          :disabled="atualizando"
-          aria-label="Atualizar notificações"
-          title="Atualizar"
-          @click="atualizar"
-        >
-          <RefreshCw
-            :size="17"
-            :class="{ 'is-spinning': atualizando }"
-            aria-hidden="true"
-          />
-        </button>
-      </div>
-    </div>
+      <RouterLink :to="{ name: 'pedidos' }"
+        >Ver meus pedidos <ArrowUpRight :size="18" aria-hidden="true"
+      /></RouterLink>
+    </motion.header>
 
     <div
       v-if="!notifications.inicializado && !notifications.erro"
-      class="notifications-page__list"
-      aria-label="Carregando notificações"
+      class="notifications-page__loading"
+      role="status"
     >
+      <span>Buscando suas notificações…</span>
       <div
-        v-for="index in 5"
+        v-for="index in 4"
         :key="index"
         class="notifications-page__skeleton"
         aria-hidden="true"
@@ -95,554 +208,552 @@
         <div>
           <strong />
           <p />
-          <small />
         </div>
       </div>
     </div>
-
     <section
       v-else-if="notifications.erro && !notifications.inicializado"
-      class="notifications-page__state notifications-page__state--error"
+      class="notifications-page__state"
       role="alert"
     >
-      <span class="notifications-page__state-icon">
-        <CircleAlert :size="30" />
-      </span>
-      <h2>Não conseguimos carregar suas notificações.</h2>
+      <CircleAlert :size="32" aria-hidden="true" />
+      <h2>Não foi possível carregar os avisos.</h2>
       <p>Verifique sua conexão e tente novamente.</p>
-      <button type="button" @click="atualizar">Tentar novamente</button>
+      <button type="button" :disabled="atualizando" @click="atualizar">
+        Tentar novamente
+      </button>
     </section>
-
     <section
-      v-else-if="!notificacoesFiltradas.length"
+      v-else-if="!notifications.itens.length"
       class="notifications-page__state"
     >
-      <span class="notifications-page__state-icon">
-        <BellOff v-if="filtro === 'todas'" :size="30" />
-        <CheckCheck v-else :size="30" />
-      </span>
-      <h2>
-        {{
-          filtro === "todas"
-            ? "Nenhuma notificação por enquanto"
-            : "Nenhuma notificação não lida"
-        }}
-      </h2>
+      <Bell :size="36" aria-hidden="true" />
+      <h2>Quando tiver novidade, ela chega aqui.</h2>
       <p>
-        {{
-          filtro === "todas"
-            ? "Quando houver uma atualização importante sobre seus pedidos, ela aparecerá aqui."
-            : "Você não possui notificações não lidas."
-        }}
+        Atualizações dos seus pedidos e mensagens da panificadora aparecerão
+        nesta lista.
       </p>
-    </section>
-
-    <div v-else class="notifications-page__groups">
-      <section
-        v-for="grupo in grupos"
-        :key="grupo.chave"
-        class="notifications-page__group"
+      <RouterLink :to="{ name: 'pedidos' }"
+        >Ir para Meus Pedidos
+        <ArrowUpRight :size="18" aria-hidden="true" /></RouterLink
+      ><button
+        type="button"
+        class="notifications-page__empty-refresh"
+        :disabled="atualizando"
+        @click="atualizar"
       >
-        <div class="notifications-page__group-title">
-          <h2>{{ grupo.titulo }}</h2>
-          <span>{{ grupo.itens.length }}</span>
-        </div>
-
-        <div class="notifications-page__list">
-          <article
-            v-for="notificacao in grupo.itens"
-            :key="notificacao.id"
-            class="notification-card"
-            :class="{ 'is-unread': !notificacao.lida }"
+        {{ atualizando ? "Atualizando…" : "Atualizar notificações" }}</button
+      ><BaseRefreshStatus
+        :ultima-atualizacao="notifications.ultimaAtualizacao"
+        :atualizando="atualizando"
+        :erro="notifications.erroAtualizacao"
+      />
+    </section>
+    <template v-else>
+      <div class="notifications-page__summary">
+        <p v-if="todasLidas">
+          <CheckCheck :size="18" aria-hidden="true" /><span
+            >O que chegou por aqui <strong>já foi lido.</strong></span
           >
-            <button
-              type="button"
-              class="notification-card__main"
-              :disabled="processandoId === notificacao.id"
-              @click="marcarLida(notificacao)"
-            >
-              <span class="notification-card__icon">
-                <PackageCheck v-if="notificacao.pedido" :size="21" />
-                <BellRing v-else :size="21" />
-              </span>
-
-              <span class="notification-card__content">
-                <span class="notification-card__title-row">
-                  <strong>{{ tituloNotificacao(notificacao) }}</strong>
-                  <span v-if="!notificacao.lida" class="notification-card__dot">
-                    Nova
-                  </span>
-                </span>
-
-                <span class="notification-card__message">
-                  {{ notificacao.mensagem }}
-                </span>
-
-                <span class="notification-card__time">
-                  <Clock3 :size="13" />
-                  {{ formatarMomento(notificacao.criada_em) }}
-                </span>
-              </span>
-
-              <LoaderCircle
-                v-if="processandoId === notificacao.id"
-                :size="18"
-                class="notifications-page__spinner"
-              />
-              <Check
-                v-else-if="notificacao.lida"
-                :size="18"
-                class="notification-card__read"
-              />
-              <ChevronRight
-                v-else
-                :size="18"
-                class="notification-card__arrow"
-              />
-            </button>
-          </article>
+        </p>
+        <p v-else>
+          <strong
+            >{{ notifications.naoLidas }}
+            {{
+              notifications.naoLidas === 1 ? "não lida" : "não lidas"
+            }}</strong
+          >
+        </p>
+        <button
+          type="button"
+          class="notifications-page__mark-all"
+          :disabled="!notifications.naoLidas || acaoPendente"
+          :aria-busy="notifications.marcandoTodas"
+          @click="marcarTodas"
+        >
+          <CheckCheck :size="17" aria-hidden="true" />{{
+            notifications.marcandoTodas
+              ? "Marcando todas…"
+              : "Marcar todas como lidas"
+          }}
+        </button>
+      </div>
+      <div class="notifications-page__toolbar">
+        <div
+          class="notifications-page__filters"
+          role="group"
+          aria-label="Filtrar notificações"
+        >
+          <button
+            v-for="opcao in [
+              {
+                valor: 'todas',
+                label: 'Todas',
+                quantidade: notifications.itens.length,
+              },
+              {
+                valor: 'nao-lidas',
+                label: 'Não lidas',
+                quantidade: notifications.naoLidas,
+              },
+            ]"
+            :key="opcao.valor"
+            type="button"
+            :aria-pressed="filtro === opcao.valor"
+            @click="filtro = opcao.valor"
+          >
+            {{ opcao.label }} <span>{{ opcao.quantidade }}</span
+            ><motion.span
+              v-if="filtro === opcao.valor"
+              class="notifications-page__indicator"
+              layout-id="notifications-filter"
+              :transition="{ duration: reduzir ? 0 : 0.22 }"
+            />
+          </button>
         </div>
+        <label class="notifications-page__search"
+          ><Search :size="18" aria-hidden="true" /><input
+            v-model="busca"
+            type="search"
+            placeholder="Buscar aviso ou pedido"
+            aria-label="Buscar notificação por texto ou pedido"
+        /></label>
+      </div>
+      <div class="notifications-page__sync">
+        <span
+          >{{ filtradas.length }}
+          {{ filtradas.length === 1 ? "aviso" : "avisos"
+          }}<button v-if="filtrosAtivos" type="button" @click="limparFiltros">
+            Limpar filtros
+          </button></span
+        >
+        <div>
+          <BaseRefreshStatus
+            :ultima-atualizacao="notifications.ultimaAtualizacao"
+            :atualizando="atualizando"
+            :erro="notifications.erroAtualizacao"
+          /><button
+            type="button"
+            :disabled="atualizando"
+            class="notifications-page__refresh"
+            aria-label="Atualizar notificações"
+            @click="atualizar"
+          >
+            <RefreshCw :size="17" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+      <p v-if="erroAcao" class="notifications-page__error" role="alert">
+        {{ erroAcao }}
+      </p>
+      <p class="notifications-page__feedback" role="status" aria-atomic="true">
+        {{ sucesso }}
+      </p>
+
+      <section v-if="!filtradas.length" class="notifications-page__state">
+        <CheckCheck
+          v-if="todasLidas && !busca.trim()"
+          :size="32"
+          aria-hidden="true"
+        /><Search v-else :size="32" aria-hidden="true" />
+        <h2>
+          {{
+            todasLidas && !busca.trim()
+              ? "Tudo lido por aqui."
+              : "Nenhum aviso com esse filtro."
+          }}
+        </h2>
+        <p>
+          {{
+            todasLidas && !busca.trim()
+              ? "Os avisos lidos continuam disponíveis na lista completa."
+              : "Tente outro texto, número de pedido ou volte à lista completa."
+          }}
+        </p>
+        <button type="button" @click="limparFiltros">
+          Ver todas as notificações
+        </button>
       </section>
-    </div>
+      <motion.div
+        v-else
+        :key="filtro"
+        class="notifications-page__groups"
+        :initial="reduzir ? false : { opacity: 0.7 }"
+        :animate="{ opacity: 1 }"
+        :transition="{ duration: reduzir ? 0 : 0.2 }"
+      >
+        <section
+          v-for="grupo in grupos"
+          :key="grupo.chave"
+          class="notifications-page__group"
+          :aria-labelledby="`grupo-${grupo.chave}`"
+        >
+          <h2 :id="`grupo-${grupo.chave}`">
+            {{ grupo.titulo }}<span>{{ grupo.itens.length }}</span>
+          </h2>
+          <ul class="notifications-page__list">
+            <NotificationItem
+              v-for="item in grupo.itens"
+              :key="item.id"
+              :notificacao="item"
+              :animar="novasIds.has(String(item.id))"
+              :processando="
+                notifications.idsEmLeitura.includes(String(item.id))
+              "
+              :bloqueada="acaoPendente"
+              @marcar-lida="marcarLida"
+              @apareceu="concluirEntrada"
+            />
+          </ul>
+        </section>
+      </motion.div>
+    </template>
   </div>
 </template>
 
-<script setup>
-import { computed, ref } from "vue";
-import {
-  BellOff,
-  BellRing,
-  Check,
-  CheckCheck,
-  ChevronRight,
-  CircleAlert,
-  Clock3,
-  LoaderCircle,
-  PackageCheck,
-  RefreshCw,
-} from "lucide-vue-next";
-
-import BaseRefreshStatus from "@/components/ui/BaseRefreshStatus.vue";
-import { useNotificationsStore } from "@/stores/notifications";
-
-const notifications = useNotificationsStore();
-
-const filtro = ref("todas");
-const processandoId = ref(null);
-const marcandoTodas = ref(false);
-
-// O StudentLayout mantém as notificações atualizadas; esta tela só exibe o estado.
-const atualizando = computed(
-  () => notifications.carregando || notifications.atualizandoSilenciosamente,
-);
-
-const notificacoesFiltradas = computed(() => {
-  if (filtro.value === "nao-lidas") {
-    return notifications.itens.filter((item) => !item.lida);
-  }
-
-  return notifications.itens;
-});
-
-const grupos = computed(() => {
-  const mapa = new Map();
-
-  for (const item of notificacoesFiltradas.value) {
-    const data = new Date(item.criada_em);
-    const chave = chaveData(data);
-    const titulo = tituloData(data);
-
-    if (!mapa.has(chave)) {
-      mapa.set(chave, {
-        chave,
-        titulo,
-        itens: [],
-      });
-    }
-
-    mapa.get(chave).itens.push(item);
-  }
-
-  return [...mapa.values()];
-});
-
-function chaveData(data) {
-  if (Number.isNaN(data.getTime())) return "sem-data";
-
-  return [
-    data.getFullYear(),
-    String(data.getMonth() + 1).padStart(2, "0"),
-    String(data.getDate()).padStart(2, "0"),
-  ].join("-");
-}
-
-function inicioDoDia(data = new Date()) {
-  return new Date(data.getFullYear(), data.getMonth(), data.getDate());
-}
-
-function tituloData(data) {
-  if (Number.isNaN(data.getTime())) return "Anteriores";
-
-  const hoje = inicioDoDia();
-  const dia = inicioDoDia(data);
-  const diferenca = Math.round((hoje.getTime() - dia.getTime()) / 86_400_000);
-
-  if (diferenca === 0) return "Hoje";
-  if (diferenca === 1) return "Ontem";
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "long",
-    year: data.getFullYear() === hoje.getFullYear() ? undefined : "numeric",
-  }).format(data);
-}
-
-function tituloNotificacao(notificacao) {
-  if (notificacao?.pedido) {
-    return `Pedido #${notificacao.pedido} pronto`;
-  }
-
-  return "Atualização da Pires";
-}
-
-function formatarMomento(valor) {
-  const data = new Date(valor);
-  if (Number.isNaN(data.getTime())) return "Agora";
-
-  const agora = new Date();
-  const diferencaMs = agora.getTime() - data.getTime();
-  const minutos = Math.floor(diferencaMs / 60_000);
-
-  if (minutos >= 0 && minutos < 1) return "Agora";
-  if (minutos >= 1 && minutos < 60) {
-    return `Há ${minutos} ${minutos === 1 ? "minuto" : "minutos"}`;
-  }
-
-  const horas = Math.floor(minutos / 60);
-  if (horas < 24 && chaveData(data) === chaveData(agora)) {
-    return `Há ${horas} ${horas === 1 ? "hora" : "horas"}`;
-  }
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(data);
-}
-
-async function atualizar() {
-  try {
-    await notifications.atualizarAgora();
-  } catch {
-    // O estado de erro já aparece na tela.
-  }
-}
-
-async function marcarLida(notificacao) {
-  if (!notificacao || notificacao.lida || processandoId.value) return;
-
-  processandoId.value = notificacao.id;
-  try {
-    await notifications.marcarLida(notificacao.id);
-  } catch {
-    // Mantém o item como não lido.
-  } finally {
-    processandoId.value = null;
-  }
-}
-
-async function marcarTodas() {
-  if (!notifications.naoLidas || marcandoTodas.value) return;
-
-  marcandoTodas.value = true;
-  try {
-    await notifications.marcarTodasLidas();
-  } catch {
-  } finally {
-    marcandoTodas.value = false;
-  }
-}
-
-</script>
-
 <style scoped>
 .notifications-page {
-  width: min(100%, 900px);
-  margin: 0 auto;
-  color: var(--student-text);
+  width: min(100%, 1040px);
+  margin: 12px auto 0;
+  padding-bottom: 72px;
+  color: var(--pp-marrom);
 }
 .notifications-page__header {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 18px;
-}
-.notifications-page__eyebrow {
-  display: none;
+  gap: 24px;
+  padding-bottom: 24px;
 }
 .notifications-page__header h1 {
-  margin: 0;
-  font-size: 30px;
+  margin: 0 0 10px;
+  font: 400 clamp(46px, 5vw, 64px)/1.12 var(--pp-font-titulo);
+  letter-spacing: -0.025em;
 }
 .notifications-page__header p {
-  margin: 6px 0 0;
-  color: var(--student-muted);
-  font-size: 13px;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--pp-texto-2);
 }
-.notifications-page__mark-all {
-  min-height: 36px;
+.notifications-page__header a {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pp-marrom);
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+.notifications-page__summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  padding: 8px 0;
+  border-top: 1px solid var(--pp-creme-borda);
+}
+.notifications-page__summary p {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 0 10px;
-  border: 1px solid var(--student-border);
-  border-radius: 7px;
-  background: #fff;
-  color: #615850;
+  gap: 9px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--pp-texto-2);
+}
+.notifications-page__summary strong {
+  color: var(--pp-marrom);
+  font-weight: 650;
+}
+.notifications-page__mark-all {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--pp-marrom);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
+  cursor: pointer;
+}
+.notifications-page__mark-all:disabled {
+  color: var(--pp-texto-3);
+  cursor: default;
 }
 .notifications-page__toolbar {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px 32px;
+  margin-top: 8px;
 }
-.notifications-page__tabs {
+.notifications-page__filters {
   display: flex;
-  gap: 4px;
-  padding: 3px;
-  border: 1px solid var(--student-border);
-  border-radius: 8px;
-  background: #fff;
+  gap: 28px;
 }
-.notifications-page__tabs button {
-  min-height: 31px;
-  padding: 0 10px;
+.notifications-page__filters button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 0 8px;
   border: 0;
-  border-radius: 6px;
   background: transparent;
-  color: #756d65;
-  font-size: 12px;
+  color: var(--pp-texto-2);
+  font-size: 13px;
+  cursor: pointer;
+}
+.notifications-page__filters button[aria-pressed="true"] {
+  color: var(--pp-marrom);
   font-weight: 700;
 }
-.notifications-page__tabs button.is-active {
-  background: #2a211b;
-  color: #fff;
+.notifications-page__filters button > span:not(.notifications-page__indicator) {
+  font-size: 11px;
+  font-weight: 500;
 }
-.notifications-page__tabs span {
-  margin-left: 4px;
-  opacity: 0.7;
+.notifications-page__indicator {
+  position: absolute;
+  inset: auto 0 0;
+  height: 2px;
+  background: var(--pp-gold);
+}
+.notifications-page__search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 280px;
+  min-height: 44px;
+  border-bottom: 1px solid var(--pp-creme-borda);
+  color: var(--pp-texto-2);
+}
+.notifications-page__search input {
+  min-width: 0;
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  outline: none;
+  color: var(--pp-marrom);
+  font-size: 14px;
+}
+.notifications-page__search input::placeholder {
+  color: var(--pp-texto-3);
+}
+.notifications-page__search:focus-within {
+  outline: 2px solid var(--pp-dourado-escuro);
+  outline-offset: 4px;
 }
 .notifications-page__sync {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--student-muted);
-}
-.notifications-page__refresh {
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--student-border);
-  border-radius: 8px;
-  background: #fff;
-  color: #716960;
-}
-.notifications-page__groups {
-  display: grid;
-  gap: 18px;
-}
-.notifications-page__group-title {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-bottom: 7px;
-}
-.notifications-page__group-title h2 {
-  margin: 0;
-  color: #5b544d;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.notifications-page__group-title span {
-  color: var(--student-muted);
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  color: var(--pp-texto-3);
   font-size: 12px;
 }
-.notifications-page__list {
-  overflow: hidden;
-  border: 1px solid var(--student-border);
-  border-radius: 10px;
-  background: #fff;
+.notifications-page :deep(.pp-refresh-status) {
+  opacity: 1;
 }
-.notification-card {
-  border-bottom: 1px solid var(--student-border);
+.notifications-page :deep(.pp-refresh-status.is-error) {
+  color: var(--student-danger);
 }
-.notification-card:last-child {
-  border-bottom: 0;
-}
-.notification-card.is-unread {
-  background: #fffaf1;
-}
-.notification-card__main {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) 20px;
+.notifications-page__sync > span,
+.notifications-page__sync > div {
+  display: flex;
   align-items: center;
-  gap: 11px;
-  padding: 13px 14px;
+  gap: 14px;
+}
+.notifications-page__sync button {
+  min-height: 44px;
+  padding: 0;
   border: 0;
   background: transparent;
-  text-align: left;
-  color: inherit;
+  color: var(--pp-texto-2);
   cursor: pointer;
 }
-.notification-card__icon {
-  width: 34px;
-  height: 34px;
+.notifications-page__sync > span button {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  font-size: 12px;
+}
+.notifications-page__sync .notifications-page__refresh {
+  min-width: 44px;
   display: grid;
   place-items: center;
-  border-radius: 7px;
-  background: #f1eee9;
-  color: #746354;
 }
-.notification-card.is-unread .notification-card__icon {
-  background: #faedcf;
-  color: #875c1c;
+.notifications-page__feedback,
+.notifications-page__error {
+  margin: 0;
+  color: var(--pp-marrom);
+  font-size: 13px;
+  line-height: 1.6;
 }
-.notification-card__content {
-  min-width: 0;
+.notifications-page__feedback:not(:empty),
+.notifications-page__error {
+  padding: 12px 0;
 }
-.notification-card__title-row {
+.notifications-page__error {
+  color: var(--student-danger);
+}
+.notifications-page__group {
+  margin-top: 28px;
+}
+.notifications-page__group:first-child {
+  margin-top: 0;
+}
+.notifications-page__group > h2 {
   display: flex;
-  align-items: center;
-  gap: 7px;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0;
+  padding: 0 0 12px;
+  border-bottom: 1px solid var(--pp-creme-borda);
+  color: var(--pp-marrom);
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: 0;
 }
-.notification-card__title-row strong {
+.notifications-page__group > h2 span {
   font-size: 11px;
+  color: var(--pp-texto-3);
+  font-weight: 500;
 }
-.notification-card__dot {
-  padding: 2px 5px;
-  border-radius: 4px;
-  background: #9b681c;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-.notification-card__message {
-  display: block;
-  margin-top: 4px;
-  color: var(--student-muted);
-  font-size: 12px;
-  line-height: 1.45;
-}
-.notification-card__time {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 6px;
-  color: #9b938b;
-  font-size: 11px;
-}
-.notification-card__read,
-.notification-card__arrow {
-  color: #a19890;
+.notifications-page__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 .notifications-page__state {
-  min-height: 300px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 28px;
-  border: 1px solid var(--student-border);
-  border-radius: 10px;
-  background: #fff;
-}
-.notifications-page__state-icon {
-  width: 50px;
-  height: 50px;
-  display: grid;
-  place-items: center;
-  margin-bottom: 12px;
-  border-radius: 50%;
-  background: #f2eee8;
-  color: #82602c;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 48px 0 72px;
+  max-width: 60ch;
 }
 .notifications-page__state h2 {
   margin: 0;
-  font-size: 17px;
+  font: 400 clamp(30px, 4vw, 40px)/1.2 var(--pp-font-titulo);
+  letter-spacing: -0.02em;
 }
 .notifications-page__state p {
-  max-width: 520px;
-  margin: 6px 0 14px;
-  color: var(--student-muted);
-  font-size: 11px;
+  margin: 0;
+  color: var(--pp-texto-2);
+  font-size: 15px;
+  line-height: 1.7;
 }
-.notifications-page__state button {
-  min-height: 36px;
-  padding: 0 12px;
-  border: 1px solid var(--student-border-strong);
-  border-radius: 7px;
-  background: #fff;
-  font-size: 12px;
-  font-weight: 700;
+.notifications-page__state :is(a, button) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--pp-marrom);
+  color: var(--pp-creme);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.notifications-page__state .notifications-page__empty-refresh {
+  color: var(--pp-marrom);
+  background: transparent;
+  border: 1px solid var(--pp-creme-borda);
+}
+.notifications-page__loading {
+  color: var(--pp-texto-2);
+  font-size: 14px;
+  padding-top: 18px;
 }
 .notifications-page__skeleton {
-  min-height: 70px;
-  display: grid;
-  grid-template-columns: 34px 1fr;
-  gap: 11px;
-  padding: 13px;
-  border-bottom: 1px solid var(--student-border);
+  display: flex;
+  gap: 20px;
+  min-height: 120px;
+  padding: 24px 16px;
+  border-bottom: 1px solid var(--pp-creme-borda);
 }
-.notifications-page__spinner,
-.is-spinning {
-  animation: notif-spin 0.7s linear infinite;
+.notifications-page__skeleton > span {
+  width: 24px;
+  height: 24px;
+  background: var(--pp-creme-3);
+  border-radius: 50%;
 }
-@keyframes notif-spin {
-  to {
-    transform: rotate(360deg);
+.notifications-page__skeleton > div {
+  flex: 1;
+}
+.notifications-page__skeleton strong,
+.notifications-page__skeleton p {
+  display: block;
+  height: 16px;
+  background: var(--pp-creme-2);
+  width: min(65%, 340px);
+  margin: 0 0 14px;
+}
+.notifications-page__skeleton p {
+  width: 90%;
+}
+.notifications-page :is(a, button):focus-visible {
+  outline: 3px solid var(--pp-dourado-escuro);
+  outline-offset: 4px;
+}
+@media (max-width: 760px) {
+  .notifications-page__header a {
+    display: none;
   }
-}
-@media (max-width: 700px) {
+  .notifications-page {
+    margin-top: 0;
+  }
   .notifications-page__header {
-    align-items: flex-start;
     flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding-bottom: 20px;
   }
   .notifications-page__header h1 {
-    font-size: 25px;
-  }
-  .notifications-page__mark-all {
-    width: 100%;
-    justify-content: center;
+    font-size: 48px;
   }
   .notifications-page__toolbar {
-    align-items: stretch;
+    gap: 8px;
   }
-  .notifications-page__tabs {
-    flex: 1;
+  .notifications-page__search {
+    width: 100%;
   }
-  .notifications-page__tabs button {
-    flex: 1;
+  .notifications-page__summary {
+    padding: 8px 0;
+    gap: 8px;
   }
-  .notification-card__main {
-    grid-template-columns: 32px minmax(0, 1fr) 16px;
-    padding: 12px 10px;
+}
+@media (max-width: 390px) {
+  .notifications-page__header h1 {
+    font-size: 44px;
   }
-  .notification-card__icon {
-    width: 32px;
-    height: 32px;
+  .notifications-page__header p {
+    font-size: 14px;
   }
-  .notification-card__title-row {
-    align-items: flex-start;
-    flex-direction: column;
+  .notifications-page__sync {
+    flex-wrap: wrap;
+    gap: 0;
+    padding: 4px 0;
+  }
+  .notifications-page__sync > div {
+    margin-left: auto;
     gap: 4px;
+  }
+  .notifications-page__sync > span {
+    min-height: 30px;
   }
 }
 </style>

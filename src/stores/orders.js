@@ -2,6 +2,9 @@ import { defineStore } from "pinia";
 
 import orderService from "@/services/order.service";
 
+// Compartilha o resultado real entre polling, navegação e atualizações do layout.
+const carregamentos = new WeakMap();
+
 export const useOrdersStore = defineStore("orders", {
   state: () => ({
     itens: [],
@@ -28,8 +31,11 @@ export const useOrdersStore = defineStore("orders", {
 
   actions: {
     async carregar({ force = false, silencioso = false } = {}) {
-      if (this.carregando || this.atualizandoSilenciosamente) return;
+      if (carregamentos.has(this)) return carregamentos.get(this).promise;
       if (this.inicializado && !force && !silencioso) return;
+
+      const requisicao = { promise: null };
+      carregamentos.set(this, requisicao);
 
       if (silencioso) {
         this.atualizandoSilenciosamente = true;
@@ -39,18 +45,27 @@ export const useOrdersStore = defineStore("orders", {
 
       this.erro = null;
 
-      try {
-        this.itens = await orderService.listar();
-        this.inicializado = true;
-      } catch (error) {
-        if (!silencioso) {
-          this.erro = "Não foi possível carregar seus pedidos.";
+      requisicao.promise = (async () => {
+        try {
+          const itens = await orderService.listar();
+          if (carregamentos.get(this) !== requisicao) return;
+          this.itens = itens;
+          this.inicializado = true;
+        } catch (error) {
+          if (carregamentos.get(this) !== requisicao) return;
+          if (!silencioso) {
+            this.erro = "Não foi possível carregar seus pedidos.";
+          }
+          throw error;
+        } finally {
+          if (carregamentos.get(this) === requisicao) {
+            carregamentos.delete(this);
+            this.carregando = false;
+            this.atualizandoSilenciosamente = false;
+          }
         }
-        throw error;
-      } finally {
-        this.carregando = false;
-        this.atualizandoSilenciosamente = false;
-      }
+      })();
+      return requisicao.promise;
     },
 
     async buscarPorId(id) {
@@ -65,6 +80,7 @@ export const useOrdersStore = defineStore("orders", {
     },
 
     resetar() {
+      carregamentos.delete(this);
       this.itens = [];
       this.carregando = false;
       this.atualizandoSilenciosamente = false;
