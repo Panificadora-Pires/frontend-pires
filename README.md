@@ -103,6 +103,94 @@ separam verificações de domínio, comportamento e mídia/responsividade com AP
 com API local. Build e verificações de interface foram executados; o relatório registra os resultados
 e limites. Isso não comprova checkout, pagamentos ou produção. A entrega permanece local para revisão.
 
+## Meus pedidos editorial — 06/11/2026
+
+`/pedidos` estende o Balcão creme para acompanhar e retirar o lanche: introdução compacta,
+pedido ativo em destaque e coleção com produtos expansíveis. Anton conduz as chamadas,
+Inter mantém dados e controles legíveis e Caveat aparece apenas na anotação inicial.
+A extensão reutiliza os tokens e a identidade existentes, sem mudanças globais de direção.
+
+Prontos lideram, seguidos de confirmados e pendentes; dentro de cada estado ativo, o mais
+antigo vem primeiro, com ID como desempate. O histórico segue do mais recente ao mais antigo.
+Busca e filtros incluem o destaque, que não se repete na coleção. Ativos incluem prontos:
+o resumo explicita quantos desse total aguardam retirada. O progresso representa somente
+os estados reais, sem estimativas ou percentuais de preparo.
+
+`PedidosView.vue` coordena seleção, filtros, URL e atualização; `utils/orders.js` concentra
+ordenação, busca e apresentação dos estados. `OrderCard`, `OrderActions` e `OrderProgress`
+apresentam pedido, próxima ação e etapas. `useAutoRefresh` conserva bases de 10s com ativos
+e 60s sem ativos, jitter e recuperação existentes; atualizações silenciosas preservam os dados.
+Backend, stores, serviços e layouts mantêm seus contratos.
+
+No celular, o destaque tem um único controle de QR Code, logo após a mensagem de estado e
+antes das etapas. Ele só aparece para pedido pronto. `OrderQRCodeModal` usa o serviço existente
+e invalida consultas em andamento ao fechar, trocar o pedido ou sair de pronto; ausência do
+pedido na lista atualizada também fecha o diálogo. `OrderChatDrawer` mantém `OrderChatPanel`
+e o acesso por `/pedidos?chat=ID`, removendo apenas esse parâmetro após tratar o link.
+QR e conversa usam `<dialog>` nativo e `useOrderDialog`: foco inicial, contenção de Tab/Shift+Tab,
+Escape, bloqueio/restauração da rolagem e retorno de foco. Serviços e fluxo de mensagens permanecem.
+
+Motion for Vue (`motion-v` 2.11.1, MIT) anima entrada do destaque, filtros, expansão e mudança
+de estado; chaves estáveis evitam reanimar a cada polling. O lock inclui o peer `@vueuse/core`
+15.0.0; React e Tailwind não foram instalados. QR usa apenas opacidade, preservando sua geometria.
+Com movimento reduzido, as mudanças são imediatas e os diálogos não têm entrada/saída animada.
+
+Testes de domínio: `node --test tests/orders.test.mjs` (sem script `npm test`).
+[Plano](../docs/planos/pedidos-editoriais.md) e
+[capturas, gravação e resultados locais](../docs/prints/pedidos-editoriais-2026-11-06/)
+separam fixtures da leitura da API local. Revisão posterior focou a prioridade mobile e teve
+o ajuste P2 resolvido. Essas evidências não comprovam checkout, pagamentos ou produção.
+Para visualizar, inicie frontend e backend locais e abra `/pedidos` com uma conta fictícia.
+
+## Central de Notificações editorial — 06/11/2026
+
+`/notificacoes` estende o Balcão creme com título Anton, leitura em Inter, filtros Todas/Não lidas,
+busca local e lista dividida por datas. Rótulos Nova/Lida acompanham o contraste; controles têm
+foco visível e alvo mínimo de 44px. A composição atende listas de 0/1/5/50 avisos, empilha ações
+no celular e reserva o corredor do chatbot, sem preencher artificialmente listas curtas.
+
+`utils/notifications.js` só reconhece dois textos integrais, com ID válido igual ao campo `pedido`:
+
+- `Seu pedido #{id} está pronto para retirada! Mostre seu QR Code no balcão.`
+- `Nova mensagem da padaria sobre o pedido #{id}.`
+
+Mensagens divergentes, desconhecidas ou sem pedido válido ficam genéricas, preservando o texto
+original e sem destino inferido. `NotificationItem` apresenta o aviso; a View coordena filtros,
+feedback e foco. Abrir pedido/conversa e marcar leitura são ações separadas. O chat mantém sua
+regra existente de leitura ao abrir efetivamente a conversa. Erros de leitura aparecem com nova
+tentativa disponível; falha de sincronização conserva os dados, e carga, erro inicial e vazio
+têm estados distintos.
+
+O store confirma leitura somente após resposta válida, impede requisições duplicadas e elimina
+IDs repetidos. Leitura confirmada não regride por GET antigo. A marcação global confirma localmente
+apenas o conjunto capturado no início; avisos concorrentes aguardam sincronização. `StudentLayout`
+mantém o único polling de notificações, com base de 30s, jitter/backoff existentes; sair da área
+autenticada limpa o cache e invalida respostas da sessão anterior.
+
+`/pedidos?pedido=ID` aguarda um GET real bem-sucedido, compartilhado pelo store entre chamadas
+concorrentes, antes de localizar e focar o alvo; não abre QR automaticamente nem presume o estado
+atual pelo aviso antigo. Atualizações seguintes preservam a navegação. `/pedidos?chat=ID` reutiliza
+o fluxo existente. Hoje/Ontem seguem o calendário local, incluindo viradas e horário de verão;
+o relógio de meia-noite e a retomada da aba reagrupam datas sem HTTP.
+
+JavaScript, CSS e tokens existentes compõem a tela; Motion for Vue já instalado anima entrada
+breve, indicador de filtro e IDs novos com chaves estáveis. Polling e mudança de leitura não
+reanimam a lista; filtros respondem à ação do usuário e movimento reduzido torna as mudanças
+imediatas. Nenhum código Vue Bits foi copiado; sem React, Tailwind, GSAP ou dependência nova.
+`DESIGN.md` e `.impeccable/design.json` preservam a direção existente.
+
+Testes de domínio e stores, sem script `npm test`:
+
+```bash
+node --test tests/notifications.test.mjs tests/notifications-store.test.mjs tests/orders-store.test.mjs tests/orders.test.mjs
+```
+
+Os testes de stores usam `node:module.registerHooks` (Node 22.15+; ambiente desta etapa: Node 26).
+Esse requisito é dos testes. [Plano](../docs/planos/notificacoes-editoriais.md) e
+[relatório, capturas e limites](../docs/prints/notificacoes-editoriais-2026-11-06/README.md)
+registram as verificações: integração com dados reais somente por GET; marcação e chat usam fixtures.
+Para visualizar, inicie frontend/backend locais e abra `/notificacoes` com uma conta fictícia.
+
 ## Stack
 
 - Vue 3
