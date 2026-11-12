@@ -4,9 +4,11 @@ import {
   clearTokens,
   getAccessToken,
   getRefreshToken,
+  getSessionVersion,
   persistTokens,
 } from "@/services/api";
 import { authService } from "@/services/auth.service";
+import { useCartStore } from "@/stores/cart";
 
 const ACTIVATION_STORAGE_KEY = "pp_pending_activation";
 const PASSWORD_RESET_STORAGE_KEY = "pp_pending_password_reset";
@@ -17,6 +19,7 @@ export const useAuthStore = defineStore("auth", {
     carregando: false,
     erro: null,
     sessaoInicializada: false,
+    geracaoOperacao: 0,
   }),
 
   getters: {
@@ -26,13 +29,17 @@ export const useAuthStore = defineStore("auth", {
 
   actions: {
     async login(email, password) {
-      return this._executar(async () => {
+      return this._executar(async (contexto) => {
         const { data } = await authService.login({
           email: email.trim().toLowerCase(),
           password,
         });
 
+        if (contexto.versao !== getSessionVersion()) return;
+        useCartStore().sincronizarConta(null);
+        this.usuario = null;
         persistTokens(data);
+        contexto.versao = getSessionVersion();
         await this.buscarUsuarioLogado();
 
         return { usuario: this.usuario };
@@ -146,7 +153,7 @@ export const useAuthStore = defineStore("auth", {
         };
       }
 
-      return this._executar(async () => {
+      return this._executar(async (contexto) => {
         const { data } = await authService.confirmPasswordReset({
           request_id: pendencia.requestId,
           code,
@@ -155,6 +162,8 @@ export const useAuthStore = defineStore("auth", {
 
         sessionStorage.removeItem(PASSWORD_RESET_STORAGE_KEY);
         this._limparSessaoLocal();
+        contexto.versao = getSessionVersion();
+        contexto.operacao = this.geracaoOperacao;
 
         return data;
       });
@@ -169,10 +178,14 @@ export const useAuthStore = defineStore("auth", {
         };
       }
 
-      return this._executar(async () => {
+      return this._executar(async (contexto) => {
         const { data } = await authService.googleLogin(credential);
 
+        if (contexto.versao !== getSessionVersion()) return;
+        useCartStore().sincronizarConta(null);
+        this.usuario = null;
         persistTokens(data);
+        contexto.versao = getSessionVersion();
         await this.buscarUsuarioLogado();
 
         return { usuario: this.usuario };
@@ -180,15 +193,20 @@ export const useAuthStore = defineStore("auth", {
     },
 
     async buscarUsuarioLogado() {
+      const versao = getSessionVersion();
       const { data } = await authService.getProfile();
+      if (versao !== getSessionVersion()) return null;
       this.usuario = data;
+      useCartStore().sincronizarConta(data?.id);
       return data;
     },
 
     async atualizarPerfil(payload) {
-      return this._executar(async () => {
+      return this._executar(async (contexto) => {
         const { data } = await authService.updateProfile(payload);
+        if (contexto.versao !== getSessionVersion()) return;
         this.usuario = data;
+        useCartStore().sincronizarConta(data?.id);
         return data;
       });
     },
@@ -198,23 +216,28 @@ export const useAuthStore = defineStore("auth", {
         return this.autenticado;
       }
 
+      const versao = getSessionVersion();
       this.sessaoInicializada = true;
 
       if (!getAccessToken() && !getRefreshToken()) {
         this.usuario = null;
+        useCartStore().sincronizarConta(null);
         return false;
       }
 
       try {
         await this.buscarUsuarioLogado();
+        if (versao !== getSessionVersion()) return this.autenticado;
         return true;
       } catch (error) {
+        if (versao !== getSessionVersion()) return this.autenticado;
         const status = error?.response?.status;
         if (status === 401 || status === 403) {
           this._limparSessaoLocal();
         } else {
           // Falha de rede ou do servidor: mantém os tokens e tenta de novo na próxima navegação.
           this.usuario = null;
+          useCartStore().sincronizarConta(null);
           this.sessaoInicializada = false;
         }
         return false;
@@ -223,31 +246,41 @@ export const useAuthStore = defineStore("auth", {
 
     async logout() {
       const refresh = getRefreshToken();
+      this._limparSessaoLocal();
 
       try {
         if (refresh) {
           await authService.logout(refresh);
         }
       } catch {
-      } finally {
-        this._limparSessaoLocal();
       }
     },
 
     _limparSessaoLocal() {
+      this.geracaoOperacao += 1;
+      useCartStore().sincronizarConta(null);
       this.usuario = null;
       this.erro = null;
+      this.carregando = false;
       clearTokens();
     },
 
     async _executar(callback) {
+      const contexto = { versao: getSessionVersion(), operacao: ++this.geracaoOperacao };
+      const operacaoAtual = () => contexto.operacao === this.geracaoOperacao;
+      const ignorado = { ok: false, ignorado: true, campos: {} };
       this.carregando = true;
       this.erro = null;
 
       try {
-        const data = await callback();
+        const data = await callback(contexto);
+        if (!operacaoAtual() || contexto.versao !== getSessionVersion()) return ignorado;
         return { ok: true, data, campos: {} };
       } catch (error) {
+        if (!operacaoAtual()) return ignorado;
+        // O refresh recusado encerra os tokens, mas esta operação ainda precisa
+        // liberar o formulário e mostrar a falha. Outra conta/ação não é dona dela.
+        if (contexto.versao !== getSessionVersion() && (getAccessToken() || getRefreshToken() || !error.response)) return ignorado;
         const normalizado = normalizarErroApi(error);
         this.erro = normalizado.mensagem;
 
@@ -258,7 +291,7 @@ export const useAuthStore = defineStore("auth", {
           status: error.response?.status ?? null,
         };
       } finally {
-        this.carregando = false;
+        if (operacaoAtual()) this.carregando = false;
       }
     },
   },

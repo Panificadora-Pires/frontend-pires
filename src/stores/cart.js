@@ -1,7 +1,9 @@
-import { defineStore } from "pinia";
+import { acceptHMRUpdate, defineStore } from "pinia";
 export const useCartStore = defineStore("cart", {
   state: () => ({
     itens: [],
+    contaId: null,
+    geracao: 0,
   }),
 
   getters: {
@@ -21,7 +23,24 @@ export const useCartStore = defineStore("cart", {
   },
 
   actions: {
-    adicionar(produto, quantidade = 1) {
+    sincronizarConta(id) {
+      const contaId = id == null ? null : String(id);
+      if (contaId === this.contaId) return;
+      this.contaId = contaId;
+      this.geracao += 1;
+      this.itens = [];
+    },
+
+    capturarContexto() {
+      return { contaId: this.contaId, geracao: this.geracao };
+    },
+
+    contextoAtual(contexto) {
+      return this.contaId !== null && contexto?.contaId === this.contaId && contexto?.geracao === this.geracao;
+    },
+
+    adicionar(produto, quantidade = 1, contexto = this.capturarContexto()) {
+      if (!this.contextoAtual(contexto)) return false;
       const existente = this.itens.find(
         (item) => item.produto.id === produto.id,
       );
@@ -31,6 +50,7 @@ export const useCartStore = defineStore("cart", {
       } else {
         this.itens.push({ produto, quantidade });
       }
+      return true;
     },
 
     removerItem(produtoId) {
@@ -46,8 +66,11 @@ export const useCartStore = defineStore("cart", {
       if (item) item.quantidade = quantidade;
     },
 
-    limpar() {
+    limpar(contexto = this.capturarContexto()) {
+      if (!this.contextoAtual(contexto)) return false;
       this.itens = [];
+      return true;
     },
   },
 });
+if (import.meta.hot) import.meta.hot.accept(acceptHMRUpdate(useCartStore, import.meta.hot));

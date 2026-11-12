@@ -4,7 +4,7 @@ import { useAnimate, useReducedMotion } from 'motion-v';
 import { Heart, LoaderCircle, Plus } from 'lucide-vue-next';
 import ProductImage from '@/components/catalog/ProductImage.vue';
 import CardActionContent from '@/components/ui/CardActionContent.vue';
-import { categoriaProduto, precoProduto } from '@/utils/favoritos';
+import { categoriaProduto, precoProduto, disponibilidadeProduto } from '@/utils/favoritos';
 
 const props = defineProps({
   produto: { type: Object, required: true },
@@ -17,7 +17,8 @@ const [, animar] = useAnimate();
 const removido = ref(false);
 const preco = computed(() => precoProduto(props.produto));
 const temDesconto = computed(() => props.produto.em_promocao && preco.value !== null && Number(props.produto.preco) > preco.value);
-const indisponivel = computed(() => props.produto.ativo === false || Number(props.produto.estoque) <= 0 || preco.value === null);
+const disponibilidade = computed(() => disponibilidadeProduto(props.produto));
+const indisponivel = computed(() => ['indisponivel', 'sem-estoque'].includes(disponibilidade.value) || preco.value === null);
 const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 function remover() {
   // A ref Vue será limpa no teardown, mas o DOM permanece durante a saída.
@@ -42,7 +43,7 @@ function remover() {
       <p class="favorite-product__category">{{ categoriaProduto(produto) || 'Da Pires' }}</p>
       <h2 :id="`favorite-title-${produto.id}`"><button type="button" @click="emit('open', produto)">{{ produto.nome }}</button></h2>
       <p v-if="destaque" class="favorite-product__description">{{ produto.descricao || 'Sua escolha está guardada para o próximo intervalo.' }}</p>
-      <p class="favorite-product__price"><s v-if="temDesconto" :aria-label="`Preço anterior: ${moeda.format(Number(produto.preco))}`">{{ moeda.format(Number(produto.preco)) }}</s><strong>{{ preco === null ? 'Consulte o preço' : moeda.format(preco) }}</strong><span v-if="produto.ativo === false">Indisponível</span><span v-else-if="Number(produto.estoque) <= 0">Sem estoque no momento</span></p>
+      <p class="favorite-product__price"><s v-if="temDesconto" :aria-label="`Preço anterior: ${moeda.format(Number(produto.preco))}`">{{ moeda.format(Number(produto.preco)) }}</s><strong>{{ preco === null ? 'Consulte o preço' : moeda.format(preco) }}</strong><span v-if="disponibilidade === 'indisponivel'">Indisponível</span><span v-else-if="disponibilidade === 'sem-estoque'">Sem estoque no momento</span><span v-else-if="disponibilidade === 'desconhecida'">Disponibilidade conferida ao adicionar</span></p>
       <div class="favorite-product__actions">
         <button type="button" class="favorite-product__details" @click="emit('open', produto)">Ver detalhes</button>
         <button type="button" class="favorite-product__add pp-card-action" data-card-action-radius :disabled="adicionando || indisponivel" :aria-label="`Adicionar ${produto.nome} ao carrinho`" :aria-busy="adicionando" @click="emit('add', produto, $event.currentTarget.closest('article').querySelector('.catalog-product-image'))">

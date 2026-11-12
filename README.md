@@ -641,4 +641,6 @@ Segredos de integração nunca devem ser colocados em variáveis `VITE_*`, pois 
 
 `/favoritos` apresenta a seleção pessoal com composição para um, dois ou muitos produtos, busca por nome/categoria, ordenação e compra com consulta atualizada de preço e estoque. Reutiliza o modal e o carrinho existentes. O store protege remoções confirmadas, migração legada e isolamento de conta; logout invalida operações pendentes.
 
-Validação local: `node --test tests/*.test.mjs` (27 testes), build e auditoria de produção. [Plano](../docs/planos/favoritos-editoriais.md) e [evidências sintéticas](../docs/prints/favoritos-editoriais-2026-11-12/README.md) incluem 66 verificações de navegador, teclado, capturas e gravação. Não representam validação de produção ou pagamentos.
+Validação original do redesign: `node --test tests/*.test.mjs` (27 testes), build e auditoria de produção. [Plano](../docs/planos/favoritos-editoriais.md) e [evidências sintéticas](../docs/prints/favoritos-editoriais-2026-11-12/README.md) incluem 66 verificações de navegador, teclado, capturas e gravação. Não representam validação de produção ou pagamentos.
+
+Na correção de release, a listagem mantém disponibilidade desconhecida até a consulta por interação. O carrinho pertence à sessão: logout/troca de conta invalidam operações pendentes, inclusive refresh HTTP e retornos de checkout. A renovação normal da mesma sessão preserva o carrinho. [Provas da correção](../docs/prints/favoritos-release-review-2026-11-12/README.md).

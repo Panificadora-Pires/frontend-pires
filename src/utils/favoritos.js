@@ -4,6 +4,13 @@ export function precoProduto(produto) {
   const valor = produto?.preco_atual ?? produto?.preco;
   return valor !== null && valor !== undefined && valor !== '' && Number.isFinite(Number(valor)) && Number(valor) >= 0 ? Number(valor) : null;
 }
+export function disponibilidadeProduto(produto) {
+  if (produto?.ativo === false) return 'indisponivel';
+  const estoque = produto?.estoque;
+  if (estoque == null || String(estoque).trim() === '' || !Number.isFinite(Number(estoque))) return 'desconhecida';
+  if (Number(estoque) <= 0) return 'sem-estoque';
+  return produto.ativo === true ? 'disponivel' : 'desconhecida';
+}
 export function categoriasFavoritas(produtos) {
   return [...new Set(produtos.map(categoriaProduto).filter(Boolean))].sort((a,b) => a.localeCompare(b,'pt-BR'));
 }

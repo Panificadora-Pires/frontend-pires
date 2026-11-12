@@ -224,7 +224,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import {
   ArrowLeft,
@@ -259,6 +259,17 @@ const finalizando = ref(false);
 const erroFinalizar = ref("");
 const toast = ref("");
 let toastTimer = null;
+let montado = true;
+const contextoAtual = contexto => montado && cart.contextoAtual(contexto);
+watch(() => cart.geracao, () => {
+  estoques.value = {};
+  ativos.value = {};
+  sincronizando.value = false;
+  finalizando.value = false;
+  erroFinalizar.value = "";
+  toast.value = "";
+  window.clearTimeout(toastTimer);
+}, { flush: "sync" });
 
 const temProblemas = computed(() =>
   cart.itens.some((item) => Boolean(problemaItem(item))),
@@ -353,6 +364,8 @@ function limparCarrinho() {
 
 async function sincronizarCarrinho({ silencioso = false } = {}) {
   if (cart.vazio || sincronizando.value) return;
+  const contexto = cart.capturarContexto();
+  if (!contextoAtual(contexto)) return;
 
   sincronizando.value = true;
   if (!silencioso) erroFinalizar.value = "";
@@ -364,6 +377,8 @@ async function sincronizarCarrinho({ silencioso = false } = {}) {
       return { id: item.produto.id, detalhe };
     }),
   );
+
+  if (!contextoAtual(contexto)) return;
 
   const novosEstoques = { ...estoques.value };
   const novosAtivos = { ...ativos.value };
@@ -403,12 +418,15 @@ async function sincronizarCarrinho({ silencioso = false } = {}) {
 
 async function finalizarPedido() {
   if (cart.vazio || finalizando.value) return;
+  const contexto = cart.capturarContexto();
+  if (!contextoAtual(contexto)) return;
 
   finalizando.value = true;
   erroFinalizar.value = "";
 
   try {
     await sincronizarCarrinho({ silencioso: true });
+    if (!contextoAtual(contexto) || cart.vazio) return;
 
     if (temProblemas.value) {
       erroFinalizar.value = "Revise os itens destacados antes de continuar.";
@@ -417,9 +435,9 @@ async function finalizarPedido() {
 
     await router.push({ name: "checkout" });
   } catch (error) {
-    erroFinalizar.value = mensagemErroPedido(error);
+    if (contextoAtual(contexto)) erroFinalizar.value = mensagemErroPedido(error);
   } finally {
-    finalizando.value = false;
+    if (contextoAtual(contexto)) finalizando.value = false;
   }
 }
 
@@ -450,7 +468,9 @@ function mostrarToast(mensagem) {
 }
 
 onMounted(() => {
+  const contexto = cart.capturarContexto();
   sincronizarCarrinho().catch(() => {
+    if (!contextoAtual(contexto)) return;
     erroFinalizar.value =
       "Não foi possível atualizar a disponibilidade dos produtos.";
     sincronizando.value = false;
@@ -458,6 +478,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  montado = false;
   window.clearTimeout(toastTimer);
 });
 </script>

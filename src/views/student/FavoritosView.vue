@@ -88,8 +88,10 @@ async function fecharModal() {
 async function adicionar(produto, quantidade = 1, origem = 'direta', elementoOrigem = null) {
   if (!auth.usuario || favorites.suspenso || !produto?.id || produtoAdicionando.value !== null || !Number.isSafeInteger(quantidade) || quantidade < 1) return;
   const g = geracao, conta = auth.usuario?.id ?? null, requisicao = requisicaoDetalhe;
+  const contexto = cart.capturarContexto();
+  if (!cart.contextoAtual(contexto)) return;
   produtoAdicionando.value = produto.id; origemAdicao.value = origem;
-  const valido = () => contextoAtual(g, conta) && (origem !== 'modal' || (modalAberto.value && requisicao === requisicaoDetalhe));
+  const valido = () => contextoAtual(g, conta) && cart.contextoAtual(contexto) && (origem !== 'modal' || (modalAberto.value && requisicao === requisicaoDetalhe));
   try {
     const detalhe = await favorites.obterDetalhe(produto.id);
     if (!valido()) return;
@@ -109,11 +111,11 @@ async function adicionar(produto, quantidade = 1, origem = 'direta', elementoOri
     if (existente) existente.produto = detalhe;
     if (origem === 'direta') registrarOrigemVoo(elementoOrigem);
     // O layout existente observa esta ação e executa o voo uma única vez.
-    cart.adicionar(detalhe, quantidade);
+    if (!cart.adicionar(detalhe, quantidade, contexto)) return;
     mostrarToast(`${detalhe.nome} adicionado ao carrinho.`);
     if (origem === 'modal') fecharModal();
   } catch { if (valido()) mostrarToast('Não foi possível conferir este produto. Tente novamente.', 'erro'); }
-  finally { if (contextoAtual(g, conta)) { produtoAdicionando.value = null; origemAdicao.value = null; } }
+  finally { if (contextoAtual(g, conta) && cart.contextoAtual(contexto)) { produtoAdicionando.value = null; origemAdicao.value = null; } }
 }
 function adicionarRapido(produto, origem) { return adicionar(produto, 1, 'direta', origem); }
 function adicionarDoModal({ produto, quantidade }) { return adicionar(produto, quantidade, 'modal'); }

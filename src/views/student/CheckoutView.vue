@@ -412,7 +412,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import {
   ArrowLeft,
   ArrowRight,
@@ -451,6 +451,17 @@ const resultado = ref(null);
 const consultando = ref(false);
 const pixCopiado = ref(false);
 let polling = null;
+let montado = true;
+const contextoAtual = contexto => montado && cart.contextoAtual(contexto);
+watch(() => cart.geracao, () => {
+  pararPolling();
+  resultado.value = null;
+  erro.value = "";
+  processando.value = false;
+  consultando.value = false;
+  pixCopiado.value = false;
+  checkoutId.value = novoCheckoutId();
+}, { flush: "sync" });
 
 const pedido = computed(() => resultado.value?.pedido || null);
 const pagamento = computed(() => resultado.value?.pagamento || null);
@@ -534,7 +545,8 @@ function mensagemErro(error) {
   return "Não foi possível concluir o pagamento. Tente novamente.";
 }
 
-function tratarResposta(data) {
+function tratarResposta(data, contexto) {
+  if (!contextoAtual(contexto)) return;
   resultado.value = data;
   const status = data?.pagamento?.status_pagamento;
 
@@ -542,11 +554,11 @@ function tratarResposta(data) {
     ["aprovado", "pendente", "processando"].includes(status) ||
     data?.pagamento?.forma_pagamento === "dinheiro"
   ) {
-    cart.limpar();
+    cart.limpar(contexto);
   }
 
   if (["pendente", "processando"].includes(status) && data?.pedido?.id) {
-    iniciarPolling(data.pedido.id);
+    iniciarPolling(data.pedido.id, contexto);
   } else {
     pararPolling();
   }
@@ -556,6 +568,8 @@ function tratarResposta(data) {
 
 async function processarMercadoPago({ paymentType, formData }) {
   if (processando.value) return;
+  const contexto = cart.capturarContexto();
+  if (!contextoAtual(contexto)) return;
   processando.value = true;
   erro.value = "";
 
@@ -567,7 +581,8 @@ async function processarMercadoPago({ paymentType, formData }) {
       formData,
     });
 
-    tratarResposta(data);
+    if (!contextoAtual(contexto)) return;
+    tratarResposta(data, contexto);
 
     if (
       ["recusado", "cancelado", "reembolsado", "erro"].includes(
@@ -578,18 +593,21 @@ async function processarMercadoPago({ paymentType, formData }) {
       throw new Error("Pagamento não aprovado");
     }
   } catch (error) {
+    if (!contextoAtual(contexto)) return;
     erro.value = mensagemErro(error);
     if (error?.response?.data?.novo_checkout) {
       checkoutId.value = novoCheckoutId();
     }
     throw error;
   } finally {
-    processando.value = false;
+    if (contextoAtual(contexto)) processando.value = false;
   }
 }
 
 async function finalizarDinheiro() {
   if (processando.value || cart.vazio) return;
+  const contexto = cart.capturarContexto();
+  if (!contextoAtual(contexto)) return;
   processando.value = true;
   erro.value = "";
 
@@ -598,19 +616,20 @@ async function finalizarDinheiro() {
       checkoutId: checkoutId.value,
       cart,
     });
-    tratarResposta(data);
+    tratarResposta(data, contexto);
   } catch (error) {
-    erro.value = mensagemErro(error);
+    if (contextoAtual(contexto)) erro.value = mensagemErro(error);
   } finally {
-    processando.value = false;
+    if (contextoAtual(contexto)) processando.value = false;
   }
 }
 
-async function consultarPagamento(pedidoId) {
-  if (consultando.value) return;
+async function consultarPagamento(pedidoId, contexto = cart.capturarContexto()) {
+  if (consultando.value || !contextoAtual(contexto)) return;
   consultando.value = true;
   try {
     const { data } = await paymentService.consultar(pedidoId);
+    if (!contextoAtual(contexto)) return;
     resultado.value = data;
     const status = data?.pagamento?.status_pagamento;
     if (
@@ -622,13 +641,13 @@ async function consultarPagamento(pedidoId) {
     }
   } catch {
   } finally {
-    consultando.value = false;
+    if (contextoAtual(contexto)) consultando.value = false;
   }
 }
 
-function iniciarPolling(pedidoId) {
+function iniciarPolling(pedidoId, contexto) {
   pararPolling();
-  polling = createAutoRefresh(() => consultarPagamento(pedidoId), {
+  polling = createAutoRefresh(() => consultarPagamento(pedidoId, contexto), {
     intervalo: INTERVALO_PAGAMENTO_MS,
     imediato: false,
   });
@@ -666,6 +685,7 @@ function tratarMensagem3DS(event) {
 onMounted(() => window.addEventListener("message", tratarMensagem3DS));
 
 onBeforeUnmount(() => {
+  montado = false;
   pararPolling();
   window.removeEventListener("message", tratarMensagem3DS);
 });
