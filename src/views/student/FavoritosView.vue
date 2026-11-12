@@ -1,689 +1,218 @@
+<script setup>
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { AnimatePresence } from 'motion-v';
+import { ArrowRight, CheckCircle2, CircleAlert, Heart, Search, SearchX, X } from 'lucide-vue-next';
+import FavoriteProduct from '@/components/favorites/FavoriteProduct.vue';
+import FavoriteCollectionItem from '@/components/favorites/FavoriteCollectionItem.vue';
+import ProductDetailsModal from '@/components/catalog/ProductDetailsModal.vue';
+import { useCartStore } from '@/stores/cart';
+import { useFavoritesStore } from '@/stores/favorites';
+import { useAuthStore } from '@/stores/auth';
+import { categoriasFavoritas, filtrarFavoritos, precoProduto, validarAdicao } from '@/utils/favoritos';
+import { registrarOrigemVoo } from '@/utils/vooAoCarrinho';
+
+const cart = useCartStore(), favorites = useFavoritesStore(), auth = useAuthStore();
+const busca = ref(''), categoria = ref(''), ordem = ref('selecao');
+const estado = ref(null), titulo = ref(null);
+const categorias = computed(() => categoriasFavoritas(favorites.produtos));
+const produtosFiltrados = computed(() => filtrarFavoritos(favorites.produtos, { busca: busca.value, categoria: categoria.value, ordem: ordem.value }));
+const temFiltros = computed(() => Boolean(busca.value || categoria.value || ordem.value !== 'selecao'));
+const modalAberto = ref(false), carregandoDetalhe = ref(false), produtoDetalhado = ref(null);
+const produtoAdicionando = ref(null), origemAdicao = ref(null);
+const toast = ref(''), tipoToast = ref('sucesso');
+const adicionandoModal = computed(() => produtoAdicionando.value !== null && origemAdicao.value === 'modal');
+let montado = true, geracao = 0, requisicaoDetalhe = 0, toastTimer;
+let destinoModal = null, produtoModalId = null;
+const vistos = new Set();
+function contextoAtual(g, conta) { return montado && !favorites.suspenso && geracao === g && (auth.usuario?.id ?? null) === conta; }
+function mostrarToast(mensagem, tipo = 'sucesso') {
+  toast.value = mensagem; tipoToast.value = tipo; clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toast.value = ''; }, 4400);
+}
+function limparFiltros() { busca.value = ''; categoria.value = ''; ordem.value = 'selecao'; }
+async function recarregar() { try { await favorites.carregar({ force: true }); } catch {} }
+function focarColecao(preferido) {
+  const botao = preferido ? document.getElementById(`favorite-remove-${preferido}`) : null;
+  const valido = elemento => elemento && !elemento.disabled && !elemento.closest('[inert]');
+  const primeiro = produtosFiltrados.value.map(p => document.getElementById(`favorite-remove-${p.id}`)).find(valido);
+  (valido(botao) ? botao : primeiro || estado.value || titulo.value)?.focus({ preventScroll: true });
+}
+async function alternarFavorito(produto, confirmar) {
+  if (!auth.usuario || favorites.suspenso || !produto?.id || favorites.estaProcessando(produto.id)) return;
+  const g = geracao, conta = auth.usuario?.id ?? null;
+  const ids = produtosFiltrados.value.map(p => p.id), indice = ids.indexOf(produto.id);
+  const proximo = ids[indice + 1] ?? ids[indice - 1];
+  const estava = favorites.tem(produto.id);
+  let resultado;
+  try {
+    resultado = await favorites.alternar(produto);
+  } catch {
+    if (contextoAtual(g, conta)) mostrarToast('Não foi possível atualizar seus favoritos. Tente novamente.', 'erro');
+    return;
+  }
+  if (!contextoAtual(g, conta) || resultado === undefined) return;
+  mostrarToast(`${produto.nome} ${resultado ? 'adicionado aos favoritos' : 'removido dos favoritos'}.`);
+  if (estava && !resultado) {
+    if (modalAberto.value && Number(produtoModalId) === Number(produto.id)) {
+      destinoModal = { id: proximo }; fecharModal();
+    } else { await nextTick(); focarColecao(proximo); }
+  }
+  // Feedback e foco dependem da mutação confirmada, antes do efeito visual.
+  confirmar?.();
+}
+function detalheExibivel(detalhe) {
+  if (precoProduto(detalhe) === null) return null;
+  return detalhe.ativo ? detalhe : { ...detalhe, estoque: 0 };
+}
+async function abrirProduto(produto) {
+  if (!auth.usuario || favorites.suspenso || !produto?.id) return;
+  const requisicao = ++requisicaoDetalhe, g = geracao, conta = auth.usuario?.id ?? null;
+  destinoModal = { elemento: document.activeElement, id: produto.id }; produtoModalId = produto.id;
+  modalAberto.value = true; carregandoDetalhe.value = true; produtoDetalhado.value = null; toast.value = '';
+  try {
+    const detalhe = await favorites.obterDetalhe(produto.id);
+    if (!contextoAtual(g, conta) || requisicao !== requisicaoDetalhe || !modalAberto.value) return;
+    if (Number(detalhe?.id) !== Number(produto.id)) return;
+    favorites.atualizarProduto(detalhe); produtoDetalhado.value = detalheExibivel(detalhe);
+  } catch { /* O modal compartilhado apresenta o erro e permite fechar/reabrir. */ }
+  finally { if (contextoAtual(g, conta) && requisicao === requisicaoDetalhe) carregandoDetalhe.value = false; }
+}
+async function fecharModal() {
+  const destino = destinoModal; destinoModal = null; produtoModalId = null;
+  requisicaoDetalhe++; modalAberto.value = false; carregandoDetalhe.value = false; produtoDetalhado.value = null;
+  await nextTick();
+  if (!montado) return;
+  if (destino?.elemento?.isConnected && !destino.elemento.disabled && !destino.elemento.closest('[inert]')) destino.elemento.focus({ preventScroll: true });
+  else focarColecao(destino?.id);
+}
+async function adicionar(produto, quantidade = 1, origem = 'direta', elementoOrigem = null) {
+  if (!auth.usuario || favorites.suspenso || !produto?.id || produtoAdicionando.value !== null || !Number.isSafeInteger(quantidade) || quantidade < 1) return;
+  const g = geracao, conta = auth.usuario?.id ?? null, requisicao = requisicaoDetalhe;
+  produtoAdicionando.value = produto.id; origemAdicao.value = origem;
+  const valido = () => contextoAtual(g, conta) && (origem !== 'modal' || (modalAberto.value && requisicao === requisicaoDetalhe));
+  try {
+    const detalhe = await favorites.obterDetalhe(produto.id);
+    if (!valido()) return;
+    const existente = cart.itens.find(item => Number(item.produto.id) === Number(produto.id));
+    const erro = validarAdicao(produto, detalhe, quantidade, existente?.quantidade || 0);
+    if (Number(detalhe?.id) === Number(produto.id)) favorites.atualizarProduto(detalhe);
+    if (origem === 'modal') produtoDetalhado.value = detalheExibivel(detalhe);
+    if (erro) {
+      const mensagem = erro === 'preco-alterado' ? 'O preço mudou. Confira o valor atualizado e confirme a adição novamente.' : erro === 'estoque' ? 'A quantidade solicitada não está disponível. Confira o estoque e o seu carrinho.' : 'Este produto está indisponível no momento.';
+      mostrarToast(mensagem, 'erro');
+      if (erro === 'preco-alterado' && origem !== 'modal') {
+        destinoModal = { elemento: document.activeElement, id: produto.id }; produtoModalId = produto.id;
+        requisicaoDetalhe++; modalAberto.value = true; carregandoDetalhe.value = false; produtoDetalhado.value = detalheExibivel(detalhe);
+      }
+      return;
+    }
+    if (existente) existente.produto = detalhe;
+    if (origem === 'direta') registrarOrigemVoo(elementoOrigem);
+    // O layout existente observa esta ação e executa o voo uma única vez.
+    cart.adicionar(detalhe, quantidade);
+    mostrarToast(`${detalhe.nome} adicionado ao carrinho.`);
+    if (origem === 'modal') fecharModal();
+  } catch { if (valido()) mostrarToast('Não foi possível conferir este produto. Tente novamente.', 'erro'); }
+  finally { if (contextoAtual(g, conta)) { produtoAdicionando.value = null; origemAdicao.value = null; } }
+}
+function adicionarRapido(produto, origem) { return adicionar(produto, 1, 'direta', origem); }
+function adicionarDoModal({ produto, quantidade }) { return adicionar(produto, quantidade, 'modal'); }
+watch(categorias, lista => { if (categoria.value && !lista.includes(categoria.value)) categoria.value = ''; });
+// O logout limpa o store antes de aguardar HTTP. Invalidar a View no mesmo
+// instante também cancela detalhes e compras que ainda aguardam a API.
+watch(() => favorites.geracao, () => {
+  geracao++; requisicaoDetalhe++; modalAberto.value = false; produtoDetalhado.value = null; carregandoDetalhe.value = false;
+  produtoAdicionando.value = null; origemAdicao.value = null; destinoModal = null; produtoModalId = null; toast.value = '';
+}, { flush: 'sync' });
+watch(() => auth.usuario?.id ?? null, () => {
+  geracao++; requisicaoDetalhe++; modalAberto.value = false; produtoDetalhado.value = null; carregandoDetalhe.value = false;
+  produtoAdicionando.value = null; origemAdicao.value = null; destinoModal = null; toast.value = ''; limparFiltros(); vistos.clear();
+  favorites.sincronizarConta(); if (auth.usuario) recarregar();
+}, { flush: 'sync' });
+onMounted(recarregar);
+onBeforeUnmount(() => { montado = false; geracao++; requisicaoDetalhe++; clearTimeout(toastTimer); });
+</script>
+
 <template>
   <div class="favorites-page">
     <header class="favorites-page__header">
-      <div>
-        <h1>Favoritos</h1>
-        <p>Encontre rapidamente os produtos que você salvou.</p>
-      </div>
-
-      <div
-        v-if="favorites.inicializado"
-        class="favorites-page__count"
-        aria-label="Quantidade de favoritos"
-      >
-        <Heart :size="16" fill="currentColor" />
-        <strong>{{ favorites.total }}</strong>
-        <span>{{
-          favorites.total === 1 ? "produto salvo" : "produtos salvos"
-        }}</span>
-      </div>
+      <div><h1 ref="titulo" tabindex="-1">Favoritos</h1><p class="favorites-page__note">Seus sabores de sempre, por perto.</p></div>
+      <div class="favorites-page__summary"><p v-if="favorites.inicializado"><Heart :size="15" fill="currentColor" aria-hidden="true" /><strong>{{ favorites.total }}</strong> {{ favorites.total === 1 ? 'produto salvo' : 'produtos salvos' }}</p><RouterLink :to="{ name: 'cardapio' }">Explorar cardápio <ArrowRight :size="17" aria-hidden="true" /></RouterLink></div>
     </header>
-
-    <label v-if="favorites.total" class="favorites-page__search">
-      <Search :size="19" aria-hidden="true" />
-      <input
-        v-model="busca"
-        type="search"
-        placeholder="Buscar nos seus favoritos..."
-        autocomplete="off"
-      />
-      <button
-        v-if="busca"
-        type="button"
-        aria-label="Limpar busca"
-        @click="busca = ''"
-      >
-        <X :size="16" />
-      </button>
-    </label>
-
-    <div
-      v-if="favorites.carregando && !favorites.inicializado"
-      class="favorites-page__grid"
-      aria-label="Carregando favoritos"
-    >
-      <div
-        v-for="index in 5"
-        :key="index"
-        class="favorites-page__skeleton"
-        aria-hidden="true"
-      >
-        <div />
-        <span />
-        <span />
-      </div>
+    <div v-if="favorites.inicializado && favorites.total" class="favorites-page__controls" :class="{ 'favorites-page__controls--compact': favorites.total <= 2 }">
+      <label class="favorites-page__search"><Search :size="19" aria-hidden="true" /><input v-model="busca" type="search" aria-label="Buscar nos favoritos" placeholder="Buscar um sabor salvo" autocomplete="off" /><button v-if="busca" type="button" aria-label="Limpar busca" @click="busca = ''"><X :size="17" aria-hidden="true" /></button></label>
+      <label class="favorites-page__select"><span>Categoria</span><select v-model="categoria" aria-label="Filtrar por categoria"><option value="">Todas</option><option v-for="nome in categorias" :key="nome" :value="nome">{{ nome }}</option></select></label>
+      <label class="favorites-page__select"><span>Ordenar</span><select v-model="ordem" aria-label="Ordenar favoritos"><option value="selecao">Ordem da seleção</option><option value="nome">Nome A–Z</option><option value="menor-preco">Menor preço</option><option value="maior-preco">Maior preço</option></select></label>
     </div>
-
-    <section
-      v-else-if="favorites.erro && !favorites.inicializado"
-      class="favorites-page__state favorites-page__state--error"
-      role="alert"
-    >
-      <span class="favorites-page__state-icon">
-        <CircleAlert :size="30" />
-      </span>
-      <h2>Não conseguimos carregar seus favoritos.</h2>
-      <p>Verifique sua conexão e tente novamente.</p>
-      <button type="button" @click="recarregar">Tentar novamente</button>
-    </section>
-
-    <section v-else-if="!favorites.total" class="favorites-page__state">
-      <span
-        class="favorites-page__state-icon favorites-page__state-icon--heart"
-      >
-        <Heart :size="34" />
-      </span>
-      <h2>Nenhum favorito ainda</h2>
-      <p>
-        Salve os produtos que você mais gosta para encontrá-los rapidamente
-        quando chegar a hora do intervalo.
-      </p>
-      <RouterLink :to="{ name: 'cardapio' }">
-        Explorar cardápio
-        <ArrowRight :size="17" />
-      </RouterLink>
-    </section>
-
-    <section
-      v-else-if="!produtosFiltrados.length"
-      class="favorites-page__state"
-    >
-      <span class="favorites-page__state-icon">
-        <SearchX :size="30" />
-      </span>
-      <h2>Nenhum favorito encontrado.</h2>
-      <p>Tente buscar por outro nome ou categoria.</p>
-      <button type="button" @click="busca = ''">Limpar busca</button>
-    </section>
-
-    <section v-else>
-      <div class="favorites-page__section-head">
-        <div>
-          <h2>Produtos salvos</h2>
-          <p>
-            {{ produtosFiltrados.length }}
-            {{
-              produtosFiltrados.length === 1
-                ? "produto encontrado"
-                : "produtos encontrados"
-            }}
-          </p>
+    <section class="favorites-page__collection" aria-label="Sua coleção de favoritos" :aria-busy="favorites.carregando">
+      <p v-if="favorites.inicializado && favorites.erro" class="favorites-page__update-error" role="status">Não foi possível atualizar sua coleção. Seus produtos continuam aqui. <button type="button" :disabled="favorites.carregando" @click="recarregar">Tentar novamente</button></p>
+      <div v-if="!favorites.inicializado && !favorites.erro" class="favorites-page__loading" role="status"><span>Carregando seus favoritos…</span><div class="favorites-page__skeletons" aria-hidden="true"><div v-for="n in 4" :key="n" /></div></div>
+      <div v-else-if="!favorites.inicializado && favorites.erro" ref="estado" tabindex="-1" class="favorites-page__state" role="alert"><CircleAlert :size="32" aria-hidden="true" /><h2>Sua coleção não carregou.</h2><p>Verifique sua conexão e tente novamente.</p><button type="button" :disabled="favorites.carregando" @click="recarregar">{{ favorites.carregando ? 'Carregando…' : 'Tentar novamente' }}</button></div>
+      <template v-else>
+        <div v-if="favorites.total" class="favorites-page__collection-head"><p aria-live="polite" aria-atomic="true">{{ produtosFiltrados.length }} {{ produtosFiltrados.length === 1 ? 'sabor para o seu intervalo' : 'sabores para o seu intervalo' }}</p><button v-if="temFiltros" type="button" @click="limparFiltros">Limpar filtros</button></div>
+        <div class="favorites-page__grid" :class="{ 'favorites-page__grid--single': produtosFiltrados.length === 1, 'favorites-page__grid--duo': produtosFiltrados.length === 2 }">
+          <AnimatePresence mode="popLayout">
+            <FavoriteCollectionItem v-for="produto in produtosFiltrados" :key="produto.id" :produto-id="produto.id" :animar="!vistos.has(produto.id)" @apareceu="vistos.add($event)">
+              <FavoriteProduct :produto="produto" :destaque="produtosFiltrados.length === 1" :favoritando="favorites.estaProcessando(produto.id)" :adicionando="produtoAdicionando === produto.id" @open="abrirProduto" @favorite="alternarFavorito" @add="adicionarRapido" />
+            </FavoriteCollectionItem>
+          </AnimatePresence>
         </div>
-
-        <RouterLink :to="{ name: 'cardapio' }" class="favorites-page__browse">
-          Ver cardápio
-          <ArrowRight :size="15" />
-        </RouterLink>
-      </div>
-
-      <div class="favorites-page__grid">
-        <ProductCard
-          v-for="produto in produtosFiltrados"
-          :key="produto.id"
-          :produto="produto"
-          :favorito="favorites.tem(produto.id)"
-          :favoritando="favorites.estaProcessando(produto.id)"
-          :adicionando="produtoAdicionando === produto.id"
-          @open="abrirProduto"
-          @favorite="alternarFavorito"
-          @add="adicionarRapido"
-        />
-      </div>
+        <div v-if="!favorites.total" class="favorites-page__state favorites-page__state--empty">
+          <svg class="favorites-page__illustration" viewBox="0 0 200 150" fill="none" aria-hidden="true"><path d="M30 110h140M45 110l-7-55h124l-7 55M60 110v18m80-18v18" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M65 54c-16-6-17-27-4-32 8-4 16 0 20 7 4-7 12-11 20-7 13 5 12 26-4 32L81 66 65 54Z" fill="var(--pp-creme-3)" stroke="currentColor" stroke-width="2"/><path d="M110 53c-6-14 5-28 18-25 10 2 16 14 10 25M67 81h66m-58 13h50" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+          <h2 ref="estado" tabindex="-1">Guarde um lugar<br />para os seus preferidos.</h2><p>Toque no coração dos produtos que você gosta.<br class="favorites-page__desktop-break" /> Eles ficam aqui para o próximo intervalo.</p><RouterLink :to="{ name: 'cardapio' }">Encontrar meu próximo favorito <ArrowRight :size="17" aria-hidden="true" /></RouterLink>
+        </div>
+        <div v-else-if="!produtosFiltrados.length" ref="estado" tabindex="-1" class="favorites-page__state"><SearchX :size="32" aria-hidden="true" /><h2>Esse sabor não está na seleção.</h2><p>Tente outro nome ou veja todos os produtos que você salvou.</p><button type="button" @click="limparFiltros">Ver todos os favoritos</button></div>
+      </template>
     </section>
-
-    <ProductDetailsModal
-      :open="modalAberto"
-      :produto="produtoDetalhado"
-      :loading="carregandoDetalhe"
-      :adding="adicionandoModal"
-      :feedback="toast"
-      :favorito="
-        Boolean(produtoDetalhado && favorites.tem(produtoDetalhado.id))
-      "
-      :favoritando="
-        Boolean(
-          produtoDetalhado && favorites.estaProcessando(produtoDetalhado.id),
-        )
-      "
-      @close="fecharModal"
-      @favorite="alternarFavorito"
-      @add="adicionarDoModal"
-    />
-
-    <Transition name="favorites-toast">
-      <div
-        v-if="toast"
-        class="favorites-page__toast"
-        role="status"
-        aria-live="polite"
-      >
-        <CheckCircle2 :size="18" />
-        {{ toast }}
-      </div>
-    </Transition>
+    <ProductDetailsModal :open="modalAberto" :produto="produtoDetalhado" :loading="carregandoDetalhe" :adding="adicionandoModal" :feedback="toast" :favorito="Boolean(produtoDetalhado && favorites.tem(produtoDetalhado.id))" :favoritando="Boolean(produtoDetalhado && favorites.estaProcessando(produtoDetalhado.id))" @close="fecharModal" @favorite="alternarFavorito" @add="adicionarDoModal" />
+    <Transition name="favorites-toast"><div v-if="toast" class="favorites-page__toast" :class="{ 'favorites-page__toast--error': tipoToast === 'erro' }" :role="tipoToast === 'erro' ? 'alert' : 'status'" aria-live="polite"><CircleAlert v-if="tipoToast === 'erro'" :size="19" aria-hidden="true" /><CheckCircle2 v-else :size="19" aria-hidden="true" />{{ toast }}</div></Transition>
   </div>
 </template>
 
-<script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
-import {
-  ArrowRight,
-  CheckCircle2,
-  CircleAlert,
-  Heart,
-  Search,
-  SearchX,
-  X,
-} from "lucide-vue-next";
-
-import ProductCard from "@/components/catalog/ProductCard.vue";
-import ProductDetailsModal from "@/components/catalog/ProductDetailsModal.vue";
-import catalogService from "@/services/catalog.service";
-import { useCartStore } from "@/stores/cart";
-import { useFavoritesStore } from "@/stores/favorites";
-
-const cart = useCartStore();
-const favorites = useFavoritesStore();
-
-const busca = ref("");
-const detalhesCache = new Map();
-
-const modalAberto = ref(false);
-const carregandoDetalhe = ref(false);
-const produtoDetalhado = ref(null);
-const produtoAdicionando = ref(null);
-const adicionandoModal = ref(false);
-const toast = ref("");
-let toastTimer = null;
-
-const produtosFiltrados = computed(() => {
-  const termo = normalizarTexto(busca.value);
-  const lista = [...favorites.produtos];
-
-  if (!termo) return lista;
-
-  return lista.filter((produto) => {
-    const alvo = normalizarTexto(
-      `${produto.nome || ""} ${produto.categoria_nome || ""}`,
-    );
-    return alvo.includes(termo);
-  });
-});
-
-function normalizarTexto(valor) {
-  return String(valor || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLocaleLowerCase("pt-BR")
-    .trim();
-}
-
-async function recarregar() {
-  try {
-    await favorites.carregar({ force: true });
-  } catch {
-  }
-}
-
-async function alternarFavorito(produto) {
-  if (!produto?.id) return;
-
-  const estavaFavoritado = favorites.tem(produto.id);
-
-  try {
-    await favorites.alternar(produto);
-    mostrarToast(
-      estavaFavoritado
-        ? `${produto.nome} removido dos favoritos.`
-        : `${produto.nome} adicionado aos favoritos.`,
-    );
-  } catch {
-    mostrarToast("Não foi possível atualizar seus favoritos.");
-  }
-}
-
-async function obterDetalhes(produto) {
-  if (!produto?.id) return null;
-  if (detalhesCache.has(produto.id)) {
-    return detalhesCache.get(produto.id);
-  }
-
-  const detalhe = await catalogService.obterProduto(produto.id);
-  detalhesCache.set(produto.id, detalhe);
-  return detalhe;
-}
-
-async function abrirProduto(produto) {
-  toast.value = "";
-  modalAberto.value = true;
-  carregandoDetalhe.value = true;
-  produtoDetalhado.value = null;
-
-  try {
-    produtoDetalhado.value = await obterDetalhes(produto);
-  } catch {
-    produtoDetalhado.value = null;
-  } finally {
-    carregandoDetalhe.value = false;
-  }
-}
-
-function fecharModal() {
-  modalAberto.value = false;
-  produtoDetalhado.value = null;
-}
-
-async function adicionarRapido(produto) {
-  if (!produto?.id || produtoAdicionando.value) return;
-  produtoAdicionando.value = produto.id;
-
-  try {
-    const detalhe = await obterDetalhes(produto);
-    const estoque = Number(detalhe?.estoque ?? 0);
-
-    if (estoque <= 0) {
-      mostrarToast(`${produto.nome} está sem estoque no momento.`);
-      return;
-    }
-
-    const itemAtual = cart.itens.find((item) => item.produto.id === produto.id);
-
-    if ((itemAtual?.quantidade || 0) >= estoque) {
-      mostrarToast(
-        `Você já adicionou todo o estoque disponível de ${produto.nome}.`,
-      );
-      return;
-    }
-
-    cart.adicionar({ ...produto, ...detalhe }, 1);
-    mostrarToast(`${produto.nome} adicionado ao carrinho.`);
-  } catch {
-    mostrarToast("Não foi possível verificar a disponibilidade do produto.");
-  } finally {
-    produtoAdicionando.value = null;
-  }
-}
-
-async function adicionarDoModal({ produto, quantidade }) {
-  if (!produto || adicionandoModal.value) return;
-  adicionandoModal.value = true;
-
-  try {
-    const estoque = Number(produto.estoque || 0);
-    const itemAtual = cart.itens.find((item) => item.produto.id === produto.id);
-    const novaQuantidade = (itemAtual?.quantidade || 0) + quantidade;
-
-    if (novaQuantidade > estoque) {
-      mostrarToast(
-        `Há somente ${estoque} ${
-          estoque === 1 ? "unidade disponível" : "unidades disponíveis"
-        }.`,
-      );
-      return;
-    }
-
-    cart.adicionar(produto, quantidade);
-    mostrarToast(`${produto.nome} adicionado ao carrinho.`);
-    fecharModal();
-  } finally {
-    adicionandoModal.value = false;
-  }
-}
-
-function mostrarToast(mensagem) {
-  toast.value = mensagem;
-  window.clearTimeout(toastTimer);
-  toastTimer = window.setTimeout(() => {
-    toast.value = "";
-  }, 2400);
-}
-
-onMounted(() => {
-  favorites.carregar().catch(() => {});
-});
-
-onBeforeUnmount(() => {
-  window.clearTimeout(toastTimer);
-});
-</script>
-
 <style scoped>
-.favorites-page {
-  width: min(100%, 1320px);
-  margin: 0 auto;
-  color: #2d2823;
-}
-
-.favorites-page__header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 28px;
-  margin-bottom: 22px;
-}
-
-.favorites-page__header h1 {
-  margin: 0;
-  color: #241f1a;
-  font-size: clamp(28px, 3vw, 38px);
-  line-height: 1.05;
-  font-weight: 760;
-  letter-spacing: -0.035em;
-}
-
-.favorites-page__header p {
-  margin: 7px 0 0;
-  color: #766e67;
-  font-size: 13px;
-  line-height: 1.45;
-}
-
-.favorites-page__count {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 36px;
-  padding: 0 2px;
-  color: #6c6259;
-  font-size: 11px;
-  white-space: nowrap;
-}
-
-.favorites-page__count svg {
-  color: #a96813;
-}
-
-.favorites-page__count strong {
-  color: #2b241f;
-  font-size: 12px;
-}
-
-.favorites-page__count span {
-  color: #827970;
-}
-
-.favorites-page__search {
-  width: 100%;
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 28px;
-  padding: 0 15px;
-  border: 1px solid rgba(50, 33, 22, 0.085);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.94);
-  color: #827970;
-  box-shadow: 0 5px 17px rgba(48, 32, 21, 0.025);
-  transition:
-    border-color 160ms ease,
-    box-shadow 160ms ease;
-}
-
-.favorites-page__search:focus-within {
-  border-color: rgba(45, 29, 20, 0.32);
-  box-shadow: 0 0 0 3px rgba(184, 121, 31, 0.07);
-}
-
-.favorites-page__search input {
-  min-width: 0;
-  flex: 1;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: #302923;
-  font: inherit;
-  font-size: 12px;
-}
-
-.favorites-page__search input::placeholder {
-  color: #9d958d;
-}
-
-.favorites-page__search button {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: #f5f1ec;
-  color: #80776f;
-  cursor: pointer;
-}
-
-.favorites-page__section-head {
-  min-height: 46px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 18px;
-  margin-bottom: 14px;
-}
-
-.favorites-page__section-head h2 {
-  margin: 0;
-  color: #29231e;
-  font-size: 17px;
-  font-weight: 760;
-  letter-spacing: -0.02em;
-}
-
-.favorites-page__section-head p {
-  margin: 4px 0 0;
-  color: #928981;
-  font-size: 10.5px;
-}
-
-.favorites-page__browse {
-  min-height: 34px;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: #745019;
-  font-size: 10.5px;
-  font-weight: 760;
-  text-decoration: none;
-}
-.favorites-page__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  align-items: start;
-  gap: 14px;
-}
-
-.favorites-page__skeleton {
-  min-height: 290px;
-  padding: 10px;
-  border: 1px solid #e8e2dc;
-  border-radius: 14px;
-  background: #fff;
-  overflow: hidden;
-}
-
-.favorites-page__skeleton div,
-.favorites-page__skeleton span {
-  display: block;
-  border-radius: 10px;
-  background: linear-gradient(90deg, #eee9e3 25%, #f6f2ed 45%, #eee9e3 65%);
-  background-size: 250% 100%;
-  animation: favorites-shimmer 1.3s linear infinite;
-}
-
-.favorites-page__skeleton div {
-  aspect-ratio: 1.2 / 1;
-}
-
-.favorites-page__skeleton span {
-  width: 72%;
-  height: 12px;
-  margin-top: 13px;
-}
-
-.favorites-page__skeleton span:last-child {
-  width: 45%;
-  height: 9px;
-  margin-top: 8px;
-}
-
-.favorites-page__state {
-  min-height: 330px;
-  display: grid;
-  place-items: center;
-  align-content: center;
-  padding: 38px 20px;
-  border: 1px solid #e6e0da;
-  border-radius: 14px;
-  background: #fff;
-  text-align: center;
-}
-
-.favorites-page__state-icon {
-  width: 56px;
-  height: 56px;
-  display: grid;
-  place-items: center;
-  margin-bottom: 16px;
-  border-radius: 50%;
-  background: #f5f1ec;
-  color: #9b6b28;
-}
-
-.favorites-page__state-icon--heart {
-  background: #fff7eb;
-  color: #a96813;
-}
-
-.favorites-page__state h2 {
-  margin: 0;
-  color: #2b251f;
-  font-size: 18px;
-}
-
-.favorites-page__state p {
-  width: min(100%, 420px);
-  margin: 8px 0 20px;
-  color: #82786f;
-  font-size: 12px;
-  line-height: 1.55;
-}
-
-.favorites-page__state button,
-.favorites-page__state a {
-  min-height: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  padding: 0 16px;
-  border: 1px solid #2d211a;
-  border-radius: 10px;
-  background: #2d211a;
-  color: #fff8ef;
-  font: inherit;
-  font-size: 11px;
-  font-weight: 760;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.favorites-page__state--error .favorites-page__state-icon {
-  background: #fff1ef;
-  color: #b94a45;
-}
-
-.favorites-page__toast {
-  position: fixed;
-  right: 28px;
-  bottom: 28px;
-  z-index: 120;
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  max-width: min(420px, calc(100vw - 32px));
-  padding: 12px 15px;
-  border-radius: 11px;
-  background: #2d211a;
-  color: #fff8ef;
-  box-shadow: 0 14px 32px rgba(28, 16, 9, 0.18);
-  font-size: 11.5px;
-  font-weight: 650;
-}
-
-.favorites-toast-enter-active,
-.favorites-toast-leave-active {
-  transition:
-    opacity 160ms ease,
-    transform 160ms ease;
-}
-
-.favorites-toast-enter-from,
-.favorites-toast-leave-to {
-  opacity: 0;
-  transform: translateY(8px);
-}
-
-@keyframes favorites-shimmer {
-  to {
-    background-position: -150% 0;
-  }
-}
-
-@media (max-width: 920px) {
-  .favorites-page__grid {
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  }
-}
-
-@media (max-width: 680px) {
-  .favorites-page__header {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 18px;
-  }
-
-  .favorites-page__header h1 {
-    font-size: 28px;
-  }
-
-  .favorites-page__header p {
-    font-size: 11.5px;
-  }
-
-  .favorites-page__count {
-    min-height: 28px;
-  }
-
-  .favorites-page__search {
-    min-height: 46px;
-    margin-bottom: 20px;
-  }
-
-  .favorites-page__section-head {
-    align-items: center;
-  }
-
-  .favorites-page__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 9px;
-  }
-
-  .favorites-page__state {
-    min-height: 380px;
-    padding-inline: 24px;
-  }
-
-  .favorites-page__toast {
-    right: 16px;
-    bottom: 84px;
-  }
-}
-
-@media (max-width: 390px) {
-  .favorites-page__grid {
-    grid-template-columns: 1fr;
-  }
-}
+.favorites-page { width: min(100%, 1160px); margin: 0 auto; color: var(--pp-marrom); }
+.favorites-page__header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding-bottom: 30px; }
+.favorites-page h1 { margin: 0; font: 400 clamp(40px, 4.5vw, 64px)/1.08 var(--pp-font-titulo); letter-spacing: -.025em; }
+.favorites-page__note { margin: 9px 0 0; font: 700 26px/1.2 var(--pp-font-nota); color: var(--pp-dourado-profundo); }
+.favorites-page__summary { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; font-size: 13px; }
+.favorites-page__summary p { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--pp-texto-2); }
+.favorites-page__summary svg { color: var(--pp-dourado-profundo); }
+.favorites-page__summary a { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 600; color: var(--pp-dourado-profundo); }
+.favorites-page__controls { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(150px, 190px) minmax(160px, 200px); align-items: center; gap: 24px; border-block: 1px solid var(--pp-creme-borda); }
+.favorites-page__search { display: flex; align-items: center; gap: 10px; min-height: 64px; min-width: 0; }
+.favorites-page__search input { width: 100%; min-width: 0; min-height: 44px; padding: 0; border: 0; outline: 0; background: transparent; color: inherit; font: 400 14px/1.5 var(--pp-font-body); }
+.favorites-page__search input::placeholder { opacity: 1; color: var(--pp-texto-2); }
+.favorites-page__search input::-webkit-search-cancel-button { display: none; }
+.favorites-page__search button { flex: none; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; }
+.favorites-page__select { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.favorites-page__select span { font-size: 11px; color: var(--pp-texto-2); }
+.favorites-page__select select { width: 100%; min-width: 0; min-height: 44px; border: 0; background: transparent; color: inherit; font: 500 12px/1.5 var(--pp-font-body); cursor: pointer; }
+.favorites-page__controls--compact .favorites-page__search { min-height: 56px; }
+.favorites-page__collection-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 58px; }
+.favorites-page__collection-head p { margin: 0; color: var(--pp-texto-2); font-size: 12px; }
+.favorites-page__collection-head button, .favorites-page__update-error button { padding: 0; min-height: 44px; border: 0; background: transparent; color: var(--pp-dourado-profundo); font: 600 12px/1.5 var(--pp-font-body); text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+.favorites-page__grid { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 38px 24px; }
+.favorites-page__grid--single { grid-template-columns: minmax(0, 1fr); }
+.favorites-page__grid--duo { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; }
+.favorites-page__state { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; padding-block: 48px; }
+.favorites-page__state h2 { margin: 0; max-width: 700px; font: 400 clamp(32px, 4vw, 48px)/1.15 var(--pp-font-titulo); }
+.favorites-page__state p { max-width: 52ch; margin: 0; color: var(--pp-texto-2); font-size: 15px; line-height: 1.7; }
+.favorites-page__state a, .favorites-page__state button { display: inline-flex; align-items: center; gap: 12px; min-height: 48px; margin-top: 6px; padding: 12px 24px; border: 1px solid var(--pp-marrom); border-radius: var(--pp-radius-full); background: var(--pp-marrom); color: var(--pp-creme); font: 600 14px/1.5 var(--pp-font-body); cursor: pointer; }
+.favorites-page__state--empty { align-items: center; text-align: center; padding-top: 30px; }
+.favorites-page__illustration { width: 180px; height: 135px; color: var(--pp-dourado-profundo); }
+.favorites-page__loading > span { display: block; margin-block: 20px; color: var(--pp-texto-2); font-size: 14px; }
+.favorites-page__skeletons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+.favorites-page__skeletons div { aspect-ratio: .75; border-radius: var(--pp-radius-sm); background: var(--pp-creme-2); }
+.favorites-page__update-error { display: flex; align-items: center; gap: 12px; margin: 16px 0 0; color: var(--pp-texto-2); font-size: 13px; line-height: 1.5; }
+.favorites-page__toast { position: fixed; left: 50%; bottom: 28px; z-index: 90; display: flex; align-items: center; gap: 10px; width: max-content; max-width: min(540px, calc(100vw - 32px)); padding: 14px 20px; border: 1px solid var(--pp-marrom-2); border-radius: var(--pp-radius-btn); background: var(--pp-marrom); color: var(--pp-creme); transform: translateX(-50%); font: 400 14px/1.5 var(--pp-font-body); }
+.favorites-page__toast svg { flex: none; }
+.favorites-page__toast--error { border-width: 2px; }
+.favorites-page button:focus-visible, .favorites-page a:focus-visible, .favorites-page h1:focus-visible, .favorites-page h2:focus-visible, .favorites-page__state:focus-visible { outline: 3px solid var(--pp-dourado-profundo); outline-offset: 4px; }
+.favorites-page__search:focus-within, .favorites-page__select:focus-within { outline: 3px solid var(--pp-dourado-profundo); outline-offset: 3px; }
+.favorites-toast-enter-active, .favorites-toast-leave-active { transition: opacity 180ms var(--pp-ease); }
+.favorites-toast-enter-from, .favorites-toast-leave-to { opacity: 0; }
+@media (max-width: 1100px) { .favorites-page__grid:not(.favorites-page__grid--single):not(.favorites-page__grid--duo) { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media (max-width: 760px) { .favorites-page__header { gap: 16px; padding-bottom: 22px; } .favorites-page__note { font-size: 22px; max-width: 230px; } .favorites-page__summary { font-size: 12px; } .favorites-page__controls { grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 0 20px; } .favorites-page__search { grid-column: 1/-1; min-height: 52px; border-bottom: 1px solid var(--pp-creme-borda); } .favorites-page__grid:not(.favorites-page__grid--single), .favorites-page__skeletons { grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 32px 20px; } .favorites-page__select { min-height: 48px; } .favorites-page__toast { bottom: calc(145px + env(safe-area-inset-bottom)); } .favorites-page__update-error { flex-wrap: wrap; gap: 0 12px; } }
+@media (max-width: 480px) { .favorites-page__header { display: block; } .favorites-page__summary { flex-direction: row; justify-content: space-between; align-items: center; margin-top: 14px; gap: 12px; } .favorites-page__note { max-width: none; } .favorites-page__grid, .favorites-page__grid:not(.favorites-page__grid--single), .favorites-page__skeletons { grid-template-columns: minmax(0,1fr) !important; gap: 34px; } .favorites-page__collection-head { min-height: 54px; } .favorites-page__select { gap: 5px; } .favorites-page__select span { font-size: 10px; } .favorites-page__select select { font-size: 11px; } .favorites-page__controls { gap: 0 12px; } .favorites-page__state { padding-block: 32px; } .favorites-page__state p { font-size: 14px; } .favorites-page__state a { padding-inline: 18px; font-size: 13px; } .favorites-page__illustration { width: 150px; height: 112px; } .favorites-page__desktop-break { display: none; } }
+@media (prefers-reduced-motion: reduce) { .favorites-toast-enter-active, .favorites-toast-leave-active { transition: none; } }
 </style>

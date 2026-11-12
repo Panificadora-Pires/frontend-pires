@@ -10,6 +10,7 @@ import { useChatStore } from "@/stores/chat";
 import { useChatbotStore } from "@/stores/chatbot";
 import { useNotificationsStore } from "@/stores/notifications";
 import { useOrdersStore } from "@/stores/orders";
+import { useFavoritesStore } from "@/stores/favorites";
 import { animarVooAoCarrinho, movimentoReduzido } from "@/utils/vooAoCarrinho";
 import { useCatalogTransitions } from "@/composables/useCatalogTransitions";
 import "@/assets/styles/catalog-transitions.css";
@@ -22,6 +23,8 @@ const chat = useChatStore();
 const chatbot = useChatbotStore();
 const notifications = useNotificationsStore();
 const orders = useOrdersStore();
+const favorites = useFavoritesStore();
+watch(() => auth.usuario?.id ?? null, id => favorites.sincronizarConta(id), { immediate: true, flush: "sync" });
 const router = useRouter();
 const route = useRoute();
 const header = ref(null);
@@ -48,6 +51,7 @@ async function pularContador() {
   timerPulo = window.setTimeout(() => { carrinhoPulando.value = false; }, 400);
 }
 async function handleLogout() {
+  favorites.resetar({ suspender: true });
   chat.resetar();
   chatbot.resetar();
   await auth.logout();

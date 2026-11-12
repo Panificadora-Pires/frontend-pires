@@ -636,3 +636,9 @@ O frontend nunca deve ser considerado fonte de verdade para:
 Essas validações pertencem ao backend.
 
 Segredos de integração nunca devem ser colocados em variáveis `VITE_*`, pois essas variáveis ficam disponíveis no bundle entregue ao navegador.
+
+## Favoritos editoriais
+
+`/favoritos` apresenta a seleção pessoal com composição para um, dois ou muitos produtos, busca por nome/categoria, ordenação e compra com consulta atualizada de preço e estoque. Reutiliza o modal e o carrinho existentes. O store protege remoções confirmadas, migração legada e isolamento de conta; logout invalida operações pendentes.
+
+Validação local: `node --test tests/*.test.mjs` (27 testes), build e auditoria de produção. [Plano](../docs/planos/favoritos-editoriais.md) e [evidências sintéticas](../docs/prints/favoritos-editoriais-2026-11-12/README.md) incluem 66 verificações de navegador, teclado, capturas e gravação. Não representam validação de produção ou pagamentos.
