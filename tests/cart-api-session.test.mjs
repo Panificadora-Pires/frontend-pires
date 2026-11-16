@@ -28,9 +28,13 @@ const { useCartStore } = await import('../src/stores/cart.js');
 after(() => { hooks.deregister(); axios.create = originalCreate; axios.post = originalPost; });
 const dados = new Map();
 let redirecionamentos;
+let storageInicializado = false;
 beforeEach(() => {
   setActivePinia(createPinia());
-  dados.clear(); globalThis.localStorage = { getItem: k => dados.get(k) ?? null, setItem: (k,v) => dados.set(k,v), removeItem: k => dados.delete(k) };
+  // Encerra pela API dona da sessão antes de reiniciar o storage de teste.
+  if (storageInicializado) clearTokens();
+  globalThis.localStorage = { getItem: k => dados.get(k) ?? null, setItem: (k,v) => dados.set(k,v), removeItem: k => dados.delete(k) };
+  storageInicializado = true;
   redirecionamentos = []; globalThis.window = { location: { pathname: '/checkout', replace: path => redirecionamentos.push(path) } };
   clearTokens(); persistTokens({ access: 'access-a', refresh: 'refresh-a' });
 });

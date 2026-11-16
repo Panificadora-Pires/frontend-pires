@@ -366,7 +366,13 @@ order.service.js
 payment.service.js
 ```
 
-A autenticação utiliza JWT e o cliente HTTP é responsável por enviar o token nas requisições autenticadas. Falha de rede (sem resposta do servidor) não desloga o usuário: os tokens só são apagados quando o backend recusa a sessão.
+A autenticação utiliza JWT e o cliente HTTP é responsável por enviar o token nas requisições autenticadas. Falha de rede (sem resposta do servidor) preserva as credenciais para nova tentativa; a recusa do refresh pelo backend encerra a sessão.
+
+Login e logout em outra aba invalidam a sessão local, inclusive antes da entrega do evento `storage`: o cliente compara o snapshot e o marcador `pp_session_id` antes de enviar/entregar HTTP ou alterar credenciais. A aba anterior suspende requests, desmonta a interface, limpa os stores e abre um novo documento no login; o guard pode então restaurar a nova conta. O marcador muda em cada login, inclusive A→B→A. Uma renovação HTTP da mesma conta mantém marcador, versão e carrinho. O `user_id` do JWT apenas reconhece continuidade local; validação e permissões continuam no servidor.
+
+Cada sessão grava access/refresh juntos em `pp_session_tokens:<UUID>`; `pp_session_id` aponta a sessão ativa. Refresh escreve somente no bundle capturado; logout marca `pp_session_revoked:<UUID>` e remove somente aquele bundle, sem remover o ponteiro que outra aba pode ter trocado. A revogação prevalece sobre refresh tardio. Isso preserva B mesmo se login B intercalar as operações de storage de A. Credenciais antigas em `pp_access_token`/`pp_refresh_token` têm compatibilidade de leitura: um bundle/revogação `legacy` só vale para o par original exato. As chaves brutas legadas não são regravadas ou removidas por operações tardias. Eventos atrasados consultam o snapshot atual; um refresh antigo não substitui a renovação já concluída em outra aba.
+
+Regressões: `node --test tests/*.test.mjs`. A prova Chrome com duas abas reais no mesmo contexto usa API fictícia e uma instalação existente do Playwright: com Vite em `127.0.0.1:5173`, executar `node tests/session-tabs.browser.mjs`. Se o módulo não estiver no caminho de resolução do Node, definir `PLAYWRIGHT_MODULE` com seu caminho absoluto antes do comando (PowerShell: `$env:PLAYWRIGHT_MODULE = '<caminho do módulo playwright>'`). O roteiro é independente dos arquivos de evidências e cobre checkout pendente, refresh tardio e logout de A após login B, sem pedidos/pagamentos reais. Ele usa a URL da instância HTTP já carregada pela aplicação, incluindo a query de HMR do Vite.
 
 ## Atualização automática
 
