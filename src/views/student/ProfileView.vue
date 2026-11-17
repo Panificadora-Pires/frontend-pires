@@ -1,10 +1,5 @@
 <template>
-  <motion.div
-    class="profile-page"
-    :initial="{ opacity: 1, y: reduzir ? 0 : 8 }"
-    :animate="{ opacity: 1, y: 0 }"
-    :transition="{ duration: reduzir ? 0 : 0.2 }"
-  >
+  <div class="profile-page">
     <header class="profile-page__header">
       <h1>
         Meu perfil
@@ -32,7 +27,12 @@
       </button>
     </div>
     <div v-else class="profile-page__layout">
-      <div class="profile-page__main">
+      <motion.div
+        class="profile-page__main"
+        :initial="{ opacity: reduzir ? 1 : 0.85, y: reduzir ? 0 : 6 }"
+        :animate="{ opacity: 1, y: 0 }"
+        :transition="{ duration: reduzir ? 0 : 0.2 }"
+      >
         <section class="profile-identity" aria-labelledby="perfil-identidade">
           <div
             class="profile-avatar profile-avatar-editor__preview"
@@ -68,7 +68,7 @@
               <button
                 id="profile-avatar-trigger"
                 type="button"
-                class="profile-text-btn"
+                class="profile-text-btn profile-text-btn--upload"
                 :disabled="salvando"
                 :aria-invalid="Boolean(erros.avatar)"
                 :aria-describedby="erros.avatar ? 'profile-avatar-help profile-avatar-error' : 'profile-avatar-help'"
@@ -124,7 +124,7 @@
             Mantenha seu nome e telefone atualizados.
           </p>
           <form class="profile-form" novalidate :aria-busy="salvando" @submit.prevent="salvarPerfil">
-            <div class="profile-field profile-field--wide">
+            <div class="profile-field">
               <label for="profile-name">
                 Nome completo
               </label>
@@ -144,25 +144,7 @@
                 {{ erros.name }}
               </p>
             </div>
-            <div class="profile-field profile-field--wide">
-              <label for="profile-email">
-                E-mail
-              </label>
-              <div class="profile-readonly">
-                <input
-                  id="profile-email"
-                  :value="auth.usuario.email || ''"
-                  type="email"
-                  readonly
-                  aria-describedby="profile-email-help"
-                />
-                <LockKeyhole :size="17" aria-hidden="true" />
-              </div>
-              <p id="profile-email-help" class="profile-hint">
-                Este é o e-mail de acesso à sua conta. Ele não pode ser alterado nesta tela.
-              </p>
-            </div>
-            <div class="profile-field profile-field--phone">
+            <div class="profile-field">
               <label for="profile-phone">
                 Telefone
               </label>
@@ -184,6 +166,24 @@
               </p>
               <p v-if="erros.phone" id="profile-phone-error" class="profile-field-error">
                 {{ erros.phone }}
+              </p>
+            </div>
+            <div class="profile-field profile-field--wide">
+              <label for="profile-email">
+                E-mail
+              </label>
+              <div class="profile-readonly">
+                <input
+                  id="profile-email"
+                  :value="auth.usuario.email || ''"
+                  type="email"
+                  readonly
+                  aria-describedby="profile-email-help"
+                />
+                <LockKeyhole :size="17" aria-hidden="true" />
+              </div>
+              <p id="profile-email-help" class="profile-hint">
+                Este é o e-mail de acesso à sua conta. Ele não pode ser alterado nesta tela.
               </p>
             </div>
             <div class="profile-form__actions">
@@ -224,13 +224,19 @@
             </div>
           </form>
         </section>
-      </div>
-      <aside class="profile-page__aside" aria-label="Informações da conta">
+      </motion.div>
+      <motion.aside
+        class="profile-page__aside"
+        aria-label="Informações da conta"
+        :initial="{ opacity: reduzir ? 1 : 0.85, y: reduzir ? 0 : 6 }"
+        :animate="{ opacity: 1, y: 0 }"
+        :transition="{ duration: reduzir ? 0 : 0.2 }"
+      >
         <section class="profile-security" aria-labelledby="perfil-seguranca">
-          <ShieldCheck :size="27" class="profile-security__icon" aria-hidden="true" />
-          <h2 id="perfil-seguranca">
-            Segurança da conta
-          </h2>
+          <div class="profile-aside-heading">
+            <ShieldCheck :size="20" aria-hidden="true" />
+            <h2 id="perfil-seguranca">Segurança da conta</h2>
+          </div>
           <dl class="profile-security-list">
             <div>
               <dt>
@@ -260,14 +266,12 @@
               </dd>
             </div>
           </dl>
-          <p class="profile-hint">
-            Estas informações mostram as formas de acesso já configuradas na sua conta.
-          </p>
         </section>
         <section class="profile-account" aria-labelledby="perfil-resumo">
-          <h2 id="perfil-resumo">
-            Sua conta
-          </h2>
+          <div class="profile-aside-heading">
+            <UserRound :size="20" aria-hidden="true" />
+            <h2 id="perfil-resumo">Sua conta</h2>
+          </div>
           <dl class="profile-summary-list">
             <div>
               <dt>
@@ -295,9 +299,9 @@
             </div>
           </dl>
         </section>
-      </aside>
+      </motion.aside>
     </div>
-  </motion.div>
+  </div>
 </template>
 
 <script setup>
@@ -591,7 +595,7 @@ onBeforeUnmount(() => {
 .profile-page {
   width: min(1120px, 100%);
   margin: 0 auto;
-  padding: 12px 0 72px;
+  padding: 8px 0 0;
   color: var(--pp-marrom);
 }
 
@@ -610,7 +614,7 @@ onBeforeUnmount(() => {
 }
 
 .profile-page__header {
-  margin-bottom: 48px;
+  margin-bottom: 28px;
 }
 
 .profile-page__header h1 {
@@ -623,7 +627,7 @@ onBeforeUnmount(() => {
 }
 
 .profile-page__header p {
-  margin: 14px 0 0;
+  margin: 12px 0 0;
   color: var(--pp-texto-2);
   font-size: 16px;
   line-height: 1.6;
@@ -631,31 +635,45 @@ onBeforeUnmount(() => {
 
 .profile-page__layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 1fr) 320px;
   align-items: start;
-  gap: 48px;
+  gap: 24px;
 }
 
-.profile-page__main, .profile-page__aside, .profile-identity__content {
+.profile-page__main,
+.profile-page__aside,
+.profile-identity__content {
   min-width: 0;
+}
+
+.profile-page__main {
+  overflow: hidden;
+  border-radius: var(--pp-radius-card-lg);
+  background: var(--pp-surface-card);
 }
 
 .profile-identity {
   position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
   align-items: center;
-  gap: 28px;
-  padding: 0 0 36px;
-  border-bottom: 1px solid var(--pp-creme-borda);
+  gap: 24px;
+  padding: 28px;
+  background: var(--pp-marrom);
+  color: var(--pp-creme);
+}
+
+.profile-identity :is(button, input):focus-visible {
+  outline-color: var(--pp-gold);
 }
 
 .profile-avatar {
   display: grid;
   place-items: center;
-  flex: 0 0 128px;
   width: 128px;
   height: 128px;
   overflow: hidden;
+  border: 3px solid var(--pp-creme);
   border-radius: 50%;
   background: var(--pp-creme-2);
   color: var(--pp-marrom-2);
@@ -675,17 +693,17 @@ onBeforeUnmount(() => {
 
 .profile-identity h2 {
   margin: 0;
-  font-size: clamp(24px, 2.4vw, 32px);
-  font-weight: 600;
+  color: var(--pp-creme);
+  font-size: clamp(26px, 2.5vw, 34px);
+  font-weight: 700;
   letter-spacing: -.025em;
-  line-height: 1.25;
+  line-height: 1.2;
   overflow-wrap: anywhere;
 }
 
 .profile-identity__email {
-  margin: 8px 0 6px;
-  color: var(--pp-texto-2);
-  font-size: 15px;
+  margin: 8px 0;
+  font-size: 16px;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
@@ -694,8 +712,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 7px;
-  margin: 0 0 8px;
-  color: var(--pp-texto-2);
+  margin: 0;
   font-size: 14px;
   line-height: 1.5;
 }
@@ -707,7 +724,9 @@ onBeforeUnmount(() => {
 .profile-avatar-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 20px;
+  align-items: center;
+  gap: 4px 18px;
+  margin: 18px 0 8px;
 }
 
 .profile-text-btn {
@@ -716,19 +735,35 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 8px;
   min-height: 44px;
-  padding: 8px 0;
-  border: 0;
+  padding: 10px 0;
+  border: 1px solid transparent;
+  border-radius: var(--pp-radius-btn);
   background: transparent;
-  color: var(--pp-dourado-profundo);
+  color: var(--pp-creme);
   font-size: 14px;
+  line-height: 1.4;
   font-weight: 600;
   text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 4px;
   cursor: pointer;
+  transition: background-color 150ms, color 150ms, transform 150ms;
 }
 
 .profile-text-btn:hover:not(:disabled) {
-  text-decoration: underline;
-  text-underline-offset: 4px;
+  color: var(--pp-gold);
+}
+
+.profile-text-btn--upload {
+  padding-inline: 14px;
+  background: var(--pp-creme);
+  color: var(--pp-marrom);
+  text-decoration: none;
+}
+
+.profile-text-btn--upload:hover:not(:disabled) {
+  background: var(--pp-creme-2);
+  color: var(--pp-marrom);
 }
 
 .profile-file-input {
@@ -739,18 +774,23 @@ onBeforeUnmount(() => {
   margin: 0;
   color: var(--pp-texto-2);
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.5;
+}
+
+.profile-identity .profile-hint {
+  color: var(--pp-creme);
+  font-size: 13px;
 }
 
 .profile-avatar-pending {
   margin: 6px 0 0;
-  color: var(--pp-dourado-profundo);
+  color: var(--pp-creme);
   font-size: 14px;
   line-height: 1.5;
 }
 
 .profile-details {
-  padding-top: 32px;
+  padding: 28px;
 }
 
 .profile-section-heading {
@@ -758,22 +798,24 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px 16px;
 }
 
-.profile-details h2, .profile-page__aside h2, .profile-load-state h2 {
+.profile-details h2,
+.profile-page__aside h2,
+.profile-load-state h2 {
   margin: 0;
-  font-size: 21px;
+  font-size: 20px;
   font-weight: 600;
   line-height: 1.4;
   letter-spacing: -.02em;
 }
 
 .profile-section-intro {
-  margin: 8px 0 28px;
+  margin: 6px 0 22px;
   color: var(--pp-texto-2);
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.5;
 }
 
 .profile-unsaved {
@@ -788,23 +830,18 @@ onBeforeUnmount(() => {
 .profile-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
+  gap: 22px 20px;
 }
 
 .profile-field {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 8px;
 }
 
 .profile-field--wide {
   grid-column: 1 / -1;
-}
-
-.profile-field--phone {
-  grid-column: 1 / -1;
-  max-width: 320px;
 }
 
 .profile-field label {
@@ -819,8 +856,8 @@ onBeforeUnmount(() => {
   height: 50px;
   padding: 12px 15px;
   border: 1px solid var(--pp-texto-3);
-  border-radius: var(--pp-radius-sm);
-  background: var(--pp-creme);
+  border-radius: var(--pp-radius-input);
+  background: var(--pp-surface-card);
   color: var(--pp-marrom);
   font: 400 16px/1.5 var(--pp-font-body);
   caret-color: var(--pp-dourado-profundo);
@@ -862,13 +899,18 @@ onBeforeUnmount(() => {
   line-height: 1.5;
 }
 
+.profile-identity .profile-field-error {
+  margin-top: 6px;
+  color: var(--pp-creme);
+}
+
 .profile-form__actions {
   grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
-  padding-top: 8px;
+  padding-top: 2px;
 }
 
 .profile-btn {
@@ -877,13 +919,14 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 10px;
   min-height: 48px;
-  padding: 13px 22px;
+  padding: 13px 20px;
   border: 1px solid transparent;
-  border-radius: var(--pp-radius-sm);
+  border-radius: var(--pp-radius-btn);
   font-size: 14px;
   line-height: 1.4;
   font-weight: 600;
   cursor: pointer;
+  transition: background-color 150ms, color 150ms, transform 150ms;
 }
 
 .profile-btn--primary {
@@ -896,13 +939,17 @@ onBeforeUnmount(() => {
 }
 
 .profile-btn--secondary {
-  border-color: var(--pp-creme-borda);
+  border-color: var(--pp-texto-3);
   background: transparent;
   color: var(--pp-marrom);
 }
 
 .profile-btn--secondary:hover:not(:disabled) {
   background: var(--pp-creme-2);
+}
+
+.profile-page button:active:not(:disabled) {
+  transform: scale(.98);
 }
 
 .profile-page button:disabled {
@@ -917,7 +964,10 @@ onBeforeUnmount(() => {
 
 .profile-feedback-region {
   grid-column: 1 / -1;
-  min-height: 28px;
+}
+
+.profile-feedback-region:empty {
+  margin-top: -22px;
 }
 
 .profile-feedback {
@@ -943,77 +993,72 @@ onBeforeUnmount(() => {
 }
 
 .profile-page__aside {
-  padding-top: 4px;
-}
-
-.profile-security {
-  padding: 26px 24px;
-  border-radius: 14px;
+  padding: 24px;
+  border-radius: var(--pp-radius-card-lg);
   background: var(--pp-creme-2);
 }
 
-.profile-security__icon {
-  margin-bottom: 14px;
+.profile-aside-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-aside-heading > svg {
+  flex-shrink: 0;
   color: var(--pp-dourado-profundo);
 }
 
-.profile-security-list {
+.profile-security-list,
+.profile-summary-list {
   display: grid;
-  gap: 22px;
-  margin: 26px 0;
+  gap: 18px;
+  margin: 22px 0 0;
+}
+
+.profile-security-list > div,
+.profile-summary-list > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  align-items: baseline;
+  gap: 12px;
 }
 
 .profile-security-list dt {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .profile-security-list dt svg {
-  color: var(--pp-texto-2);
   flex-shrink: 0;
+  width: 16px;
+  color: var(--pp-texto-2);
 }
 
-.profile-security-list dd {
-  margin: 6px 0 0 28px;
-  color: var(--pp-texto-2);
+.profile-security-list dd,
+.profile-summary-list dd {
+  margin: 0;
+  color: var(--pp-marrom);
   font-size: 14px;
   line-height: 1.5;
+  text-align: right;
   overflow-wrap: anywhere;
-}
-
-.profile-security-list dd.is-positive {
-  color: var(--pp-marrom-2);
-}
-
-.profile-account {
-  margin-top: 30px;
-  padding: 0 0 0 24px;
-}
-
-.profile-summary-list {
-  margin: 20px 0 0;
-}
-
-.profile-summary-list > div {
-  padding: 15px 0;
-  border-bottom: 1px solid var(--pp-creme-borda);
+  font-variant-numeric: tabular-nums;
 }
 
 .profile-summary-list dt {
   color: var(--pp-texto-2);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.5;
 }
 
-.profile-summary-list dd {
-  margin: 5px 0 0;
-  font-size: 14px;
-  line-height: 1.6;
-  overflow-wrap: anywhere;
-  font-variant-numeric: tabular-nums;
+.profile-account {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--pp-creme-borda);
 }
 
 .profile-load-state {
@@ -1037,126 +1082,117 @@ onBeforeUnmount(() => {
 }
 
 @keyframes profile-spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
 @keyframes profile-preview {
-  from {
-    opacity: .5;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: .5; }
+  to { opacity: 1; }
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 999px) {
   .profile-page__layout {
-    gap: 32px;
-    grid-template-columns: minmax(0, 1fr) 280px;
-  }
-  .profile-identity {
-    align-items: flex-start;
-    gap: 20px;
-  }
-  .profile-avatar {
-    flex-basis: 104px;
-    width: 104px;
-    height: 104px;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
-@media (max-width: 768px) {
-  .profile-page {
-    padding-top: 8px;
-    padding-bottom: 96px;
-  }
+@media (max-width: 600px) {
   .profile-page__header {
-    margin-bottom: 32px;
+    margin-bottom: 24px;
   }
+
   .profile-page__header h1 {
     font-size: 40px;
   }
+
   .profile-page__header p {
     font-size: 15px;
-    max-width: 32ch;
   }
-  .profile-page__layout {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 36px;
-  }
+
   .profile-identity {
-    align-items: center;
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 12px 16px;
+    padding: 22px 18px;
   }
+
   .profile-avatar {
-    flex-basis: 96px;
+    grid-column: 1;
+    grid-row: 1 / 3;
     width: 96px;
     height: 96px;
     font-size: 32px;
   }
+
+  .profile-identity__content {
+    display: contents;
+  }
+
   .profile-identity h2 {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
     font-size: 24px;
   }
-  .profile-identity__email {
-    font-size: 14px;
-  }
-  .profile-details {
-    padding-top: 28px;
-  }
-  .profile-page__aside {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
-    gap: 28px;
-  }
-  .profile-account {
-    margin-top: 0;
-    padding: 20px 0 0;
-  }
-}
 
-@media (max-width: 480px) {
-  .profile-identity {
-    flex-direction: column;
+  .profile-identity__verification {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
     align-items: flex-start;
-    gap: 20px;
-    padding-bottom: 28px;
   }
-  .profile-avatar {
-    flex-basis: 96px;
+
+  .profile-identity__email,
+  .profile-avatar-actions,
+  .profile-identity .profile-hint,
+  .profile-avatar-pending,
+  .profile-identity .profile-field-error {
+    grid-column: 1 / -1;
+    margin: 0;
   }
-  .profile-identity__content {
-    width: 100%;
+
+  .profile-identity__email {
+    grid-row: 3;
   }
+
+  .profile-avatar-actions {
+    gap: 4px 12px;
+  }
+
+  .profile-details {
+    padding: 22px 18px;
+  }
+
   .profile-form {
     grid-template-columns: minmax(0, 1fr);
   }
-  .profile-field--phone {
-    max-width: none;
+
+  .profile-page__aside {
+    padding: 22px 18px;
   }
+}
+
+@media (max-width: 360px) {
   .profile-form__actions {
-    flex-direction: column;
     align-items: stretch;
   }
+
   .profile-form__actions .profile-btn {
     width: 100%;
-  }
-  .profile-page__aside {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 28px;
-  }
-  .profile-security {
-    padding: 24px;
-  }
-  .profile-account {
-    padding: 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .profile-spin, .profile-avatar.is-preview img {
+  .profile-spin,
+  .profile-avatar.is-preview img {
     animation: none;
+  }
+
+  .profile-page button {
+    transition: none;
+  }
+
+  .profile-page button:active:not(:disabled) {
+    transform: none;
   }
 }
 </style>
