@@ -76,7 +76,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { ArrowRight, Check, LoaderCircle, Plus } from "lucide-vue-next";
 
 import ProductImage from "@/components/catalog/ProductImage.vue";
@@ -89,6 +89,12 @@ const catalogo = ref([]);
 const toast = ref("");
 const adicionandoId = ref(null);
 let toastTimer = null;
+let montado = true;
+watch(() => cart.geracao, () => {
+  adicionandoId.value = null;
+  toast.value = "";
+  window.clearTimeout(toastTimer);
+}, { flush: "sync" });
 
 function normalizar(valor) {
   return String(valor || "")
@@ -218,6 +224,8 @@ function formatarPreco(valor) {
 
 async function adicionar(produto) {
   if (adicionandoId.value) return;
+  const contexto = cart.capturarContexto();
+  if (!cart.contextoAtual(contexto)) return;
 
   adicionandoId.value = produto.id;
 
@@ -228,14 +236,15 @@ async function adicionar(produto) {
       produtoCompleto = await catalogService.obterProduto(produto.id);
     } catch {}
 
-    cart.adicionar(produtoCompleto, 1);
+    if (!montado || !cart.contextoAtual(contexto)) return;
+    if (!cart.adicionar(produtoCompleto, 1, contexto)) return;
     toast.value = `${produto.nome} foi adicionado ao carrinho.`;
     window.clearTimeout(toastTimer);
     toastTimer = window.setTimeout(() => {
       toast.value = "";
     }, 1800);
   } finally {
-    adicionandoId.value = null;
+    if (montado && cart.contextoAtual(contexto)) adicionandoId.value = null;
   }
 }
 
@@ -248,6 +257,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+  montado = false;
   window.clearTimeout(toastTimer);
 });
 </script>

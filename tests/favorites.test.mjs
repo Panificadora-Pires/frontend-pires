@@ -1,11 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { filtrarFavoritos, categoriasFavoritas, validarAdicao } from '../src/utils/favoritos.js';
+import { filtrarFavoritos, categoriasFavoritas, validarAdicao, disponibilidadeProduto } from '../src/utils/favoritos.js';
 const produtos = [
   {id:1, nome:'Pão de queijo', categoria_nome:'Salgados', preco_atual:'7.50'},
   {id:2, nome:'Café', categoria_nome:'Bebidas', preco:'4.00'},
   {id:3, nome:'Água', categoria_nome:'Bebidas', preco:'3.00'},
 ];
+test('listagem sem estoque não afirma disponibilidade e valores ausentes não viram zero', () => {
+  for (const estoque of [undefined, null, '', ' ', NaN, Infinity]) {
+    assert.equal(disponibilidadeProduto({ estoque }), 'desconhecida');
+  }
+  assert.equal(disponibilidadeProduto(produtos[0]), 'desconhecida');
+  assert.equal(disponibilidadeProduto({ ativo: true }), 'desconhecida');
+  assert.equal(disponibilidadeProduto({ estoque: 0 }), 'sem-estoque');
+  assert.equal(disponibilidadeProduto({ estoque: '0' }), 'sem-estoque');
+  assert.equal(disponibilidadeProduto({ estoque: 3 }), 'desconhecida');
+  assert.equal(disponibilidadeProduto({ ativo: true, estoque: 3 }), 'disponivel');
+  assert.equal(disponibilidadeProduto({ ativo: false }), 'indisponivel');
+});
 test('busca remove acentos e combina categoria real e ordenação sem mutar coleção',()=>{
   assert.deepEqual(filtrarFavoritos(produtos,{busca:'PAO'}).map(p=>p.id),[1]);
   assert.deepEqual(filtrarFavoritos(produtos,{busca:'bebidas',categoria:'Bebidas',ordem:'maior-preco'}).map(p=>p.id),[2,3]);

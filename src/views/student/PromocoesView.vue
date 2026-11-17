@@ -19,6 +19,10 @@ const modalAberto = ref(false), carregandoDetalhe = ref(false), produtoDetalhado
 const adicionandoModal = computed(() => origemAdicao.value === 'modal');
 const toast = ref('');
 let toastTimer, montado = true, carregou = false, requisicaoDetalhe = 0, observer;
+const contextoAtual = contexto => montado && cart.contextoAtual(contexto);
+watch(() => cart.geracao, () => {
+  fecharModal(); produtoAdicionando.value = null; origemAdicao.value = null; toast.value = ''; clearTimeout(toastTimer);
+}, { flush: 'sync' });
 const trilha = useTemplateRef('trilha');
 const indicador = ref({ width: '0px', transform: 'translateX(0px)' });
 const promocoesAtivas = computed(() => selecionarOfertas(produtos.value, promocoes.value, hoje.value));
@@ -72,12 +76,13 @@ async function carregarDados() {
 const { atualizarAgora } = useAutoRefresh(carregarDados, { intervalo: 60_000 });
 async function abrirProduto(produto) {
   const pedido = ++requisicaoDetalhe;
+  const contexto = cart.capturarContexto();
   toast.value = ''; modalAberto.value = true; carregandoDetalhe.value = true; produtoDetalhado.value = null;
   try {
     const detalhe = await catalogService.obterProduto(produto.id);
-    if (montado && pedido === requisicaoDetalhe) produtoDetalhado.value = detalhe;
+    if (contextoAtual(contexto) && pedido === requisicaoDetalhe) produtoDetalhado.value = detalhe;
   } catch { /* O diálogo compartilhado apresenta o estado de falha. */ }
-  finally { if (montado && pedido === requisicaoDetalhe) carregandoDetalhe.value = false; }
+  finally { if (contextoAtual(contexto) && pedido === requisicaoDetalhe) carregandoDetalhe.value = false; }
 }
 function fecharModal() { requisicaoDetalhe++; modalAberto.value = false; produtoDetalhado.value = null; carregandoDetalhe.value = false; }
 async function alternarFavorito(produto) {
@@ -87,11 +92,13 @@ async function alternarFavorito(produto) {
 }
 async function adicionar(produto, quantidade = 1, origem = 'direta') {
   if (produtoAdicionando.value !== null || !Number.isSafeInteger(quantidade) || quantidade < 1) return;
+  const contexto = cart.capturarContexto();
+  if (!contextoAtual(contexto)) return;
   produtoAdicionando.value = produto.id; origemAdicao.value = origem;
   try {
     // Nenhum cache: preço, promoção e estoque são conferidos em cada tentativa, inclusive no modal.
     const detalhe = await catalogService.obterProduto(produto.id);
-    if (!montado) return;
+    if (!contextoAtual(contexto)) return;
     if (origem === 'modal' && produtoDetalhado.value?.id === produto.id) produtoDetalhado.value = detalhe;
     if (!detalhe.ativo || !detalhe.em_promocao || Number(detalhe.preco_atual) !== Number(produto.preco_atual)) {
       mostrarToast('Esta oferta mudou. Confira o preço e a disponibilidade antes de adicionar.');
@@ -103,11 +110,11 @@ async function adicionar(produto, quantidade = 1, origem = 'direta') {
     if ((existente?.quantidade || 0) + quantidade > estoque) { mostrarToast(`Há somente ${estoque} ${estoque === 1 ? 'unidade disponível' : 'unidades disponíveis'} de ${produto.nome}.`); return; }
     // O store existente soma quantidades; atualizar também o preço do item já presente.
     if (existente) existente.produto = detalhe;
-    cart.adicionar(detalhe, quantidade);
+    if (!cart.adicionar(detalhe, quantidade, contexto)) return;
     mostrarToast(`${produto.nome} adicionado ao carrinho.`);
     if (origem === 'modal' && produtoDetalhado.value?.id === produto.id) fecharModal();
-  } catch { if (montado) mostrarToast('Não foi possível verificar a disponibilidade do produto.'); }
-  finally { produtoAdicionando.value = null; origemAdicao.value = null; }
+  } catch { if (contextoAtual(contexto)) mostrarToast('Não foi possível verificar a disponibilidade do produto.'); }
+  finally { if (contextoAtual(contexto)) { produtoAdicionando.value = null; origemAdicao.value = null; } }
 }
 function adicionarDoModal({ produto, quantidade }) { return adicionar(produto, quantidade, 'modal'); }
 function limparFiltros() { busca.value = ''; categoriaAtiva.value = null; ordenacao.value = 'desconto'; }

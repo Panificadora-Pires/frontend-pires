@@ -24,7 +24,10 @@ const chatbot = useChatbotStore();
 const notifications = useNotificationsStore();
 const orders = useOrdersStore();
 const favorites = useFavoritesStore();
-watch(() => auth.usuario?.id ?? null, id => favorites.sincronizarConta(id), { immediate: true, flush: "sync" });
+watch(() => auth.usuario?.id ?? null, id => {
+  cart.sincronizarConta(id);
+  favorites.sincronizarConta(id);
+}, { immediate: true, flush: "sync" });
 const router = useRouter();
 const route = useRoute();
 const header = ref(null);
@@ -41,12 +44,12 @@ const bottomNavItems = computed(() => [
   { name: "perfil", label: "Perfil", icon: User },
 ]);
 function limitarBadge(valor) { return Number(valor || 0) > 99 ? "99+" : valor; }
-async function pularContador() {
+async function pularContador(contexto) {
   window.clearTimeout(timerPulo);
   carrinhoPulando.value = false;
   if (movimentoReduzido()) return;
   await nextTick();
-  if (!montado) return;
+  if (!montado || !cart.contextoAtual(contexto)) return;
   carrinhoPulando.value = true;
   timerPulo = window.setTimeout(() => { carrinhoPulando.value = false; }, 400);
 }
@@ -55,6 +58,7 @@ async function handleLogout() {
   chat.resetar();
   chatbot.resetar();
   await auth.logout();
+  if (auth.usuario) return;
   await router.replace({ name: "login" });
 }
 watch(() => notifications.naoLidas, (atual, anterior) => {
@@ -65,9 +69,11 @@ onMounted(() => {
   chat.iniciarPollingNaoLidas(30_000);
   pararDeOuvirCarrinho = cart.$onAction(({ name, after }) => {
     if (name !== "adicionar") return;
-    after(async () => {
+    const contexto = cart.capturarContexto();
+    after(async (adicionado) => {
+      if (!adicionado || !cart.contextoAtual(contexto)) return;
       await animarVooAoCarrinho(header.value?.elementoCarrinho());
-      if (montado) pularContador();
+      if (montado && cart.contextoAtual(contexto)) pularContador(contexto);
     });
   });
 });
