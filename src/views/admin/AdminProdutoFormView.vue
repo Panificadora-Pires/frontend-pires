@@ -5,7 +5,6 @@
         <RouterLink :to="{ name: 'admin-produtos' }" class="editor-back">
           <ArrowLeft :size="16" aria-hidden="true" /> Voltar aos produtos
         </RouterLink>
-        <span class="editor-kicker">CATÁLOGO / PRODUTOS</span>
         <h1>{{ editando ? "Editar produto" : "Novo produto" }}</h1>
         <p>{{ editando ? "Atualize o que aparece no cardápio, mantendo os dados internos organizados." : "Adicione um produto ao cardápio da Pires." }}</p>
       </div>
@@ -135,11 +134,15 @@
         </div>
 
         <div class="editor-actions">
-          <RouterLink :to="{ name: 'admin-produtos' }" class="editor-cancel">Cancelar</RouterLink>
-          <button type="submit" :disabled="salvando || Boolean(erroImagem)" class="editor-save">
-            <LoaderCircle v-if="salvando" :size="17" class="editor-spin" aria-hidden="true" />
-            <Save v-else :size="17" aria-hidden="true" />
-            {{ salvando ? "Salvando…" : editando ? "Salvar alterações" : "Cadastrar produto" }}
+          <RouterLink :to="{ name: 'admin-produtos' }" class="editor-cancel pp-card-action" data-card-action-radius>
+            <CardActionContent>Cancelar</CardActionContent>
+          </RouterLink>
+          <button type="submit" :disabled="salvando || Boolean(erroImagem)" class="editor-save pp-card-action" data-card-action-radius>
+            <CardActionContent>
+              <LoaderCircle v-if="salvando" :size="17" class="editor-spin" aria-hidden="true" />
+              <Save v-else :size="17" aria-hidden="true" />
+              {{ salvando ? "Salvando…" : editando ? "Salvar alterações" : "Cadastrar produto" }}
+            </CardActionContent>
           </button>
         </div>
       </aside>
@@ -159,6 +162,7 @@ import {
   Upload,
 } from "lucide-vue-next";
 import adminService from "@/services/admin.service";
+import CardActionContent from "@/components/ui/CardActionContent.vue";
 import { resolverUrlMidia } from "@/services/catalog.service";
 import { getSessionVersion } from "@/services/api";
 import { validarImagemProduto } from "@/utils/adminProdutoImagem";
@@ -298,7 +302,6 @@ onBeforeUnmount(() => {
 .editor-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:23px}
 .editor-back{display:inline-flex;align-items:center;gap:6px;color:var(--pp-admin-muted);font-size:12px;font-weight:600;text-decoration:none;margin-bottom:15px}
 .editor-back:hover{color:var(--pp-admin-accent)}
-.editor-kicker{display:block;color:var(--pp-admin-accent);letter-spacing:.11em;font-weight:700;font-size:11px}
 .editor-header h1{font-size:30px;letter-spacing:-.03em;font-weight:650;margin:6px 0 7px}
 .editor-header p{font-size:14px;color:var(--pp-admin-muted);margin:0;line-height:1.5}
 .editor-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,.72fr);gap:16px;align-items:start}
@@ -338,8 +341,10 @@ onBeforeUnmount(() => {
 .editor-actions{display:grid;grid-template-columns:1fr 1.4fr;gap:9px}
 .editor-cancel,.editor-save{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:45px;padding:10px;border:1px solid var(--pp-admin-border);border-radius:9px;background:var(--pp-admin-surface);color:var(--pp-admin-text);font-size:12px;font-weight:650;text-decoration:none;cursor:pointer;transition:transform 220ms ease,box-shadow 220ms ease,background-color 220ms ease}
 .editor-save{border-color:var(--pp-admin-text);background:var(--pp-admin-text);color:var(--pp-admin-bg)}
-.editor-cancel:hover,.editor-save:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 7px 17px color-mix(in srgb,var(--pp-marrom) 12%,transparent)}
-.editor-save:hover:not(:disabled){background:var(--pp-marrom-2)}
+.editor-cancel:hover,.editor-save:hover:not(:disabled){box-shadow:0 7px 17px color-mix(in srgb,var(--pp-marrom) 12%,transparent)}
+.editor-save:hover:not(:disabled){background:var(--pp-admin-text)}
+.editor-page .pp-card-action{--pp-home-action-duration:370ms}
+.editor-page :deep(.pp-card-action__fill){background:var(--pp-gold);color:var(--pp-marrom)}
 .editor-save:disabled{opacity:.55;cursor:wait}
 .editor-loading{display:flex;align-items:center;justify-content:center;gap:11px;min-height:220px;color:var(--pp-admin-muted);font-size:13px}
 .editor-loading-error{display:flex;align-items:center;gap:12px}
