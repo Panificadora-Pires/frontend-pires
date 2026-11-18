@@ -1,0 +1,891 @@
+{
+  "checks": [
+    {
+      "name": "Dashboard real 1440px, dados e imagens da API",
+      "ok": true,
+      "detail": {
+        "width": 1440,
+        "documentWidth": 1440,
+        "sidebar": 232
+      }
+    },
+    {
+      "name": "Dashboard real 390px, dados e imagens da API",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "documentWidth": 390,
+        "sidebar": 0
+      }
+    },
+    {
+      "name": "Gaveta protege foco, fecha por Escape e devolve ao gatilho",
+      "ok": true
+    },
+    {
+      "name": "Rotas existentes permanecem acessíveis e contexto de Pedidos ativo",
+      "ok": true
+    },
+    {
+      "name": "Vazio real não inventa ranking ou alertas de estoque",
+      "ok": true
+    },
+    {
+      "name": "Erro inicial encerra aria-busy e mantém valores desconhecidos",
+      "ok": true
+    },
+    {
+      "name": "Falha silenciosa preserva último faturamento e sinaliza desatualização",
+      "ok": true,
+      "detail": {
+        "total": "130.00",
+        "initialized": true,
+        "error": "Não foi possível atualizar os dados do Dashboard. Tente novamente."
+      }
+    },
+    {
+      "name": "Carga inicial lenta não apresenta zero ou ranking vazio como resposta",
+      "ok": true
+    },
+    {
+      "name": "Polling central continua ativo sem nova instância no Dashboard",
+      "ok": true,
+      "detail": {
+        "requestsBefore": 11,
+        "requestsAfter": 12
+      }
+    },
+    {
+      "name": "Movimento reduzido e reflow em 1280/768/320",
+      "ok": true,
+      "detail": [
+        {
+          "width": 1280,
+          "scrollWidth": 1280,
+          "reduced": true
+        },
+        {
+          "width": 768,
+          "scrollWidth": 768,
+          "reduced": true
+        },
+        {
+          "width": 320,
+          "scrollWidth": 320,
+          "reduced": true
+        }
+      ]
+    },
+    {
+      "name": "Coleção parcial não inicializa contagens como completas",
+      "ok": true,
+      "detail": {
+        "initialized": false,
+        "count": 0
+      }
+    },
+    {
+      "name": "Guard mantém aluno e anônimo fora do Admin",
+      "ok": true
+    },
+    {
+      "name": "Logout limpa sessão e retorna ao login",
+      "ok": true
+    }
+  ],
+  "errors": [],
+  "requests": [
+    {
+      "path": "/usuarios/me/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/promocoes/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/relatorio_vendas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/mais_vendidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/chat/nao_lidas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/usuarios/me/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/promocoes/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/relatorio_vendas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/mais_vendidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/chat/nao_lidas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/usuarios/me/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/promocoes/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/relatorio_vendas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/mais_vendidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/chat/nao_lidas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/usuarios/me/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/promocoes/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/relatorio_vendas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/mais_vendidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/chat/nao_lidas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/usuarios/me/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/20/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/chat/nao_lidas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/chat/20/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/usuarios/me/",
+      "method": "GET",
+      "mode": "empty"
+    },
+    {
+      "path": "/produtos/",
+      "method": "GET",
+      "mode": "empty"
+    },
+    {
+      "path": "/promocoes/",
+      "method": "GET",
+      "mode": "empty"
+    },
+    {
+      "path": "/pedidos/relatorio_vendas/",
+      "method": "GET",
+      "mode": "empty"
+    },
+    {
+      "path": "/produtos/mais_vendidos/",
+      "method": "GET",
+      "mode": "empty"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "empty"
+    },
+    {
+      "path": "/chat/nao_lidas/",
+      "method": "GET",
+      "mode": "empty"
+    },
+    {
+      "path": "/usuarios/me/",
+      "method": "GET",
+      "mode": "error"
+    },
+    {
+      "path": "/produtos/",
+      "method": "GET",
+      "mode": "error"
+    },
+    {
+      "path": "/promocoes/",
+      "method": "GET",
+      "mode": "error"
+    },
+    {
+      "path": "/pedidos/relatorio_vendas/",
+      "method": "GET",
+      "mode": "error"
+    },
+    {
+      "path": "/produtos/mais_vendidos/",
+      "method": "GET",
+      "mode": "error"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "error"
+    },
+    {
+      "path": "/chat/nao_lidas/",
+      "method": "GET",
+      "mode": "error"
+    },
+    {
+      "path": "/usuarios/me/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/promocoes/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/relatorio_vendas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/mais_vendidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/chat/nao_lidas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/",
+      "method": "GET",
+      "mode": "error"
+    },
+    {
+      "path": "/promocoes/",
+      "method": "GET",
+      "mode": "error"
+    },
+    {
+      "path": "/pedidos/relatorio_vendas/",
+      "method": "GET",
+      "mode": "error"
+    },
+    {
+      "path": "/produtos/mais_vendidos/",
+      "method": "GET",
+      "mode": "error"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "error"
+    },
+    {
+      "path": "/usuarios/me/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/promocoes/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/relatorio_vendas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/mais_vendidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/chat/nao_lidas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/usuarios/me/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/promocoes/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/relatorio_vendas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/mais_vendidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/chat/nao_lidas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/usuarios/me/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/promocoes/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/relatorio_vendas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/mais_vendidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/chat/nao_lidas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/usuarios/me/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/promocoes/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/relatorio_vendas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/mais_vendidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/chat/nao_lidas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/usuarios/me/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/promocoes/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/relatorio_vendas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/mais_vendidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/chat/nao_lidas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/usuarios/me/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/produtos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/promocoes/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/relatorio_vendas/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/produtos/mais_vendidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/chat/nao_lidas/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "partial"
+    },
+    {
+      "path": "/usuarios/me/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/promocoes/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/categorias/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/favoritos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/promocoes/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/notificacoes/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/chat/nao_lidas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/usuarios/me/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/promocoes/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/relatorio_vendas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/mais_vendidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/chat/nao_lidas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/token/logout/",
+      "method": "POST",
+      "mode": "normal"
+    }
+  ],
+  "console": [
+    {
+      "mode": "error",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "mode": "error",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "mode": "error",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "mode": "error",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "mode": "error",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "mode": "error",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "mode": "error",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "mode": "error",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "mode": "error",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "mode": "error",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "mode": "normal",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
+    }
+  ]
+}

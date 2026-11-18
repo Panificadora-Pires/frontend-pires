@@ -18,12 +18,12 @@ Base: `origin/dev` `d91a454`, atualizada por fetch. Direção V2 aprovada em 18/
 
 ## Invariantes e aceite
 
-- [ ] Provas RED antes dos ajustes: coleta truncada rejeitada; carga/erro/vazio distintos; logout e request antigo não reativam dados; refresh preserva último sucesso.
-- [ ] Store de extras com geração/sessão, reset explícito e deduplicação por instância. `useAutoRefresh` continua dono do refresh de 60s; fila central permanece 15s.
-- [ ] Shell 232px e gaveta nativa: foco, Escape, retorno, fechamento ao navegar/resize e limpeza ao desmontar. Indicador de seção permanece correto em detalhe/edição.
-- [ ] Indicadores reais: pedidos do dia e fila da store existente; faturamento/retirados do agregado. Ranking usa `resultado` e imagens do catálogo; sem receita inventada por produto.
-- [ ] Estoque: informar indisponibilidade de alertas automáticos e encaminhar a Produtos; não apresentar ausência de contrato como “estoque normal”.
-- [ ] Visual V2 em 1440/390, estados sintéticos, console, teclado e movimento reduzido. Nenhum overflow global. Tabela recente vira registros mobile sem esconder dinheiro/pagamento/ação.
-- [ ] Testes Node pertinentes, build e revisão independente. Commits locais; sem push/PR antes da revisão do Arthur.
+- [x] Provas RED antes dos ajustes: coleta truncada rejeitada; carga/erro/vazio distintos; logout e request antigo não reativam dados; refresh preserva último sucesso.
+- [x] Store de extras com geração/sessão, reset explícito e deduplicação por instância. `useAutoRefresh` continua dono do refresh de 60s; fila central permanece 15s.
+- [x] Shell 232px e gaveta nativa: foco, Escape, retorno, fechamento ao navegar/resize e limpeza ao desmontar. Indicador de seção permanece correto em detalhe/edição.
+- [x] Indicadores reais: pedidos do dia e fila da store existente; faturamento/retirados do agregado. Ranking usa `resultado` e imagens do catálogo; sem receita inventada por produto.
+- [x] Estoque: informar indisponibilidade de alertas automáticos e encaminhar a Produtos; não apresentar ausência de contrato como “estoque normal”.
+- [x] Visual V2 em 1440/390, estados sintéticos, console, teclado e movimento reduzido. Nenhum overflow global. Tabela recente vira registros mobile sem esconder dinheiro/pagamento/ação.
+- [x] Testes Node pertinentes, build e revisão independente. Commits locais; sem push/PR antes da revisão do Arthur.
 
 Kanban e seleção de etapa no mobile pertencem ao PR2. Backend, aluno, autenticação e `main` fora do escopo. Não corrigir dívidas de outras telas por conveniência.

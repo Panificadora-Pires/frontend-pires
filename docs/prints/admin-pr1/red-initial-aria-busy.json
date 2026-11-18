@@ -1,0 +1,74 @@
+{
+  "checks": [
+    {
+      "name": "Erro inicial encerra aria-busy e mantém valores desconhecidos",
+      "ok": false,
+      "error": "Expected values to be strictly equal:\n\n4 !== 0\n"
+    }
+  ],
+  "errors": [],
+  "requests": [
+    {
+      "path": "/usuarios/me/",
+      "method": "GET",
+      "mode": "error"
+    },
+    {
+      "path": "/produtos/",
+      "method": "GET",
+      "mode": "error"
+    },
+    {
+      "path": "/promocoes/",
+      "method": "GET",
+      "mode": "error"
+    },
+    {
+      "path": "/pedidos/relatorio_vendas/",
+      "method": "GET",
+      "mode": "error"
+    },
+    {
+      "path": "/produtos/mais_vendidos/",
+      "method": "GET",
+      "mode": "error"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "error"
+    },
+    {
+      "path": "/chat/nao_lidas/",
+      "method": "GET",
+      "mode": "error"
+    }
+  ],
+  "console": [
+    {
+      "mode": "error",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "mode": "error",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "mode": "error",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "mode": "error",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "mode": "error",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    }
+  ]
+}

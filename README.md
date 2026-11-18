@@ -650,3 +650,7 @@ Segredos de integração nunca devem ser colocados em variáveis `VITE_*`, pois 
 Validação original do redesign: `node --test tests/*.test.mjs` (27 testes), build e auditoria de produção. [Plano](../docs/planos/favoritos-editoriais.md) e [evidências sintéticas](../docs/prints/favoritos-editoriais-2026-11-12/README.md) incluem 66 verificações de navegador, teclado, capturas e gravação. Não representam validação de produção ou pagamentos.
 
 Na correção de release, a listagem mantém disponibilidade desconhecida até a consulta por interação. O carrinho pertence à sessão: logout/troca de conta invalidam operações pendentes, inclusive refresh HTTP e retornos de checkout. A renovação normal da mesma sessão preserva o carrinho. [Provas da correção](../docs/prints/favoritos-release-review-2026-11-12/README.md).
+
+## Admin — Shell e Dashboard V2
+
+Implementação local do PR1, preservando a área do aluno. Contratos, provas e limites em [docs/entregas/admin-shell-dashboard.md](docs/entregas/admin-shell-dashboard.md). Kanban fica no PR2; publicação depende de revisão.
