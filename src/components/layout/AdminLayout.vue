@@ -51,12 +51,14 @@ import "@/assets/styles/admin.css";
 import "@/assets/styles/admin-tokens.css";
 import AdminNavigation from "@/components/admin/AdminNavigation.vue";
 import { useAdminOrdersStore } from "@/stores/adminOrders";
+import { useAdminQueueSummaryStore } from "@/stores/adminQueueSummary";
 import { useAdminDashboardStore } from "@/stores/adminDashboard";
 import { useAuthStore } from "@/stores/auth";
 import { useChatStore } from "@/stores/chat";
 
 const auth = useAuthStore();
 const adminOrders = useAdminOrdersStore();
+const queueSummary = useAdminQueueSummaryStore();
 const dashboard = useAdminDashboardStore();
 const chat = useChatStore();
 const router = useRouter();
@@ -74,7 +76,7 @@ const iniciais = computed(() => {
 });
 const navGroups = computed(() => [
   { label: "Visão geral", items: [{ name: "admin-dashboard", label: "Dashboard", icon: LayoutDashboard }] },
-  { label: "Operação", items: [{ name: "admin-pedidos", label: "Pedidos", icon: ClipboardList, badge: adminOrders.aguardandoAcao || null, children: ["admin-pedido-detalhes"] }] },
+  { label: "Operação", items: [{ name: "admin-pedidos", label: "Pedidos", icon: ClipboardList, badge: queueSummary.aguardandoAcao || null, children: ["admin-pedido-detalhes"] }] },
   { label: "Catálogo", items: [
     { name: "admin-produtos", label: "Produtos", icon: Boxes, children: ["admin-produto-novo", "admin-produto-editar"] },
     { name: "admin-categorias", label: "Categorias", icon: Layers3 },
@@ -120,23 +122,32 @@ watch(() => route.fullPath, () => fecharMenu({ restaurarFoco: false }));
 async function handleLogout() {
   fecharMenu({ restaurarFoco: false });
   adminOrders.resetar();
+  queueSummary.resetar();
   dashboard.resetar();
   chat.resetar();
   await auth.logout();
   await router.replace({ name: "login" });
 }
-// A fila do admin fica atualizada em segundo plano enquanto o painel estiver aberto:
-// o badge do menu, o dashboard e a tela de pedidos leem a mesma store.
+// O badge lê contagens agregadas; a coleção integral legada só é
+// carregada enquanto o Dashboard antigo ainda depende dela.
+// A tela Kanban utiliza páginas do servidor e não deve baixar o histórico.
+function atualizarFonteDashboard() {
+  if (route.name === "admin-dashboard") adminOrders.iniciarAutoAtualizacao();
+  else adminOrders.pararAutoAtualizacao();
+}
+watch(() => route.name, atualizarFonteDashboard);
 onMounted(() => {
   desktopMedia = window.matchMedia("(min-width: 1024px)");
   desktopMedia.addEventListener("change", ajustarDesktop);
-  adminOrders.iniciarAutoAtualizacao();
+  queueSummary.iniciarAutoAtualizacao();
+  atualizarFonteDashboard();
   // Mensagens de clientes ainda não lidas, no mesmo ritmo da fila.
   chat.iniciarPollingNaoLidas(15_000);
 });
 onBeforeUnmount(() => {
   fecharMenu({ restaurarFoco: false });
   desktopMedia?.removeEventListener("change", ajustarDesktop);
+  queueSummary.resetar();
   adminOrders.pararAutoAtualizacao();
   dashboard.resetar();
   chat.pararPollingNaoLidas();

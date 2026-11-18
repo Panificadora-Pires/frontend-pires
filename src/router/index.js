@@ -108,7 +108,7 @@ const routes = [
       {
         path: "pedidos",
         name: "admin-pedidos",
-        component: () => import("@/views/admin/AdminPedidosView.vue"),
+        component: () => import("@/views/admin/AdminPedidosKanbanView.vue"),
       },
       {
         path: "pedidos/:id",
