@@ -56,7 +56,7 @@
         <button class="admin-btn admin-btn--primary" :disabled="carregando">
           <RefreshCw v-if="carregando" :size="16" class="admin-spin" />
           <Search v-else :size="16" />
-          Atualizar relatório
+          Gerar relatório
         </button>
       </form>
     </section>
