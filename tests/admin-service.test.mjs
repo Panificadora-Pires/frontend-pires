@@ -65,3 +65,11 @@ test('indicadores globais do catálogo exigem valores inteiros e não aceitam fa
   api.get=async()=>({data:{...indicadores,reposicao:null}});
   await assert.rejects(service.resumoProdutosAdmin(),{code:'ADMIN_CATALOG_SUMMARY_INVALID'});
 });
+
+test('detalhe interno do produto usa rota restrita da API administrativa',async()=>{
+  const calls=[];
+  const produto={id:11,nome:'Brioche',preco_custo:'3.10',estoque:5,estoque_minimo:2};
+  api.get=async path=>{calls.push(path);return {data:produto};};
+  assert.deepEqual(await service.obterProdutoAdmin(11),produto);
+  assert.deepEqual(calls,['/produtos/11/admin_detalhe/']);
+});
