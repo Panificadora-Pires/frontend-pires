@@ -24,6 +24,16 @@ Fechamento em 18/11/2026: `node --test` passou 126 testes; build/PWA, 21 cenári
 
 Os 79 caminhos consolidados foram conferidos: 15 arquivos de código, cinco testes e 59 documentos/evidências do escopo de autenticação. A varredura dos textos não encontrou credenciais ou dados pessoais reais de contas; e-mails são placeholders ou fixtures. `.env` permanece ignorado; os seis artefatos dispensados de contraste não constam dos objetos alcançáveis pelos commits enviados. A base remota `dev` foi reconfirmada em `7411a525`; dependências e lockfile permanecem intactos.
 
+## Segunda revisão — histórico e resposta tardia (18/11/2026)
+
+Investigado o [comentário da linha 84](https://github.com/Panificadora-Pires/frontend-pires/pull/53#discussion_r4614687433). O guard de `AuthPage.vue` normalmente recusa Voltar/Avançar durante HTTP pendente. A URL provisória do navegador não prova que o Vue Router concluiu a navegação; a prova verifica o resultado do guard ou aguarda o formulário de destino.
+
+Corrida confirmada em uma janela específica: durante a saída animada de cadastro para login, o formulário já perdeu o guard, mas o botão Google persiste. Um callback GIS nesse intervalo inicia HTTP; Voltar/Avançar consegue trocar de tela antes da resposta. Na base, a resposta retida gravou tokens e usuário após a troca. Os dois testes de regressão falharam antes do patch por access token indevido.
+
+O watcher do layout agora acompanha `route.fullPath` e chama `auth.invalidarOperacao()` sincronicamente quando a navegação se conclui. A geração da store invalida os efeitos antes de `persistTokens` e da atualização de usuário; não é necessário alterar a store. Navegações recusadas não invalidam a operação legítima. Cadastro/recuperação concluídos mantêm seus metadados e navegação normal; a proteção por versão de sessão permanece intacta.
+
+Prova final: 126 testes Node, 27 cenários de autenticação no Chrome, nove cenários entre abas, build/PWA e diff-check aprovados. Os seis novos cenários cobrem senha/Google com Voltar/Avançar recusados, Google com navegação efetiva durante a transição, ausência de ambos os tokens/usuário/GET de perfil tardio e nova tentativa válida após descarte. API e GIS são sintéticos. Nenhuma alteração visual, dependência ou backend; as pendências de produção abaixo permanecem abertas.
+
 ## Pendências de produção
 
 1. Não foram localizados documentos jurídicos publicados de Termos de Uso e Política de Privacidade. A UI apresenta o aviso; o backend não registra aceite. Definir documentos, destinos e tratamento antes de produção.

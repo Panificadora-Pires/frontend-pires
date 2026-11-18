@@ -127,6 +127,109 @@ try {
     await page.getByText(/Verifique sua conexão/).waitFor(); assert.equal(await page.getByLabel('E-mail', { exact: true }).inputValue(), 'synthetic@example.test');
     state.offline = false; await submit(page); await page.waitForURL(base + '/'); await context.close();
   });
+  for (const method of ['senha', 'Google']) for (const direction of ['Voltar', 'Avançar']) {
+    await check(`${method}: ${direction} recusado pelo guard preserva login legítimo`, async () => {
+      const { page, context, state } = await fixture({ reducedMotion: 'reduce' });
+      const shown = async name => {
+        await page.waitForURL(`**/${name}`);
+        if (name === 'cadastro') await page.getByLabel('Nome completo', { exact: true }).waitFor();
+        else await page.getByRole('heading', { name: /Bom te ver/ }).waitFor();
+        await idle(page);
+      };
+      let release;
+      const path = method === 'senha' ? '/token/' : '/social/google/';
+      state.hold = { path, wait: new Promise(resolve => { release = resolve; }) };
+      try {
+        await go(page, '/login');
+        await page.locator('.auth-create-link').click(); await shown('cadastro');
+        await page.goBack(); await shown('login');
+        if (direction === 'Voltar') {
+          await page.goForward(); await shown('cadastro');
+          await page.locator('.auth-create-link').click(); await shown('login');
+        }
+        // Observar a conclusão real da navegação, sem substituir os guards.
+        await page.evaluate(() => {
+          document.querySelector('#app').__vue_app__.config.globalProperties.$router.afterEach((to, from, failure) => {
+            window.historyNavigation = { aborted: Boolean(failure), from: from.fullPath, to: to.fullPath };
+          });
+        });
+        await Promise.all([
+          page.waitForRequest(request => new URL(request.url()).pathname.endsWith(path)),
+          method === 'senha' ? (async () => { await loginFields(page); await submit(page); })()
+            : page.getByRole('button', { name: 'Continuar com Google (teste)' }).click(),
+        ]);
+        if (direction === 'Avançar') await page.goForward(); else await page.goBack();
+        await page.waitForFunction(() => window.historyNavigation);
+        assert.equal(await page.evaluate(() => window.historyNavigation.aborted), true);
+        await page.waitForURL('**/login');
+        assert.equal(await page.evaluate(() => {
+          const auth = document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('auth');
+          return auth.carregando && auth.usuario === null;
+        }), true);
+        release();
+        await page.waitForURL(base + '/');
+        assert.equal(state.calls.filter(call => call.path === path).length, 1);
+        assert.deepEqual(state.errors, []);
+      } finally { release(); await context.close(); }
+    });
+  }
+  for (const direction of ['Voltar', 'Avançar']) {
+    await check(`Google: ${direction} durante transição invalida HTTP retido`, async () => {
+      const { page, context, state } = await fixture();
+      let release;
+      state.hold = { path: '/social/google/', wait: new Promise(resolve => { release = resolve; }) };
+      try {
+        await go(page, '/cadastro');
+        await page.getByRole('button', { name: 'Continuar com Google (teste)' }).waitFor();
+        if (direction === 'Avançar') {
+          await page.locator('.auth-create-link').click(); await page.waitForURL('**/login'); await idle(page);
+          await page.locator('.auth-create-link').click(); await page.waitForURL('**/cadastro'); await idle(page);
+          await page.goBack(); await page.waitForURL('**/login'); await idle(page);
+          await page.goBack(); await page.waitForURL('**/cadastro'); await idle(page);
+        }
+        await page.evaluate(() => {
+          const auth = document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('auth');
+          auth.$onAction(({ name, after }) => {
+            if (name === 'loginWithGoogle') after(result => { window.historyLoginResult = result; });
+          });
+        });
+        // O callback GIS pode chegar quando o formulário de saída já perdeu seu guard.
+        if (direction === 'Voltar') await page.locator('.auth-create-link').evaluate(el => el.click());
+        else await page.goForward();
+        await page.waitForURL('**/login');
+        assert.equal(await page.locator('.auth-page-leave-active').count(), 1);
+        await Promise.all([
+          page.waitForRequest(request => new URL(request.url()).pathname.endsWith('/social/google/')),
+          page.evaluate(() => window.gsiCallback({ credential: 'synthetic-google' })),
+        ]);
+        if (direction === 'Voltar') await page.goBack(); else await page.goForward();
+        await page.waitForURL('**/cadastro');
+        await page.getByLabel('Nome completo', { exact: true }).waitFor(); await idle(page);
+        release();
+        await page.waitForFunction(() => window.historyLoginResult);
+        const snapshot = await page.evaluate(async () => {
+          const auth = document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('auth');
+          const resource = performance.getEntriesByType('resource').find(entry => new URL(entry.name).pathname === '/src/services/api.js');
+          const api = await import(resource.name);
+          return { result: window.historyLoginResult, usuario: auth.usuario, carregando: auth.carregando,
+            access: api.getAccessToken(), refresh: api.getRefreshToken() };
+        });
+        assert.equal(snapshot.access, null, 'resposta obsoleta não pode gravar access token');
+        assert.equal(snapshot.refresh, null, 'resposta obsoleta não pode gravar refresh token');
+        assert.equal(snapshot.usuario, null, 'resposta obsoleta não pode autenticar usuário');
+        assert.equal(snapshot.result.ignorado, true);
+        assert.equal(snapshot.carregando, false);
+        assert.equal(state.calls.filter(call => call.path === '/usuarios/me/').length, 0);
+        assert.equal(page.url(), base + '/cadastro');
+        assert.deepEqual(state.errors, []);
+        // A navegação cancela somente a tentativa antiga; uma nova continua legítima.
+        state.hold = null;
+        await page.locator('.auth-create-link').click(); await page.waitForURL('**/login'); await idle(page);
+        await page.getByRole('button', { name: 'Continuar com Google (teste)' }).click();
+        await page.waitForURL(base + '/');
+      } finally { release(); await context.close(); }
+    });
+  }
   await check('Google integrado usa credencial sintética e destino', async () => {
     const { page, context, state } = await fixture(); await go(page, '/login?redirect=/pedidos');
     await page.getByRole('button', { name: 'Continuar com Google (teste)' }).click(); await page.waitForURL('**/pedidos');

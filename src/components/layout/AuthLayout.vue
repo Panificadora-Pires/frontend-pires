@@ -81,14 +81,16 @@ function guardarNavegacao(evento) {
   if (!link || link.origin !== window.location.origin) return;
   if (router.resolve(link.pathname).meta.somenteVisitante) evento.preventDefault();
 }
-watch(() => route.name, () => {
+watch(() => route.fullPath, () => {
   sequencia += 1;
+  // O layout persiste entre telas; uma navegação concluída invalida os efeitos do HTTP antigo na store.
+  auth.invalidarOperacao();
   ocupado.value = false;
   erroGoogle.value = "";
   aceite.value = false;
   erroAceite.value = false;
   if (temGoogle.value) googleIniciado.value = true;
-});
+}, { flush: "sync" });
 onMounted(() => { media = window.matchMedia("(max-width: 900px)"); pequeno.value = media.matches; media.addEventListener("change", atualizarTamanho); });
 function atualizarTamanho(evento) { pequeno.value = evento.matches; }
 onBeforeUnmount(() => { ativo = false; sequencia += 1; media?.removeEventListener("change", atualizarTamanho); auth.invalidarOperacao?.(); });

@@ -46,6 +46,30 @@
       "ok": true
     },
     {
+      "name": "senha: Voltar recusado pelo guard preserva login legítimo",
+      "ok": true
+    },
+    {
+      "name": "senha: Avançar recusado pelo guard preserva login legítimo",
+      "ok": true
+    },
+    {
+      "name": "Google: Voltar recusado pelo guard preserva login legítimo",
+      "ok": true
+    },
+    {
+      "name": "Google: Avançar recusado pelo guard preserva login legítimo",
+      "ok": true
+    },
+    {
+      "name": "Google: Voltar durante transição invalida HTTP retido",
+      "ok": true
+    },
+    {
+      "name": "Google: Avançar durante transição invalida HTTP retido",
+      "ok": true
+    },
+    {
       "name": "Google integrado usa credencial sintética e destino",
       "ok": true
     },
