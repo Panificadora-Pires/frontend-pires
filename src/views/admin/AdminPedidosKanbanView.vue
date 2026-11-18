@@ -24,20 +24,7 @@
         <input v-model="busca" type="search" maxlength="100" autocomplete="off" aria-label="Buscar pedido, cliente ou produto" placeholder="Buscar pedido, cliente ou produto" />
         <button v-if="busca" type="button" class="kanban-search-clear" aria-label="Limpar busca" @click="busca = ''"><X :size="15" aria-hidden="true" /></button>
       </div>
-      <label class="kanban-payment">
-        <span class="sr-only">Filtrar por pagamento</span>
-        <select v-model="pagamento" aria-label="Filtrar por pagamento">
-          <option value="">Todos os pagamentos</option>
-          <option value="pendente">Pendente</option>
-          <option value="processando">Processando</option>
-          <option value="aprovado">Aprovado</option>
-          <option value="recusado">Recusado</option>
-          <option value="cancelado">Cancelado</option>
-          <option value="reembolsado">Reembolsado</option>
-          <option value="erro">Erro</option>
-        </select>
-        <ChevronDown class="kanban-select-arrow" :size="16" aria-hidden="true" />
-      </label>
+      <AdminPaymentFilter v-model="pagamento" class="kanban-payment" />
     </div>
 
     <div v-if="chat.naoLidas.total > 0" class="kanban-messages" role="status">
@@ -153,8 +140,9 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { ChevronDown, CircleAlert, ClipboardList, MessageCircle, Search, X } from "lucide-vue-next";
+import { CircleAlert, ClipboardList, MessageCircle, Search, X } from "lucide-vue-next";
 
+import AdminPaymentFilter from "@/components/admin/AdminPaymentFilter.vue";
 import { useAutoRefresh } from "@/composables/useAutoRefresh";
 import adminService, { mensagemErroApi } from "@/services/admin.service";
 import { getSessionVersion } from "@/services/api";
@@ -414,7 +402,7 @@ onBeforeUnmount(() => {
 .kanban-modes button.is-active{background:var(--pp-admin-surface);color:var(--pp-admin-text);box-shadow:0 1px 4px #39210e12}
 .kanban-search{display:flex;align-items:center;gap:10px;flex:1;min-width:210px;max-width:410px;background:var(--pp-admin-surface);border:1px solid var(--pp-admin-border);border-radius:9px;padding:0 12px;min-height:46px;color:var(--pp-admin-muted)}
 .kanban-search input{min-width:0;width:100%;height:44px;background:transparent;border:0;outline:0;color:var(--pp-admin-text);font-size:13px}
-.kanban-payment{margin-left:auto}.kanban-payment select{height:46px;min-width:174px;padding:0 12px;background:var(--pp-admin-surface);border:1px solid var(--pp-admin-border);border-radius:9px;color:var(--pp-admin-text)}
+.kanban-payment{margin-left:auto}
 .kanban-messages{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;background:var(--pp-admin-warning-bg);border-radius:10px;margin-bottom:18px;font-size:13px}.kanban-messages>svg{flex:none;color:var(--pp-admin-accent)}
 .kanban-messages strong{display:block;margin-bottom:7px}.kanban-message-links{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap}.kanban-message-links a{color:var(--pp-admin-accent);font-weight:600;text-decoration:underline;text-underline-offset:3px}
 .kanban-alert{display:flex;align-items:center;gap:10px;padding:13px 15px;background:var(--pp-admin-danger-bg);color:var(--pp-admin-danger);border-radius:9px;margin-bottom:18px;font-size:13px}.kanban-alert span{flex:1}.kanban-alert button{color:inherit;border:1px solid currentColor;background:transparent;padding:9px 12px;border-radius:7px;cursor:pointer}
@@ -445,13 +433,15 @@ onBeforeUnmount(() => {
 .kanban-page-controls button{border:1px solid var(--pp-admin-border);background:var(--pp-admin-surface);padding:8px;border-radius:7px;color:var(--pp-admin-text);font-weight:600;cursor:pointer}.kanban-page-controls button:disabled{opacity:.45;cursor:default}
 .kanban-footer{font-size:12px;color:var(--pp-admin-muted);margin:20px 0 0;line-height:1.6}
 .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-.kanban-page button:focus-visible,.kanban-page a:focus-visible,.kanban-page input:focus-visible,.kanban-page select:focus-visible{outline:3px solid var(--pp-admin-accent);outline-offset:3px}
+.kanban-page button:focus-visible,.kanban-page a:focus-visible,.kanban-page input:focus-visible{outline:3px solid var(--pp-admin-accent);outline-offset:3px}
+/* A busca já destaca o contêiner inteiro no foco: não desenhar outra borda sobre o input. */
+.kanban-page .kanban-search input:focus-visible{outline:none;box-shadow:none}
 @media(max-width:1200px){.kanban-board{gap:10px}.kanban-column{padding:10px}.kanban-card{padding:12px}}
 @media(max-width:820px){
   .kanban-header{display:block}.kanban-synced{padding:10px 0 0}
   .kanban-overview{gap:8px}.kanban-overview>div{padding:14px}.kanban-overview strong{font-size:22px}
   .kanban-toolbar{display:grid;grid-template-columns:1fr 1fr}.kanban-modes{grid-column:1/-1;justify-content:stretch}.kanban-modes button{flex:1}
-  .kanban-search{grid-column:1/-1;max-width:none;min-width:0}.kanban-payment{grid-column:1/-1;margin:0}.kanban-payment select{width:100%}
+  .kanban-search{grid-column:1/-1;max-width:none;min-width:0}.kanban-payment{grid-column:1/-1;margin:0}
   .kanban-stage-tabs{display:flex;overflow-x:auto;gap:8px;margin-bottom:12px;padding-bottom:4px}
   .kanban-stage-tabs button{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:max-content;border:1px solid var(--pp-admin-border);border-radius:9px;background:var(--pp-admin-surface);min-height:44px;padding:8px 12px;color:var(--pp-admin-text);font-size:13px;cursor:pointer}
   .kanban-stage-tabs button.is-current{border-color:var(--pp-admin-accent);background:var(--pp-admin-warning-bg)}
@@ -463,7 +453,7 @@ onBeforeUnmount(() => {
 /* Acabamento editorial: estados interativos visíveis sem excesso de efeitos. */
 .kanban-modes button,
 .kanban-search,
-.kanban-payment select,
+.kanban-payment,
 .kanban-card,
 .kanban-card-actions a,
 .kanban-card-actions button {
@@ -479,10 +469,10 @@ onBeforeUnmount(() => {
   border-color: var(--pp-admin-border);
   box-shadow: 0 2px 10px rgba(53,27,10,.025);
 }
-.kanban-search:hover, .kanban-payment select:hover {
+.kanban-search:hover {
   border-color: var(--pp-admin-accent);
 }
-.kanban-search:focus-within, .kanban-payment:focus-within select {
+.kanban-search:focus-within {
   border-color: var(--pp-admin-accent);
   box-shadow: 0 0 0 3px rgba(156,98,29,.12);
 }
@@ -500,20 +490,6 @@ onBeforeUnmount(() => {
 }
 .kanban-search-clear:hover {
   background: var(--pp-admin-warning-bg);
-  color: var(--pp-admin-accent);
-}
-.kanban-payment { position: relative; display: flex; align-items: center; }
-.kanban-payment select {
-  appearance: none;
-  border-radius: 11px;
-  padding-right: 40px;
-  box-shadow: 0 2px 10px rgba(53,27,10,.025);
-  cursor: pointer;
-}
-.kanban-select-arrow {
-  position: absolute;
-  right: 12px;
-  pointer-events: none;
   color: var(--pp-admin-accent);
 }
 .kanban-card:hover {
