@@ -39,3 +39,7 @@ export function itensDoPedido(pedido) {
   if (itens.length > 2) primeiros.push("+" + (itens.length - 2) + " outros");
   return primeiros.join(" · ") + " (" + total + " itens)";
 }
+
+export function paginaExpirada(error, pagina) {
+  return Number.isInteger(pagina) && pagina > 1 && error?.response?.status === 404;
+}
