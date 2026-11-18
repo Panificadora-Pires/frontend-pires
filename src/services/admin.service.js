@@ -234,6 +234,10 @@ const adminService = {
   obterProduto(id) {
     return api.get(`/produtos/${id}/`).then(({ data }) => data);
   },
+  obterProdutoAdmin(id) {
+    return api.get(`/produtos/${id}/admin_detalhe/`).then(({ data }) => data);
+  },
+
 
   criarProduto(payload) {
     return api
