@@ -460,5 +460,98 @@ onBeforeUnmount(() => {
   .kanban-board,.kanban-board.is-history{display:block}.kanban-column{display:none;padding:14px}.kanban-column.is-mobile-selected{display:block}
 }
 @media(max-width:440px){.kanban-header h1{font-size:27px}.kanban-overview{grid-template-columns:1fr 1fr}.kanban-overview>div:nth-child(3){grid-column:1/-1}.kanban-overview>div:nth-child(3) strong{font-size:22px}.kanban-toolbar{grid-template-columns:1fr}.kanban-card{padding:14px}}
+
+/* Acabamento editorial: estados interativos visíveis sem excesso de efeitos. */
+.kanban-modes button,
+.kanban-search,
+.kanban-payment select,
+.kanban-card,
+.kanban-card-actions a,
+.kanban-card-actions button {
+  transition: border-color 220ms ease, background-color 220ms ease, color 220ms ease,
+    box-shadow 250ms ease, transform 300ms cubic-bezier(.22, 1, .36, 1);
+}
+.kanban-modes button:hover:not(.is-active) {
+  background: rgba(255,255,255,.65);
+  color: var(--pp-admin-text);
+}
+.kanban-search {
+  border-radius: 11px;
+  border-color: var(--pp-admin-border);
+  box-shadow: 0 2px 10px rgba(53,27,10,.025);
+}
+.kanban-search:hover, .kanban-payment select:hover {
+  border-color: var(--pp-admin-accent);
+}
+.kanban-search:focus-within, .kanban-payment:focus-within select {
+  border-color: var(--pp-admin-accent);
+  box-shadow: 0 0 0 3px rgba(156,98,29,.12);
+}
+.kanban-search-clear {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 29px;
+  height: 29px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--pp-admin-muted);
+  background: var(--pp-creme-2);
+  cursor: pointer;
+}
+.kanban-search-clear:hover {
+  background: var(--pp-admin-warning-bg);
+  color: var(--pp-admin-accent);
+}
+.kanban-payment { position: relative; display: flex; align-items: center; }
+.kanban-payment select {
+  appearance: none;
+  border-radius: 11px;
+  padding-right: 40px;
+  box-shadow: 0 2px 10px rgba(53,27,10,.025);
+  cursor: pointer;
+}
+.kanban-select-arrow {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  color: var(--pp-admin-accent);
+}
+.kanban-card:hover {
+  border-color: rgba(156,98,29,.35);
+  box-shadow: 0 9px 23px rgba(53,27,10,.09);
+  transform: translateY(-2px);
+}
+.kanban-card-actions a:hover,
+.kanban-card-actions button:hover:not(:disabled) {
+  border-color: var(--pp-admin-accent);
+  color: var(--pp-admin-accent);
+  background: var(--pp-admin-warning-bg);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(53,27,10,.1);
+}
+.kanban-card-actions button:hover:not(:disabled),
+.kanban-card-actions .kanban-retirada:hover {
+  background: var(--pp-marrom-2);
+  border-color: var(--pp-marrom-2);
+  color: white;
+}
+.kanban-card-actions a:active,
+.kanban-card-actions button:active:not(:disabled) {
+  transform: translateY(0) scale(.98);
+}
+.kanban-switch-enter-active, .kanban-switch-leave-active {
+  transition: opacity 230ms ease, transform 300ms cubic-bezier(.22, 1, .36, 1);
+}
+.kanban-switch-enter-from {
+  opacity: 0;
+  transform: translateY(12px) scale(.99);
+}
+.kanban-switch-leave-to {
+  opacity: 0;
+  transform: translateY(-7px) scale(.995);
+}
+
 @media(prefers-reduced-motion:reduce){.kanban-page *{transition:none!important;animation:none!important}}
+@media(prefers-reduced-motion:reduce){.kanban-card:hover,.kanban-card-actions a:hover,.kanban-card-actions button:hover:not(:disabled){transform:none}}
 </style>
