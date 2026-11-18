@@ -117,6 +117,47 @@ const adminService = {
     return listarTodasPaginas("/pedidos/", params);
   },
 
+  // Novo contrato para a fila/Kanban: uma página por vez, sem baixar o histórico.
+  async listarPedidosPagina({ page = 1, page_size = 30, ...filtros } = {}) {
+    const pagina = Number(page);
+    const tamanho = Number(page_size);
+    if (!Number.isInteger(pagina) || pagina < 1 || !Number.isInteger(tamanho) || tamanho < 1 || tamanho > 100) {
+      const error = new Error("Parâmetros de paginação inválidos.");
+      error.code = "ADMIN_PAGE_INVALID";
+      throw error;
+    }
+
+    const { data } = await api.get("/pedidos/", {
+      params: { ...filtros, page: pagina, page_size: tamanho },
+    });
+    if (
+      !data || !Array.isArray(data.results) ||
+      !Number.isInteger(data.count) || data.count < 0 ||
+      !Number.isInteger(data.page) ||
+      !Number.isInteger(data.page_size) ||
+      !Number.isInteger(data.total_pages)
+    ) {
+      const error = new Error("Resposta de paginação administrativa inválida.");
+      error.code = "ADMIN_PAGE_INVALID";
+      throw error;
+    }
+    return data;
+  },
+
+  async resumoPedidosAdmin() {
+    const { data } = await api.get("/pedidos/resumo_admin/");
+    const campos = [
+      "total", "pedidos_hoje", "pendentes", "confirmados", "prontos",
+      "retirados", "cancelados", "pagamentos_pendentes",
+    ];
+    if (!data?.data_referencia || campos.some((campo) => !Number.isInteger(data[campo]) || data[campo] < 0)) {
+      const error = new Error("Resposta de resumo administrativo inválida.");
+      error.code = "ADMIN_SUMMARY_INVALID";
+      throw error;
+    }
+    return data;
+  },
+
   obterPedido(id) {
     return api.get(`/pedidos/${id}/`).then(({ data }) => data);
   },
