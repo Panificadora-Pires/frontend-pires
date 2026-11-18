@@ -6,10 +6,6 @@
         <h1>Pedidos</h1>
         <p>Acompanhe a produção por etapa, do pedido à retirada.</p>
       </div>
-      <div class="kanban-synced" role="status">
-        <span class="kanban-live-dot" :class="{ 'is-error': erroGlobal || resumo.erro }" aria-hidden="true"></span>
-        <span>{{ erroGlobal || resumo.erro ? "Conexão instável · tentando novamente" : carregando ? "Sincronizando fila…" : !resumo.inicializado ? "Aguardando sincronização…" : "Fila atualizada automaticamente" }}</span>
-      </div>
     </header>
 
     <section class="kanban-overview" aria-label="Resumo operacional">
@@ -27,10 +23,11 @@
         <Search :size="17" aria-hidden="true" />
         <span class="sr-only">Buscar pedido, cliente ou produto</span>
         <input v-model="busca" type="search" maxlength="100" autocomplete="off" placeholder="Buscar pedido, cliente ou produto" />
+        <button v-if="busca" type="button" class="kanban-search-clear" aria-label="Limpar busca" @click="busca = ''"><X :size="15" aria-hidden="true" /></button>
       </label>
       <label class="kanban-payment">
         <span class="sr-only">Filtrar por pagamento</span>
-        <select v-model="pagamento">
+        <select v-model="pagamento" aria-label="Filtrar por pagamento">
           <option value="">Todos os pagamentos</option>
           <option value="pendente">Pendente</option>
           <option value="processando">Processando</option>
@@ -40,6 +37,7 @@
           <option value="reembolsado">Reembolsado</option>
           <option value="erro">Erro</option>
         </select>
+        <ChevronDown class="kanban-select-arrow" :size="16" aria-hidden="true" />
       </label>
     </div>
 
@@ -78,11 +76,13 @@
       </button>
     </nav>
 
-    <div class="kanban-board" :class="{ 'is-history': modo === 'historico' }">
+    <Transition name="kanban-switch" mode="out-in">
+      <div :key="modo" class="kanban-board" :class="{ 'is-history': modo === 'historico' }">
       <section
         v-for="etapa in etapasVisiveis"
         :key="etapa.status"
         class="kanban-column"
+        :data-status="etapa.status"
         :class="['stage-' + etapa.status, { 'is-mobile-selected': abaMobile === etapa.status }]"
         :aria-label="etapa.titulo"
         :aria-busy="carregando && !dados[etapa.status].inicializado"
@@ -108,7 +108,7 @@
         </div>
 
         <div v-if="dados[etapa.status].inicializado" class="kanban-cards">
-          <article v-for="pedido in dados[etapa.status].results" :key="pedido.id" class="kanban-card">
+          <article v-for="pedido in dados[etapa.status].results" :key="pedido.id" :data-pedido-id="pedido.id" class="kanban-card">
             <div class="kanban-card-top">
               <span class="kanban-order-id">#{{ pedido.id }}</span>
               <time :datetime="pedido.data">{{ formatarData(pedido.data) }}</time>
@@ -129,7 +129,7 @@
                 v-if="proximaAcao(pedido)"
                 type="button"
                 :disabled="emAcao === pedido.id"
-                @click="avancar(pedido)"
+                @click="avancar(pedido, $event)"
               >{{ emAcao === pedido.id ? "Salvando…" : proximaAcao(pedido).label }}</button>
               <RouterLink v-else-if="pedido.status === 'pronto'" class="kanban-retirada" :to="{ name: 'admin-pedido-detalhes', params: { id: pedido.id } }">Retirada / QR Code</RouterLink>
             </div>
@@ -143,16 +143,17 @@
           <button type="button" :disabled="!dados[etapa.status].next || carregando" @click="mudarPagina(etapa.status, 1)" aria-label="Próxima página">Próxima</button>
         </footer>
       </section>
-    </div>
+      </div>
+    </Transition>
 
     <p class="kanban-footer">Os números da operação vêm do Django. Cada etapa carrega até 12 pedidos por página e é sincronizada automaticamente. Para retirar pedidos, utilize os detalhes e o QR Code.</p>
   </section>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, reactive, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { CircleAlert, ClipboardList, MessageCircle, Search } from "lucide-vue-next";
+import { ChevronDown, CircleAlert, ClipboardList, MessageCircle, Search, X } from "lucide-vue-next";
 
 import { useAutoRefresh } from "@/composables/useAutoRefresh";
 import adminService, { mensagemErroApi } from "@/services/admin.service";
