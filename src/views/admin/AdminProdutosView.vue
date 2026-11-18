@@ -2,12 +2,11 @@
   <section class="admin-page pp-catalog">
     <header class="catalog-header">
       <div>
-        <span class="catalog-eyebrow">CATÁLOGO / GESTÃO</span>
         <h1>Produtos</h1>
         <p>Preços, estoque e disponibilidade do cardápio em um só lugar.</p>
       </div>
-      <RouterLink :to="{ name: 'admin-produto-novo' }" class="catalog-create">
-        <Plus :size="17" aria-hidden="true" /> Novo produto
+      <RouterLink :to="{ name: 'admin-produto-novo' }" class="catalog-create pp-card-action" data-card-action-radius>
+        <CardActionContent><Plus :size="17" aria-hidden="true" /> Novo produto</CardActionContent>
       </RouterLink>
     </header>
 
@@ -29,7 +28,6 @@
           </p>
           <p v-else>Organize o cardápio e acompanhe a disponibilidade.</p>
         </div>
-        <span class="catalog-panel-header__hint">Dados do estoque no Django</span>
       </header>
 
       <div class="catalog-toolbar">
@@ -139,23 +137,27 @@
 
             <div class="catalog-actions">
               <RouterLink
-                class="catalog-action catalog-action--edit"
+                class="catalog-action catalog-action--edit pp-card-action"
+                data-card-action-radius
                 :to="{ name: 'admin-produto-editar', params: { id: produto.id } }"
                 :aria-label="`Editar ${produto.nome}`"
               >
-                <Pencil :size="15" aria-hidden="true" /> Editar
+                <CardActionContent><Pencil :size="15" aria-hidden="true" /> Editar</CardActionContent>
               </RouterLink>
               <button
                 type="button"
-                class="catalog-action"
+                class="catalog-action pp-card-action"
+                data-card-action-radius
                 :class="{ 'catalog-action--inactive': produto.ativo }"
                 :disabled="alterando === produto.id"
                 :aria-label="`${produto.ativo ? 'Desativar' : 'Ativar'} ${produto.nome}`"
                 @click="alternarAtivo(produto)"
               >
-                <LoaderCircle v-if="alterando === produto.id" :size="15" class="catalog-spin" aria-hidden="true" />
-                <Power v-else :size="15" aria-hidden="true" />
-                {{ alterando === produto.id ? 'Salvando…' : produto.ativo ? 'Desativar' : 'Ativar' }}
+                <CardActionContent>
+                  <LoaderCircle v-if="alterando === produto.id" :size="15" class="catalog-spin" aria-hidden="true" />
+                  <Power v-else :size="15" aria-hidden="true" />
+                  {{ alterando === produto.id ? 'Salvando…' : produto.ativo ? 'Desativar' : 'Ativar' }}
+                </CardActionContent>
               </button>
             </div>
           </li>
@@ -183,6 +185,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { ChevronLeft, ChevronRight, CircleAlert, LoaderCircle, PackageOpen, Pencil, Plus, Power, Search, X } from "lucide-vue-next";
 
 import AdminCatalogSelect from "@/components/admin/AdminCatalogSelect.vue";
+import CardActionContent from "@/components/ui/CardActionContent.vue";
 import ProductImage from "@/components/catalog/ProductImage.vue";
 import { useAutoRefresh } from "@/composables/useAutoRefresh";
 import adminService, { mensagemErroApi } from "@/services/admin.service";
@@ -323,11 +326,10 @@ onBeforeUnmount(() => {
 <style scoped>
 .pp-catalog{color:var(--pp-admin-text)}
 .catalog-header{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:24px}
-.catalog-eyebrow{font-size:11px;font-weight:700;letter-spacing:.11em;color:var(--pp-admin-accent)}
 .catalog-header h1{margin:7px 0 6px;font-size:30px;font-weight:650;letter-spacing:-.03em;line-height:1.2}
 .catalog-header p{margin:0;color:var(--pp-admin-muted);font-size:14px;line-height:1.5}
 .catalog-create{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:11px 17px;border-radius:10px;background:var(--pp-admin-text);color:var(--pp-admin-bg);font-size:13px;font-weight:650;white-space:nowrap;text-decoration:none;transition:transform 220ms ease,background-color 220ms ease,box-shadow 220ms ease}
-.catalog-create:hover{transform:translateY(-2px);background:var(--pp-marrom-2);box-shadow:0 8px 20px color-mix(in srgb,var(--pp-marrom) 13%,transparent)}
+.catalog-create:hover{box-shadow:0 8px 20px color-mix(in srgb,var(--pp-marrom) 13%,transparent)}
 .catalog-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:22px}
 .catalog-metric{display:flex;flex-direction:column;gap:4px;min-width:0;padding:18px 20px;border:1px solid var(--pp-admin-border);border-radius:12px;background:var(--pp-creme-2)}
 .catalog-metric span{font-size:12px;color:var(--pp-admin-muted)}.catalog-metric strong{font-size:27px;font-weight:650;line-height:1.2;font-variant-numeric:tabular-nums}.catalog-metric small{color:var(--pp-admin-muted);font-size:12px;line-height:1.45}
@@ -370,10 +372,14 @@ onBeforeUnmount(() => {
 .catalog-actions{display:flex;justify-content:flex-end;gap:7px;align-items:center}
 .catalog-action{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:38px;padding:8px 10px;border:1px solid var(--pp-admin-border);border-radius:8px;background:var(--pp-admin-surface);color:var(--pp-admin-text);font:inherit;font-size:11px;font-weight:650;white-space:nowrap;cursor:pointer;text-decoration:none;transition:border-color 220ms ease,transform 220ms ease,box-shadow 220ms ease,background-color 220ms ease}
 .catalog-action--edit{background:var(--pp-admin-text);border-color:var(--pp-admin-text);color:var(--pp-admin-bg)}
-.catalog-action:hover:not(:disabled){transform:translateY(-2px);border-color:var(--pp-admin-accent);box-shadow:0 6px 14px color-mix(in srgb,var(--pp-marrom) 10%,transparent)}
-.catalog-action--edit:hover{background:var(--pp-marrom-2);color:var(--pp-admin-bg)}
+.catalog-action:hover:not(:disabled){border-color:var(--pp-admin-accent);box-shadow:0 6px 14px color-mix(in srgb,var(--pp-marrom) 10%,transparent)}
+.catalog-action--edit:hover{border-color:var(--pp-admin-accent)}
+.pp-catalog .pp-card-action { --pp-home-action-duration: 370ms; }
+.pp-catalog :deep(.pp-card-action__fill){background:var(--pp-gold);color:var(--pp-marrom)}
+.pp-catalog .catalog-create:hover{background:var(--pp-admin-text);color:var(--pp-admin-bg)}
+.pp-catalog .catalog-action--edit:hover{background:var(--pp-admin-text);color:var(--pp-admin-bg)}
 .catalog-action:disabled{opacity:.6;cursor:wait}
-.catalog-action--inactive:hover{color:var(--pp-admin-danger)}
+.catalog-action--inactive:hover{border-color:var(--pp-admin-danger)}
 .catalog-error{display:flex;gap:10px;align-items:center;padding:14px 22px;border-top:1px solid var(--pp-admin-border);color:var(--pp-admin-danger);font-size:12px}
 .catalog-error span{flex:1}.catalog-error button,.catalog-reset{padding:9px 13px;border:1px solid var(--pp-admin-accent);border-radius:8px;background:transparent;color:var(--pp-admin-accent);font-size:12px;font-weight:650;cursor:pointer;text-decoration:none}
 .catalog-state{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:9px;min-height:220px;padding:32px 20px;text-align:center;color:var(--pp-admin-muted);font-size:13px}
