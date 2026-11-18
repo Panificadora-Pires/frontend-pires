@@ -34,3 +34,15 @@ test('ranking usa resultado da API e associa foto sem inventar receita', () => {
   assert.throws(()=>normalizarRanking({resultado:null},[]),/ranking/i);
   assert.throws(()=>normalizarRanking({resultado:[{produto_id:8,quantidade_vendida:null}]},[]),/ranking/i);
 });
+
+test('pagamentos pendentes ignoram pedidos cancelados e preservam pedidos ativos', () => {
+  const pedidos = [
+    { status: 'cancelado', forma_pagamento: 'dinheiro', status_pagamento: 'pendente' },
+    { status: 'cancelado', forma_pagamento: 'pix', status_pagamento: 'processando' },
+    { status: 'pendente', forma_pagamento: 'pix', status_pagamento: 'processando' },
+    { status: 'confirmado', forma_pagamento: 'dinheiro', status_pagamento: 'pendente' },
+    { status: 'pronto', forma_pagamento: 'dinheiro', status_pagamento: 'pendente' },
+    { status: 'retirado', forma_pagamento: 'dinheiro', status_pagamento: 'aprovado' },
+  ];
+  assert.equal(metricasPedidos(pedidos, '2026-11-18').pagamentosPendentes, 3);
+});

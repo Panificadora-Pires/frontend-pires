@@ -36,7 +36,7 @@ export function metricasPedidos(pedidos, hoje) {
     pendentes: pedidos.filter(p => p.status === 'pendente').length,
     confirmados: pedidos.filter(p => p.status === 'confirmado').length,
     prontos: pedidos.filter(p => p.status === 'pronto').length,
-    pagamentosPendentes: pedidos.filter(p => ['pendente', 'processando'].includes(p.status_pagamento)).length,
+    pagamentosPendentes: pedidos.filter(p => p.status !== 'cancelado' && ['pendente', 'processando'].includes(p.status_pagamento)).length,
   };
 }
 
