@@ -147,7 +147,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   fecharMenu({ restaurarFoco: false });
   desktopMedia?.removeEventListener("change", ajustarDesktop);
-  queueSummary.pararAutoAtualizacao();
+  queueSummary.resetar();
   adminOrders.pararAutoAtualizacao();
   dashboard.resetar();
   chat.pararPollingNaoLidas();
