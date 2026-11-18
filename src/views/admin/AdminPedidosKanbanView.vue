@@ -19,12 +19,11 @@
         <button type="button" :aria-pressed="modo === 'fila'" :class="{ 'is-active': modo === 'fila' }" @click="selecionarModo('fila')">Produção</button>
         <button type="button" :aria-pressed="modo === 'historico'" :class="{ 'is-active': modo === 'historico' }" @click="selecionarModo('historico')">Histórico</button>
       </div>
-      <label class="kanban-search">
+      <div class="kanban-search" role="search">
         <Search :size="17" aria-hidden="true" />
-        <span class="sr-only">Buscar pedido, cliente ou produto</span>
-        <input v-model="busca" type="search" maxlength="100" autocomplete="off" placeholder="Buscar pedido, cliente ou produto" />
+        <input v-model="busca" type="search" maxlength="100" autocomplete="off" aria-label="Buscar pedido, cliente ou produto" placeholder="Buscar pedido, cliente ou produto" />
         <button v-if="busca" type="button" class="kanban-search-clear" aria-label="Limpar busca" @click="busca = ''"><X :size="15" aria-hidden="true" /></button>
-      </label>
+      </div>
       <label class="kanban-payment">
         <span class="sr-only">Filtrar por pagamento</span>
         <select v-model="pagamento" aria-label="Filtrar por pagamento">
