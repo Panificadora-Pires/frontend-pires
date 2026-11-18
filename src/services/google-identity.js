@@ -22,6 +22,9 @@ export async function renderGoogleButton({
   activeCredentialHandler = onCredential;
   const google = await initializeGoogleIdentity(clientId);
 
+  // O carregamento pode concluir depois da saída do shell de autenticação.
+  if (activeCredentialHandler !== onCredential || !element.isConnected) return;
+
   element.replaceChildren();
 
   google.accounts.id.renderButton(element, {
@@ -87,35 +90,43 @@ function waitForGoogleIdentity() {
 
   googleReadyPromise = new Promise((resolve, reject) => {
     const startedAt = Date.now();
+    let interval = null;
+    let settled = false;
+    let script;
+    const fail = (message) => {
+      if (settled) return;
+      settled = true;
+      window.clearInterval(interval);
+      script?.remove();
+      reject(new Error(message));
+    };
     const existingScript = document.querySelector(
       `script[src="${GOOGLE_SCRIPT_SRC}"]`,
     );
 
-    if (!existingScript) {
-      const script = document.createElement("script");
+    script = existingScript;
+    if (!script) {
+      script = document.createElement("script");
       script.src = GOOGLE_SCRIPT_SRC;
       script.async = true;
       script.defer = true;
       script.onerror = () => {
-        reject(
-          new Error("Não foi possível carregar o Google Identity Services."),
-        );
+        fail("Não foi possível carregar o Google Identity Services.");
       };
       document.head.appendChild(script);
     }
 
-    const interval = window.setInterval(() => {
+    interval = window.setInterval(() => {
       if (window.google?.accounts?.id) {
+        if (settled) return;
+        settled = true;
         window.clearInterval(interval);
         resolve(window.google);
         return;
       }
 
       if (Date.now() - startedAt >= GOOGLE_LOAD_TIMEOUT_MS) {
-        window.clearInterval(interval);
-        reject(
-          new Error("Tempo esgotado ao carregar o Google Identity Services."),
-        );
+        fail("Tempo esgotado ao carregar o Google Identity Services.");
       }
     }, 50);
   }).catch((error) => {

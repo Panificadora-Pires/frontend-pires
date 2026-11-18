@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Acesso Pires — protótipo editorial</title>
+  <style>
+    :root {
+      --pp-creme:#fbf6ee; --pp-creme-2:#f4ebdc; --pp-creme-borda:#dccbaf;
+      --pp-marrom:#2a160b; --pp-texto-2:#6b5641; --pp-texto-3:#76624d;
+      --pp-gold:#e0a83e; --pp-dourado-profundo:#7f4f14;
+      --pp-font-body:"Inter",system-ui,-apple-system,sans-serif;
+      --pp-font-titulo:"Anton",Impact,"Arial Narrow",sans-serif;
+      --pp-font-nota:"Caveat","Comic Sans MS",cursive;
+      --pp-ease:cubic-bezier(.2,.7,.2,1);
+    }
+    * { box-sizing:border-box }
+    body { margin:0; background:var(--pp-creme); color:var(--pp-marrom); font-family:var(--pp-font-body) }
+    button,input { font:inherit }
+    button,a,input { -webkit-tap-highlight-color:transparent }
+    a { color:var(--pp-dourado-profundo); text-underline-offset:4px }
+    button { cursor:pointer }
+    :focus-visible { outline:3px solid var(--pp-dourado-profundo); outline-offset:4px }
+    ::selection { background:var(--pp-gold); color:var(--pp-marrom) }
+    .shell { position:relative; min-height:100dvh; isolation:isolate }
+    .photo { position:fixed; z-index:2; top:16px; bottom:16px; left:calc(50% + 8px); width:calc(50% - 24px); border-radius:20px; overflow:hidden; background:var(--pp-marrom); transform:translateX(0); transition:transform 560ms var(--pp-ease) }
+    .register .photo { transform:translateX(calc(-100% - 16px)) }
+    .photo img { width:100%; height:100%; object-fit:cover; object-position:66% center; display:block }
+    .photo::after { position:absolute; content:""; inset:0; background:linear-gradient(180deg,transparent 35%,rgba(42,22,11,.36) 56%,rgba(42,22,11,.94) 100%) }
+    .caption { position:absolute; z-index:1; left:clamp(28px,4vw,64px); right:32px; bottom:44px; color:var(--pp-creme) }
+    .caption h2 { font-family:var(--pp-font-titulo); font-size:clamp(48px,5.3vw,80px); font-weight:400; line-height:1.05; letter-spacing:-.025em; margin:0 0 18px }
+    .caption p { margin:0; color:var(--pp-gold); font-family:var(--pp-font-nota); font-size:29px }
+    .panel { position:relative; z-index:1; width:50%; min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:44px clamp(32px,5vw,80px); margin-left:0 }
+    .register .panel { margin-left:50% }
+    .content { width:100%; max-width:400px }
+    .register .content { max-width:500px }
+    .brand { display:inline-flex; align-items:center; min-height:44px; margin-bottom:34px }
+    .brand img { width:150px; height:auto; display:block }
+    h1 { font-family:var(--pp-font-titulo); font-size:clamp(40px,4.3vw,64px); font-weight:400; line-height:1.08; letter-spacing:-.025em; margin:0 0 14px; text-wrap:balance }
+    h1:focus { outline:0 }
+    .intro { color:var(--pp-texto-2); font-size:15px; line-height:1.6; margin:0 0 6px; max-width:40ch }
+    .note { font-family:var(--pp-font-nota); color:var(--pp-dourado-profundo); font-size:26px; margin:0 0 28px }
+    form { display:grid; gap:18px }
+    .fields { display:grid; gap:16px }
+    .field { display:grid; gap:7px; min-width:0; font-size:13px; font-weight:600 }
+    .field input { width:100%; min-width:0; height:50px; padding:0 14px; border:1px solid var(--pp-texto-3); background:transparent; border-radius:12px; color:var(--pp-marrom); font-size:16px; font-weight:400; caret-color:var(--pp-dourado-profundo) }
+    .field input::placeholder { color:var(--pp-texto-2); opacity:1 }
+    .field input:focus-visible { border-color:var(--pp-dourado-profundo); outline-offset:2px }
+    .password { position:relative }
+    .password input { padding-right:48px }
+    .reveal { position:absolute; top:3px; right:3px; width:44px; height:44px; display:grid; place-items:center; border:0; border-radius:8px; background:transparent; color:var(--pp-texto-2) }
+    .reveal svg { width:19px; height:19px; fill:none; stroke:currentColor; stroke-width:1.7 }
+    .forgot { min-height:44px; display:flex; align-items:center; justify-content:flex-end; font-size:13px; margin-top:-13px; margin-bottom:-8px }
+    .cta,.google { min-height:50px; width:100%; display:flex; justify-content:center; align-items:center; gap:12px; padding:12px 20px; border-radius:12px; font-size:14px; font-weight:600; transition:background-color 150ms }
+    .cta { background:var(--pp-marrom); color:var(--pp-creme); border:1px solid var(--pp-marrom) }
+    .cta:hover { background:var(--pp-dourado-profundo) }
+    .cta svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.8 }
+    .google { background:transparent; color:var(--pp-marrom); border:1px solid var(--pp-texto-3) }
+    .google:hover { background:var(--pp-creme-2) }
+    .divider { display:flex; align-items:center; gap:14px; margin:23px 0; color:var(--pp-texto-2); font-size:12px }
+    .divider::before,.divider::after { content:""; height:1px; background:var(--pp-creme-borda); flex:1 }
+    .switch { margin:24px 0 0; font-size:13px; display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:0 7px; color:var(--pp-texto-2) }
+    .switch a { min-height:44px; display:inline-flex; align-items:center; font-weight:600 }
+    .terms { display:flex; align-items:flex-start; gap:10px; min-height:44px; color:var(--pp-texto-2); font-size:12px; line-height:1.6 }
+    .terms input { width:18px; height:18px; flex:none; margin:3px 0 0; accent-color:var(--pp-marrom) }
+    .terms span { padding-top:2px }
+    .full { grid-column:1/-1 }
+    .prototype-note { margin:24px 0 0; color:var(--pp-texto-2); font-size:14px; line-height:1.6; text-align:center }
+    .status { border:1px solid var(--pp-dourado-profundo); border-radius:8px; padding:12px; color:var(--pp-marrom); background:var(--pp-creme-2); font-size:13px; line-height:1.5; margin:0 0 20px }
+    [hidden] { display:none!important }
+    @media(min-width:1100px) { .register .fields { grid-template-columns:1fr 1fr } }
+    @media(max-height:740px) and (min-width:901px) { .panel { align-items:flex-start; padding-block:28px } .brand { margin-bottom:20px } .note { margin-bottom:20px } .caption { bottom:32px } .register .fields { gap:12px } .register form { gap:12px } .register .divider { margin:16px 0 } }
+    @media(max-width:900px) { .photo { display:none } .panel,.register .panel { width:100%; margin:0; padding:32px 24px max(32px,env(safe-area-inset-bottom)); align-items:flex-start } .content,.register .content { max-width:500px } .brand { margin-bottom:32px } .brand img { width:140px } h1 { font-size:44px } .note { font-size:25px } .fields { grid-template-columns:1fr } }
+    @media(max-width:360px) { .panel,.register .panel { padding-inline:20px } h1 { font-size:39px } }
+    @media(prefers-reduced-motion:reduce) { *,*::before,*::after { transition:none!important; animation:none!important; scroll-behavior:auto!important } }
+  </style>
+</head>
+<body>
+  <main class="shell" id="shell">
+    <aside class="photo" aria-hidden="true">
+      <img src="../../public/background-image.png" alt="">
+      <div class="caption"><h2>Seu intervalo.<br>Do seu jeito.</h2><p>Peça no app. Retire no balcão.</p></div>
+    </aside>
+    <section class="panel" aria-label="Acesso à Pires">
+      <div class="content">
+        <a class="brand" href="#login" aria-label="Pires Panificadora — entrar"><img src="../../public/logo.png" alt="Pires Panificadora"></a>
+        <div class="status" id="status" role="status" hidden></div>
+        <div id="login">
+          <h1 tabindex="-1">Bom te ver<br>por aqui.</h1>
+          <p class="intro">Entre para escolher seu lanche e acompanhar seu pedido.</p>
+          <p class="note">o próximo intervalo começa aqui</p>
+          <form data-demo="login">
+            <label class="field">E-mail<input type="email" autocomplete="email" name="email" placeholder="Seu e-mail" required></label>
+            <label class="field">Senha<span class="password"><input type="password" autocomplete="current-password" name="password" placeholder="Sua senha" required><button class="reveal" type="button" aria-label="Mostrar senha"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
+            <a class="forgot" href="#recuperar">Esqueceu sua senha?</a>
+            <button class="cta" type="submit">Entrar<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+          </form>
+          <div class="divider">ou continue com</div>
+          <button class="google" type="button">Continuar com Google</button>
+          <p class="switch">Ainda não tem conta? <a href="#cadastro">Criar conta</a></p>
+        </div>
+        <div id="cadastro" hidden inert>
+          <h1 tabindex="-1">Seu lugar<br>na Pires.</h1>
+          <p class="intro">Crie sua conta para pedir e retirar no balcão.</p>
+          <p class="note">a gente se encontra no intervalo</p>
+          <form data-demo="cadastro">
+            <div class="fields">
+              <label class="field">Nome completo<input name="name" autocomplete="name" placeholder="Seu nome" required></label>
+              <label class="field">E-mail<input type="email" name="email" autocomplete="email" placeholder="Seu e-mail" required></label>
+              <label class="field">Telefone<input type="tel" name="phone" autocomplete="tel" placeholder="(47) 99999-9999" required></label>
+              <label class="field">Senha<span class="password"><input type="password" name="password" autocomplete="new-password" placeholder="Crie uma senha" required><button class="reveal" type="button" aria-label="Mostrar senha"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
+              <label class="field full">Confirmar senha<input type="password" name="password-confirm" autocomplete="new-password" placeholder="Repita sua senha" required></label>
+            </div>
+            <label class="terms"><input type="checkbox" required><span>Aceito os Termos de Uso e a Política de Privacidade.</span></label>
+            <button class="cta" type="submit">Criar conta<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+          </form>
+          <div class="divider">ou continue com</div>
+          <button class="google" type="button">Continuar com Google</button>
+          <p class="switch">Já tem uma conta? <a href="#login">Fazer login</a></p>
+        </div>
+        <p class="prototype-note">Protótipo de composição e movimento. Nenhuma conta é acessada ou criada.</p>
+      </div>
+    </section>
+  </main>
+  <script>
+    const shell = document.getElementById('shell');
+    const login = document.getElementById('login');
+    const cadastro = document.getElementById('cadastro');
+    const status = document.getElementById('status');
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    function showStatus(message) { status.hidden = false; status.textContent = message; }
+    function render(initial = false) {
+      if (location.hash === '#recuperar') {
+        showStatus('A recuperação está descrita na especificação. Este protótipo demonstra a troca entre login e cadastro.');
+        return;
+      }
+      const registering = location.hash === '#cadastro';
+      if (initial) document.querySelector('.photo').style.transition = 'none';
+      shell.classList.toggle('register', registering);
+      login.hidden = registering; login.inert = registering;
+      cadastro.hidden = !registering; cadastro.inert = !registering;
+      status.hidden = true;
+      if (!initial) {
+        const incoming = registering ? cadastro : login;
+        if (window.innerWidth <= 900 && !reduce.matches) incoming.animate([{opacity:.4,transform:'translateY(6px)'},{opacity:1,transform:'translateY(0)'}],{duration:140,easing:'ease-out'});
+        incoming.querySelector('h1').focus({preventScroll:true});
+        window.scrollTo({top:0,behavior:'instant'});
+      }
+      if (initial) requestAnimationFrame(() => requestAnimationFrame(() => document.querySelector('.photo').style.removeProperty('transition')));
+    }
+    document.querySelectorAll('.reveal').forEach(button => button.addEventListener('click', () => {
+      const input = button.previousElementSibling;
+      const showing = input.type === 'password';
+      input.type = showing ? 'text' : 'password';
+      button.setAttribute('aria-label',showing ? 'Ocultar senha' : 'Mostrar senha');
+      button.setAttribute('aria-pressed',String(showing));
+    }));
+    document.querySelectorAll('form').forEach(form => form.addEventListener('submit', event => {
+      event.preventDefault();
+      showStatus('Demonstração visual: os dados não foram enviados. Nenhuma conta foi acessada ou criada.');
+    }));
+    document.querySelectorAll('.google').forEach(button => button.addEventListener('click', () => showStatus('O Google não é conectado neste protótipo. A implementação mantém o botão oficial existente.')));
+    window.addEventListener('hashchange',() => render());
+    render(true);
+  </script>
+</body>
+</html>

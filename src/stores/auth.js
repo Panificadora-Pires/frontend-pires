@@ -20,6 +20,8 @@ export const useAuthStore = defineStore("auth", {
     erro: null,
     sessaoInicializada: false,
     geracaoOperacao: 0,
+    pendenciasTemporarias: {},
+    chaveOperacao: null,
   }),
 
   getters: {
@@ -35,19 +37,19 @@ export const useAuthStore = defineStore("auth", {
           password,
         });
 
-        if (contexto.versao !== getSessionVersion()) return;
+        if (!contexto.atual()) return;
         useCartStore().sincronizarConta(null);
         this.usuario = null;
         persistTokens(data);
         contexto.versao = getSessionVersion();
-        await this.buscarUsuarioLogado();
+        await this.buscarUsuarioLogado(contexto);
 
         return { usuario: this.usuario };
-      });
+      }, `login:${email.trim().toLowerCase()}`);
     },
 
     async register(userData) {
-      return this._executar(async () => {
+      return this._executar(async (contexto) => {
         const payload = {
           name: userData.name.trim(),
           email: userData.email.trim().toLowerCase(),
@@ -57,7 +59,8 @@ export const useAuthStore = defineStore("auth", {
 
         const { data } = await authService.register(payload);
 
-        salvarJsonSessao(ACTIVATION_STORAGE_KEY, {
+        if (!contexto.atual()) return;
+        this._salvarPendencia(ACTIVATION_STORAGE_KEY, {
           email: payload.email,
           requestId: data.verification_id,
           emailSent: data.email_sent,
@@ -81,26 +84,28 @@ export const useAuthStore = defineStore("auth", {
         };
       }
 
-      return this._executar(async () => {
+      return this._executar(async (contexto) => {
         const { data } = await authService.confirmActivation({
           request_id: pendencia.requestId,
           code,
         });
 
-        sessionStorage.removeItem(ACTIVATION_STORAGE_KEY);
+        if (!contexto.atual() || this.obterAtivacaoPendente()?.requestId !== pendencia.requestId) return;
+        this.limparAtivacaoPendente();
         return data;
       });
     },
 
     async reenviarAtivacao(email) {
-      return this._executar(async () => {
+      return this._executar(async (contexto) => {
         const emailNormalizado = email.trim().toLowerCase();
         const { data } = await authService.resendActivation(emailNormalizado);
 
-        salvarJsonSessao(ACTIVATION_STORAGE_KEY, {
+        if (!contexto.atual()) return;
+        this._salvarPendencia(ACTIVATION_STORAGE_KEY, {
           email: emailNormalizado,
           requestId: data.verification_id,
-          emailSent: true,
+          emailSent: null,
           retryAfterSeconds: Number(data.retry_after_seconds || 0),
           requestedAt: Date.now(),
         });
@@ -110,21 +115,23 @@ export const useAuthStore = defineStore("auth", {
     },
 
     obterAtivacaoPendente() {
-      return lerJsonSessao(ACTIVATION_STORAGE_KEY);
+      return this._lerPendencia(ACTIVATION_STORAGE_KEY);
     },
 
     limparAtivacaoPendente() {
-      sessionStorage.removeItem(ACTIVATION_STORAGE_KEY);
+      this._removerPendencia(ACTIVATION_STORAGE_KEY);
     },
 
     async solicitarRedefinicaoSenha(email) {
-      return this._executar(async () => {
+      return this._executar(async (contexto) => {
         const emailNormalizado = email.trim().toLowerCase();
         const { data } =
           await authService.requestPasswordReset(emailNormalizado);
 
-        salvarJsonSessao(PASSWORD_RESET_STORAGE_KEY, {
+        if (!contexto.atual()) return;
+        this._salvarPendencia(PASSWORD_RESET_STORAGE_KEY, {
           email: emailNormalizado,
+          message: data.message,
           requestId: data.verification_id,
           retryAfterSeconds: Number(data.retry_after_seconds || 0),
           requestedAt: Date.now(),
@@ -135,11 +142,11 @@ export const useAuthStore = defineStore("auth", {
     },
 
     obterRedefinicaoPendente() {
-      return lerJsonSessao(PASSWORD_RESET_STORAGE_KEY);
+      return this._lerPendencia(PASSWORD_RESET_STORAGE_KEY);
     },
 
     limparRedefinicaoPendente() {
-      sessionStorage.removeItem(PASSWORD_RESET_STORAGE_KEY);
+      this._removerPendencia(PASSWORD_RESET_STORAGE_KEY);
     },
 
     async redefinirSenha({ code, newPassword }) {
@@ -160,7 +167,8 @@ export const useAuthStore = defineStore("auth", {
           new_password: newPassword,
         });
 
-        sessionStorage.removeItem(PASSWORD_RESET_STORAGE_KEY);
+        if (!contexto.atual() || this.obterRedefinicaoPendente()?.requestId !== pendencia.requestId) return;
+        this.limparRedefinicaoPendente();
         this._limparSessaoLocal();
         contexto.versao = getSessionVersion();
         contexto.operacao = this.geracaoOperacao;
@@ -181,21 +189,21 @@ export const useAuthStore = defineStore("auth", {
       return this._executar(async (contexto) => {
         const { data } = await authService.googleLogin(credential);
 
-        if (contexto.versao !== getSessionVersion()) return;
+        if (!contexto.atual()) return;
         useCartStore().sincronizarConta(null);
         this.usuario = null;
         persistTokens(data);
         contexto.versao = getSessionVersion();
-        await this.buscarUsuarioLogado();
+        await this.buscarUsuarioLogado(contexto);
 
         return { usuario: this.usuario };
       });
     },
 
-    async buscarUsuarioLogado() {
+    async buscarUsuarioLogado(contexto = null) {
       const versao = getSessionVersion();
       const { data } = await authService.getProfile();
-      if (versao !== getSessionVersion()) return null;
+      if (versao !== getSessionVersion() || (contexto && !contexto.atual())) return null;
       this.usuario = data;
       useCartStore().sincronizarConta(data?.id);
       return data;
@@ -204,7 +212,7 @@ export const useAuthStore = defineStore("auth", {
     async atualizarPerfil(payload) {
       return this._executar(async (contexto) => {
         const { data } = await authService.updateProfile(payload);
-        if (contexto.versao !== getSessionVersion()) return;
+        if (!contexto.atual()) return;
         this.usuario = data;
         useCartStore().sincronizarConta(data?.id);
         return data;
@@ -265,16 +273,51 @@ export const useAuthStore = defineStore("auth", {
       clearTokens();
     },
 
-    async _executar(callback) {
+    invalidarOperacao() {
+      this.geracaoOperacao += 1;
+      this.carregando = false;
+      this.erro = null;
+    },
+
+    _salvarPendencia(chave, valor) {
+      // A conta pode já ter sido criada; storage bloqueado não deve simular falha no cadastro.
+      // O fallback vive apenas nesta página e nunca recebe senhas ou códigos.
+      try {
+        sessionStorage.setItem(chave, JSON.stringify(valor));
+        delete this.pendenciasTemporarias[chave];
+      } catch { this.pendenciasTemporarias[chave] = valor; }
+    },
+
+    _removerPendencia(chave) {
+      try {
+        sessionStorage.removeItem(chave);
+        delete this.pendenciasTemporarias[chave];
+      } catch { this.pendenciasTemporarias[chave] = null; }
+    },
+
+    _lerPendencia(chave) {
+      return Object.hasOwn(this.pendenciasTemporarias, chave)
+        ? this.pendenciasTemporarias[chave]
+        : lerJsonSessao(chave);
+    },
+
+    async _executar(callback, chave = null) {
+      // Repetir uma submissão não duplica HTTP. Uma nova identidade de login
+      // pode substituir a anterior; a geração invalida seus efeitos tardios.
+      if (this.carregando && (!chave || !this.chaveOperacao || chave === this.chaveOperacao)) {
+        return { ok: false, ignorado: true, campos: {} };
+      }
       const contexto = { versao: getSessionVersion(), operacao: ++this.geracaoOperacao };
+      contexto.atual = () => contexto.operacao === this.geracaoOperacao && contexto.versao === getSessionVersion();
       const operacaoAtual = () => contexto.operacao === this.geracaoOperacao;
       const ignorado = { ok: false, ignorado: true, campos: {} };
       this.carregando = true;
+      this.chaveOperacao = chave;
       this.erro = null;
 
       try {
         const data = await callback(contexto);
-        if (!operacaoAtual() || contexto.versao !== getSessionVersion()) return ignorado;
+        if (data === undefined || !operacaoAtual() || contexto.versao !== getSessionVersion()) return ignorado;
         return { ok: true, data, campos: {} };
       } catch (error) {
         if (!operacaoAtual()) return ignorado;
@@ -357,16 +400,12 @@ function primeiraMensagem(valor) {
   return "";
 }
 
-function salvarJsonSessao(chave, valor) {
-  sessionStorage.setItem(chave, JSON.stringify(valor));
-}
-
 function lerJsonSessao(chave) {
   try {
     const valor = sessionStorage.getItem(chave);
     return valor ? JSON.parse(valor) : null;
   } catch {
-    sessionStorage.removeItem(chave);
+    try { sessionStorage.removeItem(chave); } catch { /* Storage indisponível. */ }
     return null;
   }
 }

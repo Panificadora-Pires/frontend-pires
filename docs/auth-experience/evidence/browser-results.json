@@ -1,0 +1,113 @@
+{
+  "synthetic": true,
+  "results": [
+    {
+      "name": "URL raiz anônima redireciona login; raiz autenticada sobrevive refresh",
+      "ok": true
+    },
+    {
+      "name": "navegação bidirecional, histórico, Google persistente e foco",
+      "ok": true
+    },
+    {
+      "name": "refresh durante a transição e acesso direto",
+      "ok": true
+    },
+    {
+      "name": "clique repetido durante saída não dispara navegação inversa",
+      "ok": true
+    },
+    {
+      "name": "login HTTP 400: erro recuperável",
+      "ok": true
+    },
+    {
+      "name": "login HTTP 401: erro recuperável",
+      "ok": true
+    },
+    {
+      "name": "login HTTP 403: erro recuperável",
+      "ok": true
+    },
+    {
+      "name": "login HTTP 429: erro recuperável",
+      "ok": true
+    },
+    {
+      "name": "login válido preserva destino interno",
+      "ok": true
+    },
+    {
+      "name": "submissão duplicada e navegação durante HTTP pendente",
+      "ok": true
+    },
+    {
+      "name": "falha de rede mantém formulário e permite nova tentativa",
+      "ok": true
+    },
+    {
+      "name": "senha: Voltar recusado pelo guard preserva login legítimo",
+      "ok": true
+    },
+    {
+      "name": "senha: Avançar recusado pelo guard preserva login legítimo",
+      "ok": true
+    },
+    {
+      "name": "Google: Voltar recusado pelo guard preserva login legítimo",
+      "ok": true
+    },
+    {
+      "name": "Google: Avançar recusado pelo guard preserva login legítimo",
+      "ok": true
+    },
+    {
+      "name": "Google: Voltar durante transição invalida HTTP retido",
+      "ok": true
+    },
+    {
+      "name": "Google: Avançar durante transição invalida HTTP retido",
+      "ok": true
+    },
+    {
+      "name": "Google integrado usa credencial sintética e destino",
+      "ok": true
+    },
+    {
+      "name": "falha no carregamento Google mantém login por senha",
+      "ok": true
+    },
+    {
+      "name": "cadastro exige aceite, mostra pendência jurídica e erros do servidor",
+      "ok": true
+    },
+    {
+      "name": "Google no cadastro exige ciência do aviso jurídico",
+      "ok": true
+    },
+    {
+      "name": "cadastro com falha inicial de entrega conduz à confirmação verdadeira",
+      "ok": true
+    },
+    {
+      "name": "confirmação inválida/expirada, reenvio/cooldown e sucesso",
+      "ok": true
+    },
+    {
+      "name": "recuperação genérica, persistência, senha fraca/código expirado e sucesso",
+      "ok": true
+    },
+    {
+      "name": "nova aba sem solicitação não simula recuperação",
+      "ok": true
+    },
+    {
+      "name": "reduced motion, teclado e senha visível",
+      "ok": true
+    },
+    {
+      "name": "capturas responsivas cinco telas e pouca altura sem overflow",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+﻿PASS URL raiz anônima redireciona login; raiz autenticada sobrevive refresh
+PASS navegação bidirecional, histórico, Google persistente e foco
+PASS refresh durante a transição e acesso direto
+PASS clique repetido durante saída não dispara navegação inversa
+PASS login HTTP 400: erro recuperável
+PASS login HTTP 401: erro recuperável
+PASS login HTTP 403: erro recuperável
+PASS login HTTP 429: erro recuperável
+PASS login válido preserva destino interno
+PASS submissão duplicada e navegação durante HTTP pendente
+PASS falha de rede mantém formulário e permite nova tentativa
+PASS Google integrado usa credencial sintética e destino
+PASS falha no carregamento Google mantém login por senha
+PASS cadastro exige aceite, mostra pendência jurídica e erros do servidor
+PASS Google no cadastro exige ciência do aviso jurídico
+PASS cadastro com falha inicial de entrega conduz à confirmação verdadeira
+PASS confirmação inválida/expirada, reenvio/cooldown e sucesso
+PASS recuperação genérica, persistência, senha fraca/código expirado e sucesso
+PASS nova aba sem solicitação não simula recuperação
+PASS reduced motion, teclado e senha visível
+PASS capturas responsivas cinco telas e pouca altura sem overflow

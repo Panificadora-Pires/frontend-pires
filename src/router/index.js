@@ -4,6 +4,12 @@ import { useAuthStore } from "@/stores/auth";
 
 const routes = [
   {
+    path: "/acesso",
+    component: () => import("@/components/layout/AuthLayout.vue"),
+    redirect: { name: "login" },
+    meta: { publica: true, somenteVisitante: true },
+    children: [
+  {
     path: "/login",
     name: "login",
     component: () => import("@/views/auth/LoginView.vue"),
@@ -32,6 +38,8 @@ const routes = [
     name: "redefinir-senha",
     component: () => import("@/views/auth/ResetPasswordView.vue"),
     meta: { publica: true, somenteVisitante: true },
+  },
+    ],
   },
 
   {
