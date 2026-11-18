@@ -68,6 +68,7 @@
         :key="etapa.status"
         type="button"
         :class="{ 'is-current': abaMobile === etapa.status }"
+        :data-status="etapa.status"
         :aria-current="abaMobile === etapa.status ? 'true' : undefined"
         @click="selecionarAba(etapa.status)"
       >
@@ -146,7 +147,7 @@
       </div>
     </Transition>
 
-    <p class="kanban-footer">Os números da operação vêm do Django. Cada etapa carrega até 12 pedidos por página e é sincronizada automaticamente. Para retirar pedidos, utilize os detalhes e o QR Code.</p>
+    <p class="kanban-footer">Os totais vêm do Django. Cada etapa apresenta até 12 pedidos por página. Na retirada, valide o QR Code apresentado pelo cliente.</p>
   </section>
 </template>
 
@@ -298,15 +299,88 @@ function mudarPagina(status, deslocamento) {
   paginas[status] = proxima;
   void carregarColunas().catch(() => {});
 }
-async function avancar(pedido) {
+function prepararMovimentoCard(elemento) {
+  if (
+    !elemento ||
+    window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
+  ) return null;
+
+  const origem = elemento.getBoundingClientRect();
+  if (!origem.width || !origem.height) return null;
+
+  const fantasma = elemento.cloneNode(true);
+  fantasma.setAttribute("aria-hidden", "true");
+  fantasma.inert = true;
+  Object.assign(fantasma.style, {
+    position: "fixed",
+    top: `${origem.top}px`,
+    left: `${origem.left}px`,
+    width: `${origem.width}px`,
+    height: `${origem.height}px`,
+    margin: "0",
+    pointerEvents: "none",
+    zIndex: "1000",
+    boxShadow: "0 20px 45px rgba(45, 24, 12, .18)",
+    transformOrigin: "top left",
+  });
+
+  return {
+    montar() {
+      document.body.append(fantasma);
+    },
+    animar(status, id) {
+      const coluna = document.querySelector(`.kanban-column[data-status="${status}"]`);
+      const alvo = coluna?.querySelector(`.kanban-card[data-pedido-id="${id}"]`);
+      let destino = alvo?.getBoundingClientRect();
+      if (!destino?.width) destino = coluna?.querySelector(".kanban-column-head")?.getBoundingClientRect();
+      if (!destino?.width) {
+        destino = document.querySelector(`.kanban-stage-tabs button[data-status="${status}"]`)?.getBoundingClientRect();
+      }
+      if (!destino?.width || !fantasma.animate) {
+        fantasma.remove();
+        return;
+      }
+      const dx = destino.left - origem.left;
+      const dy = destino.top - origem.top;
+      const escala = Math.min(1, destino.width / origem.width);
+
+      // O card percorre a distância real entre as duas colunas.
+      const animacao = fantasma.animate(
+        [
+          { transform: "translate3d(0, 0, 0) scale(1)", opacity: 1 },
+          { transform: `translate3d(${dx}px, ${dy}px, 0) scale(${escala})`, opacity: .12 },
+        ],
+        { duration: 520, easing: "cubic-bezier(.22, 1, .36, 1)", fill: "forwards" },
+      );
+      animacao.finished.then(() => fantasma.remove(), () => fantasma.remove());
+      alvo?.animate?.(
+        [{ opacity: .5, transform: "scale(.975)" }, { opacity: 1, transform: "scale(1)" }],
+        { duration: 350, easing: "cubic-bezier(.22, 1, .36, 1)" },
+      );
+    },
+    remover() {
+      fantasma.remove();
+    },
+  };
+}
+async function avancar(pedido, event) {
   const acao = proximaAcao(pedido);
   if (!acao || emAcao.value !== null) return;
+  const movimento = prepararMovimentoCard(event?.currentTarget?.closest(".kanban-card"));
   emAcao.value = pedido.id;
   erroAcao.value = "";
   try {
+    // A animação só começa depois de o Django confirmar a mudança.
     await pedidosStore.alterarStatus(pedido.id, acao.status);
+    movimento?.montar();
+    if (window.matchMedia?.("(max-width: 820px)")?.matches) {
+      selecionarAba(acao.status);
+    }
     await Promise.allSettled([resumo.carregar(), carregarColunas()]);
+    await nextTick();
+    movimento?.animar(acao.status, pedido.id);
   } catch (error) {
+    movimento?.remover();
     erroAcao.value = mensagemErroApi(error, "Não foi possível atualizar o pedido.");
   } finally {
     emAcao.value = null;
