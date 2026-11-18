@@ -42,3 +42,26 @@ test('resumo administrativo utiliza endpoint próprio e valida contagens',async(
   api.get=async()=>({data:{...resumo,pendentes:null}});
   await assert.rejects(service.resumoPedidosAdmin(),{code:'ADMIN_SUMMARY_INVALID'});
 });
+
+test('catálogo administrativo consulta uma única página com filtros',async()=>{
+  const calls=[];
+  const pagina={count:205,page:2,page_size:18,total_pages:12,next:'next',previous:'prev',results:[{id:22,estoque:2}]};
+  api.get=async(path,config)=>{calls.push({path,params:config?.params});return {data:pagina};};
+  assert.deepEqual(await service.listarProdutosAdminPagina({page:2,page_size:18,busca:'Coxinha',categoria:4,situacao:'reposicao'}),pagina);
+  assert.deepEqual(calls,[{path:'/produtos/admin_catalogo/',params:{page:2,page_size:18,busca:'Coxinha',categoria:4,situacao:'reposicao'}}]);
+});
+test('catálogo administrativo rejeita parâmetros inválidos e não apresenta dados parciais como completos',async()=>{
+  let calls=0;
+  api.get=async()=>{calls++;return {data:{results:[{id:1}],count:1}};};
+  await assert.rejects(service.listarProdutosAdminPagina({page:0}),{code:'ADMIN_CATALOG_PAGE_INVALID'});
+  await assert.rejects(service.listarProdutosAdminPagina({page_size:101}),{code:'ADMIN_CATALOG_PAGE_INVALID'});
+  assert.equal(calls,0);
+  await assert.rejects(service.listarProdutosAdminPagina(),{code:'ADMIN_CATALOG_PAGE_INVALID'});
+});
+test('indicadores globais do catálogo exigem valores inteiros e não aceitam falsos zeros',async()=>{
+  const indicadores={total:3100,ativos:3000,sem_estoque:5,reposicao:15,em_promocao:4};
+  api.get=async path=>{assert.equal(path,'/produtos/resumo_admin/');return {data:indicadores};};
+  assert.deepEqual(await service.resumoProdutosAdmin(),indicadores);
+  api.get=async()=>({data:{...indicadores,reposicao:null}});
+  await assert.rejects(service.resumoProdutosAdmin(),{code:'ADMIN_CATALOG_SUMMARY_INVALID'});
+});
