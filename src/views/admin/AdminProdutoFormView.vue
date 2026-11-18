@@ -160,6 +160,7 @@ import {
 } from "lucide-vue-next";
 import adminService from "@/services/admin.service";
 import { resolverUrlMidia } from "@/services/catalog.service";
+import { validarImagemProduto } from "@/utils/adminProdutoImagem";
 
 const route = useRoute();
 const router = useRouter();
@@ -204,12 +205,9 @@ function preencher(p) {
 function selecionarImagem(e) {
   const arquivo = e.target.files?.[0];
   if (!arquivo) return;
-  const extensaoValida = /\\.(jpe?g|png|webp)$/i.test(arquivo.name);
-  const tamanhoValido = arquivo.size <= 5 * 1024 * 1024;
-  if (!extensaoValida || !tamanhoValido) {
-    erroImagem.value = tamanhoValido
-      ? "Formato não suportado. Use JPG, PNG ou WebP."
-      : "Escolha uma imagem com até 5 MB.";
+  const mensagem = validarImagemProduto(arquivo);
+  if (mensagem) {
+    erroImagem.value = mensagem;
     e.target.value = "";
     return;
   }
@@ -257,7 +255,7 @@ async function carregar() {
     categorias.value = lista;
     if (produto) preencher(produto);
   } catch {
-    erroCarregamento.value = "Não foi possível carregar os dados necessários para editar este produto.";
+    erroCarregamento.value = "Não foi possível carregar os dados necessários para este formulário.";
   } finally {
     carregandoDados.value = false;
   }
