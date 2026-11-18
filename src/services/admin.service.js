@@ -72,7 +72,12 @@ async function listarTodasPaginas(path, params = {}) {
     itens.push(...pagina);
 
     if (Array.isArray(data)) break;
-    if (!data?.next || pagina.length === 0) break;
+    if (!data?.next) break;
+    if (pagina.length === 0 || page === MAX_PAGES) {
+      const error = new Error("Não foi possível obter a coleção completa. Os dados podem estar incompletos.");
+      error.code = "ADMIN_COLLECTION_INCOMPLETE";
+      throw error;
+    }
   }
 
   return itens;
