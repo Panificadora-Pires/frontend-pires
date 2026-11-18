@@ -148,7 +148,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   ArrowLeft,
@@ -160,6 +160,7 @@ import {
 } from "lucide-vue-next";
 import adminService from "@/services/admin.service";
 import { resolverUrlMidia } from "@/services/catalog.service";
+import { getSessionVersion } from "@/services/api";
 import { validarImagemProduto } from "@/utils/adminProdutoImagem";
 
 const route = useRoute();
@@ -187,6 +188,7 @@ const form = reactive({
   ativo: true,
 });
 const preview = computed(() => previewTemporario.value || imagemAtual.value);
+let geracaoCarregamento = 0;
 
 function preencher(p) {
   form.nome = p.nome || "";
@@ -244,25 +246,49 @@ async function salvar() {
   }
 }
 
+function limparFormulario() {
+  Object.assign(form, {
+    nome: "", descricao: "", categoria: "", unidade_medida: "unidade",
+    preco: "", preco_custo: "", estoque: 0, estoque_minimo: 0,
+    destaque: false, ativo: true,
+  });
+  if (previewTemporario.value) URL.revokeObjectURL(previewTemporario.value);
+  previewTemporario.value = "";
+  imagemAtual.value = "";
+  imagem.value = null;
+  erro.value = "";
+  erroImagem.value = "";
+}
 async function carregar() {
+  const geracao = ++geracaoCarregamento;
+  const sessao = getSessionVersion();
+  const id = route.params.id;
   carregandoDados.value = true;
   erroCarregamento.value = "";
   try {
     const [lista, produto] = await Promise.all([
       adminService.listarCategorias(),
-      editando.value ? adminService.obterProdutoAdmin(route.params.id) : Promise.resolve(null),
+      id ? adminService.obterProdutoAdmin(id) : Promise.resolve(null),
     ]);
+    if (geracao !== geracaoCarregamento || sessao !== getSessionVersion()) return;
     categorias.value = lista;
     if (produto) preencher(produto);
   } catch {
-    erroCarregamento.value = "Não foi possível carregar os dados necessários para este formulário.";
+    if (geracao === geracaoCarregamento && sessao === getSessionVersion()) {
+      erroCarregamento.value = "Não foi possível carregar os dados necessários para este formulário.";
+    }
   } finally {
-    carregandoDados.value = false;
+    if (geracao === geracaoCarregamento) carregandoDados.value = false;
   }
 }
 
+watch(() => route.params.id, () => {
+  limparFormulario();
+  void carregar();
+});
 onMounted(carregar);
 onBeforeUnmount(() => {
+  geracaoCarregamento += 1;
   if (previewTemporario.value) URL.revokeObjectURL(previewTemporario.value);
 });
 </script>
