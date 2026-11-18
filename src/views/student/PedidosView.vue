@@ -5,14 +5,12 @@ import { motion, useReducedMotion } from "motion-v";
 import {
   ArrowUpRight,
   Search,
-  RotateCw,
   ShoppingBag,
   CircleAlert,
 } from "lucide-vue-next";
 import OrderCard from "@/components/orders/OrderCard.vue";
 import OrderQRCodeModal from "@/components/orders/OrderQRCodeModal.vue";
 import OrderChatDrawer from "@/components/chat/OrderChatDrawer.vue";
-import BaseRefreshStatus from "@/components/ui/BaseRefreshStatus.vue";
 import { useOrdersStore } from "@/stores/orders";
 import { useChatStore } from "@/stores/chat";
 import { useAutoRefresh } from "@/composables/useAutoRefresh";
@@ -233,22 +231,9 @@ watch(
             para retirada</span
           ><span v-else>. Acompanhe as atualizações por aqui.</span>
         </p>
-        <button
-          type="button"
-          class="orders-page__refresh"
-          :disabled="atualizando"
-          @click="atualizarAgora"
-        >
-          <RotateCw :size="15" aria-hidden="true" />{{
-            atualizando ? "Atualizando…" : "Atualizar"
-          }}
-        </button>
+        <button v-if="erroAtualizacao" type="button" class="orders-page__retry" @click="atualizarAgora">Tentar novamente</button>
       </div>
-      <BaseRefreshStatus
-        :ultima-atualizacao="ultimaAtualizacao"
-        :atualizando="atualizando"
-        :erro="erroAtualizacao"
-      />
+
       <p v-if="avisoPedido" class="orders-page__target-notice" role="status">
         {{ avisoPedido }}
       </p>
@@ -373,6 +358,9 @@ watch(
 </template>
 
 <style scoped>
+.orders-page__retry{border:1px solid var(--pp-dourado-profundo);border-radius:8px;background:transparent;color:var(--pp-marrom);padding:9px 12px;min-height:40px;font-size:12px;font-weight:650;cursor:pointer}
+.orders-page__retry:hover{background:var(--pp-dourado-suave)}
+
 .orders-page {
   max-width: 1120px;
   margin: 12px auto 0;
