@@ -1,0 +1,23 @@
+﻿PASS login externo A→B limpa carrinho e substitui documento da aba A
+PASS checkout antes do storage event não envia itens A com token B
+PASS logout externo remove conta e carrinho sem aguardar nova interação
+PASS checkout A pendente não produz resultado nem limpa B
+PASS refresh externo da mesma conta preserva documento/carrinho/operação pendente
+PASS A→B→A antes do evento invalida geração do login original
+PASS refresh A concluído após login B preserva tokens B
+PASS refresh A recusado após login B preserva tokens B
+PASS logout tardio A antes do evento não remove nem revoga B
+{
+  "passed": 9,
+  "scenarios": [
+    "login externo A→B limpa carrinho e substitui documento da aba A",
+    "checkout antes do storage event não envia itens A com token B",
+    "logout externo remove conta e carrinho sem aguardar nova interação",
+    "checkout A pendente não produz resultado nem limpa B",
+    "refresh externo da mesma conta preserva documento/carrinho/operação pendente",
+    "A→B→A antes do evento invalida geração do login original",
+    "refresh A concluído após login B preserva tokens B",
+    "refresh A recusado após login B preserva tokens B",
+    "logout tardio A antes do evento não remove nem revoga B"
+  ]
+}

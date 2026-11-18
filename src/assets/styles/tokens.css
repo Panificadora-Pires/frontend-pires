@@ -135,6 +135,11 @@
   /* Fundo escurecido atrás de modais e gavetas. */
   --pp-overlay: rgba(26, 21, 17, 0.58);
 
+  /* Autenticação clara: texto de erro com contraste sobre creme. */
+  --pp-auth-error: #9b3029;
+  --pp-auth-error-bg: #f9e9e5;
+  --pp-auth-photo-shade: linear-gradient(180deg, transparent 0%, rgba(42, 22, 11, .88) 100%);
+
   /* Navegação flutuante: vidro neutro, com leitura sobre vídeo e creme. */
   --pp-header-top: 20px;
   --pp-header-edge: 32px;

@@ -1,0 +1,150 @@
+﻿
+> pires-panificadora@0.0.0 build
+> vite build
+
+vite v8.3.5 building client environment for production...
+transforming...
+✓ 2606 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/registerSW.js                                     0.13 kB
+dist/manifest.webmanifest                              0.46 kB
+dist/index.html                                        1.36 kB │ gzip:   0.60 kB
+dist/assets/bebidas-BbPYiB6N.webp                     10.60 kB
+dist/assets/combos-D0iyDAK6.webp                      30.57 kB
+dist/assets/coxinha-promocao-poster-C5d0nT0k.webp     38.23 kB
+dist/assets/salgados-DOTGz3ya.webp                    42.95 kB
+dist/assets/doces-CmcRfiq7.webp                       45.18 kB
+dist/assets/retirada-C-3Lnoqv.webp                    54.93 kB
+dist/assets/combo-balcao-runway-B0cbWa0M.webp         65.94 kB
+dist/assets/preparo--I0IipBW.webp                     80.60 kB
+dist/assets/vitrine-BP_bzGoe.webp                    101.93 kB
+dist/assets/coxinha-promocao-escura-DR6wWMNg.mp4   2,410.78 kB
+dist/assets/AdminUsuariosView-C8QCxrkl.css             0.32 kB │ gzip:   0.20 kB
+dist/assets/AdminProdutosView-BxKt9tpw.css             0.43 kB │ gzip:   0.23 kB
+dist/assets/BaseRefreshStatus-CAdIBSn9.css             0.51 kB │ gzip:   0.28 kB
+dist/assets/AdminCategoriasView-DskQs-kL.css           0.55 kB │ gzip:   0.25 kB
+dist/assets/AdminLineChart-DHBMpaJZ.css                0.76 kB │ gzip:   0.29 kB
+dist/assets/AdminPromocoesView-D1crOFMj.css            0.83 kB │ gzip:   0.36 kB
+dist/assets/AdminPedidosView-DLOFsBPD.css              1.34 kB │ gzip:   0.49 kB
+dist/assets/AdminProdutoFormView-BAcS6It2.css          1.73 kB │ gzip:   0.58 kB
+dist/assets/AdminDashboardView-mXOG5BF2.css            2.24 kB │ gzip:   0.66 kB
+dist/assets/ProductImage-Cb0riveZ.css                  3.04 kB │ gzip:   0.69 kB
+dist/assets/BaseInput-D-1Fmo-l.css                     3.48 kB │ gzip:   1.02 kB
+dist/assets/AdminRelatoriosView-DaeDWu77.css           4.56 kB │ gzip:   1.26 kB
+dist/assets/AuthLayout-B3pmBZYS.css                    5.04 kB │ gzip:   1.39 kB
+dist/assets/OrderChatPanel-D9hmzV5C.css                5.23 kB │ gzip:   1.22 kB
+dist/assets/ProductCard-DjU9erDQ.css                   6.60 kB │ gzip:   1.50 kB
+dist/assets/ProductDetailsModal-cF3hXvJp.css           7.98 kB │ gzip:   1.79 kB
+dist/assets/AdminPedidoDetalhesView-BO1N6EWR.css       9.96 kB │ gzip:   2.38 kB
+dist/assets/CardapioView-CuyC1JzR.css                 10.17 kB │ gzip:   2.29 kB
+dist/assets/ProfileView-DHn6VB8O.css                  10.39 kB │ gzip:   2.24 kB
+dist/assets/NotificacoesView-BPgpYHBJ.css             11.01 kB │ gzip:   2.20 kB
+dist/assets/AdminLayout-B4BGxCFf.css                  12.79 kB │ gzip:   2.91 kB
+dist/assets/FavoritosView-D-v9m5s2.css                13.11 kB │ gzip:   2.54 kB
+dist/assets/CarrinhoView-ZGcUplVF.css                 13.12 kB │ gzip:   2.75 kB
+dist/assets/PromocoesView-CbDLBvzG.css                15.27 kB │ gzip:   2.89 kB
+dist/assets/index-C0b_t3Nl.css                        15.30 kB │ gzip:   4.20 kB
+dist/assets/CheckoutView-oruyxZm3.css                 16.41 kB │ gzip:   3.02 kB
+dist/assets/PedidosView-Dr6bIHdj.css                  19.72 kB │ gzip:   3.91 kB
+dist/assets/StudentLayout-DX5THzNj.css                22.95 kB │ gzip:   4.39 kB
+dist/assets/HomeView--INuAPLT.css                     34.84 kB │ gzip:   6.37 kB
+dist/assets/logo-BuUh917n.js                           0.03 kB │ gzip:   0.05 kB
+dist/assets/coxinha-promocao-poster-BCZmIu_R.js        0.06 kB │ gzip:   0.08 kB
+dist/assets/minus-Cus4aXZv.js                          0.11 kB │ gzip:   0.13 kB
+dist/assets/check-oS9kx1Nm.js                          0.12 kB │ gzip:   0.14 kB
+dist/assets/chevron-down-IYWCs-Ap.js                   0.12 kB │ gzip:   0.14 kB
+dist/assets/chevron-right-DQHvCg3y.js                  0.13 kB │ gzip:   0.14 kB
+dist/assets/loader-circle-DJjTSH9a.js                  0.14 kB │ gzip:   0.15 kB
+dist/assets/plus-DzNCkU3o.js                           0.15 kB │ gzip:   0.15 kB
+dist/assets/x-D55jK2T5.js                              0.15 kB │ gzip:   0.15 kB
+dist/assets/arrow-left-v9j0cYth.js                     0.16 kB │ gzip:   0.16 kB
+dist/assets/arrow-right-CFTHXuYe.js                    0.16 kB │ gzip:   0.16 kB
+dist/assets/arrow-up-right-C8ZH2bFI.js                 0.16 kB │ gzip:   0.15 kB
+dist/assets/search-B9RYC6jK.js                         0.17 kB │ gzip:   0.16 kB
+dist/assets/circle-check-CuCqsEZB.js                   0.17 kB │ gzip:   0.16 kB
+dist/assets/user-iS6RL_41.js                           0.19 kB │ gzip:   0.18 kB
+dist/assets/lock-n0pyGm1z.js                           0.20 kB │ gzip:   0.19 kB
+dist/assets/mail-CGvwaoiM.js                           0.21 kB │ gzip:   0.20 kB
+dist/assets/message-circle-Dsq2pggh.js                 0.24 kB │ gzip:   0.21 kB
+dist/assets/circle-alert-B8yqfjb8.js                   0.25 kB │ gzip:   0.18 kB
+dist/assets/search-x-DRTQNcJ0.js                       0.25 kB │ gzip:   0.19 kB
+dist/assets/pencil-Bcdym6Wk.js                         0.27 kB │ gzip:   0.22 kB
+dist/assets/bell-CvG8CU1G.js                           0.29 kB │ gzip:   0.23 kB
+dist/assets/shopping-cart-v5DcDvLG.js                  0.29 kB │ gzip:   0.23 kB
+dist/assets/clock-3-DSKHPeQg.js                        0.31 kB │ gzip:   0.24 kB
+dist/assets/shield-check-Bbnu6mKK.js                   0.32 kB │ gzip:   0.24 kB
+dist/assets/refresh-cw-BMIrN0Gh.js                     0.32 kB │ gzip:   0.22 kB
+dist/assets/tag-DmGoKKr6.js                            0.32 kB │ gzip:   0.24 kB
+dist/assets/trash-2-BhWTE8Me.js                        0.32 kB │ gzip:   0.21 kB
+dist/assets/camera-BcXLQleF.js                         0.33 kB │ gzip:   0.25 kB
+dist/assets/shopping-bag-C3488H0L.js                   0.34 kB │ gzip:   0.24 kB
+dist/assets/key-round-DiaFeYmp.js                      0.35 kB │ gzip:   0.25 kB
+dist/assets/menu-BZrTUFs7.js                           0.36 kB │ gzip:   0.23 kB
+dist/assets/useAutoRefresh-BMLvU-uk.js                 0.39 kB │ gzip:   0.26 kB
+dist/assets/clipboard-list-BP70Dn_j.js                 0.41 kB │ gzip:   0.26 kB
+dist/assets/tags-B86lzcay.js                           0.41 kB │ gzip:   0.28 kB
+dist/assets/layers-Ce5_v2sv.js                         0.42 kB │ gzip:   0.24 kB
+dist/assets/send-horizontal-DOiwrHdQ.js                0.43 kB │ gzip:   0.29 kB
+dist/assets/auth-navigation-Dek688wj.js                0.49 kB │ gzip:   0.33 kB
+dist/assets/upload-B3MRaf6d.js                         0.50 kB │ gzip:   0.28 kB
+dist/assets/package-check-DGsbH-9H.js                  0.54 kB │ gzip:   0.32 kB
+dist/assets/qr-code-D71VfThJ.js                        0.80 kB │ gzip:   0.37 kB
+dist/assets/useApi-CROJJdhE-CXJOnl8C.js                0.80 kB │ gzip:   0.43 kB
+dist/assets/boxes-B6FyHLTb.js                          0.85 kB │ gzip:   0.39 kB
+dist/assets/CardActionContent-DvQQ9rAg.js              0.88 kB │ gzip:   0.52 kB
+dist/assets/navigationCatalog-l6m0B3ja.js              1.09 kB │ gzip:   0.44 kB
+dist/assets/createLucideIcon-Cn49pvhU.js               1.19 kB │ gzip:   0.69 kB
+dist/assets/catalog.service-By-CGX31.js                1.22 kB │ gzip:   0.67 kB
+dist/assets/autoRefresh-BBe244kA.js                    1.33 kB │ gzip:   0.67 kB
+dist/assets/BaseRefreshStatus-DTHuCv21.js              1.49 kB │ gzip:   0.78 kB
+dist/assets/orders-BowrIWCO.js                         1.96 kB │ gzip:   0.93 kB
+dist/assets/adminOrders-D_U0oxeS.js                    2.03 kB │ gzip:   0.89 kB
+dist/assets/ForgotPasswordView-BgrljeSz.js             2.10 kB │ gzip:   1.20 kB
+dist/assets/admin.service-DLo5LJZv.js                  2.53 kB │ gzip:   1.01 kB
+dist/assets/AdminLineChart-oyaZ_V3T.js                 2.70 kB │ gzip:   1.32 kB
+dist/assets/LoginView-DanXaUOY.js                      3.27 kB │ gzip:   1.61 kB
+dist/assets/chat-CQoMu2u0.js                           3.35 kB │ gzip:   1.37 kB
+dist/assets/notifications-WRk4zeQP.js                  3.44 kB │ gzip:   1.32 kB
+dist/assets/ProductCard-DUGhsADM.js                    3.59 kB │ gzip:   1.46 kB
+dist/assets/BaseInput-BsUrP7ct.js                      3.97 kB │ gzip:   1.69 kB
+dist/assets/AdminUsuariosView-DYLd6Ozn.js              4.08 kB │ gzip:   1.68 kB
+dist/assets/AdminCategoriasView-BBiQW450.js            4.28 kB │ gzip:   1.71 kB
+dist/assets/ResetPasswordView-Cl9bgaa7.js              4.87 kB │ gzip:   2.10 kB
+dist/assets/vooAoCarrinho-B5yDfLWI.js                  5.09 kB │ gzip:   2.27 kB
+dist/assets/VerifyAccountView-CQHWw4PD.js              5.13 kB │ gzip:   2.22 kB
+dist/assets/RegisterView-BIpBU4CD.js                   5.52 kB │ gzip:   2.41 kB
+dist/assets/AdminLayout-wmKTBh_M.js                    5.73 kB │ gzip:   2.10 kB
+dist/assets/AdminPedidosView-Dc4vtXuF.js               6.48 kB │ gzip:   2.60 kB
+dist/assets/AdminPromocoesView-DWoeW99j.js             6.80 kB │ gzip:   2.46 kB
+dist/assets/AdminProdutosView-fMHOLXn8.js              6.83 kB │ gzip:   2.76 kB
+dist/assets/ProductDetailsModal-BXFXRN-2.js            7.23 kB │ gzip:   2.85 kB
+dist/assets/OrderChatPanel-y2I3UiGH.js                 7.32 kB │ gzip:   3.13 kB
+dist/assets/AdminProdutoFormView-YLxv6dka.js           7.49 kB │ gzip:   2.88 kB
+dist/assets/AdminDashboardView-q1_9NHVZ.js             8.96 kB │ gzip:   3.09 kB
+dist/assets/AuthLayout-YE82cnQS.js                     9.01 kB │ gzip:   4.10 kB
+dist/assets/AdminRelatoriosView-B2gO1ZeY.js           11.17 kB │ gzip:   3.89 kB
+dist/assets/ProductImage-pnMshUDK.js                  11.18 kB │ gzip:   3.29 kB
+dist/assets/CardapioView-B5RhetJ4.js                  12.29 kB │ gzip:   4.77 kB
+dist/assets/NotificacoesView-knD-tMGy.js              13.07 kB │ gzip:   4.78 kB
+dist/assets/CarrinhoView-DXB5GOJk.js                  13.40 kB │ gzip:   4.79 kB
+dist/assets/ProfileView-C2Xb8sPN.js                   13.89 kB │ gzip:   5.06 kB
+dist/assets/PromocoesView-uwnXN73h.js                 17.36 kB │ gzip:   6.57 kB
+dist/assets/CheckoutView-CqC4K_Za.js                  19.52 kB │ gzip:   6.67 kB
+dist/assets/PedidosView-DGLHfpTk.js                   22.09 kB │ gzip:   7.84 kB
+dist/assets/StudentLayout-C8RnnKOt.js                 30.62 kB │ gzip:  10.42 kB
+dist/assets/HomeView-zQqJQqzU.js                      35.16 kB │ gzip:  11.96 kB
+dist/assets/FavoritosView-BudlADJ4.js                 37.95 kB │ gzip:  14.14 kB
+dist/assets/index-CFnFEojS.js                         64.41 kB │ gzip:  24.65 kB
+dist/assets/api-C-fcP-As.js                          119.06 kB │ gzip:  45.02 kB
+dist/assets/use-reduced-motion-DP0Q8fWJ.js           139.62 kB │ gzip:  45.73 kB
+dist/assets/AdminPedidoDetalhesView-CUnUfBWr.js      493.72 kB │ gzip: 130.71 kB
+
+✓ built in 1.64s
+
+PWA v1.3.0
+mode      generateSW
+precache  131 entries (1707.53 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-9c191d2f.js

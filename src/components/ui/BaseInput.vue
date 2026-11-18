@@ -28,7 +28,7 @@
         :autocomplete="autocomplete"
         :disabled="disabled"
         :aria-invalid="Boolean(error)"
-        :aria-describedby="error ? errorId : undefined"
+        :aria-describedby="[ $attrs['aria-describedby'], error ? errorId : '' ].filter(Boolean).join(' ') || undefined"
         class="pp-field__input"
         @input="$emit('update:modelValue', $event.target.value)"
         @blur="$emit('blur')"
@@ -40,6 +40,7 @@
         class="pp-field__toggle"
         :disabled="disabled"
         :aria-label="mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'"
+        :aria-pressed="mostrarSenha"
         @click="mostrarSenha = !mostrarSenha"
       >
         <component :is="mostrarSenha ? EyeOff : Eye" :size="20" />

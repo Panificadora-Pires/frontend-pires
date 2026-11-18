@@ -1,265 +1,67 @@
-<template>
-  <AuthLayout
-    wide
-    promo-mode="register"
-    :back-to="{ name: 'login' }"
-    back-label="Voltar para o login"
-  >
-    <template #heading>
-      <h1>Crie sua conta na <span>Pires Panificadora</span></h1>
-      <p>É rápido, fácil e permite que você reserve seus produtos favoritos.</p>
-    </template>
-
-    <div v-if="erroGeral" class="auth-alert auth-alert--error" role="alert">
-      {{ erroGeral }}
-    </div>
-
-    <form
-      class="auth-form auth-form--register"
-      novalidate
-      @submit.prevent="handleRegister"
-    >
-      <div class="auth-form__grid">
-        <BaseInput
-          :model-value="form.name"
-          label="Nome completo"
-          placeholder="Digite seu nome completo"
-          :icon="User"
-          :error="erros.name"
-          autocomplete="name"
-          name="name"
-          @update:model-value="form.name = $event"
-          @blur="validarNome"
-        />
-
-        <BaseInput
-          :model-value="form.email"
-          label="E-mail"
-          type="email"
-          placeholder="Digite seu e-mail"
-          :icon="Mail"
-          :error="erros.email"
-          autocomplete="email"
-          inputmode="email"
-          name="email"
-          @update:model-value="form.email = $event"
-          @blur="validarEmail"
-        />
-
-        <BaseInput
-          :model-value="form.phone"
-          label="Telefone"
-          type="tel"
-          placeholder="(47) 99999-9999"
-          :icon="Phone"
-          :error="erros.phone"
-          autocomplete="tel"
-          inputmode="tel"
-          maxlength="15"
-          name="phone"
-          @update:model-value="form.phone = formatarTelefone($event)"
-          @blur="validarTelefone"
-        />
-
-        <BaseInput
-          :model-value="form.password"
-          label="Senha"
-          type="password"
-          placeholder="Crie uma senha"
-          :icon="Lock"
-          :error="erros.password"
-          autocomplete="new-password"
-          name="password"
-          @update:model-value="form.password = $event"
-          @blur="validarSenha"
-        />
-
-        <div class="auth-form__full">
-          <BaseInput
-            :model-value="form.passwordConfirm"
-            label="Confirmar senha"
-            type="password"
-            placeholder="Confirme sua senha"
-            :icon="Lock"
-            :error="erros.passwordConfirm"
-            autocomplete="new-password"
-            name="password-confirm"
-            @update:model-value="form.passwordConfirm = $event"
-            @blur="validarConfirmacao"
-          />
-        </div>
-      </div>
-
-      <label class="auth-checkbox">
-        <input v-model="form.acceptedTerms" type="checkbox" />
-        <span>
-          Aceito os <strong>Termos de Uso</strong> e a
-          <strong>Política de Privacidade</strong>.
-        </span>
-      </label>
-      <p v-if="erros.acceptedTerms" class="auth-inline-error" role="alert">
-        {{ erros.acceptedTerms }}
-      </p>
-
-      <BaseButton
-        type="submit"
-        block
-        :icon="UserPlus"
-        :loading="auth.carregando"
-        loading-text="Criando conta..."
-      >
-        Criar conta
-      </BaseButton>
-    </form>
-
-    <div class="auth-divider"><span>ou</span></div>
-
-    <GoogleAuthButton
-      :loading="auth.carregando"
-      @credential="handleGoogleCredential"
-      @error="erroGeral = $event"
-    />
-
-    <p class="auth-footer">
-      Já tem uma conta?
-      <RouterLink :to="{ name: 'login' }" class="auth-link"
-        >Fazer login</RouterLink
-      >
-    </p>
-  </AuthLayout>
-</template>
-
-<script setup>
-import { reactive, ref } from "vue";
-import { Lock, Mail, Phone, User, UserPlus } from "lucide-vue-next";
+﻿<script setup>
+import { inject, reactive, ref, watch } from "vue";
+import { Lock, Mail, Phone, User } from "lucide-vue-next";
 import { useRouter } from "vue-router";
-
-import GoogleAuthButton from "@/components/auth/GoogleAuthButton.vue";
-import AuthLayout from "@/components/layout/AuthLayout.vue";
+import AuthPage from "@/components/layout/AuthPage.vue";
 import BaseButton from "@/components/ui/BaseButton.vue";
 import BaseInput from "@/components/ui/BaseInput.vue";
 import { useAuthStore } from "@/stores/auth";
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 const auth = useAuthStore();
 const router = useRouter();
-
-const form = reactive({
-  name: "",
-  email: "",
-  phone: "",
-  password: "",
-  passwordConfirm: "",
-  acceptedTerms: false,
-});
-
-const erros = reactive({
-  name: "",
-  email: "",
-  phone: "",
-  password: "",
-  passwordConfirm: "",
-  acceptedTerms: "",
-});
-
+const { ocupado, erroAceite, executar, destino, focarErro, atualizarAceite } = inject("authExperience");
+const form = reactive({ name: "", email: "", phone: "", password: "", passwordConfirm: "", acceptedTerms: false });
+const erros = reactive({ name: "", email: "", phone: "", password: "", passwordConfirm: "", acceptedTerms: "" });
 const erroGeral = ref("");
-
-function validarNome() {
-  erros.name = form.name.trim().length >= 2 ? "" : "Informe seu nome completo.";
-}
-
-function validarEmail() {
-  const email = form.email.trim();
-  erros.email = EMAIL_REGEX.test(email) ? "" : "Informe um e-mail válido.";
-}
-
-function validarTelefone() {
-  const digits = form.phone.replace(/\D/g, "");
-  erros.phone = [10, 11].includes(digits.length)
-    ? ""
-    : "Informe um telefone válido com DDD.";
-}
-
-function validarSenha() {
-  erros.password =
-    form.password.length >= 8
-      ? ""
-      : "A senha precisa ter pelo menos 8 caracteres.";
-}
-
-function validarConfirmacao() {
-  erros.passwordConfirm =
-    form.passwordConfirm && form.passwordConfirm === form.password
-      ? ""
-      : "As senhas não coincidem.";
-}
-
-function validarFormulario() {
-  validarNome();
-  validarEmail();
-  validarTelefone();
-  validarSenha();
-  validarConfirmacao();
-  erros.acceptedTerms = form.acceptedTerms
-    ? ""
-    : "Você precisa aceitar os termos para continuar.";
-
-  return !Object.values(erros).some(Boolean);
-}
-
+watch(() => form.acceptedTerms, atualizarAceite);
+function validarNome() { erros.name = form.name.trim().length >= 2 ? "" : "Informe seu nome completo."; }
+function validarEmail() { erros.email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) ? "" : "Informe um e-mail válido."; }
+function validarTelefone() { erros.phone = [10, 11].includes(form.phone.replace(/\D/g, "").length) ? "" : "Informe um telefone válido com DDD."; }
+function validarSenha() { erros.password = form.password.length >= 8 ? "" : "Use pelo menos 8 caracteres."; }
+function validarConfirmacao() { erros.passwordConfirm = form.passwordConfirm && form.passwordConfirm === form.password ? "" : "As senhas não coincidem."; }
 async function handleRegister() {
+  if (ocupado.value) return;
   erroGeral.value = "";
-
-  if (!validarFormulario()) return;
-
-  const resultado = await auth.register({
-    name: form.name,
-    email: form.email,
-    phone: form.phone,
-    password: form.password,
-  });
-
+  validarNome(); validarEmail(); validarTelefone(); validarSenha(); validarConfirmacao();
+  erros.acceptedTerms = form.acceptedTerms ? "" : "Confirme a leitura do aviso antes de continuar.";
+  if (Object.values(erros).some(Boolean)) { await focarErro(); return; }
+  const resultado = await executar(() => auth.register({ name: form.name, email: form.email, phone: form.phone, password: form.password }));
+  if (resultado.ignorado) return;
   if (!resultado.ok) {
     erroGeral.value = resultado.erro;
-    aplicarErrosBackend(resultado.campos);
-    return;
+    for (const campo of Object.keys(erros)) { if (resultado.campos?.[campo]) erros[campo] = resultado.campos[campo]; }
+    await focarErro(); return;
   }
-
-  await router.push({ name: "confirmar-email" });
+  await router.push(destino("confirmar-email"));
 }
-
-async function handleGoogleCredential(credential) {
-  erroGeral.value = "";
-  const resultado = await auth.loginWithGoogle(credential);
-
-  if (!resultado.ok) {
-    erroGeral.value = resultado.erro;
-    return;
-  }
-
-  await router.replace({ name: auth.isAdmin ? "admin-dashboard" : "home" });
-}
-
-function aplicarErrosBackend(campos) {
-  for (const campo of Object.keys(erros)) {
-    if (campos[campo]) {
-      erros[campo] = campos[campo];
-    }
-  }
-}
-
 function formatarTelefone(valor) {
-  const digits = String(valor || "")
-    .replace(/\D/g, "")
-    .slice(0, 11);
-
+  const digits = String(valor || "").replace(/\D/g, "").slice(0, 11);
   if (digits.length <= 2) return digits;
   if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-  if (digits.length <= 10) {
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
-  }
-
+  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 }
 </script>
+
+<template>
+  <AuthPage>
+    <template #heading><h1 tabindex="-1">Seu lugar<br />na Pires.</h1><p>Crie sua conta e deixe o lanche do intervalo encaminhado.</p></template>
+    <div v-if="erroGeral" class="auth-alert auth-alert--error" role="alert" tabindex="-1">{{ erroGeral }}</div>
+    <form class="auth-form auth-form--register" novalidate :aria-busy="ocupado" @submit.prevent="handleRegister">
+      <fieldset class="auth-fields" :disabled="ocupado">
+        <div class="auth-form__grid">
+          <BaseInput v-model="form.name" label="Nome completo" placeholder="Como você se chama?" :icon="User" :error="erros.name" autocomplete="name" name="name" required @blur="validarNome" />
+          <BaseInput v-model="form.email" label="E-mail" type="email" placeholder="voce@exemplo.com" :icon="Mail" :error="erros.email" autocomplete="email" inputmode="email" name="email" required @blur="validarEmail" />
+          <BaseInput :model-value="form.phone" label="Telefone" type="tel" placeholder="(47) 99999-9999" :icon="Phone" :error="erros.phone" autocomplete="tel" inputmode="tel" maxlength="15" name="phone" required @update:model-value="form.phone = formatarTelefone($event)" @blur="validarTelefone" />
+          <BaseInput v-model="form.password" label="Senha" type="password" placeholder="Pelo menos 8 caracteres" :icon="Lock" :error="erros.password" autocomplete="new-password" name="password" aria-describedby="register-password-help" required @blur="validarSenha" />
+          <div class="auth-form__full"><BaseInput v-model="form.passwordConfirm" label="Confirmar senha" type="password" placeholder="Repita sua senha" :icon="Lock" :error="erros.passwordConfirm" autocomplete="new-password" name="password-confirm" required @blur="validarConfirmacao" /></div>
+        </div>
+        <p id="register-password-help" class="auth-small">Use pelo menos 8 caracteres. Evite senhas comuns, apenas números ou semelhantes aos seus dados pessoais.</p>
+        <details class="auth-legal"><summary>Termos de Uso e Política de Privacidade</summary><p>Os documentos ainda não foram disponibilizados neste projeto. O aceite jurídico verificável está pendente; não há documentos publicados para consultar nesta tela.</p></details>
+        <label class="auth-checkbox"><input v-model="form.acceptedTerms" type="checkbox" name="accepted-terms" :aria-invalid="Boolean(erros.acceptedTerms || erroAceite)" :aria-describedby="erros.acceptedTerms || erroAceite ? 'terms-error' : undefined" /><span>Li o aviso sobre a indisponibilidade dos Termos de Uso e da Política de Privacidade.</span></label>
+        <p v-if="erros.acceptedTerms || erroAceite" id="terms-error" class="auth-inline-error" role="alert">{{ erros.acceptedTerms || 'Confirme a leitura do aviso antes de continuar com o Google.' }}</p>
+        <BaseButton type="submit" block :loading="ocupado" loading-text="Criando conta...">Criar conta</BaseButton>
+      </fieldset>
+    </form>
+  </AuthPage>
+</template>
