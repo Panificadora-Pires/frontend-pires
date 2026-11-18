@@ -8,7 +8,7 @@
       </div>
       <div class="kanban-synced" role="status">
         <span class="kanban-live-dot" :class="{ 'is-error': erroGlobal || resumo.erro }" aria-hidden="true"></span>
-        <span>{{ erroGlobal || resumo.erro ? "Conexão instável · tentando novamente" : carregando ? "Sincronizando fila…" : "Fila atualizada automaticamente" }}</span>
+        <span>{{ erroGlobal || resumo.erro ? "Conexão instável · tentando novamente" : carregando ? "Sincronizando fila…" : !resumo.inicializado ? "Aguardando sincronização…" : "Fila atualizada automaticamente" }}</span>
       </div>
     </header>
 
@@ -160,7 +160,7 @@ import { getSessionVersion } from "@/services/api";
 import { useAdminOrdersStore } from "@/stores/adminOrders";
 import { useAdminQueueSummaryStore } from "@/stores/adminQueueSummary";
 import { useChatStore } from "@/stores/chat";
-import { ETAPAS_FILA, ETAPAS_HISTORICO, TODOS_STATUS, itensDoPedido, proximaAcao } from "@/utils/adminKanban";
+import { ETAPAS_FILA, ETAPAS_HISTORICO, TODOS_STATUS, itensDoPedido, paginaExpirada, proximaAcao } from "@/utils/adminKanban";
 
 const route = useRoute();
 const router = useRouter();
@@ -220,12 +220,21 @@ async function carregarColunas() {
   const estados = etapasVisiveis.value.map(etapa => etapa.status);
   const filtroAtual = { busca: buscaAplicada.value || undefined, pagamento: pagamento.value || undefined };
   try {
-    const respostas = await Promise.allSettled(estados.map(status =>
-      adminService.listarPedidosPagina({
+    const respostas = await Promise.allSettled(estados.map(async status => {
+      const parametros = {
         page: paginas[status], page_size: PAGE_SIZE, status,
         ...filtroAtual,
-      })
-    ));
+      };
+      try {
+        return await adminService.listarPedidosPagina(parametros);
+      } catch (error) {
+        // O último pedido de uma página pode ter mudado de etapa durante o polling.
+        // Nesse caso voltamos à primeira página sem perder o filtro atual.
+        if (!paginaExpirada(error, parametros.page) || chamada !== sequencia || getSessionVersion() !== versao) throw error;
+        paginas[status] = 1;
+        return adminService.listarPedidosPagina({ ...parametros, page: 1 });
+      }
+    }));
     if (chamada !== sequencia || getSessionVersion() !== versao) return;
     let falhas = false;
     respostas.forEach((resposta, i) => {
