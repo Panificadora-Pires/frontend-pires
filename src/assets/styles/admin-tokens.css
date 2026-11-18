@@ -1,0 +1,48 @@
+/* Tema administrativo isolado: aliases da identidade existente, sem alterar aluno/auth. */
+.admin-layout {
+  --pp-admin-bg: var(--pp-creme);
+  --pp-admin-surface: var(--pp-surface-card);
+  --pp-admin-border: var(--pp-creme-borda);
+  --pp-admin-text: var(--pp-marrom);
+  --pp-admin-muted: var(--pp-texto-2);
+  --pp-admin-accent: var(--pp-dourado-profundo);
+  --pp-admin-radius: var(--pp-radius-input);
+  --pp-admin-success-bg: var(--pp-verde-suave);
+  --pp-admin-warning-bg: var(--pp-dourado-suave);
+  --pp-admin-danger-bg: var(--pp-auth-error-bg);
+  --pp-admin-danger: var(--pp-auth-error);
+  --pp-admin-success: var(--pp-verde);
+  --pp-admin-sidebar-bg: var(--pp-marrom);
+  --pp-admin-sidebar-text: var(--pp-creme);
+  --pp-admin-sidebar-muted: var(--pp-creme-3);
+  --pp-admin-sidebar-border: var(--pp-marrom-2);
+  --pp-admin-sidebar-accent: var(--pp-gold);
+  --pp-admin-backdrop: color-mix(in srgb, var(--pp-marrom) 45%, transparent);
+  /* Consumidores administrativos anteriores continuam usando seus nomes atuais. */
+  --admin-bg: var(--pp-admin-bg);
+  --admin-surface: var(--pp-admin-surface);
+  --admin-surface-subtle: var(--pp-creme-2);
+  --admin-border: var(--pp-admin-border);
+  --admin-border-strong: var(--pp-creme-borda);
+  --admin-text: var(--pp-admin-text);
+  --admin-text-soft: var(--pp-admin-muted);
+  --admin-muted: var(--pp-admin-muted);
+  --admin-accent: var(--pp-admin-accent);
+  --admin-accent-hover: var(--pp-marrom-2);
+  --admin-accent-soft: var(--pp-dourado-suave);
+  --admin-danger: var(--pp-admin-danger);
+  --admin-danger-soft: var(--pp-admin-danger-bg);
+  --admin-success: var(--pp-admin-text);
+  --admin-success-soft: var(--pp-admin-success-bg);
+  --admin-info: var(--pp-marrom-2);
+  --admin-info-soft: var(--pp-creme-2);
+  --admin-warning: var(--pp-dourado-profundo);
+  --admin-warning-soft: var(--pp-dourado-suave);
+  --admin-radius: var(--pp-admin-radius);
+  --admin-radius-lg: var(--pp-admin-radius);
+  --admin-shadow: none;
+}
+.admin-layout :focus-visible { outline: 2px solid var(--pp-admin-accent); outline-offset: 4px; }
+.admin-layout .admin-sidebar :focus-visible,
+.admin-layout .admin-drawer :focus-visible { outline-color: var(--pp-admin-sidebar-accent); }
+.admin-layout ::selection { background: var(--pp-gold); color: var(--pp-marrom); }
