@@ -18,6 +18,12 @@ Diff completo contra `origin/dev` `7411a525cce9c6e74cb494a5b14aabded1c50e09` con
 
 Executar após a consolidação: `node --test`, `npm run build`, `git diff --check`, além de `auth-experience.browser.mjs`, `session-tabs.browser.mjs` e `auth-password-contrast.browser.mjs`. Usar dados sintéticos e interceptação de APIs. A descrição do PR registra os resultados desta execução, sem reaproveitar contagens antigas como prova nova.
 
+A reexecução encontrou uma asserção instável no teste, sem falha de produto: Chromium em contexto touch não garante `:hover` na réplica externa acionada por mouse. A verificação de isolamento dessa réplica agora exige hover efetivo no desktop. Os cinco campos, dois ícones, 140 medições, teclado e toque mobile continuam testados; nenhum estilo ou código funcional foi alterado por esse ajuste.
+
+Fechamento em 18/11/2026: `node --test` passou 126 testes; build/PWA, 21 cenários de autenticação, nove cenários entre abas, 140 medições de contraste e diff-check passaram. A primeira execução entre abas atingiu timeout de `networkidle` durante as suítes concorrentes; a reexecução isolada passou integralmente, sem alterar o teste ou o produto. O Vite precisou ser reiniciado após a interrupção do ambiente. Capturas regeneradas foram comparadas visualmente e restauradas às versões aprovadas, sem mudança intencional.
+
+Os 79 caminhos consolidados foram conferidos: 15 arquivos de código, cinco testes e 59 documentos/evidências do escopo de autenticação. A varredura dos textos não encontrou credenciais ou dados pessoais reais de contas; e-mails são placeholders ou fixtures. `.env` permanece ignorado; os seis artefatos dispensados de contraste não constam dos objetos alcançáveis pelos commits enviados. A base remota `dev` foi reconfirmada em `7411a525`; dependências e lockfile permanecem intactos.
+
 ## Pendências de produção
 
 1. Não foram localizados documentos jurídicos publicados de Termos de Uso e Política de Privacidade. A UI apresenta o aviso; o backend não registra aceite. Definir documentos, destinos e tratamento antes de produção.

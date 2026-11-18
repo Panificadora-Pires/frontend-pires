@@ -84,15 +84,19 @@ try {
         await others.nth(i).hover(); await record(others.nth(i), { width, route, state: 'other-hover', text: (await others.nth(i).innerText()).trim() }, 4.5);
       }
       // Réplica dos atributos scoped fora do shell: o tema legado continua proprietário.
-      const outside = await toggles.first().evaluate(el => {
-        const clone = el.cloneNode(true); clone.id = 'outside-auth-toggle'; clone.style.position = 'fixed'; clone.style.top = '0'; clone.style.left = '0'; clone.style.zIndex = '10000'; document.body.append(clone);
-        return true;
-      });
-      assert.equal(outside, true);
-      await page.locator('#outside-auth-toggle').hover();
-      const legacy = await measure(page.locator('#outside-auth-toggle'));
-      assert.equal(legacy.color, 'rgb(243, 233, 216)');
-      await page.locator('#outside-auth-toggle').evaluate(el => el.remove());
+      // Hover por mouse só é exigido no contexto desktop; mobile já valida toque acima.
+      if (width === 1440) {
+        const outside = await toggles.first().evaluate(el => {
+          const clone = el.cloneNode(true); clone.id = 'outside-auth-toggle'; clone.style.position = 'fixed'; clone.style.top = '0'; clone.style.left = '0'; clone.style.zIndex = '10000'; document.body.append(clone);
+          return true;
+        });
+        assert.equal(outside, true);
+        await page.locator('#outside-auth-toggle').hover();
+        await page.waitForFunction(() => document.getElementById('outside-auth-toggle')?.matches(':hover'));
+        const legacy = await measure(page.locator('#outside-auth-toggle'));
+        assert.equal(legacy.color, 'rgb(243, 233, 216)');
+        await page.locator('#outside-auth-toggle').evaluate(el => el.remove());
+      }
     }
     await context.close();
   }
