@@ -134,19 +134,12 @@ async function handleLogout() {
   await auth.logout();
   await router.replace({ name: "login" });
 }
-// O badge lê contagens agregadas; a coleção integral legada só é
-// carregada enquanto o Dashboard antigo ainda depende dela.
-// A tela Kanban utiliza páginas do servidor e não deve baixar o histórico.
-function atualizarFonteDashboard() {
-  if (route.name === "admin-dashboard") adminOrders.iniciarAutoAtualizacao();
-  else adminOrders.pararAutoAtualizacao();
-}
-watch(() => route.name, atualizarFonteDashboard);
+// O Dashboard e o Kanban já consultam listas paginadas e agregados;
+// o layout não deve buscar milhares de pedidos em segundo plano.
 onMounted(() => {
   desktopMedia = window.matchMedia("(min-width: 1024px)");
   desktopMedia.addEventListener("change", ajustarDesktop);
   queueSummary.iniciarAutoAtualizacao();
-  atualizarFonteDashboard();
   // Mensagens de clientes ainda não lidas, no mesmo ritmo da fila.
   chat.iniciarPollingNaoLidas(15_000);
 });
@@ -154,7 +147,6 @@ onBeforeUnmount(() => {
   fecharMenu({ restaurarFoco: false });
   desktopMedia?.removeEventListener("change", ajustarDesktop);
   queueSummary.resetar();
-  adminOrders.pararAutoAtualizacao();
   dashboard.resetar();
   chat.pararPollingNaoLidas();
 });

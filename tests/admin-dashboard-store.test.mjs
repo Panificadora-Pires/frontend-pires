@@ -2,16 +2,26 @@ import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import { registerHooks } from 'node:module';
 import { createPinia, setActivePinia } from 'pinia';
-import service, {session} from './fixtures/admin-dashboard.service.mjs';
+import service, {session, relatorioSemanaVazio} from './fixtures/admin-dashboard.service.mjs';
 const hook=registerHooks({resolve(specifier,context,next){
   if(specifier==='@/services/admin.service'||specifier==='@/services/api')return {url:new URL('./fixtures/admin-dashboard.service.mjs',import.meta.url).href,shortCircuit:true};
   if(specifier==='@/utils/adminDashboard')return {url:new URL('../src/utils/adminDashboard.js',import.meta.url).href,shortCircuit:true};
+  if(specifier==='@/utils/adminRelatorios')return {url:new URL('../src/utils/adminRelatorios.js',import.meta.url).href,shortCircuit:true};
   return next(specifier,context);
 }});
 const {useAdminDashboardStore}=await import('../src/stores/adminDashboard.js');
 after(()=>hook.deregister());
 const now=new Date('2026-11-19T01:30:00Z');
-function reset(){setActivePinia(createPinia());session.versao=0;service.listarProdutos=async()=>[];service.listarPromocoes=async()=>[];service.maisVendidos=async()=>({resultado:[]});service.relatorioVendas=async()=>({total_vendido:'0.00',total_pedidos:0});return useAdminDashboardStore();}
+function reset(){
+  setActivePinia(createPinia());session.versao=0;
+  service.listarProdutos=async()=>[];
+  service.listarPromocoes=async()=>[];
+  service.maisVendidos=async()=>({resultado:[]});
+  service.relatorioVendas=async()=>({total_vendido:'0.00',total_pedidos:0});
+  service.listarPedidosPagina=async()=>({count:0,page:1,page_size:4,total_pages:1,next:null,previous:null,results:[]});
+  service.relatorioAnaliticoAdmin=async p=>relatorioSemanaVazio(p);
+  return useAdminDashboardStore();
+}
 function defer(){let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};}
 test('primeira carga difere de vazio; consulta agrega data São Paulo e ranking real',async()=>{
  const s=reset();assert.equal(s.inicializado,false);assert.equal(s.relatorioHoje,null);let params;
@@ -35,4 +45,42 @@ test('troca de sessão durante carga descarta até resposta de serviço que não
 });
 test('agregado ausente ou nulo não anuncia zero de vendas',async()=>{
  for(const report of [{total_vendido:null,total_pedidos:0},{total_vendido:'0.00',total_pedidos:null},{total_pedidos:0}]){const s=reset();service.relatorioVendas=async()=>report;await assert.rejects(s.carregar({agora:now}),/faturamento/i);assert.equal(s.relatorioHoje,null);assert.equal(s.inicializado,false);}
+});
+
+test('Dashboard consulta apenas quatro pedidos recentes mesmo com 3.001 pedidos no banco', async () => {
+ const s = reset();
+ let paginas = 0, parametrosSemana;
+ service.listarPedidosPagina = async params => {
+   paginas++;
+   assert.deepEqual(params, {page:1,page_size:4});
+   return {count:3001,page:1,page_size:4,total_pages:751,next:'/api/pedidos/?page=2',previous:null,
+     results:[{id:3001},{id:3000},{id:2999},{id:2998}]};
+ };
+ service.relatorioAnaliticoAdmin = async periodo => {
+   parametrosSemana = periodo;
+   const relatorio = relatorioSemanaVazio(periodo);
+   relatorio.serie_diaria[6] = {...relatorio.serie_diaria[6],
+     total_vendido:'35.40',total_pedidos:2,itens_vendidos:4,ticket_medio:'17.70'};
+   relatorio.resumo = {total_vendido:'35.40',total_pedidos:2,itens_vendidos:4,ticket_medio:'17.70'};
+   relatorio.formas_pagamento[0] = {...relatorio.formas_pagamento[0],
+     total_vendido:'35.40',total_pedidos:2,percentual_pedidos:'100.0'};
+   return relatorio;
+ };
+ await s.carregar({agora:now});
+ assert.equal(paginas,1);
+ assert.equal(s.pedidosRecentes.length,4);
+ assert.deepEqual(s.pedidosRecentes.map(p=>p.id),[3001,3000,2999,2998]);
+ assert.deepEqual(parametrosSemana,{dataInicio:'2026-11-12',dataFim:'2026-11-18'});
+ assert.equal(s.relatorioSemana.resumo.total_vendido,'35.40');
+ assert.equal(s.relatorioSemana.serie_diaria.length,7);
+});
+test('Falha nos agregados semanais não transforma série financeira incompleta em zero', async () => {
+ const s = reset();
+ await s.carregar({agora:now});
+ const semanaValida = s.relatorioSemana;
+ service.relatorioAnaliticoAdmin = async periodo => ({...relatorioSemanaVazio(periodo), serie_diaria:[]});
+ await assert.rejects(s.carregar({agora:now}),/relatório|série/i);
+ assert.equal(s.relatorioSemana,semanaValida);
+ assert.equal(s.inicializado,true);
+ assert.ok(s.erro);
 });
