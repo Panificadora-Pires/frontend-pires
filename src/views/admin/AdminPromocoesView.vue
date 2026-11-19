@@ -108,9 +108,9 @@
       <footer v-if="store.inicializado && store.pagina.count" class="promotions-footer">
         <span>Exibindo {{ primeiraExibida }}–{{ ultimaExibida }} de {{ store.pagina.count }}</span>
         <div v-if="totalPaginas > 1" class="promotions-pagination">
-          <button type="button" :disabled="pagina <= 1 || store.carregando" @click="mudarPagina(-1)"><ChevronLeft :size="16" aria-hidden="true" /> Anterior</button>
-          <span>Página {{ pagina }} de {{ totalPaginas }}</span>
-          <button type="button" :disabled="pagina >= totalPaginas || store.carregando" @click="mudarPagina(1)">Próxima <ChevronRight :size="16" aria-hidden="true" /></button>
+          <button type="button" :disabled="store.pagina.page <= 1 || store.carregando || Boolean(store.erro)" @click="mudarPagina(-1)"><ChevronLeft :size="16" aria-hidden="true" /> Anterior</button>
+          <span>Página {{ store.pagina.page }} de {{ totalPaginas }}</span>
+          <button type="button" :disabled="store.pagina.page >= totalPaginas || store.carregando || Boolean(store.erro)" @click="mudarPagina(1)">Próxima <ChevronRight :size="16" aria-hidden="true" /></button>
         </div>
       </footer>
     </section>
