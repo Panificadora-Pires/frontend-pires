@@ -80,7 +80,7 @@
               <ArrowDownRight v-else-if="Number(variacoes.total_vendido) < 0" :size="16" aria-hidden="true" />
               {{ textoVariacao(variacoes.total_vendido) }}
             </span>
-            <span>em relação ao período anterior</span>
+            <span v-if="variacoes.total_vendido !== null && variacoes.total_vendido !== undefined">em relação ao período anterior</span>
           </div>
         </article>
 
@@ -93,7 +93,7 @@
               <span class="report-small-metric__change" :class="classeVariacao(variacoes[metrica.chave])">
                 {{ textoVariacao(variacoes[metrica.chave]) }}
               </span>
-              <span>ante o período anterior</span>
+              <span v-if="variacoes[metrica.chave] !== null && variacoes[metrica.chave] !== undefined">vs. período anterior</span>
             </div>
           </article>
         </div>
@@ -235,7 +235,7 @@ const sparkArea = computed(() => posicoesSpark.value.length
   : "");
 
 function textoVariacao(valor) {
-  return valor === null || valor === undefined ? "Sem base de comparação" : porcentagem(valor);
+  return valor === null || valor === undefined ? "Sem dados para comparação" : porcentagem(valor);
 }
 function classeVariacao(valor) {
   return {
