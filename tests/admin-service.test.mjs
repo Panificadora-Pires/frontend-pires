@@ -85,3 +85,58 @@ test('resumo de promoções usa agregado administrativo e não aceita contagens 
  api.get=async()=>({data:{total:100}});
  await assert.rejects(service.resumoPromocoesAdmin(),{code:'ADMIN_PROMOTIONS_SUMMARY_INVALID'});
 });
+
+test('promoções administrativas filtram e paginam uma única requisição', async () => {
+  const calls = [];
+  const pagina = {
+    count: 3001, page: 2, page_size: 12, total_pages: 251,
+    next: '?page=3', previous: '?page=1',
+    results: [{ id: 32, produto_nome: 'Coxinha' }],
+  };
+  api.get = async (path, config) => {
+    calls.push({ path, params: config.params });
+    return { data: pagina };
+  };
+  const resultado = await service.listarPromocoesAdminPagina({
+    page: 2, page_size: 12, busca: ' Coxinha ', situacao: 'ativa',
+  });
+  assert.deepEqual(resultado, pagina);
+  assert.deepEqual(calls, [{
+    path: '/promocoes/admin_listagem/',
+    params: { page: 2, page_size: 12, busca: 'Coxinha', situacao: 'ativa' },
+  }]);
+});
+test('promoções não transformam página incompleta em lista válida', async () => {
+  let calls = 0;
+  api.get = async () => {
+    calls++;
+    return { data: { count: 3001, page: 1, results: [{ id: 1 }] } };
+  };
+  await assert.rejects(service.listarPromocoesAdminPagina({ page: 0 }), {
+    code: 'ADMIN_PROMOTIONS_PAGE_INVALID',
+  });
+  await assert.rejects(service.listarPromocoesAdminPagina({ page_size: 101 }), {
+    code: 'ADMIN_PROMOTIONS_PAGE_INVALID',
+  });
+  await assert.rejects(service.listarPromocoesAdminPagina({ situacao: 'cancelada' }), {
+    code: 'ADMIN_PROMOTIONS_PAGE_INVALID',
+  });
+  assert.equal(calls, 0);
+  await assert.rejects(service.listarPromocoesAdminPagina(), {
+    code: 'ADMIN_PROMOTIONS_PAGE_INVALID',
+  });
+});
+test('contadores de promoções são globais e devem totalizar todas as situações', async () => {
+  let chamada;
+  api.get = async path => {
+    chamada = path;
+    return { data: { total: 3001, ativas: 5, agendadas: 12, encerradas: 2984 } };
+  };
+  const resumo = await service.resumoPromocoesGestao();
+  assert.equal(chamada, '/promocoes/resumo_admin/');
+  assert.equal(resumo.total, 3001);
+  api.get = async () => ({ data: { total: 3001, ativas: 5, agendadas: 12, encerradas: 100 } });
+  await assert.rejects(service.resumoPromocoesGestao(), {
+    code: 'ADMIN_PROMOTIONS_SUMMARY_INVALID',
+  });
+});
