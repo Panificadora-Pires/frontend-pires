@@ -13,10 +13,8 @@ import {
   Bell,
   CheckCheck,
   CircleAlert,
-  RefreshCw,
   Search,
 } from "lucide-vue-next";
-import BaseRefreshStatus from "@/components/ui/BaseRefreshStatus.vue";
 import NotificationItem from "@/components/notifications/NotificationItem.vue";
 import { useNotificationsStore } from "@/stores/notifications";
 import {
@@ -236,18 +234,8 @@ async function marcarTodas() {
       <RouterLink :to="{ name: 'pedidos' }"
         >Ir para Meus Pedidos
         <ArrowUpRight :size="18" aria-hidden="true" /></RouterLink
-      ><button
-        type="button"
-        class="notifications-page__empty-refresh"
-        :disabled="atualizando"
-        @click="atualizar"
       >
-        {{ atualizando ? "Atualizando…" : "Atualizar notificações" }}</button
-      ><BaseRefreshStatus
-        :ultima-atualizacao="notifications.ultimaAtualizacao"
-        :atualizando="atualizando"
-        :erro="notifications.erroAtualizacao"
-      />
+      <button v-if="notifications.erroAtualizacao" type="button" class="notifications-page__retry" @click="atualizar">Tentar novamente</button>
     </section>
     <template v-else>
       <div class="notifications-page__summary">
@@ -327,21 +315,7 @@ async function marcarTodas() {
             Limpar filtros
           </button></span
         >
-        <div>
-          <BaseRefreshStatus
-            :ultima-atualizacao="notifications.ultimaAtualizacao"
-            :atualizando="atualizando"
-            :erro="notifications.erroAtualizacao"
-          /><button
-            type="button"
-            :disabled="atualizando"
-            class="notifications-page__refresh"
-            aria-label="Atualizar notificações"
-            @click="atualizar"
-          >
-            <RefreshCw :size="17" aria-hidden="true" />
-          </button>
-        </div>
+        <button v-if="notifications.erroAtualizacao" type="button" class="notifications-page__retry" @click="atualizar">Tentar novamente</button>
       </div>
       <p v-if="erroAcao" class="notifications-page__error" role="alert">
         {{ erroAcao }}
@@ -412,6 +386,9 @@ async function marcarTodas() {
 </template>
 
 <style scoped>
+.notifications-page__retry{border:1px solid var(--pp-dourado-profundo);border-radius:8px;background:transparent;color:var(--pp-marrom);min-height:40px;padding:8px 12px;font-size:12px;font-weight:650;cursor:pointer}
+.notifications-page__retry:hover{background:var(--pp-dourado-suave)}
+
 .notifications-page {
   width: min(100%, 1040px);
   margin: 12px auto 0;

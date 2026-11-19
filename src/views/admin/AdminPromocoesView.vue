@@ -8,9 +8,9 @@
         </p>
       </div>
       <div class="admin-actions">
-        <button class="admin-btn admin-btn--primary" @click="novo">
+        <button class="admin-btn admin-btn--primary pp-card-action pp-admin-action--primary" data-card-action-radius @click="novo"><CardActionContent>
           <Plus :size="16" />Nova promoção
-        </button>
+        </CardActionContent></button>
       </div>
     </header>
 
@@ -50,14 +50,13 @@
             </td>
             <td>
               <div class="promotion-actions">
-                <button class="admin-btn admin-btn--sm" @click="editar(p)">
-                  <Pencil :size="14" />Editar</button
-                ><button
-                  class="admin-btn admin-btn--sm admin-btn--danger"
+                <button class="admin-btn admin-btn--sm pp-card-action pp-admin-action--secondary" data-card-action-radius @click="editar(p)"><CardActionContent>
+                  <Pencil :size="14" />Editar</CardActionContent></button><button
+                  class="admin-btn admin-btn--sm admin-btn--danger pp-card-action pp-admin-action--danger" data-card-action-radius
                   @click="abrirExclusao(p)"
-                >
+                ><CardActionContent>
                   <Trash2 :size="14" />Excluir
-                </button>
+                </CardActionContent></button>
               </div>
             </td>
           </tr>
@@ -111,21 +110,21 @@
         <div class="admin-modal-footer">
           <button
             type="button"
-            class="admin-btn"
+            class="admin-btn pp-card-action pp-admin-action--secondary" data-card-action-radius
             :disabled="excluindo"
             @click="fecharExclusao"
-          >
+          ><CardActionContent>
             Voltar
-          </button>
+          </CardActionContent></button>
           <button
             type="button"
-            class="admin-btn admin-btn--danger"
+            class="admin-btn admin-btn--danger pp-card-action pp-admin-action--danger" data-card-action-radius
             :disabled="excluindo"
             @click="confirmarExclusao"
-          >
+          ><CardActionContent>
             <Trash2 :size="15" />
             {{ excluindo ? "Excluindo..." : "Excluir promoção" }}
-          </button>
+          </CardActionContent></button>
         </div>
       </div>
     </div>
@@ -171,11 +170,10 @@
           /></label>
         </div>
         <div class="admin-modal-footer">
-          <button type="button" class="admin-btn" @click="formAberto = false">
-            Cancelar</button
-          ><button class="admin-btn admin-btn--primary" type="submit">
+          <button type="button" class="admin-btn pp-card-action pp-admin-action--cancel" data-card-action-radius @click="formAberto = false"><CardActionContent>
+            Cancelar</CardActionContent></button><button class="admin-btn admin-btn--primary pp-card-action pp-admin-action--primary" data-card-action-radius type="submit"><CardActionContent>
             Salvar
-          </button>
+          </CardActionContent></button>
         </div>
       </form>
     </div>
@@ -183,6 +181,7 @@
 </template>
 
 <script setup>
+import CardActionContent from "@/components/ui/CardActionContent.vue";
 import { onMounted, reactive, ref } from "vue";
 import { CircleAlert, Pencil, Plus, Tags, Trash2 } from "lucide-vue-next";
 import adminService, { mensagemErroApi } from "@/services/admin.service";

@@ -8,9 +8,9 @@
         </p>
       </div>
       <div class="admin-actions">
-        <button class="admin-btn admin-btn--primary" @click="novo">
+        <button class="admin-btn admin-btn--primary pp-card-action pp-admin-action--primary" data-card-action-radius @click="novo"><CardActionContent>
           <Plus :size="16" />Nova categoria
-        </button>
+        </CardActionContent></button>
       </div>
     </header>
 
@@ -50,9 +50,9 @@
               >
             </td>
             <td class="categories-table__action">
-              <button class="admin-btn admin-btn--sm" @click="editar(c)">
+              <button class="admin-btn admin-btn--sm pp-card-action pp-admin-action--secondary" data-card-action-radius @click="editar(c)"><CardActionContent>
                 <Pencil :size="14" />Editar
-              </button>
+              </CardActionContent></button>
             </td>
           </tr>
         </tbody>
@@ -92,11 +92,10 @@
           >
         </div>
         <div class="admin-modal-footer">
-          <button type="button" class="admin-btn" @click="formAberto = false">
-            Cancelar</button
-          ><button class="admin-btn admin-btn--primary" type="submit">
+          <button type="button" class="admin-btn pp-card-action pp-admin-action--cancel" data-card-action-radius @click="formAberto = false"><CardActionContent>
+            Cancelar</CardActionContent></button><button class="admin-btn admin-btn--primary pp-card-action pp-admin-action--primary" data-card-action-radius type="submit"><CardActionContent>
             Salvar
-          </button>
+          </CardActionContent></button>
         </div>
       </form>
     </div>
@@ -104,6 +103,7 @@
 </template>
 
 <script setup>
+import CardActionContent from "@/components/ui/CardActionContent.vue";
 import { onMounted, reactive, ref } from "vue";
 import { CircleAlert, Layers3, Pencil, Plus } from "lucide-vue-next";
 import adminService from "@/services/admin.service";

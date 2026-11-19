@@ -15,7 +15,7 @@
       </div>
       <div v-if="erro || erroAtualizacao" class="admin-detail-retry" role="status">
         <span>Não foi possível sincronizar os dados.</span>
-        <button type="button" class="admin-btn" @click="atualizarAgora">Tentar novamente</button>
+        <button type="button" class="admin-btn pp-card-action pp-admin-action--secondary" data-card-action-radius @click="atualizarAgora"><CardActionContent>Tentar novamente</CardActionContent></button>
       </div>
     </header>
 
@@ -101,28 +101,28 @@
             <div class="order-actions">
               <button
                 v-if="pedido.status === 'pendente'"
-                class="admin-btn admin-btn--primary order-actions__main"
+                class="admin-btn admin-btn--primary order-actions__main pp-card-action pp-admin-action--primary" data-card-action-radius
                 :disabled="acao || confirmacaoBloqueada"
                 @click="alterar('confirmado')"
-              >
+              ><CardActionContent>
                 <BadgeCheck :size="17" />Confirmar pedido
-              </button>
+              </CardActionContent></button>
               <button
                 v-if="pedido.status === 'confirmado'"
-                class="admin-btn admin-btn--primary order-actions__main"
+                class="admin-btn admin-btn--primary order-actions__main pp-card-action pp-admin-action--primary" data-card-action-radius
                 :disabled="acao"
                 @click="alterar('pronto')"
-              >
+              ><CardActionContent>
                 <PackageCheck :size="17" />Marcar como pronto
-              </button>
+              </CardActionContent></button>
               <button
                 v-if="pedido.status === 'pronto'"
-                class="admin-btn admin-btn--primary order-actions__main"
+                class="admin-btn admin-btn--primary order-actions__main pp-card-action pp-admin-action--primary" data-card-action-radius
                 :disabled="acao"
                 @click="scannerAberto = true"
-              >
+              ><CardActionContent>
                 <QrCode :size="17" />Confirmar retirada por QR
-              </button>
+              </CardActionContent></button>
               <div
                 v-if="['retirado', 'cancelado'].includes(pedido.status)"
                 class="order-actions__done"
@@ -137,12 +137,12 @@
                 v-if="
                   ['pendente', 'confirmado', 'pronto'].includes(pedido.status)
                 "
-                class="admin-btn admin-btn--danger order-actions__main"
+                class="admin-btn admin-btn--danger order-actions__main pp-card-action pp-admin-action--danger" data-card-action-radius
                 :disabled="acao"
                 @click="abrirCancelamento"
-              >
+              ><CardActionContent>
                 <CircleX :size="16" />Cancelar pedido
-              </button>
+              </CardActionContent></button>
             </div>
           </section>
 
@@ -247,21 +247,21 @@
         <div class="admin-modal-footer">
           <button
             type="button"
-            class="admin-btn"
+            class="admin-btn pp-card-action pp-admin-action--secondary" data-card-action-radius
             :disabled="acao"
             @click="fecharCancelamento"
-          >
+          ><CardActionContent>
             Voltar
-          </button>
+          </CardActionContent></button>
           <button
             type="button"
-            class="admin-btn admin-btn--danger"
+            class="admin-btn admin-btn--danger pp-card-action pp-admin-action--danger" data-card-action-radius
             :disabled="acao"
             @click="confirmarCancelamento"
-          >
+          ><CardActionContent>
             <CircleX :size="16" />
             {{ acao ? "Cancelando..." : "Cancelar pedido" }}
-          </button>
+          </CardActionContent></button>
         </div>
       </div>
     </div>
@@ -269,6 +269,7 @@
 </template>
 
 <script setup>
+import CardActionContent from "@/components/ui/CardActionContent.vue";
 import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import {
@@ -672,7 +673,7 @@ function onRetirado(p) {
 }
 .order-actions .admin-btn:hover:not(:disabled),
 .admin-detail-retry .admin-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
+
   box-shadow: 0 8px 22px rgba(42, 23, 11, .14);
 }
 .order-actions .admin-btn:active:not(:disabled) { transform: scale(.985); }

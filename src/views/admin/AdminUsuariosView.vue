@@ -7,11 +7,6 @@
           Consulte clientes e administradores cadastrados no sistema.
         </p>
       </div>
-      <div class="admin-actions">
-        <button class="admin-btn" @click="carregar">
-          <RefreshCw :size="16" />Atualizar
-        </button>
-      </div>
     </header>
 
     <div class="admin-kpis users-kpis">
@@ -50,8 +45,10 @@
       </select>
     </div>
 
-    <div v-if="erro" class="admin-alert admin-alert--error">
-      <CircleAlert :size="17" />{{ erro }}
+    <div v-if="erro || erroAtualizacao" class="admin-alert admin-alert--error" role="alert">
+      <CircleAlert :size="17" aria-hidden="true" />
+      <span>{{ erro || "Não foi possível sincronizar os usuários." }}</span>
+      <button type="button" class="admin-btn pp-card-action pp-admin-action--secondary" data-card-action-radius @click="atualizarAgora"><CardActionContent>Tentar novamente</CardActionContent></button>
     </div>
     <div class="admin-table-wrap">
       <table class="admin-table users-table">
@@ -103,14 +100,17 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
-import { CircleAlert, RefreshCw, Search } from "lucide-vue-next";
+import CardActionContent from "@/components/ui/CardActionContent.vue";
+import { computed, ref } from "vue";
+import { CircleAlert, Search } from "lucide-vue-next";
 import adminService from "@/services/admin.service";
+import { useAutoRefresh } from "@/composables/useAutoRefresh";
 
 const usuarios = ref([]);
 const busca = ref("");
 const tipo = ref("");
 const erro = ref("");
+const inicializado = ref(false);
 const admins = computed(() => usuarios.value.filter((u) => u.is_staff).length);
 const ativos = computed(() => usuarios.value.filter((u) => u.is_active).length);
 const clientes = computed(
@@ -140,12 +140,16 @@ function data(v) {
 }
 async function carregar() {
   try {
-    usuarios.value = await adminService.listarUsuarios();
-  } catch {
-    erro.value = "Não foi possível carregar os usuários.";
+    const resultado = await adminService.listarUsuarios();
+    usuarios.value = resultado;
+    inicializado.value = true;
+    erro.value = "";
+  } catch (error) {
+    if (!inicializado.value) erro.value = "Não foi possível carregar os usuários.";
+    throw error;
   }
 }
-onMounted(carregar);
+const { erro: erroAtualizacao, atualizarAgora } = useAutoRefresh(carregar, { intervalo: 60_000 });
 </script>
 
 <style scoped>

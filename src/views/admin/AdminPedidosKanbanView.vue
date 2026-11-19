@@ -111,14 +111,20 @@
               <span v-if="chat.naoLidasDoPedido(pedido.id)" class="kanban-unread"><MessageCircle :size="14" aria-hidden="true" />{{ chat.naoLidasDoPedido(pedido.id) }} nova(s)</span>
             </div>
             <div class="kanban-card-actions">
-              <RouterLink :to="{ name: 'admin-pedido-detalhes', params: { id: pedido.id } }">Ver detalhes</RouterLink>
+              <RouterLink class="pp-card-action pp-admin-action--secondary" data-card-action-radius :to="{ name: 'admin-pedido-detalhes', params: { id: pedido.id } }">
+                <CardActionContent>Ver detalhes</CardActionContent>
+              </RouterLink>
               <button
                 v-if="proximaAcao(pedido)"
                 type="button"
+                class="pp-card-action pp-admin-action--primary"
+                data-card-action-radius
                 :disabled="emAcao === pedido.id"
                 @click="avancar(pedido, $event)"
-              >{{ emAcao === pedido.id ? "Salvando…" : proximaAcao(pedido).label }}</button>
-              <RouterLink v-else-if="pedido.status === 'pronto'" class="kanban-retirada" :to="{ name: 'admin-pedido-detalhes', params: { id: pedido.id } }">Retirada / QR Code</RouterLink>
+              ><CardActionContent>{{ emAcao === pedido.id ? "Salvando…" : proximaAcao(pedido).label }}</CardActionContent></button>
+              <RouterLink v-else-if="pedido.status === 'pronto'" class="kanban-retirada pp-card-action pp-admin-action--secondary" data-card-action-radius :to="{ name: 'admin-pedido-detalhes', params: { id: pedido.id } }">
+                <CardActionContent>Retirada / QR Code</CardActionContent>
+              </RouterLink>
             </div>
             <p v-if="pedido.status === 'pendente' && !proximaAcao(pedido)" class="kanban-waiting">Aguardando aprovação do pagamento para confirmar.</p>
           </article>
@@ -143,6 +149,7 @@ import { useRoute, useRouter } from "vue-router";
 import { CircleAlert, ClipboardList, MessageCircle, Search, X } from "lucide-vue-next";
 
 import AdminPaymentFilter from "@/components/admin/AdminPaymentFilter.vue";
+import CardActionContent from "@/components/ui/CardActionContent.vue";
 import { useAutoRefresh } from "@/composables/useAutoRefresh";
 import adminService, { mensagemErroApi } from "@/services/admin.service";
 import { getSessionVersion } from "@/services/api";
@@ -500,16 +507,7 @@ onBeforeUnmount(() => {
 .kanban-card-actions a:hover,
 .kanban-card-actions button:hover:not(:disabled) {
   border-color: var(--pp-admin-accent);
-  color: var(--pp-admin-accent);
-  background: var(--pp-admin-warning-bg);
-  transform: translateY(-2px);
   box-shadow: 0 5px 14px rgba(53,27,10,.1);
-}
-.kanban-card-actions button:hover:not(:disabled),
-.kanban-card-actions .kanban-retirada:hover {
-  background: var(--pp-marrom-2);
-  border-color: var(--pp-marrom-2);
-  color: white;
 }
 .kanban-card-actions a:active,
 .kanban-card-actions button:active:not(:disabled) {
