@@ -61,6 +61,7 @@ import { useAdminQueueSummaryStore } from "@/stores/adminQueueSummary";
 import { useAdminDashboardStore } from "@/stores/adminDashboard";
 import { useAuthStore } from "@/stores/auth";
 import { useChatStore } from "@/stores/chat";
+import { REALTIME_ENABLED, realtimeClient } from "@/services/realtime";
 
 const auth = useAuthStore();
 const adminOrders = useAdminOrdersStore();
@@ -75,6 +76,7 @@ const menuTrigger = ref(null);
 const closeTrigger = ref(null);
 let desktopMedia = null;
 let overflowAnterior = null;
+let desinscreverRealtime = null;
 
 const iniciais = computed(() => {
   const nome = auth.usuario?.name || auth.usuario?.email || "Admin";
@@ -131,6 +133,7 @@ async function handleLogout() {
   queueSummary.resetar();
   dashboard.resetar();
   chat.resetar();
+  realtimeClient.parar();
   await auth.logout();
   await router.replace({ name: "login" });
 }
@@ -142,6 +145,18 @@ onMounted(() => {
   queueSummary.iniciarAutoAtualizacao();
   // Mensagens de clientes ainda não lidas, no mesmo ritmo da fila.
   chat.iniciarPollingNaoLidas(15_000);
+  if (REALTIME_ENABLED) {
+    desinscreverRealtime = realtimeClient.inscrever(evento => {
+      // Evento nulo = reconexão: revalidar snapshots via REST.
+      if (!evento || evento.tipo.startsWith("pedido.")) {
+        void queueSummary.atualizarAgora().catch(() => {});
+      }
+      if (!evento || evento.tipo.startsWith("chat.")) {
+        void chat.carregarNaoLidas().catch(() => {});
+      }
+    });
+    realtimeClient.iniciar();
+  }
 });
 onBeforeUnmount(() => {
   fecharMenu({ restaurarFoco: false });
@@ -149,6 +164,9 @@ onBeforeUnmount(() => {
   queueSummary.resetar();
   dashboard.resetar();
   chat.pararPollingNaoLidas();
+  desinscreverRealtime?.();
+  desinscreverRealtime = null;
+  realtimeClient.parar();
 });
 </script>
 
