@@ -37,7 +37,7 @@
       <header class="categories-panel-header">
         <div>
           <h2 id="categories-title">Estrutura do cardápio</h2>
-          <p>{{ inicializado ? visiveis.length + (visiveis.length === 1 ? " categoria encontrada" : " categorias encontradas") : "Organize a apresentação das categorias." }}</p>
+          <p>{{ inicializado ? dadosPagina.count + (dadosPagina.count === 1 ? " categoria encontrada" : " categorias encontradas") : "Organize a apresentação das categorias." }}</p>
         </div>
       </header>
 
@@ -70,13 +70,13 @@
         <LoaderCircle :size="22" class="categories-spin" aria-hidden="true" />
         Carregando categorias…
       </div>
-      <div v-else-if="inicializado && !categorias.length" class="categories-state">
+      <div v-else-if="inicializado && !indicadores.total" class="categories-state">
         <Layers3 :size="28" aria-hidden="true" />
         <strong>Seu cardápio ainda não tem categorias</strong>
         <span>Crie uma categoria para começar a organizar os produtos.</span>
         <button type="button" class="categories-empty-action" @click="abrirNovaCategoria">Criar categoria</button>
       </div>
-      <div v-else-if="inicializado && !visiveis.length" class="categories-state">
+      <div v-else-if="inicializado && !dadosPagina.count" class="categories-state">
         <SearchX :size="28" aria-hidden="true" />
         <strong>Nenhuma categoria corresponde aos filtros</strong>
         <span>Experimente outra busca ou situação.</span>
@@ -123,8 +123,17 @@
           </li>
         </ul>
       </template>
-      <footer v-if="inicializado && categorias.length" class="categories-panel-footer">
-        A ordem define como as categorias são organizadas no cardápio.
+      <footer v-if="inicializado && indicadores.total" class="categories-panel-footer">
+        <span>Exibindo {{ (dadosPagina.page - 1) * dadosPagina.page_size + 1 }}–{{ (dadosPagina.page - 1) * dadosPagina.page_size + visiveis.length }} de {{ dadosPagina.count }}. A ordem define a apresentação no cardápio.</span>
+        <nav v-if="dadosPagina.total_pages > 1" class="categories-pagination" aria-label="Paginação de categorias">
+          <button type="button" :disabled="dadosPagina.page <= 1 || carregando || Boolean(erroLeitura)" @click="mudarPagina(-1)">
+            <ChevronLeft :size="16" aria-hidden="true" />Anterior
+          </button>
+          <span>Página {{ dadosPagina.page }} de {{ dadosPagina.total_pages }}</span>
+          <button type="button" :disabled="dadosPagina.page >= dadosPagina.total_pages || carregando || Boolean(erroLeitura)" @click="mudarPagina(1)">
+            Próxima<ChevronRight :size="16" aria-hidden="true" />
+          </button>
+        </nav>
       </footer>
     </section>
 
@@ -199,18 +208,22 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, reactive, ref } from "vue";
-import { Check, CheckCircle2, CircleAlert, Info, Layers3, LoaderCircle, Pencil, Plus, Search, SearchX, X } from "lucide-vue-next";
+import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from "vue";
+import { Check, CheckCircle2, ChevronLeft, ChevronRight, CircleAlert, Info, Layers3, LoaderCircle, Pencil, Plus, Search, SearchX, X } from "lucide-vue-next";
 
 import AdminCatalogSelect from "@/components/admin/AdminCatalogSelect.vue";
 import CardActionContent from "@/components/ui/CardActionContent.vue";
 import { useAutoRefresh } from "@/composables/useAutoRefresh";
 import adminService, { mensagemErroApi } from "@/services/admin.service";
 import { getSessionVersion } from "@/services/api";
-import { filtrarCategoriasAdmin, indicadoresCategorias } from "@/utils/adminCategorias";
 
-const categorias = ref([]);
+const dadosPagina = ref({ count: 0, page: 1, page_size: 18, total_pages: 1, results: [] });
+const resumo = ref(null);
 const inicializado = ref(false);
+const pagina = ref(1);
+const carregando = ref(false);
+const PAGE_SIZE = 18;
+let timerFiltros = null;
 const erroLeitura = ref("");
 const mensagemSucesso = ref("");
 const busca = ref("");
@@ -228,31 +241,54 @@ const opcoesSituacao = [
   { label: "Ativas", value: "ativa" },
   { label: "Inativas", value: "inativa" },
 ];
-const indicadores = computed(() => indicadoresCategorias(categorias.value));
-const visiveis = computed(() => filtrarCategoriasAdmin(categorias.value, {
-  busca: busca.value, situacao: situacao.value,
-}));
+const indicadores = computed(() => resumo.value || { total: 0, ativas: 0, inativas: 0 });
+const visiveis = computed(() => dadosPagina.value.results);
 // A leitura direta após salvar também limpa erros antigos do polling.
 const erroExibido = computed(() => erroLeitura.value);
 
+function parametros() {
+  return { page: pagina.value, page_size: PAGE_SIZE, busca: busca.value.trim(), situacao: situacao.value };
+}
 async function carregar() {
   const chamada = ++sequencia;
   const sessao = getSessionVersion();
+  carregando.value = true;
   try {
-    const dados = await adminService.listarCategorias();
+    const [dados, totais] = await Promise.all([
+      adminService.listarCategoriasAdminPagina(parametros()),
+      adminService.resumoCategoriasAdmin(),
+    ]);
     if (chamada !== sequencia || sessao !== getSessionVersion()) return;
-    if (!Array.isArray(dados)) throw new Error("Resposta inválida para categorias.");
-    categorias.value = dados;
+    dadosPagina.value = dados;
+    resumo.value = totais;
     inicializado.value = true;
     erroLeitura.value = "";
   } catch (error) {
     if (chamada !== sequencia || sessao !== getSessionVersion()) return;
+    if (pagina.value > 1 && error?.response?.status === 404) {
+      pagina.value = 1;
+      return carregar();
+    }
     erroLeitura.value = inicializado.value
-      ? "Não foi possível atualizar as categorias. A última lista foi preservada."
+      ? "Não foi possível atualizar as categorias. A última consulta válida foi preservada."
       : "Não foi possível carregar as categorias.";
     throw error;
+  } finally {
+    if (chamada === sequencia && sessao === getSessionVersion()) carregando.value = false;
   }
 }
+function mudarPagina(deslocamento) {
+  if (carregando.value) return;
+  const proxima = dadosPagina.value.page + deslocamento;
+  if (proxima < 1 || proxima > dadosPagina.value.total_pages) return;
+  pagina.value = proxima;
+  void carregar().catch(() => {});
+}
+watch([busca, situacao], () => {
+  pagina.value = 1;
+  clearTimeout(timerFiltros);
+  timerFiltros = setTimeout(() => { void carregar().catch(() => {}); }, 300);
+});
 const { atualizarAgora } = useAutoRefresh(carregar, { intervalo: 60_000 });
 
 function limparFiltros() {
@@ -307,6 +343,7 @@ async function salvar() {
   try {
     if (editando) await adminService.atualizarCategoria(form.id, payload);
     else await adminService.criarCategoria(payload);
+    if (!editando) pagina.value = 1;
     dialogRef.value?.close();
     mensagemSucesso.value = editando ? "Categoria atualizada com sucesso." : "Categoria criada com sucesso.";
     // O envio já foi concluído; uma eventual falha ao reler não repete o cadastro.
@@ -319,6 +356,7 @@ async function salvar() {
 }
 onBeforeUnmount(() => {
   sequencia++;
+  clearTimeout(timerFiltros);
   focoAnterior = null;
   dialogRef.value?.close();
 });
@@ -380,7 +418,11 @@ onBeforeUnmount(() => {
 .categories-edit{min-height:39px;padding:9px 13px;border:1px solid var(--pp-admin-border);border-radius:9px;background:var(--pp-admin-surface);color:var(--pp-admin-text);font-size:12px}
 .categories-edit:hover{border-color:var(--pp-admin-accent)}
 .categories-mobile-label{display:none}
-.categories-panel-footer{padding:14px 22px;border-top:1px solid var(--pp-admin-border);font-size:12px;color:var(--pp-admin-muted)}
+.categories-panel-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:14px 22px;border-top:1px solid var(--pp-admin-border);font-size:12px;color:var(--pp-admin-muted)}
+.categories-pagination{display:flex;align-items:center;gap:9px}
+.categories-pagination button{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:38px;padding:8px 11px;border:1px solid var(--pp-admin-border);border-radius:8px;background:var(--pp-admin-surface);color:var(--pp-admin-text);font:inherit;font-weight:650;cursor:pointer}
+.categories-pagination button:disabled{opacity:.5;cursor:not-allowed}
+.categories-pagination button:hover:not(:disabled){border-color:var(--pp-admin-accent);background:var(--pp-creme-2)}
 .categories-spin{animation:categories-spin 900ms linear infinite}
 @keyframes categories-spin{to{transform:rotate(360deg)}}
 .categories-dialog{position:fixed;inset:0;width:min(540px,calc(100vw - 28px));max-width:540px;max-height:min(90dvh,780px);margin:auto;padding:0;border:0;border-radius:16px;background:var(--pp-admin-surface);color:var(--pp-admin-text);box-shadow:0 24px 80px color-mix(in srgb,var(--pp-marrom) 26%,transparent);overflow:auto}
@@ -438,6 +480,7 @@ onBeforeUnmount(() => {
   .categories-toolbar{grid-template-columns:1fr;padding:0 16px 18px}
   .categories-list{grid-template-columns:1fr;padding:0 12px 16px}
   .categories-panel-footer{padding:14px 16px}
+  .categories-pagination{width:100%;justify-content:space-between}
   .categories-dialog-header,.categories-dialog-body{padding-left:18px;padding-right:18px}
   .categories-dialog-actions{padding:16px 18px 20px}
   .categories-dialog-actions>button{flex:1;padding:9px}
