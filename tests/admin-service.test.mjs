@@ -73,3 +73,15 @@ test('detalhe interno do produto usa rota restrita da API administrativa',async(
   assert.deepEqual(await service.obterProdutoAdmin(11),produto);
   assert.deepEqual(calls,['/produtos/11/admin_detalhe/']);
 });
+
+test('resumo de promoções usa agregado administrativo e não aceita contagens parciais', async () => {
+ const paths=[];
+ api.get=async path=>{paths.push(path);return {data:{total:3100,ativas:7}};};
+ const dados=await service.resumoPromocoesAdmin();
+ assert.deepEqual(dados,{total:3100,ativas:7});
+ assert.deepEqual(paths,['/promocoes/resumo_admin/']);
+ api.get=async()=>({data:{total:100,ativas:101}});
+ await assert.rejects(service.resumoPromocoesAdmin(),{code:'ADMIN_PROMOTIONS_SUMMARY_INVALID'});
+ api.get=async()=>({data:{total:100}});
+ await assert.rejects(service.resumoPromocoesAdmin(),{code:'ADMIN_PROMOTIONS_SUMMARY_INVALID'});
+});
