@@ -285,6 +285,19 @@ const adminService = {
     return listarTodasPaginas("/promocoes/", params);
   },
 
+  async resumoPromocoesAdmin() {
+    const { data } = await api.get("/promocoes/resumo_admin/");
+    if (
+      !data || !Number.isInteger(data.total) || data.total < 0 ||
+      !Number.isInteger(data.ativas) || data.ativas < 0 || data.ativas > data.total
+    ) {
+      const error = new Error("Os indicadores de promoções estão incompletos.");
+      error.code = "ADMIN_PROMOTIONS_SUMMARY_INVALID";
+      throw error;
+    }
+    return data;
+  },
+
   criarPromocao(payload) {
     return api.post("/promocoes/", payload).then(({ data }) => data);
   },
