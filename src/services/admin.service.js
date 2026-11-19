@@ -297,6 +297,14 @@ const adminService = {
     return data;
   },
 
+  obterCategoria(id) {
+    const numero = Number(id);
+    if (!Number.isInteger(numero) || numero < 1) {
+      return Promise.reject(new Error("Categoria inválida."));
+    }
+    return api.get(`/categorias/${numero}/`).then(({ data }) => data);
+  },
+
   async resumoCategoriasAdmin() {
     const { data } = await api.get("/categorias/resumo_admin/");
     if (
