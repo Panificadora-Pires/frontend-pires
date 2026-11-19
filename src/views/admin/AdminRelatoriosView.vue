@@ -171,7 +171,6 @@
         </section>
       </div>
 
-      <p class="report-criterion">Critério: somente pedidos retirados, conforme a data da retirada em São Paulo. Os valores não representam lucro nem dinheiro conciliado.</p>
     </template>
   </section>
 </template>
@@ -359,7 +358,6 @@ onBeforeUnmount(() => store.resetar());
 .report-daily-table td:last-child,.report-daily-table th:last-child{text-align:right}
 .report-daily-table td:nth-child(2),.report-daily-table th:nth-child(2){text-align:center}
 .report-daily-table tbody tr:last-child td{border-bottom:0}
-.report-criterion{margin:0 0 7px;font-size:12px;line-height:1.6;color:var(--pp-admin-muted)}
 @media(max-width:1160px){.report-overview,.report-main-grid,.report-bottom-grid{grid-template-columns:1fr}.report-small-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.report-small-metric--wide{grid-column:auto}.report-hero{min-height:290px}.report-main-grid{gap:13px}}
 @media(max-width:720px){.report-header h1{font-size:27px}.report-filters{padding:15px}.report-filter-layout{align-items:stretch;flex-direction:column}.report-shortcuts{align-self:stretch;justify-content:space-between}.report-shortcuts button{flex:1}.report-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.report-form input{width:100%;max-width:none}.report-generate{grid-column:1/-1}.report-small-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.report-small-metric--wide{grid-column:1/-1}.report-small-metric{padding:17px}.report-hero{padding:22px;min-height:280px}.report-overview{gap:11px}.report-panel-header{padding:17px 15px 12px}.report-chart-container{padding:0 13px 14px}.report-payment-chart{padding:10px 15px}.report-ranking-content{padding:10px 15px 20px}.report-period-line{align-items:flex-start;flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){.report-page *{animation:none!important;transition:none!important}}
