@@ -232,9 +232,8 @@ const indicadores = computed(() => indicadoresCategorias(categorias.value));
 const visiveis = computed(() => filtrarCategoriasAdmin(categorias.value, {
   busca: busca.value, situacao: situacao.value,
 }));
-const erroExibido = computed(() => erroLeitura.value || (erroAtualizacao.value
-  ? "Não foi possível sincronizar as categorias. Os dados podem estar desatualizados."
-  : ""));
+// A leitura direta após salvar também limpa erros antigos do polling.
+const erroExibido = computed(() => erroLeitura.value);
 
 async function carregar() {
   const chamada = ++sequencia;
@@ -254,7 +253,7 @@ async function carregar() {
     throw error;
   }
 }
-const { erro: erroAtualizacao, atualizarAgora } = useAutoRefresh(carregar, { intervalo: 60_000 });
+const { atualizarAgora } = useAutoRefresh(carregar, { intervalo: 60_000 });
 
 function limparFiltros() {
   busca.value = "";
