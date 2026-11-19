@@ -510,3 +510,30 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Transição de páginas do Admin: sem reiniciar a tela quando apenas filtros na URL mudam. */
+.admin-layout .admin-route-enter-active {
+  transition: opacity 220ms ease, transform 260ms var(--pp-ease);
+}
+.admin-layout .admin-route-leave-active {
+  transition: opacity 130ms ease, transform 130ms ease;
+}
+.admin-layout .admin-route-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.admin-layout .admin-route-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-layout .admin-route-enter-active,
+  .admin-layout .admin-route-leave-active {
+    transition: none;
+  }
+  .admin-layout .admin-route-enter-from,
+  .admin-layout .admin-route-leave-to {
+    opacity: 1;
+    transform: none;
+  }
+}

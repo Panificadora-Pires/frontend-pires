@@ -24,7 +24,13 @@
       <RouterLink :to="{ name: 'admin-dashboard' }" class="admin-mobile-header__brand"><img src="/logo.png" alt="Pires Panificadora" /><strong>Administração</strong></RouterLink>
       <span class="admin-user__avatar" aria-hidden="true">{{ iniciais }}</span>
     </header>
-    <main id="admin-conteudo" class="admin-main" tabindex="-1"><RouterView /></main>
+    <main id="admin-conteudo" class="admin-main" tabindex="-1">
+      <RouterView v-slot="{ Component, route: viewRoute }">
+        <Transition name="admin-route" mode="out-in">
+          <component :is="Component" :key="viewRoute.name" />
+        </Transition>
+      </RouterView>
+    </main>
 
     <dialog id="admin-mobile-menu" ref="menuDialog" class="admin-drawer" aria-labelledby="admin-menu-title" @cancel.prevent="fecharMenu()" @click="fecharPeloFundo">
       <div class="admin-drawer__header">

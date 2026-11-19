@@ -191,6 +191,46 @@ const adminService = {
     return listarTodasPaginas("/produtos/", params);
   },
 
+  // Listagem operacional: uma página por requisição, estoque e promoções vêm do servidor.
+  async listarProdutosAdminPagina({ page = 1, page_size = 18, busca = "", categoria = "", situacao = "" } = {}) {
+    const numeroPagina = Number(page);
+    const tamanhoPagina = Number(page_size);
+    if (
+      !Number.isInteger(numeroPagina) || numeroPagina < 1 ||
+      !Number.isInteger(tamanhoPagina) || tamanhoPagina < 1 || tamanhoPagina > 100
+    ) {
+      const error = new Error("Página inválida para consulta de produtos.");
+      error.code = "ADMIN_CATALOG_PAGE_INVALID";
+      throw error;
+    }
+    const { data } = await api.get("/produtos/admin_catalogo/", {
+      params: { page: numeroPagina, page_size: tamanhoPagina, busca, categoria, situacao },
+    });
+    if (
+      !data || !Array.isArray(data.results) || !Number.isInteger(data.count) ||
+      data.count < 0 || !Number.isInteger(data.page) ||
+      !Number.isInteger(data.page_size) || !Number.isInteger(data.total_pages)
+    ) {
+      const error = new Error("A API não retornou uma página válida de produtos.");
+      error.code = "ADMIN_CATALOG_PAGE_INVALID";
+      throw error;
+    }
+    return data;
+  },
+
+  async resumoProdutosAdmin() {
+    const { data } = await api.get("/produtos/resumo_admin/");
+    const campos = ["total", "ativos", "sem_estoque", "reposicao", "em_promocao"];
+    if (!data || campos.some(campo => !Number.isInteger(data[campo]) || data[campo] < 0)) {
+      const error = new Error("Os indicadores do catálogo estão incompletos.");
+      error.code = "ADMIN_CATALOG_SUMMARY_INVALID";
+      throw error;
+    }
+    return data;
+  },
+
+
+
   obterProduto(id) {
     return api.get(`/produtos/${id}/`).then(({ data }) => data);
   },
