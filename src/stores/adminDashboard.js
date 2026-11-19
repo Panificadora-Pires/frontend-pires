@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import adminService from '@/services/admin.service';
 import { getSessionVersion } from '@/services/api';
 import { diaEmSaoPaulo, normalizarRanking } from '@/utils/adminDashboard';
+import { somarDias, validarRelatorioAnalitico } from '@/utils/adminRelatorios';
 
 // Cada instância possui sua carga: reset permite nova busca sem aguardar a anterior.
 const carregamentos = new WeakMap();
@@ -12,6 +13,8 @@ export const useAdminDashboardStore = defineStore('adminDashboard', {
     promocoes: [],
     ranking: [],
     relatorioHoje: null,
+    relatorioSemana: null,
+    pedidosRecentes: [],
     dia: null,
     inicializado: false,
     carregando: false,
@@ -33,20 +36,28 @@ export const useAdminDashboardStore = defineStore('adminDashboard', {
       entrada.promise = (async () => {
         try {
           const periodo = { dataInicio: dia, dataFim: dia };
-          const [produtos, promocoes, relatorioHoje, respostaRanking] = await Promise.all([
+          const inicioSemana = somarDias(dia, -6);
+          const [produtos, promocoes, relatorioHoje, respostaRanking, paginaRecentes, relatorioSemana] = await Promise.all([
             adminService.listarProdutos({ ativo: true }),
             adminService.listarPromocoes(),
             adminService.relatorioVendas(periodo),
             adminService.maisVendidos({ ...periodo, limite: 3 }),
+            adminService.listarPedidosPagina({ page: 1, page_size: 4 }),
+            adminService.relatorioAnaliticoAdmin({ dataInicio: inicioSemana, dataFim: dia }),
           ]);
           if (!sessaoAtual()) return;
           const ranking = normalizarRanking(respostaRanking, produtos);
           if (!relatorioHoje || [relatorioHoje.total_vendido, relatorioHoje.total_pedidos].some(valor => valor == null || valor === '' || !Number.isFinite(Number(valor)))) {
             throw new Error('Resposta de faturamento inválida.');
           }
+          // A série é calculada no Django, a partir dos preços históricos de itens
+          // retirados; jamais depender do histórico completo de pedidos.
+          const semanaValidada = validarRelatorioAnalitico(relatorioSemana, { inicio: inicioSemana, fim: dia });
           this.produtos = produtos;
           this.promocoes = promocoes;
           this.relatorioHoje = relatorioHoje;
+          this.relatorioSemana = semanaValidada;
+          this.pedidosRecentes = paginaRecentes.results;
           this.ranking = ranking;
           this.dia = dia;
           this.inicializado = true;
