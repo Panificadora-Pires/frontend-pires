@@ -300,6 +300,49 @@ const adminService = {
   listarUsuarios(params = {}) {
     return listarTodasPaginas("/usuarios/", params);
   },
+
+  async listarUsuariosAdminPagina({
+    page = 1, page_size = 18, busca = "",
+    perfil = "", situacao = "", verificacao = "",
+  } = {}) {
+    const numeroPagina = Number(page);
+    const tamanhoPagina = Number(page_size);
+    if (
+      !Number.isInteger(numeroPagina) || numeroPagina < 1 ||
+      !Number.isInteger(tamanhoPagina) || tamanhoPagina < 1 || tamanhoPagina > 100
+    ) {
+      throw new Error("Página inválida para consulta de usuários.");
+    }
+    const { data } = await api.get("/usuarios/admin_listagem/", {
+      params: {
+        page: numeroPagina, page_size: tamanhoPagina,
+        busca, perfil, situacao, verificacao,
+      },
+    });
+    if (
+      !data || !Array.isArray(data.results) ||
+      !Number.isInteger(data.count) || data.count < 0 ||
+      !Number.isInteger(data.page) || data.page < 1 ||
+      !Number.isInteger(data.page_size) || data.page_size < 1 ||
+      !Number.isInteger(data.total_pages) || data.total_pages < 1
+    ) {
+      throw new Error("A listagem de usuários retornou dados inválidos.");
+    }
+    return data;
+  },
+
+  async resumoUsuariosAdmin() {
+    const { data } = await api.get("/usuarios/resumo_admin/");
+    const campos = ["total", "administradores", "clientes", "ativas", "emails_verificados"];
+    if (
+      !data || campos.some(campo => !Number.isInteger(data[campo]) || data[campo] < 0) ||
+      data.administradores + data.clientes !== data.total ||
+      data.ativas > data.total || data.emails_verificados > data.total
+    ) {
+      throw new Error("Os indicadores de usuários estão incompletos.");
+    }
+    return data;
+  },
 };
 
 export default adminService;
