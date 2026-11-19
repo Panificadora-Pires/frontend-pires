@@ -14,7 +14,7 @@
     <section class="promotions-metrics" aria-label="Resumo das promoções">
       <div v-for="metrica in metricas" :key="metrica.campo" class="promotions-metric">
         <span>{{ metrica.label }}</span>
-        <strong>{{ store.inicializado ? indicadores[metrica.campo] : "—" }}</strong>
+        <strong>{{ store.resumo ? indicadores[metrica.campo] : "—" }}</strong>
         <small>{{ metrica.descricao }}</small>
       </div>
     </section>
@@ -22,7 +22,7 @@
     <section class="promotions-panel" aria-labelledby="promotions-list-title">
       <header class="promotions-panel-header">
         <h2 id="promotions-list-title">Ofertas cadastradas</h2>
-        <p>{{ store.inicializado ? filtradas.length + (filtradas.length === 1 ? " promoção encontrada" : " promoções encontradas") : "Acompanhe ofertas em andamento, futuras e encerradas." }}</p>
+        <p>{{ store.inicializado ? store.pagina.count + (store.pagina.count === 1 ? " promoção encontrada" : " promoções encontradas") : "Acompanhe ofertas em andamento, futuras e encerradas." }}</p>
       </header>
       <div class="promotions-toolbar">
         <div class="promotions-search" role="search">
@@ -49,13 +49,13 @@
       <div v-if="!store.inicializado && !store.erro" class="promotions-empty" role="status">
         <LoaderCircle :size="22" class="promotions-spin" aria-hidden="true" /> Carregando promoções…
       </div>
-      <div v-else-if="store.inicializado && !store.itens.length" class="promotions-empty">
+      <div v-else-if="store.inicializado && !store.resumo?.total" class="promotions-empty">
         <Tags :size="30" aria-hidden="true" />
         <strong>Nenhuma promoção cadastrada</strong>
         <span>Crie uma oferta para destacar um produto por um período.</span>
         <button type="button" @click="abrirNovo">Criar promoção</button>
       </div>
-      <div v-else-if="store.inicializado && !filtradas.length" class="promotions-empty">
+      <div v-else-if="store.inicializado && !store.pagina.count" class="promotions-empty">
         <SearchX :size="29" aria-hidden="true" />
         <strong>Nenhuma promoção encontrada</strong>
         <span>Experimente buscar outro produto ou mudar o filtro.</span>
@@ -105,12 +105,12 @@
           </li>
         </ul>
       </template>
-      <footer v-if="store.inicializado && filtradas.length" class="promotions-footer">
-        <span>Exibindo {{ primeiraExibida }}–{{ ultimaExibida }} de {{ filtradas.length }}</span>
+      <footer v-if="store.inicializado && store.pagina.count" class="promotions-footer">
+        <span>Exibindo {{ primeiraExibida }}–{{ ultimaExibida }} de {{ store.pagina.count }}</span>
         <div v-if="totalPaginas > 1" class="promotions-pagination">
-          <button type="button" :disabled="pagina <= 1" @click="pagina--"><ChevronLeft :size="16" aria-hidden="true" /> Anterior</button>
+          <button type="button" :disabled="pagina <= 1 || store.carregando" @click="mudarPagina(-1)"><ChevronLeft :size="16" aria-hidden="true" /> Anterior</button>
           <span>Página {{ pagina }} de {{ totalPaginas }}</span>
-          <button type="button" :disabled="pagina >= totalPaginas" @click="pagina++">Próxima <ChevronRight :size="16" aria-hidden="true" /></button>
+          <button type="button" :disabled="pagina >= totalPaginas || store.carregando" @click="mudarPagina(1)">Próxima <ChevronRight :size="16" aria-hidden="true" /></button>
         </div>
       </footer>
     </section>
@@ -256,7 +256,7 @@ import { useAutoRefresh } from "@/composables/useAutoRefresh";
 import { getSessionVersion } from "@/services/api";
 import { useAdminPromocoesStore } from "@/stores/adminPromocoes";
 import { mensagemErroApi } from "@/services/admin.service";
-import { diaEmSaoPaulo, estadoPromocao, filtrarPromocoes, indicadoresPromocoes, validarPromocao } from "@/utils/adminPromocoes";
+import { diaEmSaoPaulo, estadoPromocao, validarPromocao } from "@/utils/adminPromocoes";
 
 const store = useAdminPromocoesStore();
 const hoje = ref(diaEmSaoPaulo());
@@ -276,21 +276,44 @@ const metricas = [
   { label: "Agendadas", campo: "agendadas", descricao: "Programadas para começar" },
   { label: "Encerradas", campo: "encerradas", descricao: "Com período finalizado" },
 ];
-const indicadores = computed(() => indicadoresPromocoes(store.itens, hoje.value));
-const filtradas = computed(() => filtrarPromocoes(store.itens, {
-  busca: busca.value, situacao: situacao.value, hoje: hoje.value,
-}));
-const totalPaginas = computed(() => Math.max(1, Math.ceil(filtradas.value.length / PAGE_SIZE)));
-const visiveis = computed(() => filtradas.value.slice((pagina.value - 1) * PAGE_SIZE, pagina.value * PAGE_SIZE));
-const primeiraExibida = computed(() => (pagina.value - 1) * PAGE_SIZE + 1);
-const ultimaExibida = computed(() => (pagina.value - 1) * PAGE_SIZE + visiveis.value.length);
-watch([busca, situacao], () => { pagina.value = 1; });
-watch(totalPaginas, valor => { if (pagina.value > valor) pagina.value = valor; });
+const indicadores = computed(() => store.resumo || {});
+const totalPaginas = computed(() => store.pagina.total_pages);
+const visiveis = computed(() => store.pagina.results);
+const primeiraExibida = computed(() => (store.pagina.page - 1) * store.pagina.page_size + 1);
+const ultimaExibida = computed(() => primeiraExibida.value + visiveis.value.length - 1);
+let timerFiltros = null;
 
+function parametros() {
+  return { page: pagina.value, page_size: PAGE_SIZE, busca: busca.value.trim(), situacao: situacao.value };
+}
 async function carregar() {
   hoje.value = diaEmSaoPaulo();
-  return store.carregar();
+  try {
+    await store.carregar(parametros());
+  } catch (error) {
+    // Uma exclusão ou mudança de filtro pode invalidar a última página.
+    if (pagina.value > 1 && error?.response?.status === 404) {
+      pagina.value = 1;
+      await store.carregar(parametros());
+      return;
+    }
+    throw error;
+  }
 }
+function mudarPagina(deslocamento) {
+  if (store.carregando) return;
+  const destino = pagina.value + deslocamento;
+  if (destino < 1 || destino > totalPaginas.value) return;
+  pagina.value = destino;
+  void carregar().catch(() => {});
+}
+watch([busca, situacao], () => {
+  pagina.value = 1;
+  clearTimeout(timerFiltros);
+  timerFiltros = setTimeout(() => {
+    void carregar().catch(() => {});
+  }, 300);
+});
 const { atualizarAgora } = useAutoRefresh(carregar, { intervalo: 60_000 });
 
 const formDialog = ref(null);
@@ -484,6 +507,7 @@ onBeforeUnmount(() => {
   sequenciaBusca++;
   sequenciaDetalhe++;
   clearTimeout(timerBusca);
+  clearTimeout(timerFiltros);
   formDialog.value?.close();
   exclusaoDialog.value?.close();
   store.resetar();
