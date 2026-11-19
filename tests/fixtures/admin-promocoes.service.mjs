@@ -1,6 +1,13 @@
 export let version = 0;
 const service = {
-  listarPromocoes: async () => [],
+  listarPromocoesAdminPagina: async () => ({
+    count: 0, page: 1, page_size: 12, total_pages: 1,
+    previous: null, next: null, results: [],
+  }),
+  resumoPromocoesGestao: async () => ({
+    total: 0, ativas: 0, agendadas: 0, encerradas: 0,
+  }),
+
   atualizarPromocao: async () => ({}),
   criarPromocao: async () => ({}),
   excluirPromocao: async () => ({}),
