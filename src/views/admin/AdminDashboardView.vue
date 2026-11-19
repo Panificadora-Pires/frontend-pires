@@ -8,14 +8,14 @@
     </header>
     <div v-if="erro" class="dashboard-alert" role="alert"><CircleAlert :size="18" aria-hidden="true" /><span>{{ erro }} <template v-if="pedidosProntos || dashboard.inicializado">Os dados exibidos são da última consulta concluída.</template></span><button type="button" class="dashboard-retry" @click="atualizarTudo">Tentar novamente</button></div>
     <section class="dashboard-kpis" aria-label="Indicadores do dia">
-      <AdminMetric label="Pedidos do dia" :value="pedidosProntos ? metricas.pedidosHoje : null" caption="Criados hoje, horário de Brasília" :loading="!pedidosProntos && (adminOrders.carregando || adminOrders.atualizando)" />
+      <AdminMetric label="Pedidos do dia" :value="pedidosProntos ? metricas.pedidosHoje : null" caption="Criados hoje, horário de Brasília" :loading="!pedidosProntos && (queueSummary.carregando)" />
       <AdminMetric :label="rotuloFaturamento" :value="dashboard.inicializado ? moeda(dashboard.relatorioHoje.total_vendido) : null" :caption="dashboard.inicializado ? `${dashboard.relatorioHoje.total_pedidos} ${Number(dashboard.relatorioHoje.total_pedidos) === 1 ? 'pedido retirado' : 'pedidos retirados'}` : 'Somente pedidos retirados'" :loading="!dashboard.inicializado && dashboard.carregando" />
-      <AdminMetric label="Em preparo" :value="pedidosProntos ? metricas.confirmados : null" caption="Pedidos confirmados" :loading="!pedidosProntos && (adminOrders.carregando || adminOrders.atualizando)" />
-      <AdminMetric label="Prontos para retirada" :value="pedidosProntos ? metricas.prontos : null" caption="Aguardando no balcão" :loading="!pedidosProntos && (adminOrders.carregando || adminOrders.atualizando)" />
+      <AdminMetric label="Em preparo" :value="pedidosProntos ? metricas.confirmados : null" caption="Pedidos confirmados" :loading="!pedidosProntos && (queueSummary.carregando)" />
+      <AdminMetric label="Prontos para retirada" :value="pedidosProntos ? metricas.prontos : null" caption="Aguardando no balcão" :loading="!pedidosProntos && (queueSummary.carregando)" />
     </section>
     <div class="dashboard-middle">
       <AdminPanel title="Operação agora" :description="pedidosProntos ? `${emAndamento} pedidos em andamento` : 'Consultando a fila do balcão'">
-        <div v-if="!pedidosProntos" class="dashboard-state" :role="adminOrders.erro ? undefined : 'status'">{{ adminOrders.erro ? 'Fila indisponível. Tentando restabelecer a conexão.' : 'Carregando pedidos…' }}</div>
+        <div v-if="!pedidosProntos" class="dashboard-state" :role="queueSummary.erro ? undefined : 'status'">{{ queueSummary.erro ? 'Fila indisponível. Tentando restabelecer a conexão.' : 'Carregando pedidos…' }}</div>
         <div v-else class="operation-list">
           <RouterLink v-for="stage in etapas" :key="stage.status" :to="{ name: 'admin-pedidos', query: { status: stage.status } }"><span class="operation-dot" :class="`operation-dot--${stage.status}`" aria-hidden="true"></span><span>{{ stage.label }}<small>{{ stage.description }}</small></span><strong>{{ stage.count }}</strong><ChevronRight :size="16" aria-hidden="true" /></RouterLink>
           <p v-if="emAndamento === 0" class="dashboard-state">Nenhum pedido em andamento.</p>
@@ -29,7 +29,7 @@
         <p class="dashboard-note">Ranking por quantidade. Somente pedidos retirados.</p>
       </AdminPanel>
       <AdminPanel title="Faturamento" description="Últimos 7 dias · pedidos retirados">
-        <div v-if="!pedidosProntos" class="dashboard-state">{{ adminOrders.erro ? 'Série indisponível: a consulta de pedidos não foi concluída.' : 'Carregando faturamento…' }}</div>
+        <div v-if="!dashboard.inicializado" class="dashboard-state">{{ dashboard.erro ? 'Série indisponível. Tente atualizar os indicadores.' : 'Carregando faturamento…' }}</div>
         <template v-else><div class="revenue-total"><strong>{{ moeda(totalSemana) }}</strong><span>{{ formatarDia(serie[0].dia) }} a {{ formatarDia(diaAtual) }}</span></div><AdminRevenueChart :points="serie" /></template>
       </AdminPanel>
     </div>
@@ -40,7 +40,7 @@
       </AdminPanel>
       <AdminPanel title="Pedidos recentes" description="Últimos pedidos registrados">
         <template #action><RouterLink class="dashboard-link" :to="{ name: 'admin-pedidos' }">Abrir fila<ArrowRight :size="16" aria-hidden="true" /></RouterLink></template>
-        <div v-if="!pedidosProntos" class="dashboard-state" :role="adminOrders.erro ? undefined : 'status'">{{ adminOrders.erro ? 'Pedidos indisponíveis. Tente atualizar.' : 'Carregando pedidos…' }}</div>
+        <div v-if="!pedidosProntos" class="dashboard-state" :role="queueSummary.erro ? undefined : 'status'">{{ queueSummary.erro ? 'Pedidos indisponíveis. Tente atualizar.' : 'Carregando pedidos…' }}</div>
         <p v-else-if="!recentes.length" class="dashboard-state">Nenhum pedido registrado.</p>
         <div v-else class="dashboard-table" role="table" aria-label="Pedidos recentes">
           <div class="recent-head" role="row"><span role="columnheader">Pedido / cliente</span><span role="columnheader">Etapa</span><span role="columnheader">Pagamento</span><span role="columnheader">Total</span><span role="columnheader" class="sr-only">Detalhes</span></div>
@@ -62,11 +62,11 @@ import ProductImage from '@/components/catalog/ProductImage.vue';
 import CardActionContent from '@/components/ui/CardActionContent.vue';
 import { useAutoRefresh } from '@/composables/useAutoRefresh';
 import { useAdminDashboardStore } from '@/stores/adminDashboard';
-import { useAdminOrdersStore } from '@/stores/adminOrders';
+import { useAdminQueueSummaryStore } from '@/stores/adminQueueSummary';
 import { useAuthStore } from '@/stores/auth';
-import { diaEmSaoPaulo, metricasPedidos, serieRetiradas } from '@/utils/adminDashboard';
+import { diaEmSaoPaulo } from '@/utils/adminDashboard';
 const dashboard = useAdminDashboardStore();
-const adminOrders = useAdminOrdersStore();
+const queueSummary = useAdminQueueSummaryStore();
 const auth = useAuthStore();
 const referencia = ref(new Date());
 const diaAtual = computed(() => diaEmSaoPaulo(referencia.value));
@@ -74,26 +74,38 @@ const nome = computed(() => auth.usuario?.name?.trim().split(/\s+/)[0] || 'equip
 const hora = computed(() => Number(new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', hourCycle: 'h23' }).format(referencia.value)));
 const saudacao = computed(() => hora.value < 12 ? 'Bom dia' : hora.value < 18 ? 'Boa tarde' : 'Boa noite');
 const dataContexto = computed(() => new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(referencia.value));
-const pedidosProntos = computed(() => adminOrders.inicializado);
-const metricas = computed(() => metricasPedidos(adminOrders.itens, diaAtual.value));
-const emAndamento = computed(() => metricas.value.pendentes + metricas.value.confirmados + metricas.value.prontos);
+const pedidosProntos = computed(() => queueSummary.inicializado);
+const metricas = computed(() => queueSummary.resumo ? {
+  pedidosHoje: queueSummary.resumo.pedidos_hoje,
+  pendentes: queueSummary.resumo.pendentes,
+  confirmados: queueSummary.resumo.confirmados,
+  prontos: queueSummary.resumo.prontos,
+  pagamentosPendentes: queueSummary.resumo.pagamentos_pendentes,
+} : null);
+const emAndamento = computed(() => metricas.value
+  ? metricas.value.pendentes + metricas.value.confirmados + metricas.value.prontos
+  : 0);
 const etapas = computed(() => [
   { status: 'pendente', label: 'Pendentes', description: 'Aguardam confirmação', count: metricas.value.pendentes },
   { status: 'confirmado', label: 'Em preparo', description: 'Na produção', count: metricas.value.confirmados },
   { status: 'pronto', label: 'Prontos', description: 'Já podem ser retirados', count: metricas.value.prontos },
 ]);
-const recentes = computed(() => adminOrders.itens.slice(0, 4));
-const serie = computed(() => serieRetiradas(adminOrders.itens, diaAtual.value));
-const totalSemana = computed(() => serie.value.reduce((sum, p) => sum + Math.round(p.value * 100), 0) / 100);
+const recentes = computed(() => dashboard.pedidosRecentes);
+const serie = computed(() => (dashboard.relatorioSemana?.serie_diaria || []).map((item) => ({
+  dia: item.data,
+  label: formatarDia(item.data),
+  value: Number(item.total_vendido),
+})));
+const totalSemana = computed(() => Number(dashboard.relatorioSemana?.resumo.total_vendido || 0));
 const promocoesAtivas = computed(() => dashboard.promocoes.filter(p => p.data_inicio <= diaAtual.value && p.data_fim >= diaAtual.value).length);
 const rotuloFaturamento = computed(() => !dashboard.dia || dashboard.dia === diaAtual.value ? 'Faturamento do dia' : `Faturamento de ${formatarDia(dashboard.dia)}`);
-// Catálogo/relatório mudam devagar; a fila continua pertencendo ao AdminLayout.
+// Histórico recente e receita semanal vêm de endpoints paginados/agregados.
 const extras = useAutoRefresh(() => {
   referencia.value = new Date();
   return dashboard.carregar({ agora: referencia.value });
 }, { intervalo: 60_000 });
-const erro = computed(() => adminOrders.erro || dashboard.erro || (adminOrders.erroAtualizacao ? 'Não foi possível atualizar a fila de pedidos.' : '') || (extras.erro.value ? 'Não foi possível atualizar os indicadores.' : ''));
-function atualizarTudo() { return Promise.allSettled([extras.atualizarAgora(), adminOrders.atualizarAgora()]); }
+const erro = computed(() => queueSummary.erro || dashboard.erro || (extras.erro.value ? 'Não foi possível atualizar os indicadores.' : ''));
+function atualizarTudo() { return Promise.allSettled([extras.atualizarAgora(), queueSummary.atualizarAgora()]); }
 function moeda(valor) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(valor || 0)); }
 function formatarDia(dia) { return dia ? `${dia.slice(8, 10)}/${dia.slice(5, 7)}` : '—'; }
 function formatarData(valor) { const data = new Date(valor); return Number.isFinite(data.getTime()) ? new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(data) : '—'; }
