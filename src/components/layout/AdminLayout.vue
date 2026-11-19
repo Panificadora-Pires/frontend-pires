@@ -77,6 +77,30 @@ const closeTrigger = ref(null);
 let desktopMedia = null;
 let overflowAnterior = null;
 let desinscreverRealtime = null;
+let timerRealtime = null;
+let atualizarPedidosRealtime = false;
+let atualizarChatRealtime = false;
+function limparPendenciasRealtime() {
+  if (timerRealtime !== null) clearTimeout(timerRealtime);
+  timerRealtime = null;
+  atualizarPedidosRealtime = false;
+  atualizarChatRealtime = false;
+}
+function agendarRealtime(evento) {
+  if (!evento || evento.tipo.startsWith("pedido.")) atualizarPedidosRealtime = true;
+  if (!evento || evento.tipo.startsWith("chat.")) atualizarChatRealtime = true;
+  if (timerRealtime !== null || (!atualizarPedidosRealtime && !atualizarChatRealtime)) return;
+  // Rajadas de eventos viram uma única consulta por recurso em 400 ms.
+  timerRealtime = setTimeout(() => {
+    timerRealtime = null;
+    const pedidos = atualizarPedidosRealtime;
+    const chatPendente = atualizarChatRealtime;
+    atualizarPedidosRealtime = false;
+    atualizarChatRealtime = false;
+    if (pedidos) void queueSummary.atualizarAgora().catch(() => {});
+    if (chatPendente) void chat.carregarNaoLidas().catch(() => {});
+  }, 400);
+}
 
 const iniciais = computed(() => {
   const nome = auth.usuario?.name || auth.usuario?.email || "Admin";
@@ -133,6 +157,7 @@ async function handleLogout() {
   queueSummary.resetar();
   dashboard.resetar();
   chat.resetar();
+  limparPendenciasRealtime();
   realtimeClient.parar();
   await auth.logout();
   await router.replace({ name: "login" });
@@ -146,15 +171,7 @@ onMounted(() => {
   // Mensagens de clientes ainda não lidas, no mesmo ritmo da fila.
   chat.iniciarPollingNaoLidas(15_000);
   if (REALTIME_ENABLED) {
-    desinscreverRealtime = realtimeClient.inscrever(evento => {
-      // Evento nulo = reconexão: revalidar snapshots via REST.
-      if (!evento || evento.tipo.startsWith("pedido.")) {
-        void queueSummary.atualizarAgora().catch(() => {});
-      }
-      if (!evento || evento.tipo.startsWith("chat.")) {
-        void chat.carregarNaoLidas().catch(() => {});
-      }
-    });
+    desinscreverRealtime = realtimeClient.inscrever(agendarRealtime);
     realtimeClient.iniciar();
   }
 });
@@ -166,6 +183,7 @@ onBeforeUnmount(() => {
   chat.pararPollingNaoLidas();
   desinscreverRealtime?.();
   desinscreverRealtime = null;
+  limparPendenciasRealtime();
   realtimeClient.parar();
 });
 </script>
