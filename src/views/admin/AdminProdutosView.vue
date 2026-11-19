@@ -49,10 +49,10 @@
             @click="busca = ''"
           ><X :size="16" aria-hidden="true" /></button>
         </div>
-        <AdminCatalogSelect
+        <AdminRemoteCategorySelect
           v-model="categoria"
           aria-label="Filtrar por categoria"
-          :options="opcoesCategoria"
+          incluir-todas
           class="catalog-filter"
         />
         <AdminCatalogSelect
@@ -63,9 +63,9 @@
         />
       </div>
 
-      <div v-if="erro || erroCategorias" class="catalog-error" role="alert">
+      <div v-if="erro" class="catalog-error" role="alert">
         <CircleAlert :size="18" aria-hidden="true" />
-        <span>{{ erro || erroCategorias }}</span>
+        <span>{{ erro }}</span>
         <button type="button" @click="tentarNovamente">Tentar novamente</button>
       </div>
 
@@ -103,7 +103,7 @@
 
             <div class="catalog-cell catalog-cell--category">
               <span class="catalog-cell__label">Categoria</span>
-              <span>{{ produto.categoria_nome || nomeCategoria(produto.categoria) }}</span>
+              <span>{{ produto.categoria_nome || "Sem categoria" }}</span>
             </div>
 
             <div class="catalog-cell catalog-cell--price">
@@ -181,10 +181,11 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { ChevronLeft, ChevronRight, CircleAlert, LoaderCircle, PackageOpen, Pencil, Plus, Power, Search, X } from "lucide-vue-next";
 
 import AdminCatalogSelect from "@/components/admin/AdminCatalogSelect.vue";
+import AdminRemoteCategorySelect from "@/components/admin/AdminRemoteCategorySelect.vue";
 import CardActionContent from "@/components/ui/CardActionContent.vue";
 import ProductImage from "@/components/catalog/ProductImage.vue";
 import { useAutoRefresh } from "@/composables/useAutoRefresh";
@@ -192,7 +193,6 @@ import adminService, { mensagemErroApi } from "@/services/admin.service";
 import { getSessionVersion } from "@/services/api";
 
 const PAGE_SIZE = 18;
-const categorias = ref([]);
 const busca = ref("");
 const buscaAplicada = ref("");
 const categoria = ref("");
@@ -204,14 +204,9 @@ const inicializado = ref(false);
 const consultando = ref(false);
 const alterando = ref(null);
 const erro = ref("");
-const erroCategorias = ref("");
 let sequencia = 0;
 let timerBusca = null;
 
-const opcoesCategoria = computed(() => [
-  { label: "Todas as categorias", value: "" },
-  ...categorias.value.map(item => ({ label: item.nome, value: String(item.id) })),
-]);
 const opcoesSituacao = [
   { label: "Todas as situações", value: "" },
   { label: "Ativos", value: "ativo" },
@@ -231,17 +226,6 @@ const fimExibido = computed(() => (paginaDados.value.page - 1) * PAGE_SIZE + pag
 
 function moeda(valor) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(valor || 0));
-}
-function nomeCategoria(id) {
-  return categorias.value.find(c => String(c.id) === String(id))?.nome || "Sem categoria";
-}
-async function carregarCategorias() {
-  try {
-    categorias.value = await adminService.listarCategorias();
-    erroCategorias.value = "";
-  } catch {
-    erroCategorias.value = "Não foi possível carregar as categorias.";
-  }
 }
 async function carregar() {
   const chamada = ++sequencia;
@@ -313,10 +297,8 @@ async function alternarAtivo(produto) {
   }
 }
 function tentarNovamente() {
-  void carregarCategorias();
   void carregar().catch(() => {});
 }
-onMounted(() => { void carregarCategorias(); });
 onBeforeUnmount(() => {
   sequencia += 1;
   if (timerBusca) clearTimeout(timerBusca);
