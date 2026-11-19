@@ -69,7 +69,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from "vue";
 import { Check, ChevronDown, Search } from "lucide-vue-next";
 import adminService from "@/services/admin.service";
 import { getSessionVersion } from "@/services/api";
@@ -87,7 +87,7 @@ const aberto = ref(false), busca = ref(""), carregando = ref(false), erro = ref(
 const paginaVazia = () => ({ page: 1, count: 0, next: null, results: [] });
 const paginaDados = ref(paginaVazia());
 const nomeSelecionado = ref("");
-const listId = "remote-category-" + Math.random().toString(36).slice(2, 10);
+const listId = useId();
 let sequencia = 0, nomeGeracao = 0, timerBusca = null;
 let ativo = true;
 
