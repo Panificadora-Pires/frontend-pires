@@ -2,32 +2,43 @@ import { defineStore } from "pinia";
 import adminService from "@/services/admin.service";
 import { getSessionVersion } from "@/services/api";
 
-// A API continua sendo a única fonte de preços, vigência e permissões.
+const paginaVazia = () => ({
+  count: 0, page: 1, page_size: 12, total_pages: 1,
+  next: null, previous: null, results: [],
+});
+
+// Página e indicadores sempre vêm do Django; nunca derivar totais da página atual.
 export const useAdminPromocoesStore = defineStore("adminPromocoes", {
   state: () => ({
-    itens: [],
+    pagina: paginaVazia(),
+    resumo: null,
     inicializado: false,
     carregando: false,
     erro: null,
     geracao: 0,
+    filtrosAplicados: null,
   }),
   actions: {
-    async carregar() {
+    async carregar(filtros = {}) {
       const chamada = ++this.geracao;
       const sessao = getSessionVersion();
       const atual = () => chamada === this.geracao && sessao === getSessionVersion();
-      if (!this.inicializado) this.carregando = true;
+      this.carregando = true;
       try {
-        const itens = await adminService.listarPromocoes();
+        const [pagina, resumo] = await Promise.all([
+          adminService.listarPromocoesAdminPagina(filtros),
+          adminService.resumoPromocoesGestao(),
+        ]);
         if (!atual()) return;
-        if (!Array.isArray(itens)) throw new Error("A API não retornou uma lista válida de promoções.");
-        this.itens = itens;
+        this.pagina = pagina;
+        this.resumo = resumo;
+        this.filtrosAplicados = { ...filtros };
         this.inicializado = true;
         this.erro = null;
       } catch (error) {
         if (!atual()) return;
         this.erro = this.inicializado
-          ? "Não foi possível sincronizar as promoções. A última lista foi preservada."
+          ? "Não foi possível atualizar as promoções. A última consulta válida foi preservada."
           : "Não foi possível carregar as promoções.";
         throw error;
       } finally {
