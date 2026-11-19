@@ -9,8 +9,8 @@ const carregamentos = new WeakMap();
 
 export const useAdminDashboardStore = defineStore('adminDashboard', {
   state: () => ({
-    produtos: [],
-    promocoes: [],
+    resumoProdutos: null,
+    resumoPromocoes: null,
     ranking: [],
     relatorioHoje: null,
     relatorioSemana: null,
@@ -37,24 +37,24 @@ export const useAdminDashboardStore = defineStore('adminDashboard', {
         try {
           const periodo = { dataInicio: dia, dataFim: dia };
           const inicioSemana = somarDias(dia, -6);
-          const [produtos, promocoes, relatorioHoje, respostaRanking, paginaRecentes, relatorioSemana] = await Promise.all([
-            adminService.listarProdutos({ ativo: true }),
-            adminService.listarPromocoes(),
+          const [resumoProdutos, resumoPromocoes, relatorioHoje, respostaRanking, paginaRecentes, relatorioSemana] = await Promise.all([
+            adminService.resumoProdutosAdmin(),
+            adminService.resumoPromocoesAdmin(),
             adminService.relatorioVendas(periodo),
             adminService.maisVendidos({ ...periodo, limite: 3 }),
             adminService.listarPedidosPagina({ page: 1, page_size: 4 }),
             adminService.relatorioAnaliticoAdmin({ dataInicio: inicioSemana, dataFim: dia }),
           ]);
           if (!sessaoAtual()) return;
-          const ranking = normalizarRanking(respostaRanking, produtos);
+          const ranking = normalizarRanking(respostaRanking, []);
           if (!relatorioHoje || [relatorioHoje.total_vendido, relatorioHoje.total_pedidos].some(valor => valor == null || valor === '' || !Number.isFinite(Number(valor)))) {
             throw new Error('Resposta de faturamento inválida.');
           }
           // A série é calculada no Django, a partir dos preços históricos de itens
           // retirados; jamais depender do histórico completo de pedidos.
           const semanaValidada = validarRelatorioAnalitico(relatorioSemana, { inicio: inicioSemana, fim: dia });
-          this.produtos = produtos;
-          this.promocoes = promocoes;
+          this.resumoProdutos = resumoProdutos;
+          this.resumoPromocoes = resumoPromocoes;
           this.relatorioHoje = relatorioHoje;
           this.relatorioSemana = semanaValidada;
           this.pedidosRecentes = paginaRecentes.results;

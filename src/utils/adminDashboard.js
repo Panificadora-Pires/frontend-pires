@@ -53,7 +53,7 @@ export function normalizarRanking(resposta, produtos) {
         ...catalogo.get(String(item.produto_id)),
         id: item.produto_id,
         nome: item.produto_nome || 'Produto',
-        imagem: catalogo.get(String(item.produto_id))?.imagem || null,
+        imagem: item.produto_imagem || catalogo.get(String(item.produto_id))?.imagem || null,
       },
     };
   });

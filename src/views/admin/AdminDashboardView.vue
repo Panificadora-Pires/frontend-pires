@@ -48,7 +48,7 @@
         </div>
       </AdminPanel>
     </div>
-    <footer class="dashboard-footer"><span>Pires Panificadora · Administração</span><span v-if="dashboard.inicializado">{{ dashboard.produtos.length }} produtos ativos · {{ promocoesAtivas }} promoções ativas</span></footer>
+    <footer class="dashboard-footer"><span>Pires Panificadora · Administração</span><span v-if="dashboard.inicializado">{{ dashboard.resumoProdutos.ativos }} produtos ativos · {{ dashboard.resumoPromocoes.ativas }} promoções ativas</span></footer>
   </section>
 </template>
 
@@ -97,7 +97,6 @@ const serie = computed(() => (dashboard.relatorioSemana?.serie_diaria || []).map
   value: Number(item.total_vendido),
 })));
 const totalSemana = computed(() => Number(dashboard.relatorioSemana?.resumo.total_vendido || 0));
-const promocoesAtivas = computed(() => dashboard.promocoes.filter(p => p.data_inicio <= diaAtual.value && p.data_fim >= diaAtual.value).length);
 const rotuloFaturamento = computed(() => !dashboard.dia || dashboard.dia === diaAtual.value ? 'Faturamento do dia' : `Faturamento de ${formatarDia(dashboard.dia)}`);
 // Histórico recente e receita semanal vêm de endpoints paginados/agregados.
 const extras = useAutoRefresh(() => {

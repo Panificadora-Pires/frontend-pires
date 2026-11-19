@@ -28,8 +28,8 @@ export function relatorioSemanaVazio({ dataInicio, dataFim }) {
 }
 
 const service = {
-  listarProdutos: async () => [],
-  listarPromocoes: async () => [],
+  resumoProdutosAdmin: async () => ({total:0,ativos:0,sem_estoque:0,reposicao:0,em_promocao:0}),
+  resumoPromocoesAdmin: async () => ({total:0,ativas:0}),
   relatorioVendas: async () => ({ total_vendido: "0.00", total_pedidos: 0 }),
   maisVendidos: async () => ({ resultado: [] }),
   listarPedidosPagina: async () => ({
