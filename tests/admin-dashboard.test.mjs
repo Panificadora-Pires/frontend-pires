@@ -46,3 +46,11 @@ test('pagamentos pendentes ignoram pedidos cancelados e preservam pedidos ativos
   ];
   assert.equal(metricasPedidos(pedidos, '2026-11-18').pagamentosPendentes, 3);
 });
+
+test('ranking pode exibir imagem da API sem requisitar todos os produtos', () => {
+ const ranking=normalizarRanking({resultado:[
+   {produto_id:10,produto_nome:'Brioche',produto_imagem:'https://cdn.example.org/brioche.jpg',quantidade_vendida:12},
+ ]},[]);
+ assert.equal(ranking[0].produto.imagem,'https://cdn.example.org/brioche.jpg');
+ assert.equal(ranking[0].produto.nome,'Brioche');
+});
