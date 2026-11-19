@@ -284,6 +284,52 @@ const adminService = {
   listarPromocoes(params = {}) {
     return listarTodasPaginas("/promocoes/", params);
   },
+  
+  async listarPromocoesAdminPagina({ page = 1, page_size = 12, busca = "", situacao = "" } = {}) {
+    const numeroPagina = Number(page);
+    const tamanho = Number(page_size);
+    if (
+      !Number.isInteger(numeroPagina) || numeroPagina < 1 ||
+      !Number.isInteger(tamanho) || tamanho < 1 || tamanho > 100 ||
+      typeof busca !== "string" || busca.trim().length > 100 ||
+      !["", "ativa", "agendada", "encerrada"].includes(situacao)
+    ) {
+      const error = new Error("Filtros ou página inválidos para promoções.");
+      error.code = "ADMIN_PROMOTIONS_PAGE_INVALID";
+      throw error;
+    }
+    const { data } = await api.get("/promocoes/admin_listagem/", {
+      params: { page: numeroPagina, page_size: tamanho, busca: busca.trim(), situacao },
+    });
+    if (
+      !data || !Array.isArray(data.results) ||
+      !Number.isInteger(data.count) || data.count < 0 ||
+      !Number.isInteger(data.page) || data.page < 1 ||
+      !Number.isInteger(data.page_size) || data.page_size < 1 ||
+      !Number.isInteger(data.total_pages) || data.total_pages < 1 ||
+      data.results.length > data.page_size
+    ) {
+      const error = new Error("O Django retornou uma página incompleta de promoções.");
+      error.code = "ADMIN_PROMOTIONS_PAGE_INVALID";
+      throw error;
+    }
+    return data;
+  },
+
+  async resumoPromocoesGestao() {
+    const { data } = await api.get("/promocoes/resumo_admin/");
+    const campos = ["total", "ativas", "agendadas", "encerradas"];
+    if (
+      !data || campos.some(campo => !Number.isInteger(data[campo]) || data[campo] < 0) ||
+      data.ativas + data.agendadas + data.encerradas !== data.total
+    ) {
+      const error = new Error("Os totais de promoções estão incompletos.");
+      error.code = "ADMIN_PROMOTIONS_SUMMARY_INVALID";
+      throw error;
+    }
+    return data;
+  },
+
 
   async resumoPromocoesAdmin() {
     const { data } = await api.get("/promocoes/resumo_admin/");
