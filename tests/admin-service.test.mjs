@@ -5,20 +5,6 @@ import api from './fixtures/admin-api.mjs';
 const hooks=registerHooks({resolve(specifier,context,next){if(specifier==='./api'&&context.parentURL?.endsWith('/src/services/admin.service.js'))return {url:new URL('./fixtures/admin-api.mjs',import.meta.url).href,shortCircuit:true};return next(specifier,context);}});
 const {default:service}=await import('../src/services/admin.service.js');
 after(()=>hooks.deregister());
-test('coleção completa concatena páginas e mantém parâmetros',async()=>{
-  const calls=[];api.get=async(path,config)=>{calls.push({path,...config.params});return {data:{next:config.params.page===1?'page2':null,results:[{id:config.params.page}]}};};
-  assert.deepEqual(await service.listarCategorias({ativa:true}),[{id:1},{id:2}]);assert.equal(calls[1].ativa,true);assert.equal(calls[1].page_size,100);
-});
-test('página 30 com next rejeita coleção parcial em vez de declarar sucesso',async()=>{
-  let calls=0;api.get=async()=>{calls++;return {data:{count:3100,next:'mais',results:[{id:calls}]}};};
-  await assert.rejects(service.listarCategorias(),{code:'ADMIN_COLLECTION_INCOMPLETE'});assert.equal(calls,30);
-});
-test('página vazia com next não transforma falha de cobertura em vazio real',async()=>{
-  api.get=async()=>({data:{next:'mais',results:[]}});
-  await assert.rejects(service.listarCategorias(),{code:'ADMIN_COLLECTION_INCOMPLETE'});
-});
-test('coleção não paginada continua compatível',async()=>{api.get=async()=>({data:[{id:7}]});assert.deepEqual(await service.listarCategorias(),[{id:7}]);});
-
 test('listagem paginada envia filtros para API e preserva metadata da página',async()=>{
   const calls=[];
   const resposta={count:301,next:'http://test/api/pedidos/?page=2',previous:null,page:1,page_size:30,total_pages:11,results:[{id:5}]};
@@ -176,4 +162,18 @@ test('indicadores globais de categorias não aceitam valores parciais', async ()
   assert.equal(rota,'/categorias/resumo_admin/');
   api.get=async()=>({data:{total:3001,ativas:2000,inativas:4}});
   await assert.rejects(service.resumoCategoriasAdmin(),{code:'ADMIN_CATEGORIES_SUMMARY_INVALID'});
+});
+
+test('categoria selecionada por ID não busca todas as páginas', async () => {
+ const chamadas=[];
+ api.get=async path=>{chamadas.push(path);return {data:{id:3001,nome:'Cafés',ativa:false}};};
+ assert.deepEqual(await service.obterCategoria(3001),{id:3001,nome:'Cafés',ativa:false});
+ assert.deepEqual(chamadas,['/categorias/3001/']);
+ await assert.rejects(service.obterCategoria('invalido'),/inválida/);
+ assert.equal(chamadas.length,1);
+});
+test('método de coleção completa não está disponível na API administrativa', () => {
+ assert.equal(typeof service.listarCategorias,'undefined');
+ assert.equal(typeof service.listarPedidos,'undefined');
+ assert.equal(typeof service.listarProdutos,'undefined');
 });
