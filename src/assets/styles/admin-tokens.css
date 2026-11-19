@@ -46,3 +46,48 @@
 .admin-layout .admin-sidebar :focus-visible,
 .admin-layout .admin-drawer :focus-visible { outline-color: var(--pp-admin-sidebar-accent); }
 .admin-layout ::selection { background: var(--pp-gold); color: var(--pp-marrom); }
+
+/* Variantes opt-in: CardActionContent continua dono do círculo e da cópia acessível.
+   Escopo administrativo preserva as ações existentes do aluno. */
+.admin-layout .pp-card-action {
+  --pp-home-action-duration: 370ms;
+  --pp-admin-action-fill: var(--pp-gold);
+  --pp-admin-action-ink: var(--pp-marrom);
+}
+.admin-layout .pp-admin-action--secondary {
+  --pp-admin-action-fill: var(--pp-creme-2);
+}
+.admin-layout .pp-admin-action--danger {
+  --pp-admin-action-fill: var(--pp-admin-danger);
+  --pp-admin-action-ink: var(--pp-admin-bg);
+}
+.admin-layout .pp-admin-action--cancel {
+  --pp-admin-action-fill: var(--pp-admin-danger-bg);
+  --pp-admin-action-ink: var(--pp-admin-danger);
+}
+.admin-layout .pp-card-action > .pp-card-action__fill {
+  background: var(--pp-admin-action-fill);
+  color: var(--pp-admin-action-ink);
+}
+.admin-layout .pp-card-action:is(.pp-admin-action--danger, .pp-admin-action--cancel):focus-visible {
+  outline-color: var(--pp-admin-danger);
+}
+/* Botões das telas anteriores: preservar dimensões, sem troca de fundo sob o círculo. */
+.admin-layout .admin-btn.pp-card-action {
+  --pp-admin-action-base: var(--pp-admin-surface);
+  --pp-admin-action-base-ink: var(--pp-admin-text);
+  background: var(--pp-admin-action-base);
+  color: var(--pp-admin-action-base-ink);
+  border-color: var(--pp-admin-border);
+}
+.admin-layout .admin-btn.pp-admin-action--primary {
+  --pp-admin-action-base: var(--pp-admin-text);
+  --pp-admin-action-base-ink: var(--pp-admin-bg);
+  border-color: var(--pp-admin-text);
+}
+.admin-layout .admin-btn.pp-admin-action--danger {
+  --pp-admin-action-base-ink: var(--pp-admin-danger);
+}
+.admin-layout .pp-card-action:is(:disabled, [aria-disabled="true"], .is-loading) {
+  cursor: not-allowed;
+}
