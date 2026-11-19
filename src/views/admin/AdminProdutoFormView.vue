@@ -134,10 +134,10 @@
         </div>
 
         <div class="editor-actions">
-          <RouterLink :to="{ name: 'admin-produtos' }" class="editor-cancel pp-card-action" data-card-action-radius>
+          <RouterLink :to="{ name: 'admin-produtos' }" class="editor-cancel pp-card-action pp-admin-action--cancel" data-card-action-radius>
             <CardActionContent>Cancelar</CardActionContent>
           </RouterLink>
-          <button type="submit" :disabled="salvando || Boolean(erroImagem)" class="editor-save pp-card-action" data-card-action-radius>
+          <button type="submit" :disabled="salvando || Boolean(erroImagem)" class="editor-save pp-card-action pp-admin-action--primary" data-card-action-radius>
             <CardActionContent>
               <LoaderCircle v-if="salvando" :size="17" class="editor-spin" aria-hidden="true" />
               <Save v-else :size="17" aria-hidden="true" />
@@ -343,8 +343,6 @@ onBeforeUnmount(() => {
 .editor-save{border-color:var(--pp-admin-text);background:var(--pp-admin-text);color:var(--pp-admin-bg)}
 .editor-cancel:hover,.editor-save:hover:not(:disabled){box-shadow:0 7px 17px color-mix(in srgb,var(--pp-marrom) 12%,transparent)}
 .editor-save:hover:not(:disabled){background:var(--pp-admin-text)}
-.editor-page .pp-card-action{--pp-home-action-duration:370ms}
-.editor-page :deep(.pp-card-action__fill){background:var(--pp-gold);color:var(--pp-marrom)}
 .editor-save:disabled{opacity:.55;cursor:wait}
 .editor-loading{display:flex;align-items:center;justify-content:center;gap:11px;min-height:220px;color:var(--pp-admin-muted);font-size:13px}
 .editor-loading-error{display:flex;align-items:center;gap:12px}
