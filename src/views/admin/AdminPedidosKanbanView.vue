@@ -253,13 +253,19 @@ async function carregarColunas() {
 }
 const atualizacao = useAutoRefresh(carregarColunas, { intervalo: 15_000 });
 let desinscreverRealtime = null;
+let timerRealtime = null;
 onMounted(() => {
   if (!REALTIME_ENABLED) return;
   desinscreverRealtime = realtimeClient.inscrever(evento => {
     // Uma mudança de status reconsulta as mesmas páginas/filtros já em uso.
     // O polling de 15 segundos continua sendo o fallback de segurança.
     if (!evento || evento.tipo.startsWith("pedido.")) {
-      void atualizacao.atualizarAgora();
+      if (timerRealtime !== null) return;
+      // No máximo um refresh em cada janela, inclusive sob eventos simultâneos.
+      timerRealtime = setTimeout(() => {
+        timerRealtime = null;
+        void atualizacao.atualizarAgora();
+      }, 400);
     }
   });
 });
@@ -400,6 +406,8 @@ function tentarNovamente() {
 onBeforeUnmount(() => {
   desinscreverRealtime?.();
   desinscreverRealtime = null;
+  if (timerRealtime !== null) clearTimeout(timerRealtime);
+  timerRealtime = null;
   sequencia += 1;
   if (debounceBusca) clearTimeout(debounceBusca);
 });
