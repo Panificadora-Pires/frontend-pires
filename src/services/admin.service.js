@@ -47,44 +47,6 @@ export function mensagemErroApi(error, fallback = "Não foi possível concluir a
   return primeiraMensagem(data) || fallback;
 }
 
-// Compatibilidade temporária: Produtos e Editor ainda precisam da lista completa
-// de categorias em seus seletores. O PR5F migrará para busca remota.
-const PAGE_SIZE = 100;
-const MAX_PAGES = 30;
-
-function normalizarColecao(data) {
-  if (Array.isArray(data)) return data;
-  if (Array.isArray(data?.results)) return data.results;
-  return [];
-}
-
-async function listarTodasPaginas(path, params = {}) {
-  const itens = [];
-
-  for (let page = 1; page <= MAX_PAGES; page += 1) {
-    const { data } = await api.get(path, {
-      params: {
-        ...params,
-        page,
-        page_size: PAGE_SIZE,
-      },
-    });
-
-    const pagina = normalizarColecao(data);
-    itens.push(...pagina);
-
-    if (Array.isArray(data)) break;
-    if (!data?.next) break;
-    if (pagina.length === 0 || page === MAX_PAGES) {
-      const error = new Error("Não foi possível obter a coleção completa. Os dados podem estar incompletos.");
-      error.code = "ADMIN_COLLECTION_INCOMPLETE";
-      throw error;
-    }
-  }
-
-  return itens;
-}
-
 function produtoFormData(payload) {
   const form = new FormData();
 
@@ -263,10 +225,6 @@ const adminService = {
       .then(({ data }) => data);
   },
 
-  listarCategorias(params = {}) {
-    return listarTodasPaginas("/categorias/", params);
-  },
-
   async listarCategoriasAdminPagina({ page = 1, page_size = 18, busca = "", situacao = "" } = {}) {
     const numero = Number(page), tamanho = Number(page_size);
     if (
@@ -295,6 +253,14 @@ const adminService = {
       throw error;
     }
     return data;
+  },
+
+  obterCategoria(id) {
+    const numero = Number(id);
+    if (!Number.isInteger(numero) || numero < 1) {
+      return Promise.reject(new Error("Categoria inválida."));
+    }
+    return api.get(`/categorias/${numero}/`).then(({ data }) => data);
   },
 
   async resumoCategoriasAdmin() {
