@@ -73,7 +73,6 @@
               <span class="promotions-product-icon" aria-hidden="true"><Tag :size="20" /></span>
               <div>
                 <strong>{{ promocao.produto_nome || "Produto não identificado" }}</strong>
-                <small>Oferta por período</small>
               </div>
             </div>
             <div class="promotions-price">
@@ -113,7 +112,6 @@
           <span>Página {{ pagina }} de {{ totalPaginas }}</span>
           <button type="button" :disabled="pagina >= totalPaginas" @click="pagina++">Próxima <ChevronRight :size="16" aria-hidden="true" /></button>
         </div>
-        <span v-else>Preços e datas são confirmados ao salvar.</span>
       </footer>
     </section>
 
@@ -169,7 +167,7 @@
             </div>
             <button v-if="paginaProdutos.next && !carregandoProdutos && !erroProdutos" type="button"
               class="promotions-more" @click="buscarProdutos(true)">Mostrar mais produtos</button>
-            <small>Use a busca para encontrar produtos fora dos primeiros resultados.</small>
+            <small>Não encontrou o produto? Busque pelo nome ou código.</small>
           </div>
 
           <label class="promotions-field">
@@ -189,7 +187,7 @@
             </label>
           </div>
           <div class="promotions-date-note"><Info :size="16" aria-hidden="true" />
-            A oferta vale durante todo o período, incluindo as datas inicial e final.
+            A promoção inclui as datas de início e fim.
           </div>
           <p v-if="erroFormulario" class="promotions-form-error" role="alert"><CircleAlert :size="16" aria-hidden="true" />{{ erroFormulario }}</p>
         </div>
@@ -525,7 +523,7 @@ onBeforeUnmount(() => {
 .promotions-empty strong{font-size:14px;color:var(--pp-admin-text)}
 .promotions-empty button{border:1px solid var(--pp-admin-accent);background:transparent;color:var(--pp-admin-accent);min-height:38px;padding:8px 12px;border-radius:8px;font-weight:650;cursor:pointer}
 .promotions-columns,.promotions-row{display:grid;grid-template-columns:minmax(180px,1.5fr) minmax(120px,.85fr) minmax(190px,1.3fr) 110px minmax(170px,.9fr);gap:13px;align-items:center}
-.promotions-columns{padding:13px 20px;font-size:11px;font-weight:650;color:var(--pp-admin-muted);border-top:1px solid var(--pp-admin-border);border-bottom:1px solid var(--pp-admin-border);background:var(--pp-creme-2)}
+.promotions-columns{padding:13px 20px;font-size:12px;font-weight:650;color:var(--pp-admin-muted);border-top:1px solid var(--pp-admin-border);border-bottom:1px solid var(--pp-admin-border);background:var(--pp-creme-2)}
 .promotions-actions-head{text-align:right}
 .promotions-list{padding:0;margin:0;list-style:none}
 .promotions-row{padding:16px 20px;border-bottom:1px solid var(--pp-admin-border);transition:background-color 200ms ease}
@@ -534,12 +532,12 @@ onBeforeUnmount(() => {
 .promotions-product{display:flex;gap:12px;align-items:center;min-width:0}
 .promotions-product-icon{display:grid;place-items:center;flex:none;width:46px;height:46px;background:var(--pp-creme-2);border-radius:11px;color:var(--pp-admin-accent)}
 .promotions-product>div{min-width:0}
-.promotions-product strong{display:block;font-size:13px;line-height:1.45;overflow-wrap:anywhere}
-.promotions-product small{display:block;color:var(--pp-admin-muted);font-size:11px;margin-top:3px}
-.promotions-price strong{font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums}
-.promotions-period>span:last-child{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--pp-admin-muted);line-height:1.5}
+.promotions-product strong{display:block;font-size:14px;line-height:1.45;overflow-wrap:anywhere}
+.promotions-product small{display:block;color:var(--pp-admin-muted);font-size:12px;margin-top:3px}
+.promotions-price strong{font-size:15px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.promotions-period>span:last-child{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--pp-admin-muted);line-height:1.5}
 .promotions-period svg{flex:none}
-.promotions-badge{display:inline-flex;align-items:center;gap:7px;border-radius:8px;padding:7px 9px;white-space:nowrap;font-size:11px;font-weight:650}
+.promotions-badge{display:inline-flex;align-items:center;gap:7px;border-radius:8px;padding:7px 9px;white-space:nowrap;font-size:12px;font-weight:650}
 .promotions-badge--ativa{background:var(--pp-admin-success-bg);color:var(--pp-admin-text)}
 .promotions-badge--agendada{background:var(--pp-admin-warning-bg);color:var(--pp-admin-text)}
 .promotions-badge--encerrada{background:var(--pp-creme-2);color:var(--pp-admin-muted)}
@@ -547,12 +545,12 @@ onBeforeUnmount(() => {
 .promotions-badge--agendada .promotions-dot{background:var(--pp-admin-accent)}
 .promotions-badge--encerrada .promotions-dot{background:var(--pp-admin-muted)}
 .promotions-actions{display:flex;justify-content:flex-end;gap:8px}
-.promotions-action{display:inline-flex;justify-content:center;align-items:center;gap:6px;min-height:40px;padding:9px 11px;border:1px solid var(--pp-admin-border);border-radius:9px;background:var(--pp-admin-surface);color:var(--pp-admin-text);font-size:12px;font-weight:650;cursor:pointer}
+.promotions-action{display:inline-flex;justify-content:center;align-items:center;gap:6px;min-height:40px;padding:9px 11px;border:1px solid var(--pp-admin-border);border-radius:9px;background:var(--pp-admin-surface);color:var(--pp-admin-text);font-size:13px;font-weight:650;cursor:pointer}
 .promotions-action--danger{color:var(--pp-admin-danger)}
 .promotions-action:hover{border-color:var(--pp-admin-accent)}
 .promotions-action--danger:hover{border-color:var(--pp-admin-danger)}
 .promotions-mobile-label{display:none}
-.promotions-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 22px;color:var(--pp-admin-muted);font-size:12px;border-top:1px solid var(--pp-admin-border)}
+.promotions-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 22px;color:var(--pp-admin-muted);font-size:13px;border-top:1px solid var(--pp-admin-border)}
 .promotions-pagination{display:flex;align-items:center;gap:10px}
 .promotions-pagination button{display:inline-flex;align-items:center;gap:4px;min-height:36px;padding:7px 9px;border:1px solid var(--pp-admin-border);border-radius:8px;background:var(--pp-admin-surface);color:var(--pp-admin-text);cursor:pointer}
 .promotions-pagination button:disabled{opacity:.5;cursor:not-allowed}
@@ -563,18 +561,18 @@ onBeforeUnmount(() => {
 .promotions-dialog[open] .promotions-dialog-panel{animation:promotions-enter 250ms cubic-bezier(.22,1,.36,1)}
 @keyframes promotions-enter{from{opacity:0;transform:translateY(12px) scale(.99)}to{opacity:1;transform:none}}
 .promotions-dialog-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;padding:23px 25px 19px;border-bottom:1px solid var(--pp-admin-border)}
-.promotions-dialog-header>div>span{font-size:10px;letter-spacing:.1em;color:var(--pp-admin-accent);font-weight:700}
+.promotions-dialog-header>div>span{font-size:11px;letter-spacing:.1em;color:var(--pp-admin-accent);font-weight:700}
 .promotions-dialog-header h2{font-size:23px;margin:6px 0;letter-spacing:-.025em}
 .promotions-dialog-header p{font-size:12px;line-height:1.5;color:var(--pp-admin-muted);margin:0}
 .promotions-close{display:grid;place-items:center;flex:none;width:38px;height:38px;border:0;border-radius:9px;background:var(--pp-creme-2);color:var(--pp-admin-muted);cursor:pointer}
 .promotions-close:hover{color:var(--pp-admin-text)}
 .promotions-form-body{display:flex;flex-direction:column;gap:18px;padding:21px 25px}
 .promotions-field{display:flex;flex-direction:column;gap:8px;min-width:0}
-.promotions-field>span,.promotions-field>label{font-size:12px;font-weight:650}
+.promotions-field>span,.promotions-field>label{font-size:13px;font-weight:650}
 .promotions-field em{font-style:normal;color:var(--pp-admin-accent)}
 .promotions-field>input{min-height:44px;width:100%;padding:10px 12px;border:1px solid var(--pp-admin-border);border-radius:9px;background:var(--pp-admin-surface);color:var(--pp-admin-text);font:inherit;font-size:13px}
 .promotions-field>input:focus-visible{outline:2px solid var(--pp-admin-accent);outline-offset:2px}
-.promotions-field small{font-size:11px;line-height:1.5;color:var(--pp-admin-muted)}
+.promotions-field small{font-size:12px;line-height:1.5;color:var(--pp-admin-muted)}
 .promotions-selected{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--pp-admin-border);border-radius:10px;background:var(--pp-creme-2);padding:11px 13px}
 .promotions-selected strong,.promotions-selected small{display:block}
 .promotions-selected strong{font-size:12px}
@@ -585,7 +583,7 @@ onBeforeUnmount(() => {
 .promotions-product-results button:last-child{border-bottom:0}
 .promotions-product-results button:hover,.promotions-product-results button[aria-pressed="true"]{background:var(--pp-creme-2)}
 .promotions-product-results button strong,.promotions-product-results button small{display:block}
-.promotions-product-results button strong{font-size:12px;font-weight:650}
+.promotions-product-results button strong{font-size:13px;font-weight:650}
 .promotions-product-results button small{margin-top:2px}
 .promotions-product-results button svg{flex:none;color:var(--pp-admin-success)}
 .promotions-product-error,.promotions-product-loading{font-size:12px;color:var(--pp-admin-muted);padding:10px 12px;border-radius:8px;background:var(--pp-creme-2)}
