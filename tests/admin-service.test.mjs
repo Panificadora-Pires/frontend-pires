@@ -140,3 +140,40 @@ test('contadores de promoções são globais e devem totalizar todas as situaç�
     code: 'ADMIN_PROMOTIONS_SUMMARY_INVALID',
   });
 });
+
+test('categorias administrativas carregam somente a página solicitada, com filtros', async () => {
+  const chamadas=[];
+  const resposta={
+    count:3001,page:2,page_size:18,total_pages:167,next:'?page=3',
+    previous:'?page=1',results:[{id:19,nome:'Bebidas'}],
+  };
+  api.get=async(path,config)=>{
+    chamadas.push({path,params:config.params});
+    return {data:resposta};
+  };
+  const pagina=await service.listarCategoriasAdminPagina({
+    page:2,page_size:18,busca:' cafés ',situacao:'ativa',
+  });
+  assert.deepEqual(pagina,resposta);
+  assert.deepEqual(chamadas,[{
+    path:'/categorias/admin_listagem/',
+    params:{page:2,page_size:18,busca:'cafés',situacao:'ativa'},
+  }]);
+});
+test('categorias paginadas rejeitam filtros inválidos e resposta parcial', async () => {
+  let chamadas=0;
+  api.get=async()=>{chamadas++;return {data:{count:3001,results:[]}};};
+  await assert.rejects(service.listarCategoriasAdminPagina({page:0}),{code:'ADMIN_CATEGORIES_PAGE_INVALID'});
+  await assert.rejects(service.listarCategoriasAdminPagina({page_size:101}),{code:'ADMIN_CATEGORIES_PAGE_INVALID'});
+  await assert.rejects(service.listarCategoriasAdminPagina({situacao:'desconhecida'}),{code:'ADMIN_CATEGORIES_PAGE_INVALID'});
+  assert.equal(chamadas,0);
+  await assert.rejects(service.listarCategoriasAdminPagina(),{code:'ADMIN_CATEGORIES_PAGE_INVALID'});
+});
+test('indicadores globais de categorias não aceitam valores parciais', async () => {
+  let rota;
+  api.get=async path=>{rota=path;return {data:{total:3001,ativas:2000,inativas:1001}};};
+  assert.deepEqual(await service.resumoCategoriasAdmin(),{total:3001,ativas:2000,inativas:1001});
+  assert.equal(rota,'/categorias/resumo_admin/');
+  api.get=async()=>({data:{total:3001,ativas:2000,inativas:4}});
+  await assert.rejects(service.resumoCategoriasAdmin(),{code:'ADMIN_CATEGORIES_SUMMARY_INVALID'});
+});
