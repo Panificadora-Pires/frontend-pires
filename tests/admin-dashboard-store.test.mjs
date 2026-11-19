@@ -14,8 +14,8 @@ after(()=>hook.deregister());
 const now=new Date('2026-11-19T01:30:00Z');
 function reset(){
   setActivePinia(createPinia());session.versao=0;
-  service.listarProdutos=async()=>[];
-  service.listarPromocoes=async()=>[];
+  service.resumoProdutosAdmin=async()=>({total:0,ativos:0,sem_estoque:0,reposicao:0,em_promocao:0});
+  service.resumoPromocoesAdmin=async()=>({total:0,ativas:0});
   service.maisVendidos=async()=>({resultado:[]});
   service.relatorioVendas=async()=>({total_vendido:'0.00',total_pedidos:0});
   service.listarPedidosPagina=async()=>({count:0,page:1,page_size:4,total_pages:1,next:null,previous:null,results:[]});
@@ -26,8 +26,10 @@ function defer(){let resolve;const promise=new Promise(r=>resolve=r);return {pro
 test('primeira carga difere de vazio; consulta agrega data São Paulo e ranking real',async()=>{
  const s=reset();assert.equal(s.inicializado,false);assert.equal(s.relatorioHoje,null);let params;
  service.relatorioVendas=async p=>(params=p,{total_vendido:'520.00',total_pedidos:52});
- service.listarProdutos=async()=>[{id:1,imagem:'/coxinha.webp'}];service.maisVendidos=async()=>({resultado:[{produto_id:1,produto_nome:'Coxinha',quantidade_vendida:26}]});
- await s.carregar({agora:now});assert.equal(s.inicializado,true);assert.equal(s.dia,'2026-11-18');assert.deepEqual(params,{dataInicio:'2026-11-18',dataFim:'2026-11-18'});assert.equal(s.ranking[0].produto.imagem,'/coxinha.webp');
+ service.resumoProdutosAdmin=async()=>({total:15,ativos:12,sem_estoque:1,reposicao:2,em_promocao:3});
+ service.resumoPromocoesAdmin=async()=>({total:8,ativas:5});
+ service.maisVendidos=async()=>({resultado:[{produto_id:1,produto_nome:'Coxinha',produto_imagem:'/coxinha.webp',quantidade_vendida:26}]});
+ await s.carregar({agora:now});assert.equal(s.inicializado,true);assert.equal(s.dia,'2026-11-18');assert.deepEqual(params,{dataInicio:'2026-11-18',dataFim:'2026-11-18'});assert.equal(s.ranking[0].produto.imagem,'/coxinha.webp');assert.equal(s.resumoProdutos.ativos,12);assert.equal(s.resumoPromocoes.ativas,5);
 });
 test('falha inicial não vira vazio e refresh falho preserva último sucesso',async()=>{
  const s=reset();service.maisVendidos=async()=>{throw Error('Falha sintética');};await assert.rejects(s.carregar({agora:now}));assert.equal(s.inicializado,false);assert.ok(s.erro);
@@ -83,4 +85,14 @@ test('Falha nos agregados semanais não transforma série financeira incompleta 
  assert.equal(s.relatorioSemana,semanaValida);
  assert.equal(s.inicializado,true);
  assert.ok(s.erro);
+});
+
+test('Dashboard rejeita totais ausentes de promoções e preserva o snapshot anterior', async () => {
+ const s=reset();
+ await s.carregar({agora:now});
+ const snapshot=s.resumoPromocoes;
+ service.resumoPromocoesAdmin=async()=>{throw new Error('Resumo indisponível');};
+ await assert.rejects(s.carregar({agora:now}),/indisponível/);
+ assert.equal(s.resumoPromocoes,snapshot);
+ assert.equal(s.inicializado,true);
 });
