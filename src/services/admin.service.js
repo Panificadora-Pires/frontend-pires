@@ -47,6 +47,8 @@ export function mensagemErroApi(error, fallback = "Não foi possível concluir a
   return primeiraMensagem(data) || fallback;
 }
 
+// Compatibilidade temporária: Produtos e Editor ainda precisam da lista completa
+// de categorias em seus seletores. O PR5F migrará para busca remota.
 const PAGE_SIZE = 100;
 const MAX_PAGES = 30;
 
@@ -113,10 +115,6 @@ function produtoFormData(payload) {
 }
 
 const adminService = {
-  listarPedidos(params = {}) {
-    return listarTodasPaginas("/pedidos/", params);
-  },
-
   // Novo contrato para a fila/Kanban: uma página por vez, sem baixar o histórico.
   async listarPedidosPagina({ page = 1, page_size = 30, ...filtros } = {}) {
     const pagina = Number(page);
@@ -191,10 +189,6 @@ const adminService = {
     return api.get("/pedidos/relatorio_analitico_admin/", {
       params: { data_inicio: dataInicio, data_fim: dataFim },
     }).then(({ data }) => data);
-  },
-
-  listarProdutos(params = {}) {
-    return listarTodasPaginas("/produtos/", params);
   },
 
   // Listagem operacional: uma página por requisição, estoque e promoções vêm do servidor.
@@ -326,10 +320,6 @@ const adminService = {
     return api.patch(`/categorias/${id}/`, payload).then(({ data }) => data);
   },
 
-  listarPromocoes(params = {}) {
-    return listarTodasPaginas("/promocoes/", params);
-  },
-  
   async listarPromocoesAdminPagina({ page = 1, page_size = 12, busca = "", situacao = "" } = {}) {
     const numeroPagina = Number(page);
     const tamanho = Number(page_size);
@@ -399,10 +389,6 @@ const adminService = {
 
   excluirPromocao(id) {
     return api.delete(`/promocoes/${id}/`);
-  },
-
-  listarUsuarios(params = {}) {
-    return listarTodasPaginas("/usuarios/", params);
   },
 
   async listarUsuariosAdminPagina({
