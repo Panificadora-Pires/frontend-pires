@@ -273,6 +273,51 @@ const adminService = {
     return listarTodasPaginas("/categorias/", params);
   },
 
+  async listarCategoriasAdminPagina({ page = 1, page_size = 18, busca = "", situacao = "" } = {}) {
+    const numero = Number(page), tamanho = Number(page_size);
+    if (
+      !Number.isInteger(numero) || numero < 1 ||
+      !Number.isInteger(tamanho) || tamanho < 1 || tamanho > 100 ||
+      typeof busca !== "string" || busca.trim().length > 100 ||
+      !["", "ativa", "inativa"].includes(situacao)
+    ) {
+      const error = new Error("Filtros ou página inválidos para categorias.");
+      error.code = "ADMIN_CATEGORIES_PAGE_INVALID";
+      throw error;
+    }
+    const { data } = await api.get("/categorias/admin_listagem/", {
+      params: { page: numero, page_size: tamanho, busca: busca.trim(), situacao },
+    });
+    if (
+      !data || !Array.isArray(data.results) ||
+      !Number.isInteger(data.count) || data.count < 0 ||
+      !Number.isInteger(data.page) || data.page < 1 ||
+      !Number.isInteger(data.page_size) || data.page_size < 1 ||
+      !Number.isInteger(data.total_pages) || data.total_pages < 1 ||
+      data.results.length > data.page_size
+    ) {
+      const error = new Error("A API retornou uma página inválida de categorias.");
+      error.code = "ADMIN_CATEGORIES_PAGE_INVALID";
+      throw error;
+    }
+    return data;
+  },
+
+  async resumoCategoriasAdmin() {
+    const { data } = await api.get("/categorias/resumo_admin/");
+    if (
+      !data || ["total", "ativas", "inativas"].some(
+        campo => !Number.isInteger(data[campo]) || data[campo] < 0
+      ) || data.ativas + data.inativas !== data.total
+    ) {
+      const error = new Error("Os indicadores de categorias estão incompletos.");
+      error.code = "ADMIN_CATEGORIES_SUMMARY_INVALID";
+      throw error;
+    }
+    return data;
+  },
+
+
   criarCategoria(payload) {
     return api.post("/categorias/", payload).then(({ data }) => data);
   },
