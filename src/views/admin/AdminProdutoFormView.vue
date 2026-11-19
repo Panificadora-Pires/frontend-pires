@@ -33,13 +33,14 @@
               <span>Nome do produto <em>*</em></span>
               <input v-model.trim="form.nome" required maxlength="255" placeholder="Ex.: Coxinha de frango" />
             </label>
-            <label class="editor-field">
+            <div class="editor-field">
               <span>Categoria <em>*</em></span>
-              <select v-model="form.categoria" required>
-                <option disabled value="">Selecione uma categoria</option>
-                <option v-for="c in categorias" :key="c.id" :value="c.id">{{ c.nome }}</option>
-              </select>
-            </label>
+              <AdminRemoteCategorySelect
+                v-model="form.categoria"
+                aria-label="Selecionar categoria do produto"
+                required
+              />
+            </div>
             <label class="editor-field">
               <span>Unidade de medida <em>*</em></span>
               <select v-model="form.unidade_medida" required>
@@ -164,12 +165,12 @@ import {
 import adminService from "@/services/admin.service";
 import CardActionContent from "@/components/ui/CardActionContent.vue";
 import { resolverUrlMidia } from "@/services/catalog.service";
+import AdminRemoteCategorySelect from "@/components/admin/AdminRemoteCategorySelect.vue";
 import { getSessionVersion } from "@/services/api";
 import { validarImagemProduto } from "@/utils/adminProdutoImagem";
 
 const route = useRoute();
 const router = useRouter();
-const categorias = ref([]);
 const salvando = ref(false);
 const carregandoDados = ref(true);
 const erroCarregamento = ref("");
@@ -235,6 +236,10 @@ function erroApi(e) {
 }
 
 async function salvar() {
+  if (!form.categoria) {
+    erro.value = "Selecione uma categoria para o produto.";
+    return;
+  }
   salvando.value = true;
   erro.value = "";
   try {
@@ -270,12 +275,8 @@ async function carregar() {
   carregandoDados.value = true;
   erroCarregamento.value = "";
   try {
-    const [lista, produto] = await Promise.all([
-      adminService.listarCategorias(),
-      id ? adminService.obterProdutoAdmin(id) : Promise.resolve(null),
-    ]);
+    const produto = id ? await adminService.obterProdutoAdmin(id) : null;
     if (geracao !== geracaoCarregamento || sessao !== getSessionVersion()) return;
-    categorias.value = lista;
     if (produto) preencher(produto);
   } catch {
     if (geracao === geracaoCarregamento && sessao === getSessionVersion()) {
