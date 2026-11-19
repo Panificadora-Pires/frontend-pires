@@ -144,7 +144,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { CircleAlert, ClipboardList, MessageCircle, Search, X } from "lucide-vue-next";
 
@@ -153,6 +153,7 @@ import CardActionContent from "@/components/ui/CardActionContent.vue";
 import { useAutoRefresh } from "@/composables/useAutoRefresh";
 import adminService, { mensagemErroApi } from "@/services/admin.service";
 import { getSessionVersion } from "@/services/api";
+import { REALTIME_ENABLED, realtimeClient } from "@/services/realtime";
 import { useAdminOrdersStore } from "@/stores/adminOrders";
 import { useAdminQueueSummaryStore } from "@/stores/adminQueueSummary";
 import { useChatStore } from "@/stores/chat";
@@ -251,6 +252,17 @@ async function carregarColunas() {
   }
 }
 const atualizacao = useAutoRefresh(carregarColunas, { intervalo: 15_000 });
+let desinscreverRealtime = null;
+onMounted(() => {
+  if (!REALTIME_ENABLED) return;
+  desinscreverRealtime = realtimeClient.inscrever(evento => {
+    // Uma mudança de status reconsulta as mesmas páginas/filtros já em uso.
+    // O polling de 15 segundos continua sendo o fallback de segurança.
+    if (!evento || evento.tipo.startsWith("pedido.")) {
+      void atualizacao.atualizarAgora();
+    }
+  });
+});
 
 function aplicarFiltros() {
   sequencia += 1;
@@ -386,6 +398,8 @@ function tentarNovamente() {
   void carregarColunas().catch(() => {});
 }
 onBeforeUnmount(() => {
+  desinscreverRealtime?.();
+  desinscreverRealtime = null;
   sequencia += 1;
   if (debounceBusca) clearTimeout(debounceBusca);
 });
