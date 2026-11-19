@@ -187,6 +187,12 @@ const adminService = {
       .then(({ data }) => data);
   },
 
+  relatorioAnaliticoAdmin({ dataInicio, dataFim }) {
+    return api.get("/pedidos/relatorio_analitico_admin/", {
+      params: { data_inicio: dataInicio, data_fim: dataFim },
+    }).then(({ data }) => data);
+  },
+
   listarProdutos(params = {}) {
     return listarTodasPaginas("/produtos/", params);
   },
