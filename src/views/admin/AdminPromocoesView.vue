@@ -147,7 +147,7 @@
               <input id="promotion-product-search" ref="buscaProdutoRef" v-model="buscaProduto"
                 type="search" maxlength="100" autocomplete="off"
                 placeholder="Buscar produto pelo nome ou código"
-                @input="agendarBuscaProduto" />
+                @input="agendarBuscaProduto" @keydown.enter.prevent="buscarProdutoAoEnter" />
             </div>
             <div v-if="erroProdutos" class="promotions-product-error" role="alert">
               {{ erroProdutos }}
@@ -352,6 +352,10 @@ async function buscarProdutos(mais = false) {
   } finally {
     if (chamada === sequenciaBusca) carregandoProdutos.value = false;
   }
+}
+function buscarProdutoAoEnter() {
+  clearTimeout(timerBusca);
+  buscarProdutos(false);
 }
 function agendarBuscaProduto() {
   clearTimeout(timerBusca);
