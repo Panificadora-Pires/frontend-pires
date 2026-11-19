@@ -5,7 +5,7 @@
         <h1>Produtos</h1>
         <p>Preços, estoque e disponibilidade do cardápio em um só lugar.</p>
       </div>
-      <RouterLink :to="{ name: 'admin-produto-novo' }" class="catalog-create pp-card-action" data-card-action-radius>
+      <RouterLink :to="{ name: 'admin-produto-novo' }" class="catalog-create pp-card-action pp-admin-action--primary" data-card-action-radius>
         <CardActionContent><Plus :size="17" aria-hidden="true" /> Novo produto</CardActionContent>
       </RouterLink>
     </header>
@@ -137,7 +137,7 @@
 
             <div class="catalog-actions">
               <RouterLink
-                class="catalog-action catalog-action--edit pp-card-action"
+                class="catalog-action catalog-action--edit pp-card-action pp-admin-action--secondary"
                 data-card-action-radius
                 :to="{ name: 'admin-produto-editar', params: { id: produto.id } }"
                 :aria-label="`Editar ${produto.nome}`"
@@ -148,7 +148,7 @@
                 type="button"
                 class="catalog-action pp-card-action"
                 data-card-action-radius
-                :class="{ 'catalog-action--inactive': produto.ativo }"
+                :class="produto.ativo ? 'catalog-action--inactive pp-admin-action--danger' : 'pp-admin-action--secondary'"
                 :disabled="alterando === produto.id"
                 :aria-label="`${produto.ativo ? 'Desativar' : 'Ativar'} ${produto.nome}`"
                 @click="alternarAtivo(produto)"
@@ -374,8 +374,6 @@ onBeforeUnmount(() => {
 .catalog-action--edit{background:var(--pp-admin-text);border-color:var(--pp-admin-text);color:var(--pp-admin-bg)}
 .catalog-action:hover:not(:disabled){border-color:var(--pp-admin-accent);box-shadow:0 6px 14px color-mix(in srgb,var(--pp-marrom) 10%,transparent)}
 .catalog-action--edit:hover{border-color:var(--pp-admin-accent)}
-.pp-catalog .pp-card-action { --pp-home-action-duration: 370ms; }
-.pp-catalog :deep(.pp-card-action__fill){background:var(--pp-gold);color:var(--pp-marrom)}
 .pp-catalog .catalog-create:hover{background:var(--pp-admin-text);color:var(--pp-admin-bg)}
 .pp-catalog .catalog-action--edit:hover{background:var(--pp-admin-text);color:var(--pp-admin-bg)}
 .catalog-action:disabled{opacity:.6;cursor:wait}
