@@ -3,7 +3,7 @@
     <header class="dashboard-header">
       <div><p class="dashboard-date">{{ dataContexto }}</p><h1>{{ saudacao }}, {{ nome }}.</h1><p>Um olhar para o dia. Atenção ao que vem a seguir.</p></div>
       <div class="dashboard-actions">
-        <RouterLink class="dashboard-primary pp-card-action" data-card-action-radius :to="{ name: 'admin-pedidos' }"><CardActionContent><ClipboardList :size="17" aria-hidden="true" />Abrir fila de pedidos</CardActionContent></RouterLink>
+        <RouterLink class="dashboard-primary pp-card-action pp-admin-action--primary" data-card-action-radius :to="{ name: 'admin-pedidos' }"><CardActionContent><ClipboardList :size="17" aria-hidden="true" />Abrir fila de pedidos</CardActionContent></RouterLink>
       </div>
     </header>
     <div v-if="erro" class="dashboard-alert" role="alert"><CircleAlert :size="18" aria-hidden="true" /><span>{{ erro }} <template v-if="pedidosProntos || dashboard.inicializado">Os dados exibidos são da última consulta concluída.</template></span><button type="button" class="dashboard-retry" @click="atualizarTudo">Tentar novamente</button></div>
@@ -106,7 +106,6 @@ function badge(status) { return ['pendente', 'confirmado', 'pronto', 'retirado',
 .dashboard-header h1{font-size:30px;line-height:1.25;letter-spacing:-.025em;margin:8px 0 6px;font-weight:650}.dashboard-header p{font-size:14px;line-height:1.5;color:var(--pp-admin-muted);margin:0}.dashboard-header .dashboard-date{font-size:13px}
 .dashboard-actions{display:flex;align-items:flex-end;flex-direction:column;gap:10px;flex:none}.dashboard-primary,.dashboard-link{display:inline-flex;align-items:center;gap:8px;min-height:44px;text-decoration:none;font-size:14px;font-weight:500}
 .dashboard-primary{background:var(--pp-admin-text);color:var(--pp-admin-bg);padding:10px 18px;border-radius:10px}.dashboard-primary:hover{background:var(--pp-admin-text)}.dashboard-link{color:var(--pp-admin-accent)}.dashboard-link:hover{text-decoration:underline;text-underline-offset:4px}
-.pp-admin-dashboard .pp-card-action{--pp-home-action-duration:370ms}.pp-admin-dashboard :deep(.pp-card-action__fill){background:var(--pp-gold);color:var(--pp-marrom)}
 .dashboard-primary:focus-visible,.dashboard-link:focus-visible,.dashboard-retry:focus-visible,.operation-list a:focus-visible{outline:3px solid var(--pp-admin-accent);outline-offset:4px}
 .dashboard-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:20px 0;background:var(--pp-creme-2);border-radius:14px;margin-bottom:24px}.dashboard-kpis>:not(:first-child){border-left:1px solid var(--pp-admin-border)}
 .dashboard-middle{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.08fr) minmax(0,1.28fr);gap:18px;align-items:stretch}.dashboard-bottom{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,2.36fr);gap:18px;margin-top:20px}

@@ -111,18 +111,18 @@
               <span v-if="chat.naoLidasDoPedido(pedido.id)" class="kanban-unread"><MessageCircle :size="14" aria-hidden="true" />{{ chat.naoLidasDoPedido(pedido.id) }} nova(s)</span>
             </div>
             <div class="kanban-card-actions">
-              <RouterLink class="pp-card-action" data-card-action-radius :to="{ name: 'admin-pedido-detalhes', params: { id: pedido.id } }">
+              <RouterLink class="pp-card-action pp-admin-action--secondary" data-card-action-radius :to="{ name: 'admin-pedido-detalhes', params: { id: pedido.id } }">
                 <CardActionContent>Ver detalhes</CardActionContent>
               </RouterLink>
               <button
                 v-if="proximaAcao(pedido)"
                 type="button"
-                class="pp-card-action"
+                class="pp-card-action pp-admin-action--primary"
                 data-card-action-radius
                 :disabled="emAcao === pedido.id"
                 @click="avancar(pedido, $event)"
               ><CardActionContent>{{ emAcao === pedido.id ? "Salvando…" : proximaAcao(pedido).label }}</CardActionContent></button>
-              <RouterLink v-else-if="pedido.status === 'pronto'" class="kanban-retirada pp-card-action" data-card-action-radius :to="{ name: 'admin-pedido-detalhes', params: { id: pedido.id } }">
+              <RouterLink v-else-if="pedido.status === 'pronto'" class="kanban-retirada pp-card-action pp-admin-action--secondary" data-card-action-radius :to="{ name: 'admin-pedido-detalhes', params: { id: pedido.id } }">
                 <CardActionContent>Retirada / QR Code</CardActionContent>
               </RouterLink>
             </div>
@@ -504,8 +504,6 @@ onBeforeUnmount(() => {
   box-shadow: 0 9px 23px rgba(53,27,10,.09);
   transform: translateY(-2px);
 }
-.kanban-card-actions .pp-card-action{--pp-home-action-duration:370ms}
-.kanban-card-actions :deep(.pp-card-action__fill){background:var(--pp-gold);color:var(--pp-marrom)}
 .kanban-card-actions a:hover,
 .kanban-card-actions button:hover:not(:disabled) {
   border-color: var(--pp-admin-accent);

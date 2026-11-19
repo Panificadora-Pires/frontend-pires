@@ -48,7 +48,7 @@
     <div v-if="erro || erroAtualizacao" class="admin-alert admin-alert--error" role="alert">
       <CircleAlert :size="17" aria-hidden="true" />
       <span>{{ erro || "Não foi possível sincronizar os usuários." }}</span>
-      <button type="button" class="admin-btn" @click="atualizarAgora">Tentar novamente</button>
+      <button type="button" class="admin-btn pp-card-action pp-admin-action--secondary" data-card-action-radius @click="atualizarAgora"><CardActionContent>Tentar novamente</CardActionContent></button>
     </div>
     <div class="admin-table-wrap">
       <table class="admin-table users-table">
@@ -100,6 +100,7 @@
 </template>
 
 <script setup>
+import CardActionContent from "@/components/ui/CardActionContent.vue";
 import { computed, ref } from "vue";
 import { CircleAlert, Search } from "lucide-vue-next";
 import adminService from "@/services/admin.service";

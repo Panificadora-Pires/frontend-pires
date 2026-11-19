@@ -53,11 +53,11 @@
             @change="atalhoAtivo = ''"
           />
         </label>
-        <button class="admin-btn admin-btn--primary" :disabled="carregando">
+        <button class="admin-btn admin-btn--primary pp-card-action pp-admin-action--primary" data-card-action-radius :disabled="carregando"><CardActionContent>
           <RefreshCw v-if="carregando" :size="16" class="admin-spin" />
           <Search v-else :size="16" />
           Gerar relatório
-        </button>
+        </CardActionContent></button>
       </form>
     </section>
 
@@ -211,6 +211,7 @@
 </template>
 
 <script setup>
+import CardActionContent from "@/components/ui/CardActionContent.vue";
 import { computed, onMounted, ref } from "vue";
 import { CircleAlert, RefreshCw, Search } from "lucide-vue-next";
 
