@@ -1,17 +1,30 @@
 import { acceptHMRUpdate, defineStore } from "pinia";
 
-// Rascunho por aba: sobrevive ao F5, mas nunca vira fonte de verdade para
-// preços/estoque. A identidade só é confiável depois de restaurar o perfil.
-const CART_DRAFT_KEY = "pp_cart_draft_v1";
+// Rascunho local e separado por conta. Logout oculta itens da interface,
+// mas nao apaga a selecao desse usuario neste navegador. Precos e estoque
+// armazenados nunca sao fonte de verdade para confirmar o pedido.
+const CART_DRAFT_PREFIX = "pp_cart_draft_v2_";
+const CART_DRAFT_LEGACY_KEY = "pp_cart_draft_v1";
 const PRODUCT_FIELDS = [
   "id", "nome", "categoria", "categoria_nome", "imagem",
   "preco", "preco_atual", "em_promocao", "estoque", "ativo",
 ];
 
+function draftKey(accountId) {
+  return `${CART_DRAFT_PREFIX}${encodeURIComponent(accountId)}`;
+}
+
 function readDraft(accountId) {
+  let serialized = null;
+  let version = 2;
+  try { serialized = localStorage.getItem(draftKey(accountId)); } catch {}
+  // Migra um rascunho antigo salvo em sessionStorage apos F5, sem misturar contas.
+  if (serialized === null) {
+    try { serialized = sessionStorage.getItem(CART_DRAFT_LEGACY_KEY); version = 1; } catch {}
+  }
   try {
-    const saved = JSON.parse(sessionStorage.getItem(CART_DRAFT_KEY) || "null");
-    if (saved?.version !== 1 || saved.accountId !== accountId
+    const saved = JSON.parse(serialized || "null");
+    if (saved?.version !== version || saved.accountId !== accountId
       || !Array.isArray(saved.items) || saved.items.length > 100) return [];
 
     return saved.items.flatMap(({ product, quantity } = {}) => {
@@ -23,8 +36,6 @@ function readDraft(accountId) {
         PRODUCT_FIELDS.filter(field => Object.hasOwn(product, field))
           .map(field => [field, product[field]])
       );
-      // Não confiar no valor salvo para confirmar um pedido: o carrinho
-      // reconsulta catálogo/estoque ao entrar e antes do checkout.
       return [{ produto: clean, quantidade: qty }];
     });
   } catch {
@@ -32,25 +43,39 @@ function readDraft(accountId) {
   }
 }
 
-function saveDraft(store) {
+function limparRascunhoLegado(accountId) {
   try {
-    if (!store.contaId || store.itens.length === 0) {
-      sessionStorage.removeItem(CART_DRAFT_KEY);
-      return;
+    const saved = JSON.parse(sessionStorage.getItem(CART_DRAFT_LEGACY_KEY) || "null");
+    if (saved?.version === 1 && saved.accountId === accountId) {
+      sessionStorage.removeItem(CART_DRAFT_LEGACY_KEY);
     }
-    sessionStorage.setItem(CART_DRAFT_KEY, JSON.stringify({
-      version: 1,
-      accountId: store.contaId,
-      items: store.itens.map(({ produto, quantidade }) => ({
-        product: Object.fromEntries(
-          PRODUCT_FIELDS.filter(field => Object.hasOwn(produto, field))
-            .map(field => [field, produto[field]])
-        ),
-        quantity: quantidade,
-      })),
-    }));
   } catch {
-    // Storage pode estar desativado ou cheio. O carrinho em memória segue funcional.
+    // Rascunho legado indisponivel ou invalido nao impede o carrinho.
+  }
+}
+
+function saveDraft(store) {
+  if (!store.contaId) return;
+  try {
+    const key = draftKey(store.contaId);
+    if (!store.itens.length) {
+      localStorage.removeItem(key);
+    } else {
+      localStorage.setItem(key, JSON.stringify({
+        version: 2,
+        accountId: store.contaId,
+        items: store.itens.map(({ produto, quantidade }) => ({
+          product: Object.fromEntries(
+            PRODUCT_FIELDS.filter(field => Object.hasOwn(produto, field))
+              .map(field => [field, produto[field]])
+          ),
+          quantity: quantidade,
+        })),
+      }));
+    }
+    limparRascunhoLegado(store.contaId);
+  } catch {
+    // Storage bloqueado/cheio: carrinho permanece funcional em memoria.
   }
 }
 
@@ -80,20 +105,15 @@ export const useCartStore = defineStore("cart", {
   actions: {
     sincronizarConta(id) {
       const contaId = id == null ? null : String(id);
-      if (contaId === this.contaId) {
-        // Login explícito e logout podem chegar aqui antes de haver uma conta
-        // em memória. Mesmo assim devem descartar o rascunho anterior.
-        if (contaId === null) saveDraft(this);
-        return;
-      }
+      if (contaId === this.contaId) return;
 
-      const restaurado = this.contaId === null && contaId !== null
-        ? readDraft(contaId)
-        : [];
+      // Sempre isolar os itens na troca de conta; o rascunho de cada usuario
+      // permanece local, mas so e carregado apos identificar o novo perfil.
+      const restaurado = contaId !== null ? readDraft(contaId) : [];
       this.contaId = contaId;
       this.geracao += 1;
       this.itens = restaurado;
-      saveDraft(this);
+      if (contaId !== null) saveDraft(this);
     },
 
     suspenderConta() {
