@@ -40,9 +40,10 @@
 
             <button
               type="button"
+              ref="botaoLimparRef"
               class="cart-page__clear"
               :disabled="finalizando"
-              @click="limparCarrinho"
+              @click="abrirConfirmacaoLimpeza"
             >
               <Trash2 :size="14" />
               Limpar
@@ -210,6 +211,40 @@
       <CartRecommendations />
     </template>
 
+    <dialog
+      ref="dialogoLimpezaRef"
+      class="cart-clear-dialog"
+      aria-labelledby="cart-clear-dialog-title"
+      aria-describedby="cart-clear-dialog-description"
+      @close="restaurarFocoLimpeza"
+    >
+      <span class="cart-clear-dialog__eyebrow">SEU CARRINHO</span>
+      <h2 id="cart-clear-dialog-title" class="cart-clear-dialog__title">
+        Tirar tudo do carrinho?
+      </h2>
+      <p id="cart-clear-dialog-description" class="cart-clear-dialog__description">
+        Todos os produtos escolhidos serão removidos. Você pode adicioná-los novamente pelo cardápio.
+      </p>
+      <div class="cart-clear-dialog__actions">
+        <button
+          ref="botaoCancelarLimpezaRef"
+          type="button"
+          class="cart-clear-dialog__cancel"
+          @click="fecharConfirmacaoLimpeza"
+        >
+          Manter produtos
+        </button>
+        <button
+          type="button"
+          class="cart-clear-dialog__confirm"
+          @click="confirmarLimpezaCarrinho"
+        >
+          <Trash2 :size="17" aria-hidden="true" />
+          Sim, limpar carrinho
+        </button>
+      </div>
+    </dialog>
+
     <Transition name="cart-toast">
       <div
         v-if="toast"
@@ -225,7 +260,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import {
   ArrowLeft,
@@ -260,6 +295,9 @@ const sincronizando = ref(false);
 const finalizando = ref(false);
 const erroFinalizar = ref("");
 const toast = ref("");
+const dialogoLimpezaRef = ref(null);
+const botaoLimparRef = ref(null);
+const botaoCancelarLimpezaRef = ref(null);
 let toastTimer = null;
 let montado = true;
 const contextoAtual = contexto => montado && cart.contextoAtual(contexto);
@@ -270,6 +308,7 @@ watch(() => cart.geracao, () => {
   finalizando.value = false;
   erroFinalizar.value = "";
   toast.value = "";
+  if (dialogoLimpezaRef.value?.open) dialogoLimpezaRef.value.close();
   window.clearTimeout(toastTimer);
 }, { flush: "sync" });
 
@@ -353,11 +392,29 @@ function removerItem(produtoId) {
   mostrarToast("Produto removido do carrinho.");
 }
 
-function limparCarrinho() {
-  if (
-    !window.confirm("Deseja realmente remover todos os produtos do carrinho?")
-  )
-    return;
+function abrirConfirmacaoLimpeza() {
+  if (finalizando.value || cart.vazio || dialogoLimpezaRef.value?.open) return;
+  dialogoLimpezaRef.value?.showModal();
+  nextTick(() => botaoCancelarLimpezaRef.value?.focus());
+}
+
+function fecharConfirmacaoLimpeza() {
+  dialogoLimpezaRef.value?.close();
+}
+
+function restaurarFocoLimpeza() {
+  nextTick(() => {
+    if (cart.vazio) {
+      document.querySelector(".cart-page__primary-link")?.focus();
+    } else {
+      botaoLimparRef.value?.focus();
+    }
+  });
+}
+
+function confirmarLimpezaCarrinho() {
+  if (finalizando.value) return;
+  dialogoLimpezaRef.value?.close();
   cart.limpar();
   estoques.value = {};
   ativos.value = {};
@@ -482,10 +539,104 @@ onMounted(() => {
 onBeforeUnmount(() => {
   montado = false;
   window.clearTimeout(toastTimer);
+  if (dialogoLimpezaRef.value?.open) dialogoLimpezaRef.value.close();
 });
 </script>
 
 <style scoped>
+/* Modal nativo sem janela do Chrome: o estilo e as ações pertencem à Pires. */
+.cart-clear-dialog {
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  margin: auto;
+  padding: 30px;
+  border: 1px solid var(--pp-creme-borda);
+  border-radius: 18px 18px 18px 6px;
+  background: var(--pp-creme);
+  color: var(--pp-marrom);
+  box-shadow: 0 24px 80px rgba(35, 19, 9, .25);
+  font-family: var(--pp-font-body);
+}
+.cart-clear-dialog::backdrop {
+  background: rgba(30, 18, 9, .58);
+}
+.cart-clear-dialog__eyebrow {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--pp-dourado-profundo);
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: .12em;
+}
+.cart-clear-dialog__title {
+  margin: 0;
+  font: 400 clamp(30px, 7vw, 38px)/1.15 var(--pp-font-titulo);
+}
+.cart-clear-dialog__description {
+  margin: 14px 0 28px;
+  color: var(--pp-texto-2);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.cart-clear-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.cart-clear-dialog__actions button {
+  flex: 1 1 155px;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 15px;
+  border-radius: 9px;
+  font: 650 14px/1.3 var(--pp-font-body);
+  cursor: pointer;
+  transition: transform .15s ease, background .15s ease, border-color .15s ease;
+}
+.cart-clear-dialog__cancel {
+  border: 1px solid var(--pp-creme-borda);
+  background: transparent;
+  color: var(--pp-marrom);
+}
+.cart-clear-dialog__cancel:hover {
+  background: #eee2d2;
+}
+.cart-clear-dialog__confirm {
+  border: 1px solid var(--pp-marrom);
+  background: var(--pp-marrom);
+  color: var(--pp-creme);
+}
+.cart-clear-dialog__confirm:hover {
+  background: #442718;
+}
+.cart-clear-dialog__actions button:active {
+  transform: scale(.985);
+}
+.cart-clear-dialog__actions button:focus-visible {
+  outline: 3px solid var(--pp-dourado-escuro);
+  outline-offset: 3px;
+}
+@media (max-width: 520px) {
+  .cart-clear-dialog {
+    padding: 25px 20px;
+  }
+  .cart-clear-dialog__actions {
+    flex-direction: column;
+  }
+  .cart-clear-dialog__actions button {
+    flex: auto;
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cart-clear-dialog__actions button {
+    transition: none;
+  }
+}
 .cart-page {
   width: min(100%,1280px);
   margin: auto;
