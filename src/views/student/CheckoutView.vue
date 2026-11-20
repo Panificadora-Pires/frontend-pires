@@ -2193,7 +2193,7 @@ onBeforeUnmount(() => {
 }
 .checkout-result__footer {
   grid-column: 2;
-  grid-row: 1 / span 5;
+  grid-row: 1;
   position: sticky;
   top: calc(var(--pp-altura-topo) + 24px);
   display: flex;
