@@ -172,9 +172,8 @@ watch(
   <div class="orders-page">
     <header class="orders-page__intro">
       <div>
-        <h1>
-          Meus pedidos<span class="orders-page__note">Da Pires pra você.</span>
-        </h1>
+        <h1>Meus pedidos</h1>
+        <span class="orders-page__note">Da Pires pra você.</span>
         <p>Seus pedidos, do preparo à retirada.</p>
       </div>
       <RouterLink :to="{ name: 'cardapio' }"
@@ -388,26 +387,15 @@ watch(
   padding-bottom: 30px;
 }
 .orders-page__intro h1 {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 22px;
-  font-family: var(--pp-font-titulo);
-  font-size: clamp(44px, 5vw, 64px);
-  font-weight: 400;
+  margin: 0;
+  font: 400 clamp(50px, 7vw, 92px)/1.08 var(--pp-font-titulo);
   letter-spacing: -0.025em;
-  line-height: 1.1;
-  margin: 0 0 14px;
 }
 .orders-page__note {
-  display: inline-block;
-  font-family: var(--pp-font-nota);
+  display: block;
+  margin: 7px 0 11px;
+  font: 700 28px/1.2 var(--pp-font-nota);
   color: var(--pp-dourado-profundo);
-  font-weight: 600;
-  font-size: 26px;
-  letter-spacing: 0;
-  transform: rotate(-4deg);
-  white-space: nowrap;
 }
 .orders-page__intro p {
   color: var(--pp-texto-2);
@@ -623,8 +611,7 @@ watch(
     padding-bottom: 18px;
   }
   .orders-page__intro h1 {
-    font-size: 48px;
-    gap: 12px;
+    font-size: clamp(50px, 12vw, 70px);
   }
   .orders-page__note {
     font-size: 23px;
@@ -638,11 +625,8 @@ watch(
   }
 }
 @media (max-width: 390px) {
-  .orders-page__intro h1 {
-    font-size: 44px;
-  }
   .orders-page__note {
-    font-size: 21px;
+    font-size: 23px;
   }
   .orders-page__filters {
     width: 100%;

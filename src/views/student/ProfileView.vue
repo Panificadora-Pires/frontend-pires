@@ -620,9 +620,9 @@ onBeforeUnmount(() => {
 .profile-page__header h1 {
   margin: 0;
   font-family: var(--pp-font-titulo);
-  font-size: clamp(40px, 5vw, 64px);
+  font-size: clamp(50px, 7vw, 92px);
   font-weight: 400;
-  line-height: 1.12;
+  line-height: 1.08;
   letter-spacing: -.025em;
 }
 
@@ -1102,7 +1102,7 @@ onBeforeUnmount(() => {
   }
 
   .profile-page__header h1 {
-    font-size: 40px;
+    font-size: clamp(50px, 12vw, 70px);
   }
 
   .profile-page__header p {
