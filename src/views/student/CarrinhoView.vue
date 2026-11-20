@@ -131,12 +131,12 @@
 
               <button
                 type="button"
-                class="cart-item__remove pp-card-action pp-card-action--danger"
+                class="cart-item__remove"
                 :disabled="finalizando"
                 :aria-label="`Remover ${item.produto.nome} do carrinho`"
                 @click="removerItem(item.produto.id)"
               >
-                <CardActionContent><X :size="16" /></CardActionContent>
+                <X :size="18" aria-hidden="true" />
               </button>
             </article>
           </TransitionGroup>
@@ -832,12 +832,36 @@ onBeforeUnmount(() => {
   position: absolute;
   right: 0;
   top: 8px;
+  display: grid;
+  place-items: center;
   width: 44px;
   height: 44px;
+  padding: 0;
   border: 0;
+  border-radius: 12px;
   background: transparent;
   color: var(--pp-texto-2);
   cursor: pointer;
+  transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+}
+@media (hover: hover) {
+  .cart-item__remove:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--pp-auth-error) 10%, transparent);
+    color: var(--pp-auth-error);
+    transform: translateY(-1px);
+  }
+}
+.cart-item__remove:focus-visible {
+  outline: 2px solid var(--pp-dourado-profundo);
+  outline-offset: 2px;
+  background: color-mix(in srgb, var(--pp-auth-error) 10%, transparent);
+}
+.cart-item__remove:disabled {
+  cursor: not-allowed;
+  opacity: .5;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cart-item__remove { transition: none; }
 }
 .cart-item--problem {
   border-bottom-color: var(--student-danger);
