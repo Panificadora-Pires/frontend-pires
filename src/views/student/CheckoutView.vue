@@ -293,6 +293,10 @@
         </div>
 
         <div class="checkout-payment__body">
+          <div class="checkout-payment__amount">
+            <span>Total do pedido</span>
+            <strong>{{ formatarPreco(cart.totalPreco) }}</strong>
+          </div>
           <div v-if="metodo === 'cash'" class="checkout-cash">
             <div class="checkout-cash__icon">
               <Banknote :size="25" />
@@ -1723,6 +1727,25 @@ onBeforeUnmount(() => {
   border: 1px solid var(--pp-creme-borda);
   border-radius: 14px;
   background: #fffdf9;
+}
+.checkout-payment__amount {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 17px;
+  border-bottom: 1px solid var(--pp-creme-borda);
+}
+.checkout-payment__amount span {
+  color: var(--pp-texto-2);
+  font-size: 14px;
+}
+.checkout-payment__amount strong {
+  color: var(--pp-marrom);
+  font-size: 22px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 .checkout-cash {
   grid-template-columns: 50px minmax(0, 1fr);
