@@ -10,11 +10,11 @@
       </div>
       <div
         class="checkout-progress__line"
-        :class="{ 'is-done': Boolean(resultado) }"
+        :class="{ 'is-done': etapaPagamentoConcluida }"
       />
       <div
         class="checkout-progress__step"
-        :class="{ 'is-active': !resultado, 'is-done': Boolean(resultado) }"
+        :class="{ 'is-active': !etapaPagamentoConcluida, 'is-done': etapaPagamentoConcluida }"
       >
         <span>
           <CircleCheckBig v-if="resultado" :size="14" />
@@ -22,7 +22,7 @@
         </span>
         <div>
           <strong>Pagamento</strong>
-          <small>{{ resultado ? "Concluído" : "Escolha como pagar" }}</small>
+          <small>{{ descricaoPagamento }}</small>
         </div>
       </div>
       <div
@@ -31,14 +31,12 @@
       />
       <div
         class="checkout-progress__step"
-        :class="{ 'is-active': Boolean(resultado) }"
+        :class="{ 'is-active': Boolean(pedido) }"
       >
         <span>3</span>
         <div>
           <strong>Confirmação</strong>
-          <small>{{
-            resultado ? "Acompanhe seu pedido" : "Próxima etapa"
-          }}</small>
+          <small>{{ descricaoPedido }}</small>
         </div>
       </div>
     </nav>
@@ -46,11 +44,12 @@
     <header class="checkout-page__header">
       <div>
         <h1>{{ resultado ? "Status do pedido" : "Pagamento" }}</h1>
+        <span v-if="!resultado" class="checkout-page__note">Seu pedido, do seu jeito.</span>
         <p>
           {{
             resultado
               ? "Confira abaixo as informações da sua compra."
-              : "Escolha a forma de pagamento e revise o resumo do pedido."
+              : "Escolha como pagar e confira o total antes de confirmar."
           }}
         </p>
       </div>
@@ -228,21 +227,20 @@
       <main class="checkout-payment">
         <div class="checkout-payment__head">
           <div>
-            <span class="checkout-payment__kicker">Forma de pagamento</span>
+            <span class="checkout-payment__kicker">Escolha uma opção</span>
             <h2>Como você quer pagar?</h2>
-            <p>Selecione uma opção para continuar.</p>
+            <p>Escolha a opção que funciona melhor para você.</p>
           </div>
         </div>
 
         <div
           class="checkout-methods"
-          role="radiogroup"
+          role="group"
           aria-label="Forma de pagamento"
         >
           <button
             type="button"
-            role="radio"
-            :aria-checked="metodo === 'pix'"
+            :aria-pressed="metodo === 'pix'"
             :class="{ 'is-active': metodo === 'pix' }"
             @click="selecionarMetodo('pix')"
           >
@@ -258,8 +256,7 @@
 
           <button
             type="button"
-            role="radio"
-            :aria-checked="metodo === 'card'"
+            :aria-pressed="metodo === 'card'"
             :class="{ 'is-active': metodo === 'card' }"
             @click="selecionarMetodo('card')"
           >
@@ -277,8 +274,7 @@
 
           <button
             type="button"
-            role="radio"
-            :aria-checked="metodo === 'cash'"
+            :aria-pressed="metodo === 'cash'"
             :class="{ 'is-active': metodo === 'cash' }"
             @click="selecionarMetodo('cash')"
           >
@@ -319,7 +315,7 @@
               {{
                 processando
                   ? "Criando pedido..."
-                  : `Confirmar pedido · ${formatarPreco(cart.totalPreco)}`
+                  : `Registrar pedido · ${formatarPreco(cart.totalPreco)}`
               }}
             </button>
           </div>
@@ -363,7 +359,9 @@
           <RouterLink :to="{ name: 'carrinho' }">Editar</RouterLink>
         </div>
 
-        <div class="checkout-summary__items">
+        <details class="checkout-summary__details" open>
+          <summary class="checkout-summary__toggle">Ver itens e valores do pedido</summary>
+          <div class="checkout-summary__items">
           <div
             v-for="item in cart.itens"
             :key="item.produto.id"
@@ -393,6 +391,8 @@
             <strong>Grátis</strong>
           </div>
         </div>
+
+        </details>
 
         <div class="checkout-summary__total">
           <span>Total</span>
@@ -435,6 +435,11 @@ import paymentService from "@/services/payment.service";
 import { useAuthStore } from "@/stores/auth";
 import { useCartStore } from "@/stores/cart";
 import { createAutoRefresh } from "@/utils/autoRefresh";
+import {
+  descreverEtapaPagamento,
+  descreverEtapaPedido,
+  etapaPagamentoAprovada,
+} from "@/utils/checkoutProgress";
 
 // Pix/cartão: confere o pagamento a cada 5 s com a aba visível e na hora em que o cliente
 // volta para a aba (ex.: depois de pagar no app do banco).
@@ -464,6 +469,16 @@ watch(() => cart.geracao, () => {
 }, { flush: "sync" });
 
 const pedido = computed(() => resultado.value?.pedido || null);
+const descricaoPagamento = computed(() => descreverEtapaPagamento({
+  forma: resultado.value?.pagamento?.forma_pagamento,
+  status: resultado.value?.pagamento?.status_pagamento,
+  temChallenge: Boolean(resultado.value?.pagamento?.mercadopago_challenge_url),
+  temResultado: Boolean(resultado.value),
+}));
+const descricaoPedido = computed(() => descreverEtapaPedido(pedido.value?.id));
+const etapaPagamentoConcluida = computed(() =>
+  etapaPagamentoAprovada(resultado.value?.pagamento?.status_pagamento)
+);
 const pagamento = computed(() => resultado.value?.pagamento || null);
 const challengeUrl = computed(
   () => pagamento.value?.mercadopago_challenge_url || "",
