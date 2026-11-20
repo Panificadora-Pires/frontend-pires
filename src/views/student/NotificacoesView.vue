@@ -404,7 +404,7 @@ async function marcarTodas() {
 }
 .notifications-page__header h1 {
   margin: 0 0 10px;
-  font: 400 clamp(46px, 5vw, 64px)/1.12 var(--pp-font-titulo);
+  font: 400 clamp(50px, 7vw, 92px)/1.08 var(--pp-font-titulo);
   letter-spacing: -0.025em;
 }
 .notifications-page__header p {
@@ -700,7 +700,7 @@ async function marcarTodas() {
     padding-bottom: 20px;
   }
   .notifications-page__header h1 {
-    font-size: 48px;
+    font-size: clamp(50px, 12vw, 70px);
   }
   .notifications-page__toolbar {
     gap: 8px;
@@ -715,7 +715,7 @@ async function marcarTodas() {
 }
 @media (max-width: 390px) {
   .notifications-page__header h1 {
-    font-size: 44px;
+    font-size: 50px;
   }
   .notifications-page__header p {
     font-size: 14px;
