@@ -241,6 +241,7 @@
           <button
             type="button"
             :aria-pressed="metodo === 'pix'"
+            :disabled="processando"
             :class="{ 'is-active': metodo === 'pix' }"
             @click="selecionarMetodo('pix')"
           >
@@ -257,6 +258,7 @@
           <button
             type="button"
             :aria-pressed="metodo === 'card'"
+            :disabled="processando"
             :class="{ 'is-active': metodo === 'card' }"
             @click="selecionarMetodo('card')"
           >
@@ -275,6 +277,7 @@
           <button
             type="button"
             :aria-pressed="metodo === 'cash'"
+            :disabled="processando"
             :class="{ 'is-active': metodo === 'cash' }"
             @click="selecionarMetodo('cash')"
           >
@@ -1672,6 +1675,11 @@ onBeforeUnmount(() => {
   background: var(--pp-dourado-suave);
   color: var(--pp-marrom);
   box-shadow: inset 0 0 0 1px var(--pp-dourado-profundo);
+}
+.checkout-methods button:disabled {
+  cursor: not-allowed;
+  opacity: .6;
+  transform: none;
 }
 .checkout-methods button:focus-visible,
 .checkout-summary a:focus-visible,
