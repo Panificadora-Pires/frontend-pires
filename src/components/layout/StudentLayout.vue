@@ -116,7 +116,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="student-layout" :class="{ 'has-chatbot': mostrarChatbot }">
+  <div class="student-layout" :class="{ 'has-chatbot': mostrarChatbot, 'student-layout--cart': route.name === 'carrinho' }">
     <StudentHeader ref="header" :carrinho-pulando="carrinhoPulando" @logout="handleLogout" />
     <main class="student-layout__main"><RouterView /></main>
     <ChatbotWidget v-if="mostrarChatbot" />
@@ -148,6 +148,13 @@ onBeforeUnmount(() => {
 
 .student-layout__bottom-nav {
   display: none;
+}
+/* No carrinho, a ajuda fechada ocupa espaço próprio e não cobre a compra. */
+.student-layout--cart :deep(.chatbot:not(.is-open)) {
+  position: static;
+  width: min(100%, 1304px);
+  margin: 0 auto;
+  padding: 0 24px 24px;
 }
 .student-layout__bottom-icon-wrap.is-added > svg,
 .student-layout__bottom-icon-wrap.is-added > .student-layout__badge-dot {

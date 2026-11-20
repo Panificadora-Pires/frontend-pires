@@ -1,0 +1,680 @@
+[
+  {
+    "width": 1440,
+    "count": 0,
+    "title": "Anton, Impact, \"Arial Narrow\", sans-serif",
+    "targets": [
+      {
+        "text": "Continuar comprando",
+        "height": 44
+      },
+      {
+        "text": "Explorar cardápio",
+        "height": 54
+      }
+    ]
+  },
+  {
+    "width": 1440,
+    "count": 1,
+    "title": "Anton, Impact, \"Arial Narrow\", sans-serif",
+    "targets": [
+      {
+        "text": "Continuar comprando",
+        "height": 44
+      },
+      {
+        "text": "Limpar",
+        "height": 44
+      },
+      {
+        "text": "Diminuir quantidade de Coxinha de frango",
+        "height": 44
+      },
+      {
+        "text": "Aumentar quantidade de Coxinha de frango",
+        "height": 44
+      },
+      {
+        "text": "Remover Coxinha de frango do carrinho",
+        "height": 44
+      },
+      {
+        "text": "Continuar para pagamento",
+        "height": 54
+      },
+      {
+        "text": "Ver cardápio",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Suco de laranja ao carrinho",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Café coado ao carrinho",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Bolo de cenoura com chocolate ao carrinho",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Pão de queijo ao carrinho",
+        "height": 44
+      }
+    ]
+  },
+  {
+    "width": 1440,
+    "count": 3,
+    "title": "Anton, Impact, \"Arial Narrow\", sans-serif",
+    "targets": [
+      {
+        "text": "Continuar comprando",
+        "height": 44
+      },
+      {
+        "text": "Limpar",
+        "height": 44
+      },
+      {
+        "text": "Diminuir quantidade de Coxinha de frango",
+        "height": 44
+      },
+      {
+        "text": "Aumentar quantidade de Coxinha de frango",
+        "height": 44
+      },
+      {
+        "text": "Remover Coxinha de frango do carrinho",
+        "height": 44
+      },
+      {
+        "text": "Diminuir quantidade de Suco de laranja",
+        "height": 44
+      },
+      {
+        "text": "Aumentar quantidade de Suco de laranja",
+        "height": 44
+      },
+      {
+        "text": "Remover Suco de laranja do carrinho",
+        "height": 44
+      },
+      {
+        "text": "Diminuir quantidade de Bolo de cenoura com chocolate",
+        "height": 44
+      },
+      {
+        "text": "Aumentar quantidade de Bolo de cenoura com chocolate",
+        "height": 44
+      },
+      {
+        "text": "Remover Bolo de cenoura com chocolate do carrinho",
+        "height": 44
+      },
+      {
+        "text": "Continuar para pagamento",
+        "height": 54
+      },
+      {
+        "text": "Ver cardápio",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Café coado ao carrinho",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Pão de queijo ao carrinho",
+        "height": 44
+      }
+    ]
+  },
+  {
+    "width": 1280,
+    "count": 0,
+    "title": "Anton, Impact, \"Arial Narrow\", sans-serif",
+    "targets": [
+      {
+        "text": "Continuar comprando",
+        "height": 44
+      },
+      {
+        "text": "Explorar cardápio",
+        "height": 54
+      }
+    ]
+  },
+  {
+    "width": 1280,
+    "count": 1,
+    "title": "Anton, Impact, \"Arial Narrow\", sans-serif",
+    "targets": [
+      {
+        "text": "Continuar comprando",
+        "height": 44
+      },
+      {
+        "text": "Limpar",
+        "height": 44
+      },
+      {
+        "text": "Diminuir quantidade de Coxinha de frango",
+        "height": 44
+      },
+      {
+        "text": "Aumentar quantidade de Coxinha de frango",
+        "height": 44
+      },
+      {
+        "text": "Remover Coxinha de frango do carrinho",
+        "height": 44
+      },
+      {
+        "text": "Continuar para pagamento",
+        "height": 54
+      },
+      {
+        "text": "Ver cardápio",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Suco de laranja ao carrinho",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Café coado ao carrinho",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Bolo de cenoura com chocolate ao carrinho",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Pão de queijo ao carrinho",
+        "height": 44
+      }
+    ]
+  },
+  {
+    "width": 1280,
+    "count": 3,
+    "title": "Anton, Impact, \"Arial Narrow\", sans-serif",
+    "targets": [
+      {
+        "text": "Continuar comprando",
+        "height": 44
+      },
+      {
+        "text": "Limpar",
+        "height": 44
+      },
+      {
+        "text": "Diminuir quantidade de Coxinha de frango",
+        "height": 44
+      },
+      {
+        "text": "Aumentar quantidade de Coxinha de frango",
+        "height": 44
+      },
+      {
+        "text": "Remover Coxinha de frango do carrinho",
+        "height": 44
+      },
+      {
+        "text": "Diminuir quantidade de Suco de laranja",
+        "height": 44
+      },
+      {
+        "text": "Aumentar quantidade de Suco de laranja",
+        "height": 44
+      },
+      {
+        "text": "Remover Suco de laranja do carrinho",
+        "height": 44
+      },
+      {
+        "text": "Diminuir quantidade de Bolo de cenoura com chocolate",
+        "height": 44
+      },
+      {
+        "text": "Aumentar quantidade de Bolo de cenoura com chocolate",
+        "height": 44
+      },
+      {
+        "text": "Remover Bolo de cenoura com chocolate do carrinho",
+        "height": 44
+      },
+      {
+        "text": "Continuar para pagamento",
+        "height": 54
+      },
+      {
+        "text": "Ver cardápio",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Café coado ao carrinho",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Pão de queijo ao carrinho",
+        "height": 44
+      }
+    ]
+  },
+  {
+    "width": 768,
+    "count": 0,
+    "title": "Anton, Impact, \"Arial Narrow\", sans-serif",
+    "targets": [
+      {
+        "text": "Continuar comprando",
+        "height": 44
+      },
+      {
+        "text": "Explorar cardápio",
+        "height": 54
+      }
+    ]
+  },
+  {
+    "width": 768,
+    "count": 1,
+    "title": "Anton, Impact, \"Arial Narrow\", sans-serif",
+    "targets": [
+      {
+        "text": "Continuar comprando",
+        "height": 44
+      },
+      {
+        "text": "Limpar",
+        "height": 44
+      },
+      {
+        "text": "Diminuir quantidade de Coxinha de frango",
+        "height": 44
+      },
+      {
+        "text": "Aumentar quantidade de Coxinha de frango",
+        "height": 44
+      },
+      {
+        "text": "Remover Coxinha de frango do carrinho",
+        "height": 44
+      },
+      {
+        "text": "Continuar para pagamento",
+        "height": 54
+      },
+      {
+        "text": "Ver cardápio",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Suco de laranja ao carrinho",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Café coado ao carrinho",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Bolo de cenoura com chocolate ao carrinho",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Pão de queijo ao carrinho",
+        "height": 44
+      }
+    ]
+  },
+  {
+    "width": 768,
+    "count": 3,
+    "title": "Anton, Impact, \"Arial Narrow\", sans-serif",
+    "targets": [
+      {
+        "text": "Continuar comprando",
+        "height": 44
+      },
+      {
+        "text": "Limpar",
+        "height": 44
+      },
+      {
+        "text": "Diminuir quantidade de Coxinha de frango",
+        "height": 44
+      },
+      {
+        "text": "Aumentar quantidade de Coxinha de frango",
+        "height": 44
+      },
+      {
+        "text": "Remover Coxinha de frango do carrinho",
+        "height": 44
+      },
+      {
+        "text": "Diminuir quantidade de Suco de laranja",
+        "height": 44
+      },
+      {
+        "text": "Aumentar quantidade de Suco de laranja",
+        "height": 44
+      },
+      {
+        "text": "Remover Suco de laranja do carrinho",
+        "height": 44
+      },
+      {
+        "text": "Diminuir quantidade de Bolo de cenoura com chocolate",
+        "height": 44
+      },
+      {
+        "text": "Aumentar quantidade de Bolo de cenoura com chocolate",
+        "height": 44
+      },
+      {
+        "text": "Remover Bolo de cenoura com chocolate do carrinho",
+        "height": 44
+      },
+      {
+        "text": "Continuar para pagamento",
+        "height": 54
+      },
+      {
+        "text": "Ver cardápio",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Café coado ao carrinho",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Pão de queijo ao carrinho",
+        "height": 44
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "count": 0,
+    "title": "Anton, Impact, \"Arial Narrow\", sans-serif",
+    "targets": [
+      {
+        "text": "Continuar comprando",
+        "height": 44
+      },
+      {
+        "text": "Explorar cardápio",
+        "height": 54
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "count": 1,
+    "title": "Anton, Impact, \"Arial Narrow\", sans-serif",
+    "targets": [
+      {
+        "text": "Continuar comprando",
+        "height": 44
+      },
+      {
+        "text": "Limpar",
+        "height": 44
+      },
+      {
+        "text": "Diminuir quantidade de Coxinha de frango",
+        "height": 44
+      },
+      {
+        "text": "Aumentar quantidade de Coxinha de frango",
+        "height": 44
+      },
+      {
+        "text": "Remover Coxinha de frango do carrinho",
+        "height": 44
+      },
+      {
+        "text": "Continuar para pagamento",
+        "height": 54
+      },
+      {
+        "text": "Ver cardápio",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Suco de laranja ao carrinho",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Café coado ao carrinho",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Bolo de cenoura com chocolate ao carrinho",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Pão de queijo ao carrinho",
+        "height": 44
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "count": 3,
+    "title": "Anton, Impact, \"Arial Narrow\", sans-serif",
+    "targets": [
+      {
+        "text": "Continuar comprando",
+        "height": 44
+      },
+      {
+        "text": "Limpar",
+        "height": 44
+      },
+      {
+        "text": "Diminuir quantidade de Coxinha de frango",
+        "height": 44
+      },
+      {
+        "text": "Aumentar quantidade de Coxinha de frango",
+        "height": 44
+      },
+      {
+        "text": "Remover Coxinha de frango do carrinho",
+        "height": 44
+      },
+      {
+        "text": "Diminuir quantidade de Suco de laranja",
+        "height": 44
+      },
+      {
+        "text": "Aumentar quantidade de Suco de laranja",
+        "height": 44
+      },
+      {
+        "text": "Remover Suco de laranja do carrinho",
+        "height": 44
+      },
+      {
+        "text": "Diminuir quantidade de Bolo de cenoura com chocolate",
+        "height": 44
+      },
+      {
+        "text": "Aumentar quantidade de Bolo de cenoura com chocolate",
+        "height": 44
+      },
+      {
+        "text": "Remover Bolo de cenoura com chocolate do carrinho",
+        "height": 44
+      },
+      {
+        "text": "Continuar para pagamento",
+        "height": 54
+      },
+      {
+        "text": "Ver cardápio",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Café coado ao carrinho",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Pão de queijo ao carrinho",
+        "height": 44
+      }
+    ]
+  },
+  {
+    "width": 320,
+    "count": 0,
+    "title": "Anton, Impact, \"Arial Narrow\", sans-serif",
+    "targets": [
+      {
+        "text": "Continuar comprando",
+        "height": 44
+      },
+      {
+        "text": "Explorar cardápio",
+        "height": 54
+      }
+    ]
+  },
+  {
+    "width": 320,
+    "count": 1,
+    "title": "Anton, Impact, \"Arial Narrow\", sans-serif",
+    "targets": [
+      {
+        "text": "Continuar comprando",
+        "height": 44
+      },
+      {
+        "text": "Limpar",
+        "height": 44
+      },
+      {
+        "text": "Diminuir quantidade de Coxinha de frango",
+        "height": 44
+      },
+      {
+        "text": "Aumentar quantidade de Coxinha de frango",
+        "height": 44
+      },
+      {
+        "text": "Remover Coxinha de frango do carrinho",
+        "height": 44
+      },
+      {
+        "text": "Continuar para pagamento",
+        "height": 62
+      },
+      {
+        "text": "Ver cardápio",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Suco de laranja ao carrinho",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Café coado ao carrinho",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Bolo de cenoura com chocolate ao carrinho",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Pão de queijo ao carrinho",
+        "height": 44
+      }
+    ]
+  },
+  {
+    "width": 320,
+    "count": 3,
+    "title": "Anton, Impact, \"Arial Narrow\", sans-serif",
+    "targets": [
+      {
+        "text": "Continuar comprando",
+        "height": 44
+      },
+      {
+        "text": "Limpar",
+        "height": 44
+      },
+      {
+        "text": "Diminuir quantidade de Coxinha de frango",
+        "height": 44
+      },
+      {
+        "text": "Aumentar quantidade de Coxinha de frango",
+        "height": 44
+      },
+      {
+        "text": "Remover Coxinha de frango do carrinho",
+        "height": 44
+      },
+      {
+        "text": "Diminuir quantidade de Suco de laranja",
+        "height": 44
+      },
+      {
+        "text": "Aumentar quantidade de Suco de laranja",
+        "height": 44
+      },
+      {
+        "text": "Remover Suco de laranja do carrinho",
+        "height": 44
+      },
+      {
+        "text": "Diminuir quantidade de Bolo de cenoura com chocolate",
+        "height": 44
+      },
+      {
+        "text": "Aumentar quantidade de Bolo de cenoura com chocolate",
+        "height": 44
+      },
+      {
+        "text": "Remover Bolo de cenoura com chocolate do carrinho",
+        "height": 44
+      },
+      {
+        "text": "Continuar para pagamento",
+        "height": 62
+      },
+      {
+        "text": "Ver cardápio",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Café coado ao carrinho",
+        "height": 44
+      },
+      {
+        "text": "Adicionar Pão de queijo ao carrinho",
+        "height": 44
+      }
+    ]
+  },
+  {
+    "functional": "promoção, quantidade, recomendação, remoção, limpeza, estoque, erro, loading, navegação checkout",
+    "errors": []
+  },
+  {
+    "contrast": {
+      "body": 16.02467391026269,
+      "secondary": 6.436299795524085,
+      "note": 6.4399240381404725,
+      "summary": 9.14766900705014,
+      "cta": 8.07858288324877
+    }
+  }
+]
