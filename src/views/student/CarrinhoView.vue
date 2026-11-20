@@ -12,7 +12,8 @@
       </RouterLink>
     </header>
 
-    <section v-if="cart.vazio" class="cart-page__empty">
+    <Transition name="cart-content" mode="out-in" @after-enter="focarVazioAposTransicao">
+      <section v-if="cart.vazio" key="vazio" class="cart-page__empty">
       <div class="cart-page__empty-copy">
         <span class="cart-page__eyebrow">Falta só escolher</span>
         <h2>Um intervalo<br>com seu sabor.</h2>
@@ -22,7 +23,7 @@
       <div class="cart-page__empty-art" aria-hidden="true"><ProductIllustration tipo="coxinha" /><span>feito para o seu intervalo</span></div>
     </section>
 
-    <template v-else>
+      <div v-else key="com-itens" class="cart-page__content">
       <div class="cart-page__layout">
         <section class="cart-page__items" aria-labelledby="cart-items-title">
           <div class="cart-page__section-head">
@@ -55,7 +56,7 @@
             Conferindo preços e disponibilidade...
           </div>
 
-          <div class="cart-page__item-list">
+          <TransitionGroup name="cart-item-list" tag="div" class="cart-page__item-list">
             <article
               v-for="item in cart.itens"
               :key="item.produto.id"
@@ -138,7 +139,7 @@
                 <CardActionContent><X :size="16" /></CardActionContent>
               </button>
             </article>
-          </div>
+          </TransitionGroup>
         </section>
 
         <aside class="cart-summary" aria-labelledby="cart-summary-title">
@@ -164,7 +165,9 @@
 
           <div class="cart-summary__total">
             <span>Total</span>
-            <strong>{{ formatarPreco(cart.totalPreco) }}</strong>
+            <Transition name="cart-price" mode="out-in">
+              <strong :key="cart.totalPreco">{{ formatarPreco(cart.totalPreco) }}</strong>
+            </Transition>
           </div>
 
           <div class="cart-summary__pickup">
@@ -209,7 +212,8 @@
       </div>
 
       <CartRecommendations />
-    </template>
+      </div>
+    </Transition>
 
     <dialog
       ref="dialogoLimpezaRef"
@@ -298,6 +302,7 @@ const toast = ref("");
 const dialogoLimpezaRef = ref(null);
 const botaoLimparRef = ref(null);
 const botaoCancelarLimpezaRef = ref(null);
+const focarAoEsvaziar = ref(false);
 let toastTimer = null;
 let montado = true;
 const contextoAtual = contexto => montado && cart.contextoAtual(contexto);
@@ -308,6 +313,7 @@ watch(() => cart.geracao, () => {
   finalizando.value = false;
   erroFinalizar.value = "";
   toast.value = "";
+  focarAoEsvaziar.value = false;
   if (dialogoLimpezaRef.value?.open) dialogoLimpezaRef.value.close();
   window.clearTimeout(toastTimer);
 }, { flush: "sync" });
@@ -335,7 +341,7 @@ function estoqueConhecido(item) {
 }
 
 function estoqueDisponivel(item) {
-  if (estoqueConhecido(item))
+  if (Object.prototype.hasOwnProperty.call(estoques.value, item.produto.id))
     return Number(estoques.value[item.produto.id] || 0);
   if (item.produto.estoque !== undefined)
     return Number(item.produto.estoque || 0);
@@ -403,17 +409,19 @@ function fecharConfirmacaoLimpeza() {
 }
 
 function restaurarFocoLimpeza() {
-  nextTick(() => {
-    if (cart.vazio) {
-      document.querySelector(".cart-page__primary-link")?.focus();
-    } else {
-      botaoLimparRef.value?.focus();
-    }
-  });
+  if (focarAoEsvaziar.value) return;
+  nextTick(() => botaoLimparRef.value?.focus());
+}
+
+function focarVazioAposTransicao() {
+  if (!focarAoEsvaziar.value || !cart.vazio) return;
+  focarAoEsvaziar.value = false;
+  document.querySelector(".cart-page__primary-link")?.focus();
 }
 
 function confirmarLimpezaCarrinho() {
   if (finalizando.value) return;
+  focarAoEsvaziar.value = true;
   dialogoLimpezaRef.value?.close();
   cart.limpar();
   estoques.value = {};
@@ -467,6 +475,7 @@ async function sincronizarCarrinho({ silencioso = false } = {}) {
 
   estoques.value = novosEstoques;
   ativos.value = novosAtivos;
+  cart.atualizarRascunho();
   sincronizando.value = false;
 
   if (falhas && !silencioso) {
@@ -695,15 +704,38 @@ onBeforeUnmount(() => {
   font-size: 14px;
 }
 .cart-page__clear {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  border: 0;
+  justify-content: center;
+  gap: 9px;
+  border: 1px solid transparent;
+  border-radius: 999px;
   background: transparent;
   color: var(--pp-texto-2);
   min-height: 44px;
-  padding: 8px;
+  padding: 9px 15px;
+  font: 600 14px/1.4 var(--pp-font-body);
   cursor: pointer;
+  transition: background-color 180ms ease, color 180ms ease,
+    border-color 180ms ease, transform 180ms ease;
+}
+.cart-page__clear svg {
+  transition: transform 180ms ease;
+}
+@media (hover: hover) {
+  .cart-page__clear:hover:not(:disabled) {
+    background: #eee5da;
+    border-color: var(--pp-creme-borda);
+    color: var(--pp-marrom);
+    transform: translateY(-1px);
+  }
+  .cart-page__clear:hover:not(:disabled) svg {
+    transform: rotate(-9deg);
+  }
+}
+.cart-page__clear:active:not(:disabled) {
+  background: #e6d8c7;
+  transform: translateY(1px);
 }
 .cart-item {
   position: relative;
@@ -1015,6 +1047,40 @@ onBeforeUnmount(() => {
     transform: rotate(360deg);
   }
 }
+/* Transições sutis nos estados vazio/preenchido, remoção de item e total. */
+.cart-content-enter-active,.cart-content-leave-active {
+  transition: opacity 240ms ease, transform 240ms ease;
+}
+.cart-content-enter-from {
+  opacity: 0;
+  transform: translateY(14px);
+}
+.cart-content-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+.cart-item-list-enter-active,.cart-item-list-leave-active {
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+.cart-item-list-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.cart-item-list-leave-to {
+  opacity: 0;
+  transform: translateX(12px);
+}
+.cart-price-enter-active,.cart-price-leave-active {
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+.cart-price-enter-from {
+  opacity: 0;
+  transform: translateY(5px);
+}
+.cart-price-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
+}
 .cart-toast-enter-active,.cart-toast-leave-active {
   transition: opacity 180ms;
 }
@@ -1155,6 +1221,12 @@ onBeforeUnmount(() => {
   .cart-page *, .cart-page *::before {
     animation: none!important;
     transition: none!important;
+  }
+  .cart-content-enter-active,.cart-content-leave-active,
+  .cart-item-list-enter-active,.cart-item-list-leave-active,
+  .cart-price-enter-active,.cart-price-leave-active {
+    transition: none!important;
+    transform: none!important;
   }
 }
 </style>
