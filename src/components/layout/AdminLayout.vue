@@ -61,6 +61,7 @@ import { useAdminQueueSummaryStore } from "@/stores/adminQueueSummary";
 import { useAdminDashboardStore } from "@/stores/adminDashboard";
 import { useAuthStore } from "@/stores/auth";
 import { useChatStore } from "@/stores/chat";
+import { REALTIME_ENABLED, realtimeClient } from "@/services/realtime";
 
 const auth = useAuthStore();
 const adminOrders = useAdminOrdersStore();
@@ -75,6 +76,31 @@ const menuTrigger = ref(null);
 const closeTrigger = ref(null);
 let desktopMedia = null;
 let overflowAnterior = null;
+let desinscreverRealtime = null;
+let timerRealtime = null;
+let atualizarPedidosRealtime = false;
+let atualizarChatRealtime = false;
+function limparPendenciasRealtime() {
+  if (timerRealtime !== null) clearTimeout(timerRealtime);
+  timerRealtime = null;
+  atualizarPedidosRealtime = false;
+  atualizarChatRealtime = false;
+}
+function agendarRealtime(evento) {
+  if (!evento || evento.tipo.startsWith("pedido.")) atualizarPedidosRealtime = true;
+  if (!evento || evento.tipo.startsWith("chat.")) atualizarChatRealtime = true;
+  if (timerRealtime !== null || (!atualizarPedidosRealtime && !atualizarChatRealtime)) return;
+  // Rajadas de eventos viram uma única consulta por recurso em 400 ms.
+  timerRealtime = setTimeout(() => {
+    timerRealtime = null;
+    const pedidos = atualizarPedidosRealtime;
+    const chatPendente = atualizarChatRealtime;
+    atualizarPedidosRealtime = false;
+    atualizarChatRealtime = false;
+    if (pedidos) void queueSummary.atualizarAgora().catch(() => {});
+    if (chatPendente) void chat.carregarNaoLidas().catch(() => {});
+  }, 400);
+}
 
 const iniciais = computed(() => {
   const nome = auth.usuario?.name || auth.usuario?.email || "Admin";
@@ -131,6 +157,8 @@ async function handleLogout() {
   queueSummary.resetar();
   dashboard.resetar();
   chat.resetar();
+  limparPendenciasRealtime();
+  realtimeClient.parar();
   await auth.logout();
   await router.replace({ name: "login" });
 }
@@ -142,6 +170,10 @@ onMounted(() => {
   queueSummary.iniciarAutoAtualizacao();
   // Mensagens de clientes ainda não lidas, no mesmo ritmo da fila.
   chat.iniciarPollingNaoLidas(15_000);
+  if (REALTIME_ENABLED) {
+    desinscreverRealtime = realtimeClient.inscrever(agendarRealtime);
+    realtimeClient.iniciar();
+  }
 });
 onBeforeUnmount(() => {
   fecharMenu({ restaurarFoco: false });
@@ -149,6 +181,10 @@ onBeforeUnmount(() => {
   queueSummary.resetar();
   dashboard.resetar();
   chat.pararPollingNaoLidas();
+  desinscreverRealtime?.();
+  desinscreverRealtime = null;
+  limparPendenciasRealtime();
+  realtimeClient.parar();
 });
 </script>
 
