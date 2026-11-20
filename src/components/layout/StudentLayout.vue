@@ -11,6 +11,8 @@ import { useChatbotStore } from "@/stores/chatbot";
 import { useNotificationsStore } from "@/stores/notifications";
 import { useOrdersStore } from "@/stores/orders";
 import { useFavoritesStore } from "@/stores/favorites";
+import { REALTIME_ENABLED, realtimeClient } from "@/services/realtime";
+import { createRealtimeInvalidations } from "@/utils/realtimeInvalidations";
 import { animarVooAoCarrinho, movimentoReduzido } from "@/utils/vooAoCarrinho";
 import { useCatalogTransitions } from "@/composables/useCatalogTransitions";
 import "@/assets/styles/catalog-transitions.css";
@@ -34,6 +36,8 @@ const header = ref(null);
 const carrinhoPulando = ref(false);
 let timerPulo = null;
 let pararDeOuvirCarrinho = null;
+let desinscreverRealtime = null;
+let invalidacoesRealtime = null;
 let montado = true;
 const mostrarChatbot = computed(() => route.name !== "checkout");
 const bottomNavItems = computed(() => [
@@ -54,6 +58,11 @@ async function pularContador(contexto) {
   timerPulo = window.setTimeout(() => { carrinhoPulando.value = false; }, 400);
 }
 async function handleLogout() {
+  desinscreverRealtime?.();
+  desinscreverRealtime = null;
+  invalidacoesRealtime?.parar();
+  invalidacoesRealtime = null;
+  realtimeClient.parar();
   favorites.resetar({ suspender: true });
   chat.resetar();
   chatbot.resetar();
@@ -61,12 +70,27 @@ async function handleLogout() {
   if (auth.usuario) return;
   await router.replace({ name: "login" });
 }
+// A autenticação pode ser restaurada depois do mount; não conectar anônimos.
+watch(() => auth.usuario?.id ?? null, id => {
+  if (!REALTIME_ENABLED || !montado) return;
+  if (id && auth.autenticado) realtimeClient.iniciar();
+  else realtimeClient.parar();
+});
 watch(() => notifications.naoLidas, (atual, anterior) => {
   if (atual > anterior && orders.inicializado) orders.carregar({ force: true, silencioso: true }).catch(() => {});
 });
 onMounted(() => {
   notifications.iniciarPolling();
   chat.iniciarPollingNaoLidas(30_000);
+  if (REALTIME_ENABLED) {
+    invalidacoesRealtime = createRealtimeInvalidations({
+      pedidos: () => orders.carregar({ force: true, silencioso: orders.inicializado }),
+      chat: () => chat.carregarNaoLidas(),
+      notificacoes: () => notifications.atualizarAgora(),
+    });
+    desinscreverRealtime = realtimeClient.inscrever(invalidacoesRealtime.sinalizar);
+    if (auth.autenticado) realtimeClient.iniciar();
+  }
   pararDeOuvirCarrinho = cart.$onAction(({ name, after }) => {
     if (name !== "adicionar") return;
     const contexto = cart.capturarContexto();
@@ -79,6 +103,11 @@ onMounted(() => {
 });
 onBeforeUnmount(() => {
   montado = false;
+  desinscreverRealtime?.();
+  desinscreverRealtime = null;
+  invalidacoesRealtime?.parar();
+  invalidacoesRealtime = null;
+  realtimeClient.parar();
   notifications.resetar();
   chat.pararPollingNaoLidas();
   pararDeOuvirCarrinho?.();

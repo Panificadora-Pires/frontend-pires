@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 
 import { mensagemErroApi } from "@/services/admin.service";
 import chatService from "@/services/chat.service";
+import { getSessionVersion } from "@/services/api";
 import { createAutoRefresh } from "@/utils/autoRefresh";
 
 let autoRefreshNaoLidas = null;
@@ -29,6 +30,7 @@ export const useChatStore = defineStore("chat", {
     erros: {},
     naoLidas: { total: 0, porPedido: {} },
     naoLidasInicializado: false,
+    geracaoSessao: 0,
   }),
 
   getters: {
@@ -42,6 +44,9 @@ export const useChatStore = defineStore("chat", {
   actions: {
     async carregarConversa(pedidoId, { silencioso = false } = {}) {
       const id = chave(pedidoId);
+      const geracao = this.geracaoSessao;
+      const sessao = getSessionVersion();
+      const aindaAtual = () => this.geracaoSessao === geracao && getSessionVersion() === sessao;
 
       if (!silencioso) {
         this.carregando[id] = true;
@@ -50,6 +55,7 @@ export const useChatStore = defineStore("chat", {
 
       try {
         const { data } = await chatService.obter(pedidoId);
+        if (!aindaAtual()) return null;
         const anterior = this.conversas[id];
         this.conversas[id] = {
           ...data,
@@ -59,6 +65,7 @@ export const useChatStore = defineStore("chat", {
         this._definirNaoLidas(id, data.nao_lidas);
         return this.conversas[id];
       } catch (error) {
+        if (!aindaAtual()) return null;
         // Falha em segundo plano não apaga a conversa já exibida.
         if (!this.conversas[id]) {
           this.erros[id] = mensagemErroApi(
@@ -68,7 +75,7 @@ export const useChatStore = defineStore("chat", {
         }
         throw error;
       } finally {
-        this.carregando[id] = false;
+        if (aindaAtual()) this.carregando[id] = false;
       }
     },
 
@@ -104,11 +111,15 @@ export const useChatStore = defineStore("chat", {
     },
 
     async _enviarPendente(pedidoId, idLocal) {
+      const geracao = this.geracaoSessao;
+      const sessao = getSessionVersion();
+      const aindaAtual = () => geracao === this.geracaoSessao && sessao === getSessionVersion();
       const id = chave(pedidoId);
       const pendente = this._pendente(pedidoId, idLocal);
 
       try {
         const { data } = await chatService.enviar(pedidoId, pendente.texto);
+        if (!aindaAtual()) return false;
         this.descartar(pedidoId, idLocal);
 
         const conversa = this.conversas[id];
@@ -117,6 +128,7 @@ export const useChatStore = defineStore("chat", {
         }
         return true;
       } catch (error) {
+        if (!aindaAtual()) return false;
         const atual = this._pendente(pedidoId, idLocal);
         if (atual) {
           atual.estado = "erro";
@@ -141,11 +153,14 @@ export const useChatStore = defineStore("chat", {
     },
 
     async marcarLidas(pedidoId) {
+      const geracao = this.geracaoSessao;
+      const sessao = getSessionVersion();
       const id = chave(pedidoId);
       const conversa = this.conversas[id];
       if (!conversa?.nao_lidas && !this.naoLidas.porPedido[id]) return 0;
 
       const { data } = await chatService.marcarLidas(pedidoId);
+      if (geracao !== this.geracaoSessao || sessao !== getSessionVersion()) return 0;
       if (conversa) conversa.nao_lidas = 0;
       this._definirNaoLidas(id, 0);
       return data?.marcadas || 0;
@@ -165,7 +180,10 @@ export const useChatStore = defineStore("chat", {
     },
 
     async carregarNaoLidas() {
+      const geracao = this.geracaoSessao;
+      const sessao = getSessionVersion();
       const { data } = await chatService.naoLidas();
+      if (geracao !== this.geracaoSessao || sessao !== getSessionVersion()) return;
       const porPedido = {};
       for (const item of data?.por_pedido || []) {
         porPedido[chave(item.pedido)] = Number(item.nao_lidas) || 0;
@@ -188,6 +206,7 @@ export const useChatStore = defineStore("chat", {
     },
 
     resetar() {
+      this.geracaoSessao += 1;
       this.pararPollingNaoLidas();
       autoRefreshNaoLidas = null;
       this.conversas = {};
