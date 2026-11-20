@@ -65,7 +65,7 @@
     </header>
 
     <section v-if="resultado" class="checkout-result" aria-label="Situação atual do pedido">
-      <div class="checkout-result__top">
+      <div class="checkout-result__top" aria-live="polite" aria-atomic="true">
         <template v-if="pagamentoAprovado">
           <span class="checkout-result__icon checkout-result__icon--success">
             <CircleCheckBig :size="30" />
