@@ -96,6 +96,14 @@ export const useCartStore = defineStore("cart", {
       saveDraft(this);
     },
 
+    suspenderConta() {
+      // Se a rede falhou ao restaurar o perfil, nunca mostrar dados privados
+      // sem autenticação, mas guardar o rascunho por aba para nova tentativa.
+      this.contaId = null;
+      this.geracao += 1;
+      this.itens = [];
+    },
+
     capturarContexto() {
       return { contaId: this.contaId, geracao: this.geracao };
     },
