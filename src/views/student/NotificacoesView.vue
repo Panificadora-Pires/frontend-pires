@@ -714,8 +714,9 @@ async function marcarTodas() {
   }
 }
 @media (max-width: 390px) {
+  /* A palavra longa mantém a mesma presença editorial sem estourar 320px. */
   .notifications-page__header h1 {
-    font-size: 50px;
+    font-size: clamp(42px, 12.6vw, 50px);
   }
   .notifications-page__header p {
     font-size: 14px;
