@@ -64,7 +64,7 @@
       </RouterLink>
     </header>
 
-    <section v-if="resultado" class="checkout-result">
+    <section v-if="resultado" class="checkout-result" aria-label="Situação atual do pedido">
       <div class="checkout-result__top">
         <template v-if="pagamentoAprovado">
           <span class="checkout-result__icon checkout-result__icon--success">
@@ -138,6 +138,17 @@
             <p>A confirmação ainda está sendo processada.</p>
           </div>
         </template>
+      </div>
+
+      <div v-if="pagamentoDinheiro" class="checkout-result__next">
+        <Clock3 :size="20" aria-hidden="true" />
+        <div>
+          <strong>Próximo passo: retirada</strong>
+          <p>
+            Acompanhe o preparo em Meus pedidos. Você será avisado quando
+            estiver pronto e poderá pagar em dinheiro no balcão.
+          </p>
+        </div>
       </div>
 
       <div v-if="challengeUrl" class="checkout-result__challenge">
@@ -2008,6 +2019,276 @@ onBeforeUnmount(() => {
   .checkout-methods button,
   .checkout-cash > button { transition: none; }
   .checkout-methods button:hover:not(:disabled) { transform: none; }
+}
+
+
+/* PR7-UX3 — Status do pedido: composição editorial sem divisórias vazias.
+   A lógica e a API de pagamento continuam as mesmas. */
+.checkout-result {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 312px;
+  align-items: start;
+  gap: 18px 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.checkout-result__top,
+.checkout-result__next,
+.checkout-result__pix,
+.checkout-result__challenge,
+.checkout-result__waiting {
+  min-width: 0;
+  grid-column: 1;
+}
+.checkout-result__top {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 30px;
+  border: 1px solid var(--pp-creme-borda);
+  border-radius: 18px;
+  background: #fffdf9;
+}
+.checkout-result__top > div { min-width: 0; }
+.checkout-result__icon {
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+  background: var(--pp-creme-2);
+  color: var(--pp-dourado-profundo);
+}
+.checkout-result__label {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  color: var(--pp-dourado-profundo);
+}
+.checkout-result__top h2 {
+  color: var(--pp-marrom);
+  font-size: clamp(23px, 2.4vw, 31px);
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -.025em;
+  overflow-wrap: anywhere;
+}
+.checkout-result__top p {
+  max-width: 580px;
+  margin-top: 12px;
+  color: var(--pp-texto-2);
+  font-size: 15px;
+  line-height: 1.65;
+}
+.checkout-result__next {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 18px 22px;
+  border-radius: 14px;
+  background: var(--pp-creme-2);
+  color: var(--pp-marrom);
+}
+.checkout-result__next svg {
+  flex: 0 0 auto;
+  color: var(--pp-dourado-profundo);
+}
+.checkout-result__next strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+}
+.checkout-result__next p {
+  max-width: 56ch;
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--pp-texto-2);
+}
+.checkout-result__pix {
+  grid-template-columns: 198px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  padding: 24px;
+  border: 1px solid var(--pp-creme-borda);
+  border-radius: 18px;
+  background: #fffdf9;
+}
+.checkout-result__qr {
+  width: 100%;
+  max-width: 220px;
+  padding: 12px;
+  border: 1px solid var(--pp-creme-borda);
+  border-radius: 12px;
+  background: white;
+}
+.checkout-result__qr img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+.checkout-result__pix-info { min-width: 0; }
+.checkout-result__pix-info h3 {
+  margin: 1px 0 14px;
+  color: var(--pp-marrom);
+  font-size: 19px;
+  line-height: 1.3;
+}
+.checkout-result__pix-info ol {
+  margin: 0;
+  padding-left: 22px;
+  color: var(--pp-texto-2);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.checkout-result__pix-info li { padding-left: 3px; }
+.checkout-result__pix-info li + li { margin-top: 7px; }
+.checkout-result__pix-code {
+  display: grid;
+  grid-template-columns: minmax(0,1fr);
+  gap: 10px;
+  margin-top: 20px;
+}
+.checkout-result__pix-code code {
+  width: 100%;
+  min-height: 44px;
+  padding: 13px 14px;
+  border: 1px solid var(--pp-creme-borda);
+  border-radius: 10px;
+  background: var(--pp-creme);
+  color: var(--pp-texto-2);
+  font: 400 12px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.checkout-result__pix-code button {
+  min-height: 48px;
+  width: 100%;
+  justify-content: center;
+  gap: 9px;
+  border-radius: 10px;
+  background: var(--pp-marrom);
+  font-size: 14px;
+  font-weight: 700;
+  transition: background-color 180ms var(--pp-ease);
+}
+.checkout-result__pix-code button:hover:not(:disabled) { background: var(--pp-marrom-2); }
+.checkout-result__pix-code button:focus-visible {
+  outline: 3px solid var(--pp-dourado-escuro);
+  outline-offset: 3px;
+}
+.checkout-result__waiting {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 15px 18px;
+  border-radius: 12px;
+  background: var(--pp-creme-2);
+  color: var(--pp-texto-2);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.checkout-result__footer {
+  grid-column: 2;
+  grid-row: 1 / span 5;
+  position: sticky;
+  top: calc(var(--pp-altura-topo) + 24px);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 28px;
+  margin: 0;
+  padding: 28px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--pp-marrom);
+  color: var(--pp-creme);
+}
+.checkout-result__summary span {
+  color: var(--pp-creme-3);
+  font-size: 14px;
+}
+.checkout-result__summary strong {
+  margin-top: 8px;
+  color: var(--pp-creme);
+  font-size: 30px;
+  line-height: 1.15;
+  font-weight: 700;
+}
+.checkout-result__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+.checkout-result__actions .checkout-page__primary {
+  min-height: 48px;
+  padding: 12px 16px;
+  border-radius: 11px;
+  background: var(--pp-creme);
+  color: var(--pp-marrom);
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 700;
+  text-align: center;
+}
+.checkout-result__actions .checkout-page__primary:hover { background: var(--pp-creme-2); }
+.checkout-result__actions .checkout-page__secondary {
+  min-height: 44px;
+  justify-content: center;
+  color: var(--pp-creme);
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.checkout-result__actions .checkout-page__secondary:hover { color: var(--pp-creme-3); }
+.checkout-result__actions :is(a, button):focus-visible {
+  outline: 3px solid var(--pp-gold);
+  outline-offset: 4px;
+}
+.checkout-result__challenge {
+  width: 100%;
+  margin-top: 0;
+  border-color: var(--pp-creme-borda);
+  border-radius: 14px;
+}
+@media (max-width: 900px) {
+  .checkout-result { grid-template-columns: minmax(0,1fr); gap: 16px; }
+  .checkout-result__top,
+  .checkout-result__next,
+  .checkout-result__pix,
+  .checkout-result__challenge,
+  .checkout-result__waiting,
+  .checkout-result__footer {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .checkout-result__footer { position: static; }
+}
+@media (max-width: 700px) {
+  .checkout-result__top { padding: 23px 20px; gap: 13px; }
+  .checkout-result__icon { width: 46px; height: 46px; flex-basis: 46px; }
+  .checkout-result__top h2 { font-size: 23px; }
+  .checkout-result__top p { font-size: 14px; margin-top: 9px; }
+  .checkout-result__label { font-size: 11px; }
+  .checkout-result__pix { grid-template-columns: minmax(0,1fr); gap: 18px; padding: 20px; }
+  .checkout-result__qr { width: min(240px,100%); max-width: 240px; justify-self: center; }
+  .checkout-result__pix-info ol { font-size: 14px; }
+  .checkout-result__pix-code { grid-template-columns: minmax(0,1fr); }
+  .checkout-result__pix-code button { min-height: 48px; }
+  .checkout-result__footer { padding: 24px 22px; gap: 20px; }
+  .checkout-result__summary strong { font-size: 28px; }
+}
+@media (max-width: 350px) {
+  .checkout-result__top { flex-direction: column; }
+  .checkout-result__top h2 { font-size: 22px; }
+  .checkout-result__pix { padding: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .checkout-result__pix-code button { transition: none; }
 }
 
 </style>
