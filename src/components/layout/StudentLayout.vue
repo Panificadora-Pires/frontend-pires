@@ -149,12 +149,16 @@ onBeforeUnmount(() => {
 .student-layout__bottom-nav {
   display: none;
 }
-/* No carrinho, a ajuda fechada ocupa espaço próprio e não cobre a compra. */
-.student-layout--cart :deep(.chatbot:not(.is-open)) {
-  position: static;
-  width: min(100%, 1304px);
-  margin: 0 auto;
-  padding: 0 24px 24px;
+/* Em telas com navegação inferior, a ajuda fechada entra no fluxo
+   para não encobrir o total nem o botão de pagamento do carrinho.
+   No desktop, preservamos a posição flutuante original. */
+@media (max-width: 980px) {
+  .student-layout--cart :deep(.chatbot:not(.is-open)) {
+    position: static;
+    width: min(100%, 1304px);
+    margin: 0 auto;
+    padding: 0 24px 24px;
+  }
 }
 .student-layout__bottom-icon-wrap.is-added > svg,
 .student-layout__bottom-icon-wrap.is-added > .student-layout__badge-dot {
