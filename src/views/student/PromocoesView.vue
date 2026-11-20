@@ -168,8 +168,8 @@ onBeforeUnmount(() => { montado = false; requisicaoDetalhe++; clearTimeout(toast
 <style scoped>
 .promotions-page { width: min(100%, 1160px); margin: 0 auto; color: var(--pp-marrom); --pp-home-action-duration: 450ms; }
 .promotions-page__header { display: flex; justify-content: space-between; align-items: flex-end; gap: 32px; margin-bottom: 32px; animation: promotion-intro 350ms var(--pp-ease); }
-.promotions-page h1 { margin: 0; font: 400 clamp(50px, 7vw, 88px)/1.1 var(--pp-font-titulo); letter-spacing: -.025em; }
-.promotions-page__note { margin: 8px 0 0; font: 700 27px/1.2 var(--pp-font-nota); color: var(--pp-dourado-profundo); }
+.promotions-page h1 { margin: 0; font: 400 clamp(50px, 7vw, 92px)/1.08 var(--pp-font-titulo); letter-spacing: -.025em; }
+.promotions-page__note { margin: 8px 0 0; font: 700 28px/1.2 var(--pp-font-nota); color: var(--pp-dourado-profundo); }
 .promotions-page__intro { max-width: 310px; font-size: 15px; line-height: 1.6; }
 .promotions-page__intro p { margin: 0; }
 .promotions-page__facts { margin-top: 8px !important; color: var(--pp-texto-2); font-size: 13px; }
