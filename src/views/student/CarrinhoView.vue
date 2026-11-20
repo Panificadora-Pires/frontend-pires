@@ -1150,7 +1150,7 @@ onBeforeUnmount(() => {
   }
 
   .cart-page__spinner {
-    animation-duration: 1.4s;
+    animation: none;
   }
 }
 </style>
