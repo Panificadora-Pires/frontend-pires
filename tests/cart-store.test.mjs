@@ -14,7 +14,14 @@ after(() => hooks.deregister());
 const adiar = () => { let resolve, reject; const promise = new Promise((a,b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const produto = { id: 1, nome: 'Pão fictício', preco: '5.00' };
 let cart, auth;
+const drafts = new Map();
 beforeEach(() => {
+  drafts.clear();
+  globalThis.sessionStorage = {
+    getItem: key => drafts.get(key) ?? null,
+    setItem: (key, value) => drafts.set(key, value),
+    removeItem: key => drafts.delete(key),
+  };
   setActivePinia(createPinia()); cart = useCartStore(); auth = useAuthStore();
   tokens.access = 'access-ficticio'; tokens.refresh = 'refresh-ficticio';
   auth.usuario = { id: 1 }; cart.sincronizarConta(1);
@@ -81,4 +88,80 @@ test('novas credenciais limpam usuário/carrinho anterior antes de aguardar perf
   assert.equal(auth.usuario, null); assert.equal(cart.vazio, true);
   perfil.resolve({ data: { id: 2 } }); const resultado = await entrando;
   assert.equal(resultado.ok, true); assert.equal(auth.usuario.id, 2); assert.equal(cart.contaId, '2'); assert.equal(cart.vazio, true);
+});
+
+test('F5 restaura somente o rascunho da conta autenticada, sem precisar persistir token', () => {
+  const promo = { ...produto, nome: 'Coxinha fictícia', preco: '8.00', preco_atual: '6.00', em_promocao: true, estoque: 7 };
+  cart.adicionar(promo, 2);
+  cart.alterarQuantidade(1, 3);
+  assert.equal(cart.totalPreco, 18);
+
+  // Reinicializa todo o Pinia como faria um reload; o perfil já foi autenticado.
+  setActivePinia(createPinia());
+  const novo = useCartStore();
+  assert.equal(novo.vazio, true);
+  novo.sincronizarConta(1);
+  assert.equal(novo.totalItens, 3);
+  assert.equal(novo.totalPreco, 18);
+  assert.equal(novo.itens[0].produto.nome, 'Coxinha fictícia');
+  assert.equal(drafts.get('pp_cart_draft_v1').includes('access-ficticio'), false);
+});
+
+test('troca de conta em reload não mistura itens de contas diferentes', () => {
+  cart.adicionar(produto, 2);
+  setActivePinia(createPinia());
+  const deOutraConta = useCartStore();
+  deOutraConta.sincronizarConta(2);
+  assert.equal(deOutraConta.vazio, true);
+  deOutraConta.adicionar({ ...produto, id: 2 }, 3);
+  setActivePinia(createPinia());
+  const restaurado = useCartStore();
+  restaurado.sincronizarConta(2);
+  assert.equal(restaurado.totalItens, 3);
+  assert.equal(restaurado.itens[0].produto.id, 2);
+});
+
+test('logout/login explícito descarta rascunho, inclusive antes de existir conta em memória', () => {
+  cart.adicionar(produto, 2);
+  setActivePinia(createPinia());
+  const aposReload = useCartStore();
+  aposReload.sincronizarConta(null);
+  assert.equal(drafts.has('pp_cart_draft_v1'), false);
+  aposReload.sincronizarConta(1);
+  assert.equal(aposReload.vazio, true);
+});
+
+test('remover, limpar e quantidade persistem sem ressuscitar itens após F5', () => {
+  cart.adicionar(produto, 2);
+  cart.alterarQuantidade(1, 1);
+  setActivePinia(createPinia());
+  const recarregado = useCartStore();
+  recarregado.sincronizarConta(1);
+  assert.equal(recarregado.totalItens, 1);
+  recarregado.removerItem(1);
+  assert.equal(drafts.has('pp_cart_draft_v1'), false);
+  recarregado.adicionar(produto);
+  recarregado.limpar();
+  setActivePinia(createPinia());
+  const final = useCartStore();
+  final.sincronizarConta(1);
+  assert.equal(final.vazio, true);
+});
+
+test('storage ausente, corrompido ou bloqueado não quebra o carrinho', () => {
+  drafts.set('pp_cart_draft_v1', '{invalido');
+  setActivePinia(createPinia());
+  const corrompido = useCartStore();
+  corrompido.sincronizarConta(1);
+  assert.equal(corrompido.vazio, true);
+  globalThis.sessionStorage = {
+    getItem() { throw new Error('storage bloqueado'); },
+    setItem() { throw new Error('storage bloqueado'); },
+    removeItem() { throw new Error('storage bloqueado'); },
+  };
+  setActivePinia(createPinia());
+  const bloqueado = useCartStore();
+  bloqueado.sincronizarConta(1);
+  assert.equal(bloqueado.adicionar(produto, 1), true);
+  assert.equal(bloqueado.totalItens, 1);
 });
