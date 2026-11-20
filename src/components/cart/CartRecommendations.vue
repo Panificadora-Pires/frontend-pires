@@ -33,8 +33,9 @@
           </div>
 
           <h3>{{ produto.nome }}</h3>
+        </div>
 
-          <div class="cart-recommendation__bottom">
+        <div class="cart-recommendation__bottom">
             <div class="cart-recommendation__price">
               <small v-if="produto.em_promocao">
                 {{ formatarPreco(produto.preco) }}
@@ -61,13 +62,12 @@
                 {{ adicionandoId === produto.id ? "Adicionando" : "Adicionar" }}
               </CardActionContent>
             </button>
-          </div>
         </div>
       </article>
     </div>
 
     <Transition name="recommendation-toast">
-      <div v-if="toast" class="cart-recommendations__toast" role="status">
+      <div v-if="toast" class="cart-recommendations__toast" role="status" aria-live="polite">
         <Check :size="15" />
         {{ toast }}
       </div>
@@ -265,8 +265,8 @@ onBeforeUnmount(() => {
 <style scoped>
 .cart-recommendations {
   position: relative;
-  margin-top: 34px;
-  padding-top: 26px;
+  margin-top: 30px;
+  padding-top: 24px;
   border-top: 1px solid var(--student-border);
 }
 
@@ -275,28 +275,31 @@ onBeforeUnmount(() => {
   align-items: flex-end;
   justify-content: space-between;
   gap: 20px;
-  margin-bottom: 14px;
+  margin-bottom: 18px;
 }
 
 .cart-recommendations__head h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 21px;
+  line-height: 1.25;
   font-weight: 740;
   letter-spacing: -0.025em;
 }
 
 .cart-recommendations__head p {
-  margin: 5px 0 0;
+  margin: 7px 0 0;
   color: var(--student-muted);
-  font-size: 10.5px;
+  font-size: 14px;
+  line-height: 1.45;
 }
 
 .cart-recommendations__head a {
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   color: #7b541a;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 720;
   white-space: nowrap;
 }
@@ -304,21 +307,20 @@ onBeforeUnmount(() => {
 .cart-recommendations__rail {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 14px;
 }
 
 .cart-recommendation {
   min-width: 0;
   display: grid;
-  grid-template-columns: 78px minmax(0, 1fr);
-  gap: 11px;
-  padding: 10px;
+  grid-template-columns: 90px minmax(0, 1fr);
+  grid-template-rows: minmax(90px, auto) auto;
+  gap: 12px;
+  padding: 13px;
   border: 1px solid var(--student-border);
-  border-radius: 12px;
+  border-radius: 14px;
   background: #fff;
-  transition:
-    border-color 150ms ease,
-    transform 150ms ease;
+  transition: border-color 150ms ease, transform 150ms ease;
 }
 
 .cart-recommendation:hover {
@@ -327,39 +329,47 @@ onBeforeUnmount(() => {
 }
 
 .cart-recommendation :deep(.catalog-product-image--compact) {
-  width: 78px;
-  height: 78px;
-  flex-basis: 78px;
-  border-radius: 8px;
+  grid-column: 1;
+  grid-row: 1;
+  width: 90px;
+  height: 90px;
+  flex-basis: 90px;
+  border-radius: 10px;
 }
 
 .cart-recommendation__content {
+  grid-column: 2;
+  grid-row: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
 }
 
 .cart-recommendation__meta {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  min-height: 16px;
+  min-width: 0;
+  margin-bottom: 7px;
 }
 
 .cart-recommendation__meta > span:first-child {
   overflow: hidden;
-  color: #8c837b;
-  font-size: 7.5px;
+  max-width: 100%;
+  color: #746b62;
+  font-size: 11px;
   font-weight: 650;
   text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.035em;
 }
 
 .cart-recommendation__offer {
-  padding: 2px 4px;
-  border-radius: 4px;
+  padding: 3px 6px;
+  border-radius: 5px;
   background: #fbf1df;
   color: #895b17;
   font-size: 11px;
@@ -368,21 +378,23 @@ onBeforeUnmount(() => {
 }
 
 .cart-recommendation h3 {
-  overflow: hidden;
-  margin: 3px 0 8px;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1.35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 720;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .cart-recommendation__bottom {
-  margin-top: auto;
+  grid-column: 1 / -1;
+  grid-row: 2;
+  min-width: 0;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #f0ebe5;
 }
 
 .cart-recommendation__price {
@@ -392,27 +404,28 @@ onBeforeUnmount(() => {
 }
 
 .cart-recommendation__price small {
-  color: #a29a92;
-  font-size: 7.5px;
+  color: #81766c;
+  font-size: 12px;
   text-decoration: line-through;
 }
 
 .cart-recommendation__price strong {
-  font-size: 11px;
+  font-size: 15px;
   white-space: nowrap;
 }
 
 .cart-recommendation__bottom button {
-  min-height: 28px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 0 8px;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
   border: 1px solid #2a211b;
-  border-radius: 7px;
+  border-radius: 9px;
   background: #fff;
   color: #2a211b;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 750;
   cursor: pointer;
 }
@@ -434,13 +447,13 @@ onBeforeUnmount(() => {
   z-index: 110;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 13px;
+  gap: 7px;
+  padding: 12px 16px;
   border: 1px solid #cadbcd;
-  border-radius: 8px;
+  border-radius: 10px;
   background: #f4faf5;
   color: #33583a;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 650;
 }
 
@@ -472,35 +485,58 @@ onBeforeUnmount(() => {
 @media (max-width: 620px) {
   .cart-recommendations {
     margin-top: 26px;
+    padding-top: 20px;
   }
-
   .cart-recommendations__head {
     align-items: flex-start;
+    gap: 10px;
+    flex-wrap: wrap;
   }
-
   .cart-recommendations__head h2 {
-    font-size: 16px;
+    font-size: 19px;
   }
-
+  .cart-recommendations__head p {
+    font-size: 13px;
+  }
   .cart-recommendations__rail {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     overflow-x: auto;
-    padding-bottom: 4px;
+    overscroll-behavior-inline: contain;
+    padding-bottom: 12px;
+    scroll-padding-inline: 2px;
     scroll-snap-type: x proximity;
   }
-
   .cart-recommendation {
-    width: 260px;
-    flex: 0 0 260px;
+    width: 275px;
+    flex: 0 0 min(275px, 82vw);
     scroll-snap-align: start;
   }
-
   .cart-recommendations__toast {
     left: 13px;
     right: 13px;
     bottom: 78px;
     justify-content: center;
+  }
+}
+
+.cart-recommendations__head a:focus-visible,
+.cart-recommendation__bottom button:focus-visible {
+  outline: 3px solid #a77532;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cart-recommendation,
+  .recommendation-toast-enter-active,
+  .recommendation-toast-leave-active {
+    transition: none;
+  }
+  .cart-recommendation:hover {
+    transform: none;
+  }
+  .cart-recommendation__spinner {
+    animation-duration: 1.4s;
   }
 }
 </style>
