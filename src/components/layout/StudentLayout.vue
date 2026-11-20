@@ -116,7 +116,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="student-layout" :class="{ 'has-chatbot': mostrarChatbot }">
+  <div class="student-layout" :class="{ 'has-chatbot': mostrarChatbot, 'student-layout--cart': route.name === 'carrinho' }">
     <StudentHeader ref="header" :carrinho-pulando="carrinhoPulando" @logout="handleLogout" />
     <main class="student-layout__main"><RouterView /></main>
     <ChatbotWidget v-if="mostrarChatbot" />

@@ -654,3 +654,7 @@ Na correção de release, a listagem mantém disponibilidade desconhecida até a
 ## Admin — Shell e Dashboard V2
 
 Implementação local do PR1, preservando a área do aluno. Contratos, provas e limites em [docs/entregas/admin-shell-dashboard.md](docs/entregas/admin-shell-dashboard.md). Kanban fica no PR2; publicação depende de revisão.
+
+## Carrinho V2 — Balcão Editorial
+
+Linhas editoriais, resumo assimétrico, vazio ilustrado e composição mobile seguindo o Cardápio. [Relatório e capturas nas cinco larguras](docs/carrinho-v2/README.md). Lógica de negócio e pagamento preservados; aprovação visual pendente.

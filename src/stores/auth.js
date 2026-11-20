@@ -243,9 +243,10 @@ export const useAuthStore = defineStore("auth", {
         if (status === 401 || status === 403) {
           this._limparSessaoLocal();
         } else {
-          // Falha de rede ou do servidor: mantém os tokens e tenta de novo na próxima navegação.
+          // Falha temporária: não renderiza itens sem perfil confirmado,
+          // mas preserva o rascunho da aba para que o F5 seguinte restaure.
           this.usuario = null;
-          useCartStore().sincronizarConta(null);
+          useCartStore().suspenderConta();
           this.sessaoInicializada = false;
         }
         return false;

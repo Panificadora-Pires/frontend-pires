@@ -14,7 +14,22 @@ after(() => hooks.deregister());
 const adiar = () => { let resolve, reject; const promise = new Promise((a,b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const produto = { id: 1, nome: 'Pão fictício', preco: '5.00' };
 let cart, auth;
+const drafts = new Map();
+const persistentDrafts = new Map();
+const draftKey = accountId => `pp_cart_draft_v2_${accountId}`;
 beforeEach(() => {
+  drafts.clear();
+  persistentDrafts.clear();
+  globalThis.sessionStorage = {
+    getItem: key => drafts.get(key) ?? null,
+    setItem: (key, value) => drafts.set(key, value),
+    removeItem: key => drafts.delete(key),
+  };
+  globalThis.localStorage = {
+    getItem: key => persistentDrafts.get(key) ?? null,
+    setItem: (key, value) => persistentDrafts.set(key, value),
+    removeItem: key => persistentDrafts.delete(key),
+  };
   setActivePinia(createPinia()); cart = useCartStore(); auth = useAuthStore();
   tokens.access = 'access-ficticio'; tokens.refresh = 'refresh-ficticio';
   auth.usuario = { id: 1 }; cart.sincronizarConta(1);
@@ -31,7 +46,7 @@ test('troca de conta limpa itens/total e invalida adições e limpezas antigas, 
   cart.sincronizarConta(1); cart.adicionar(produto);
   assert.equal(cart.contextoAtual(contextoA), false);
   assert.equal(cart.adicionar(produto, 5, contextoA), false);
-  assert.equal(cart.totalItens, 1);
+  assert.equal(cart.totalItens, 3);
 });
 test('refresh do perfil do mesmo usuário preserva itens, quantidades e contexto', async () => {
   cart.adicionar(produto, 2); const contexto = cart.capturarContexto();
@@ -81,4 +96,162 @@ test('novas credenciais limpam usuário/carrinho anterior antes de aguardar perf
   assert.equal(auth.usuario, null); assert.equal(cart.vazio, true);
   perfil.resolve({ data: { id: 2 } }); const resultado = await entrando;
   assert.equal(resultado.ok, true); assert.equal(auth.usuario.id, 2); assert.equal(cart.contaId, '2'); assert.equal(cart.vazio, true);
+});
+
+test('F5 restaura somente o rascunho da conta autenticada, sem precisar persistir token', () => {
+  const promo = { ...produto, nome: 'Coxinha fictícia', preco: '8.00', preco_atual: '6.00', em_promocao: true, estoque: 7 };
+  cart.adicionar(promo, 2);
+  cart.alterarQuantidade(1, 3);
+  assert.equal(cart.totalPreco, 18);
+
+  // Reinicializa todo o Pinia como faria um reload; o perfil já foi autenticado.
+  setActivePinia(createPinia());
+  const novo = useCartStore();
+  assert.equal(novo.vazio, true);
+  novo.sincronizarConta(1);
+  assert.equal(novo.totalItens, 3);
+  assert.equal(novo.totalPreco, 18);
+  assert.equal(novo.itens[0].produto.nome, 'Coxinha fictícia');
+  assert.equal(persistentDrafts.get(draftKey(1)).includes('access-ficticio'), false);
+});
+
+test('troca de conta em reload não mistura itens de contas diferentes', () => {
+  cart.adicionar(produto, 2);
+  setActivePinia(createPinia());
+  const deOutraConta = useCartStore();
+  deOutraConta.sincronizarConta(2);
+  assert.equal(deOutraConta.vazio, true);
+  deOutraConta.adicionar({ ...produto, id: 2 }, 3);
+  setActivePinia(createPinia());
+  const restaurado = useCartStore();
+  restaurado.sincronizarConta(2);
+  assert.equal(restaurado.totalItens, 3);
+  assert.equal(restaurado.itens[0].produto.id, 2);
+  // A continua com seu proprio carrinho, sem enxergar itens de B.
+  restaurado.sincronizarConta(1);
+  assert.equal(restaurado.totalItens, 2);
+  assert.equal(restaurado.itens[0].produto.id, 1);
+});
+
+test('logout oculta itens; login da mesma conta recupera rascunho mesmo apos reinicializar Pinia', () => {
+  cart.adicionar(produto, 2);
+  cart.sincronizarConta(null);
+  assert.equal(cart.vazio, true);
+  assert.equal(cart.contaId, null);
+  assert.equal(persistentDrafts.has(draftKey(1)), true);
+  setActivePinia(createPinia());
+  const aposReload = useCartStore();
+  aposReload.sincronizarConta(null);
+  assert.equal(aposReload.vazio, true);
+  aposReload.sincronizarConta(1);
+  assert.equal(aposReload.totalItens, 2);
+});
+
+test('remover, limpar e quantidade persistem sem ressuscitar itens após F5', () => {
+  cart.adicionar(produto, 2);
+  cart.alterarQuantidade(1, 1);
+  setActivePinia(createPinia());
+  const recarregado = useCartStore();
+  recarregado.sincronizarConta(1);
+  assert.equal(recarregado.totalItens, 1);
+  recarregado.removerItem(1);
+  assert.equal(persistentDrafts.has(draftKey(1)), false);
+  recarregado.adicionar(produto);
+  recarregado.limpar();
+  setActivePinia(createPinia());
+  const final = useCartStore();
+  final.sincronizarConta(1);
+  assert.equal(final.vazio, true);
+});
+
+test('storage ausente, corrompido ou bloqueado não quebra o carrinho', () => {
+  drafts.set('pp_cart_draft_v1', '{invalido');
+  setActivePinia(createPinia());
+  const corrompido = useCartStore();
+  corrompido.sincronizarConta(1);
+  assert.equal(corrompido.vazio, true);
+  globalThis.sessionStorage = {
+    getItem() { throw new Error('storage bloqueado'); },
+    setItem() { throw new Error('storage bloqueado'); },
+    removeItem() { throw new Error('storage bloqueado'); },
+  };
+  globalThis.localStorage = {
+    getItem() { throw new Error('storage bloqueado'); },
+    setItem() { throw new Error('storage bloqueado'); },
+    removeItem() { throw new Error('storage bloqueado'); },
+  };
+  setActivePinia(createPinia());
+  const bloqueado = useCartStore();
+  bloqueado.sincronizarConta(1);
+  assert.equal(bloqueado.adicionar(produto, 1), true);
+  assert.equal(bloqueado.totalItens, 1);
+});
+
+test('falha de rede na restauração não vaza carrinho, nem apaga rascunho da conta', async () => {
+  cart.adicionar(produto, 2);
+  authService.getProfile = async () => { throw new Error('conexão temporariamente indisponível'); };
+  assert.equal(await auth.restaurarSessao(), false);
+  assert.equal(cart.vazio, true);
+  assert.equal(cart.contaId, null);
+  assert.equal(persistentDrafts.has(draftKey(1)), true);
+  authService.getProfile = async () => ({ data: { id: 1 } });
+  assert.equal(await auth.restaurarSessao(), true);
+  assert.equal(cart.totalItens, 2);
+  assert.equal(cart.contaId, '1');
+});
+
+test('logout real preserva rascunho, sem permitir operacoes com contexto antigo', async () => {
+  cart.adicionar(produto, 2);
+  const contexto = cart.capturarContexto();
+  authService.logout = async () => {};
+  await auth.logout();
+  assert.equal(cart.vazio, true);
+  assert.equal(cart.adicionar(produto, 1, contexto), false);
+  assert.equal(persistentDrafts.has(draftKey(1)), true);
+  auth.usuario = { id: 1 };
+  cart.sincronizarConta(1);
+  assert.equal(cart.totalItens, 2);
+});
+
+test('limpeza explicita remove somente rascunho da conta atual', () => {
+  cart.adicionar(produto, 2);
+  cart.sincronizarConta(2);
+  cart.adicionar({ ...produto, id: 2 }, 3);
+  assert.equal(cart.limpar(), true);
+  assert.equal(persistentDrafts.has(draftKey(2)), false);
+  cart.sincronizarConta(1);
+  assert.equal(cart.totalItens, 2);
+  cart.limpar();
+  assert.equal(persistentDrafts.has(draftKey(1)), false);
+  setActivePinia(createPinia());
+  const novo = useCartStore();
+  novo.sincronizarConta(1);
+  assert.equal(novo.vazio, true);
+});
+
+test('rascunho legado da aba e migrado uma unica vez para o armazenamento por conta', () => {
+  drafts.set('pp_cart_draft_v1', JSON.stringify({
+    version: 1, accountId: '1', items: [{ product: produto, quantity: 4 }],
+  }));
+  setActivePinia(createPinia());
+  const primeira = useCartStore();
+  primeira.sincronizarConta(2);
+  assert.equal(primeira.vazio, true);
+  assert.equal(drafts.has('pp_cart_draft_v1'), true);
+  primeira.sincronizarConta(1);
+  assert.equal(primeira.totalItens, 4);
+  assert.equal(persistentDrafts.has(draftKey(1)), true);
+  assert.equal(drafts.has('pp_cart_draft_v1'), false);
+});
+
+test('login de outra conta nunca carrega o rascunho de A', () => {
+  cart.adicionar(produto, 2);
+  cart.sincronizarConta(null);
+  cart.sincronizarConta(2);
+  assert.equal(cart.vazio, true);
+  assert.equal(persistentDrafts.has(draftKey(1)), true);
+  assert.equal(persistentDrafts.has(draftKey(2)), false);
+  cart.sincronizarConta(null);
+  cart.sincronizarConta(1);
+  assert.equal(cart.totalItens, 2);
 });
