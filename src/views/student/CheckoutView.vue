@@ -17,7 +17,7 @@
         :class="{ 'is-active': !etapaPagamentoConcluida, 'is-done': etapaPagamentoConcluida }"
       >
         <span>
-          <CircleCheckBig v-if="resultado" :size="14" />
+          <CircleCheckBig v-if="etapaPagamentoConcluida" :size="14" />
           <span v-else>2</span>
         </span>
         <div>
@@ -27,7 +27,7 @@
       </div>
       <div
         class="checkout-progress__line"
-        :class="{ 'is-done': Boolean(resultado) }"
+        :class="{ 'is-done': etapaPagamentoConcluida }"
       />
       <div
         class="checkout-progress__step"
