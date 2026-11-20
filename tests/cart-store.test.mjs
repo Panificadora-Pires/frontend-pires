@@ -165,3 +165,16 @@ test('storage ausente, corrompido ou bloqueado não quebra o carrinho', () => {
   assert.equal(bloqueado.adicionar(produto, 1), true);
   assert.equal(bloqueado.totalItens, 1);
 });
+
+test('falha de rede na restauração não vaza carrinho, nem apaga rascunho da conta', async () => {
+  cart.adicionar(produto, 2);
+  authService.getProfile = async () => { throw new Error('conexão temporariamente indisponível'); };
+  assert.equal(await auth.restaurarSessao(), false);
+  assert.equal(cart.vazio, true);
+  assert.equal(cart.contaId, null);
+  assert.equal(drafts.has('pp_cart_draft_v1'), true);
+  authService.getProfile = async () => ({ data: { id: 1 } });
+  assert.equal(await auth.restaurarSessao(), true);
+  assert.equal(cart.totalItens, 2);
+  assert.equal(cart.contaId, '1');
+});
