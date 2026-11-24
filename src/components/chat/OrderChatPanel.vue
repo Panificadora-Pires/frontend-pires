@@ -137,7 +137,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import {
   Check,
   CheckCheck,
@@ -153,6 +153,7 @@ import {
 import { useAutoRefresh } from "@/composables/useAutoRefresh";
 import { useChatStore } from "@/stores/chat";
 import { useNotificationsStore } from "@/stores/notifications";
+import { REALTIME_ENABLED, realtimeClient } from "@/services/realtime";
 
 // Com a conversa aberta, a resposta precisa aparecer rápido.
 const INTERVALO_CONVERSA_MS = 5_000;
@@ -228,6 +229,9 @@ const itens = computed(() => {
   return [...confirmadas, ...pendentes];
 });
 
+let desinscreverRealtime = null;
+let timerRealtime = null;
+
 const { atualizarAgora } = useAutoRefresh(
   () =>
     chat.carregarConversa(props.pedidoId, {
@@ -239,6 +243,29 @@ const { atualizarAgora } = useAutoRefresh(
 function recarregar() {
   atualizarAgora();
 }
+
+// Com o chat aberto, só ouvimos sinais deste pedido; nunca recebemos conteúdo
+// de mensagens via WS. A API autenticada continua sendo a fonte de verdade.
+onMounted(() => {
+  if (!REALTIME_ENABLED) return;
+  desinscreverRealtime = realtimeClient.inscrever(evento => {
+    if (evento) {
+      const tipoRelevante = evento.tipo.startsWith("chat.") || evento.tipo.startsWith("pedido.");
+      if (!tipoRelevante || Number(evento.pedido_id) !== Number(props.pedidoId)) return;
+    }
+    if (timerRealtime !== null) return;
+    timerRealtime = setTimeout(() => {
+      timerRealtime = null;
+      void atualizarAgora();
+    }, 400);
+  });
+});
+onBeforeUnmount(() => {
+  desinscreverRealtime?.();
+  desinscreverRealtime = null;
+  if (timerRealtime !== null) clearTimeout(timerRealtime);
+  timerRealtime = null;
+});
 
 function registrarRolagem() {
   const el = lista.value;

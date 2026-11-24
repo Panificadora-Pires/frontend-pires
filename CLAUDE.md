@@ -24,7 +24,7 @@ Vue 3 (`<script setup>`, Composition API), JavaScript sem TypeScript, Vite, Pini
 - Imports com o alias `@/` (`@` = `src/`).
 - HTTP **sempre** pela instância de `src/services/api.js`: ela injeta o JWT, renova o token em 401 e lê `VITE_API_URL`. Nunca `axios` direto nem URL fixa.
 - Rotas em `src/router/index.js`, em lazy loading, com `meta` (`requerAuth`, `requerAdmin`, `requerAluno`, `somenteVisitante`). Navegação por nome de rota. Não criar item de menu para página que ainda não existe.
-- Seguir o estilo atual dos stores (`defineStore('nome', { state, getters, actions })`). Quando a Fase 2 introduzir o helper de atualização automática, reutilizá-lo em vez de criar novos `setInterval`.
+- Seguir o estilo atual dos stores (`defineStore('nome', { state, getters, actions })`). Para atualização automática, reutilizar `createAutoRefresh`/`useAutoRefresh` (`src/utils/autoRefresh.js`) em vez de criar novos `setInterval`. O realtime WebSocket é opt-in (`VITE_REALTIME_ENABLED`, padrão `false`) e sempre tem fallback REST/polling.
 
 ## Telas e componentes
 
@@ -50,10 +50,10 @@ Vue 3 (`<script setup>`, Composition API), JavaScript sem TypeScript, Vite, Pini
 
 ## Verificação
 
-- Antes de dizer que terminou: `npm run build`; a partir da Fase 6, também `npm test`.
+- Antes de dizer que terminou: `node --test tests/*.test.mjs` (o mesmo comando da CI; não há script `npm test`) e `npm run build`.
 - Subir `npm run dev` (localhost:5173) com o backend local e conferir o fluxo afetado em desktop (≥ 1280 px) e celular (390 px), sem erros no console.
 - Salvar prints de validação em `../docs/prints/fase-N/`, sem dados de usuários reais.
 
 ## Commits
 
-Conventional Commits em português: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`. Autor Arthur Lanznaster, sem `Co-Authored-By` e sem rodapé do Claude. Branch da fase a partir da `main`; nunca direto na `main`.
+Conventional Commits em português: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`. Autor Arthur Lanznaster, sem `Co-Authored-By` e sem rodapé do Claude. Branch a partir da `dev` atualizada, PR para a `dev`; nunca direto na `dev` nem na `main`.

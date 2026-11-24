@@ -4,7 +4,7 @@
       Login com Google não configurado neste ambiente.
     </div>
 
-    <div v-else class="google-auth__button" :class="{ 'is-loading': loading }">
+    <div v-else class="google-auth__button" :class="{ 'is-loading': loading }" :aria-busy="loading" :inert="loading">
       <div ref="buttonHost" class="google-auth__host" />
 
       <div
@@ -16,9 +16,10 @@
       </div>
     </div>
 
-    <p v-if="erroLocal" class="google-auth__error" role="alert">
+    <p v-if="erroLocal" class="google-auth__error" role="alert" tabindex="-1">
       {{ erroLocal }}
     </p>
+    <button v-if="erroLocal" type="button" class="google-auth__retry" :disabled="loading" @click="renderizarBotao({ force: true })">Tentar carregar o Google novamente</button>
   </div>
 </template>
 
@@ -46,6 +47,7 @@ let lastRenderedWidth = 0;
 let renderSequence = 0;
 
 function handleCredential(response) {
+  if (props.loading) return;
   erroLocal.value = "";
 
   if (!response?.credential) {
@@ -145,13 +147,14 @@ onBeforeUnmount(() => {
   display: grid;
   place-items: center;
   border-radius: 6px;
-  background: rgba(36, 17, 8, 0.72);
+  background: var(--pp-creme);
+  opacity: .9;
 }
 
 .google-auth__spinner {
   width: 19px;
   height: 19px;
-  border: 2px solid var(--pp-cream-dim);
+  border: 2px solid var(--pp-dourado-profundo);
   border-right-color: transparent;
   border-radius: 50%;
   animation: google-spin 650ms linear infinite;
@@ -160,20 +163,35 @@ onBeforeUnmount(() => {
 .google-auth__unavailable,
 .google-auth__error {
   margin: 0;
-  color: var(--pp-cream-faint);
+  color: var(--pp-texto-2);
   font-size: 12px;
   text-align: center;
 }
 
+.google-auth__retry {
+  display: block;
+  min-height: 44px;
+  margin: 4px auto 0;
+  padding: 4px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--pp-dourado-profundo);
+  font: inherit;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
 .google-auth__unavailable {
   padding: 12px;
-  border: 1px dashed var(--pp-border-soft);
+  border: 1px dashed var(--pp-creme-borda);
   border-radius: 8px;
 }
 
 .google-auth__error {
   margin-top: 8px;
-  color: var(--pp-error);
+  color: var(--pp-auth-error);
 }
 
 @keyframes google-spin {

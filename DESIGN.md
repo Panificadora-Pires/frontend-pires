@@ -321,6 +321,22 @@ antes da adição. [Plano](../docs/planos/promocoes-editoriais.md) e
 [evidências e limites](../docs/prints/promocoes-editoriais-2026-11-06/README.md) registram a validação
 local. Não houve nova mídia, biblioteca ou token global nesta extensão.
 
+### Favoritos editoriais — 12/11/2026
+
+Extensão do Balcão creme restrita à coleção pessoal: título Anton compacto, nota Caveat,
+contador real e busca sublinhada. Um produto usa composição horizontal no desktop; dois
+dividem a largura; três ou mais usam quatro/três/duas/uma colunas conforme a largura.
+No celular a fotografia mantém proporção reservada e as ações continuam explícitas.
+Categorias vêm dos produtos salvos, com selects nativos e ordenação por nome ou preço.
+
+`FavoriteProduct` reutiliza `ProductImage` e `CardActionContent`; detalhes usam o modal
+compartilhado. `FavoriteCollectionItem` conserva entrada estável, saída inerte e layout
+somente por posição com Motion existente. O coração pulsa após confirmação; remoção
+transfere foco ao próximo produto ou ao título vazio. Movimento reduzido mantém tudo
+funcional. Texto pequeno usa dourado profundo, sem alterar tokens ou cards de outras telas.
+
+[Plano e provas](../docs/planos/favoritos-editoriais.md).
+
 ## Do's and Don'ts
 
 ### Do:

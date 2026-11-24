@@ -43,6 +43,11 @@
         </span>
       </div>
 
+      <p v-if="avisoCartao" class="mp-brick__aviso" role="alert">
+        <CircleAlert :size="15" aria-hidden="true" />
+        <span>{{ avisoCartao }}</span>
+      </p>
+
       <div v-if="carregando" class="mp-brick__loading" role="status">
         <LoaderCircle :size="18" class="mp-brick__spinner" />
         Preparando ambiente seguro de pagamento...
@@ -64,6 +69,7 @@ import {
   ShieldCheck,
   Zap,
 } from "lucide-vue-next";
+import { erroBrickBloqueante, mensagemAvisoBrick } from "@/utils/mercadoPagoBrick.js";
 
 const props = defineProps({
   amount: { type: Number, required: true },
@@ -82,6 +88,7 @@ const containerId = `cardPaymentBrick_${Math.random().toString(36).slice(2)}`;
 const carregando = ref(props.mode === "card");
 const enviandoPix = ref(false);
 const erroConfiguracao = ref("");
+const avisoCartao = ref("");
 let controller = null;
 
 function carregarSdk() {
@@ -163,6 +170,7 @@ async function montarCardBrick() {
           carregando.value = false;
         },
         onSubmit: (formData, additionalData) => {
+          avisoCartao.value = "";
           return props.submitHandler({
             paymentType: additionalData?.paymentTypeId || "credit_card",
             formData,
@@ -170,6 +178,11 @@ async function montarCardBrick() {
         },
         onError: (error) => {
           console.error("Mercado Pago Card Payment Brick:", error);
+          // Erro não crítico (ex.: cartão não reconhecido) mantém o formulário para correção.
+          if (!erroBrickBloqueante(error)) {
+            avisoCartao.value = mensagemAvisoBrick(error);
+            return;
+          }
           erroConfiguracao.value =
             "O formulário de cartão encontrou um erro. Recarregue e tente novamente.";
           carregando.value = false;
@@ -337,6 +350,24 @@ onBeforeUnmount(async () => {
 
 .mp-brick__container {
   min-width: 0;
+}
+
+.mp-brick__aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--student-danger-soft);
+  color: var(--student-danger);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.mp-brick__aviso svg {
+  flex: none;
+  margin-top: 1px;
 }
 
 .mp-brick__spinner {

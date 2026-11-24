@@ -1,0 +1,47 @@
+{
+  "checks": [
+    {
+      "name": "Gaveta fecha ao navegar e ao mudar para desktop, sem scroll lock residual",
+      "ok": true
+    }
+  ],
+  "errors": [],
+  "requests": [
+    {
+      "path": "/usuarios/me/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/promocoes/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/relatorio_vendas/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/produtos/mais_vendidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/pedidos/",
+      "method": "GET",
+      "mode": "normal"
+    },
+    {
+      "path": "/chat/nao_lidas/",
+      "method": "GET",
+      "mode": "normal"
+    }
+  ],
+  "console": []
+}

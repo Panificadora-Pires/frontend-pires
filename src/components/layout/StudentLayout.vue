@@ -10,6 +10,9 @@ import { useChatStore } from "@/stores/chat";
 import { useChatbotStore } from "@/stores/chatbot";
 import { useNotificationsStore } from "@/stores/notifications";
 import { useOrdersStore } from "@/stores/orders";
+import { useFavoritesStore } from "@/stores/favorites";
+import { REALTIME_ENABLED, realtimeClient } from "@/services/realtime";
+import { createRealtimeInvalidations } from "@/utils/realtimeInvalidations";
 import { animarVooAoCarrinho, movimentoReduzido } from "@/utils/vooAoCarrinho";
 import { useCatalogTransitions } from "@/composables/useCatalogTransitions";
 import "@/assets/styles/catalog-transitions.css";
@@ -22,12 +25,19 @@ const chat = useChatStore();
 const chatbot = useChatbotStore();
 const notifications = useNotificationsStore();
 const orders = useOrdersStore();
+const favorites = useFavoritesStore();
+watch(() => auth.usuario?.id ?? null, id => {
+  cart.sincronizarConta(id);
+  favorites.sincronizarConta(id);
+}, { immediate: true, flush: "sync" });
 const router = useRouter();
 const route = useRoute();
 const header = ref(null);
 const carrinhoPulando = ref(false);
 let timerPulo = null;
 let pararDeOuvirCarrinho = null;
+let desinscreverRealtime = null;
+let invalidacoesRealtime = null;
 let montado = true;
 const mostrarChatbot = computed(() => route.name !== "checkout");
 const bottomNavItems = computed(() => [
@@ -38,37 +48,66 @@ const bottomNavItems = computed(() => [
   { name: "perfil", label: "Perfil", icon: User },
 ]);
 function limitarBadge(valor) { return Number(valor || 0) > 99 ? "99+" : valor; }
-async function pularContador() {
+async function pularContador(contexto) {
   window.clearTimeout(timerPulo);
   carrinhoPulando.value = false;
   if (movimentoReduzido()) return;
   await nextTick();
-  if (!montado) return;
+  if (!montado || !cart.contextoAtual(contexto)) return;
   carrinhoPulando.value = true;
   timerPulo = window.setTimeout(() => { carrinhoPulando.value = false; }, 400);
 }
 async function handleLogout() {
+  desinscreverRealtime?.();
+  desinscreverRealtime = null;
+  invalidacoesRealtime?.parar();
+  invalidacoesRealtime = null;
+  realtimeClient.parar();
+  favorites.resetar({ suspender: true });
   chat.resetar();
   chatbot.resetar();
   await auth.logout();
+  if (auth.usuario) return;
   await router.replace({ name: "login" });
 }
+// A autenticação pode ser restaurada depois do mount; não conectar anônimos.
+watch(() => auth.usuario?.id ?? null, id => {
+  if (!REALTIME_ENABLED || !montado) return;
+  if (id && auth.autenticado) realtimeClient.iniciar();
+  else realtimeClient.parar();
+});
 watch(() => notifications.naoLidas, (atual, anterior) => {
   if (atual > anterior && orders.inicializado) orders.carregar({ force: true, silencioso: true }).catch(() => {});
 });
 onMounted(() => {
   notifications.iniciarPolling();
   chat.iniciarPollingNaoLidas(30_000);
+  if (REALTIME_ENABLED) {
+    invalidacoesRealtime = createRealtimeInvalidations({
+      pedidos: () => orders.carregar({ force: true, silencioso: orders.inicializado }),
+      chat: () => chat.carregarNaoLidas(),
+      notificacoes: () => notifications.atualizarAgora(),
+    });
+    desinscreverRealtime = realtimeClient.inscrever(invalidacoesRealtime.sinalizar);
+    if (auth.autenticado) realtimeClient.iniciar();
+  }
   pararDeOuvirCarrinho = cart.$onAction(({ name, after }) => {
     if (name !== "adicionar") return;
-    after(async () => {
+    const contexto = cart.capturarContexto();
+    after(async (adicionado) => {
+      if (!adicionado || !cart.contextoAtual(contexto)) return;
       await animarVooAoCarrinho(header.value?.elementoCarrinho());
-      if (montado) pularContador();
+      if (montado && cart.contextoAtual(contexto)) pularContador(contexto);
     });
   });
 });
 onBeforeUnmount(() => {
   montado = false;
+  desinscreverRealtime?.();
+  desinscreverRealtime = null;
+  invalidacoesRealtime?.parar();
+  invalidacoesRealtime = null;
+  realtimeClient.parar();
   notifications.resetar();
   chat.pararPollingNaoLidas();
   pararDeOuvirCarrinho?.();
@@ -77,7 +116,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="student-layout" :class="{ 'has-chatbot': mostrarChatbot }">
+  <div class="student-layout" :class="{ 'has-chatbot': mostrarChatbot, 'student-layout--cart': route.name === 'carrinho' }">
     <StudentHeader ref="header" :carrinho-pulando="carrinhoPulando" @logout="handleLogout" />
     <main class="student-layout__main"><RouterView /></main>
     <ChatbotWidget v-if="mostrarChatbot" />

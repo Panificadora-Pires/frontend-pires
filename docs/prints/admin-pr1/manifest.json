@@ -1,0 +1,44 @@
+{
+  "base": "d91a454",
+  "nodeTests": 140,
+  "browserChecks": 13,
+  "focusedChecks": 1,
+  "images": [
+    {
+      "file": "dashboard-1440.png",
+      "width": 1440,
+      "height": 1258,
+      "sha256": "4ae7443b636e3376e00d63b5bf065848da2a530cc691b2fc8a8adb11dfde934a"
+    },
+    {
+      "file": "dashboard-390.png",
+      "width": 390,
+      "height": 2713,
+      "sha256": "61e121f481055792ad35ca25c538df192422b1ec446b929b24b2e78dce1faec8"
+    },
+    {
+      "file": "empty-390.png",
+      "width": 390,
+      "height": 2262,
+      "sha256": "0662ae3e4fa9f07600caa81df0980520b9fff7fc4cfc9b682766fbeee4e0c4aa"
+    },
+    {
+      "file": "error-390.png",
+      "width": 390,
+      "height": 1820,
+      "sha256": "8bed8fee94d0a469edc982cd4de57b98494338c431bdcb71c7d8810cad0e516e"
+    },
+    {
+      "file": "loading-390.png",
+      "width": 390,
+      "height": 2593,
+      "sha256": "a6af495e3202168913b5bc31d27b4f14182cfc93e1eeff5a9a5b0371e765eda8"
+    },
+    {
+      "file": "menu-390.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "dc28bd33eca36928a27e0a1ad9cebe1363acbbb2f8cd4e78b48846a845882f43"
+    }
+  ]
+}

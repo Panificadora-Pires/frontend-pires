@@ -32,6 +32,9 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
 
+      - name: Test Node (unit and store regressions)
+        run: node --test tests/*.test.mjs
+
       - name: Build frontend and PWA
         run: npm run build
 
@@ -42,5 +45,4 @@ jobs:
           test -d dist/assets
           find dist/assets -maxdepth 1 -type f \( -name '*.js' -o -name '*.css' \) | grep -q .
 
-# O package.json ainda não possui script de testes.
-# Este check valida build/PWA, não autenticação, carrinho ou checkout.
+# O CI valida testes Node e build/PWA; cenários browser continuam em suítes específicas.

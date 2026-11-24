@@ -1,172 +1,201 @@
 <template>
   <div class="profile-page">
     <header class="profile-page__header">
-      <div>
-        <h1>Meu perfil</h1>
-        <p>Gerencie seus dados pessoais e as formas de acesso à sua conta.</p>
-      </div>
-
-      <div
-        class="profile-page__status"
-        :class="{ 'is-verified': auth.usuario?.email_verified }"
-      >
-        <BadgeCheck v-if="auth.usuario?.email_verified" :size="17" />
-        <CircleAlert v-else :size="17" />
-        <span>{{
-          auth.usuario?.email_verified
-            ? "Conta verificada"
-            : "E-mail não verificado"
-        }}</span>
-      </div>
+      <h1>
+        Meu perfil
+      </h1>
+      <p>
+        Seus dados, sua conta. Tudo em um só lugar.
+      </p>
     </header>
-
-    <div class="profile-page__layout">
-      <main class="profile-page__main">
-        <section class="profile-card" aria-labelledby="perfil-identidade">
-          <div class="profile-card__head">
-            <h2 id="perfil-identidade">Foto de perfil</h2>
+    <div v-if="!auth.usuario" class="profile-load-state" :aria-busy="carregandoPerfil">
+      <LoaderCircle v-if="carregandoPerfil" :size="28" class="profile-spin" aria-hidden="true" />
+      <CircleAlert v-else :size="28" aria-hidden="true" />
+      <h2>
+        {{ carregandoPerfil ? 'Carregando seu perfil' : 'Não foi possível carregar seu perfil' }}
+      </h2>
+      <p role="status">
+        {{ erroCarregamento || 'Aguarde enquanto buscamos seus dados.' }}
+      </p>
+      <button
+        v-if="!carregandoPerfil"
+        type="button"
+        class="profile-btn profile-btn--primary"
+        @click="carregarPerfil"
+      >
+        Tentar novamente
+      </button>
+    </div>
+    <div v-else class="profile-page__layout">
+      <motion.div
+        class="profile-page__main"
+        :initial="{ opacity: reduzir ? 1 : 0.85, y: reduzir ? 0 : 6 }"
+        :animate="{ opacity: 1, y: 0 }"
+        :transition="{ duration: reduzir ? 0 : 0.2 }"
+      >
+        <section class="profile-identity" aria-labelledby="perfil-identidade">
+          <div
+            class="profile-avatar profile-avatar-editor__preview"
+            :class="{ 'is-preview': avatarPreview }"
+          >
+            <img
+              v-if="avatarExibido"
+              :key="avatarExibido"
+              :src="avatarExibido"
+              referrerpolicy="no-referrer"
+              :alt="`Foto de ${auth.usuario.name || 'perfil'}`"
+              @error="avatarRemotoComErro = true"
+            />
+            <span v-else-if="iniciais" aria-hidden="true">
+              {{ iniciais }}
+            </span>
+            <UserRound v-else :size="40" aria-hidden="true" />
           </div>
-
-          <div class="profile-avatar-editor">
-            <div class="profile-avatar-editor__preview">
-              <img
-                v-if="avatarExibido"
-                :src="avatarExibido"
-                referrerpolicy="no-referrer"
-                :alt="`Foto de ${auth.usuario?.name || 'usuário'}`"
-                @error="avatarRemotoComErro = true"
-              />
-              <span v-else>{{ iniciais }}</span>
-
+          <div class="profile-identity__content">
+            <h2 id="perfil-identidade">
+              {{ auth.usuario.name || 'Nome não informado' }}
+            </h2>
+            <p class="profile-identity__email">
+              {{ auth.usuario.email || 'E-mail não informado' }}
+            </p>
+            <p class="profile-identity__verification">
+              <MailCheck :size="16" aria-hidden="true" />
+              <span>
+                E-mail: {{ estadoBooleano(auth.usuario.email_verified, 'Verificado', 'Não verificado') }}
+              </span>
+            </p>
+            <div class="profile-avatar-actions">
               <button
+                id="profile-avatar-trigger"
                 type="button"
-                class="profile-avatar-editor__camera"
-                aria-label="Escolher nova foto de perfil"
-                title="Alterar foto"
+                class="profile-text-btn profile-text-btn--upload"
+                :disabled="salvando"
+                :aria-invalid="Boolean(erros.avatar)"
+                :aria-describedby="erros.avatar ? 'profile-avatar-help profile-avatar-error' : 'profile-avatar-help'"
                 @click="abrirSeletorFoto"
               >
-                <Camera :size="17" />
+                <Upload :size="17" aria-hidden="true" />
+                {{ avatarExibido ? 'Trocar foto' : 'Adicionar foto' }}
+              </button>
+              <button
+                v-if="avatarExibido || (!removerAvatar && auth.usuario.avatar)"
+                type="button"
+                class="profile-text-btn"
+                :disabled="salvando"
+                @click="marcarRemocaoAvatar"
+              >
+                <Trash2 :size="17" aria-hidden="true" />
+                Remover foto
               </button>
             </div>
-
-            <div class="profile-avatar-editor__content">
-              <strong>{{ auth.usuario?.name || "Aluno" }}</strong>
-              <span>{{ auth.usuario?.email || "E-mail não informado" }}</span>
-
-              <div class="profile-avatar-editor__actions">
-                <button
-                  type="button"
-                  class="profile-link-btn"
-                  @click="abrirSeletorFoto"
-                >
-                  <Upload :size="15" />
-                  {{ avatarExibido ? "Trocar foto" : "Adicionar foto" }}
-                </button>
-
-                <button
-                  v-if="avatarExibido || auth.usuario?.avatar"
-                  type="button"
-                  class="profile-link-btn profile-link-btn--danger"
-                  @click="marcarRemocaoAvatar"
-                >
-                  <Trash2 :size="15" />
-                  Remover
-                </button>
-              </div>
-
-              <p>JPG, PNG ou WebP, com até 3 MB.</p>
-            </div>
-
-            <input
-              ref="avatarInput"
-              class="profile-avatar-editor__input"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              @change="selecionarFoto"
-            />
+            <p id="profile-avatar-help" class="profile-hint">
+              JPG, PNG ou WebP, com até 3 MB.
+            </p>
+            <p v-if="avatarPreview || removerAvatar" class="profile-avatar-pending" role="status">
+              {{ removerAvatar ? 'Foto marcada para remoção. Salve para confirmar.' : 'Prévia da nova foto. Salve para confirmar.' }}
+            </p>
+            <p v-if="erros.avatar" id="profile-avatar-error" class="profile-field-error">
+              {{ erros.avatar }}
+            </p>
           </div>
-
-          <p v-if="erros.avatar" class="profile-field-error" role="alert">
-            {{ erros.avatar }}
-          </p>
+          <input
+            id="profile-avatar-input"
+            ref="avatarInput"
+            class="profile-file-input"
+            type="file"
+            tabindex="-1"
+            aria-label="Escolher foto de perfil"
+            accept="image/jpeg,image/png,image/webp"
+            :disabled="salvando"
+            @change="selecionarFoto"
+          />
         </section>
-
-        <section class="profile-card" aria-labelledby="perfil-dados">
-          <div class="profile-card__head profile-card__head--form">
-            <h2 id="perfil-dados">Dados pessoais</h2>
-
+        <section class="profile-details" aria-labelledby="perfil-dados">
+          <div class="profile-section-heading">
+            <h2 id="perfil-dados">
+              Dados pessoais
+            </h2>
             <span v-if="temAlteracoes" class="profile-unsaved">
-              <CircleDot :size="13" />
+              <CircleDot :size="14" aria-hidden="true" />
               Alterações não salvas
             </span>
           </div>
-
-          <form class="profile-form" @submit.prevent="salvarPerfil">
-            <div class="profile-form__field profile-form__field--wide">
-              <label for="profile-name">Nome completo</label>
-              <div
-                class="profile-form__control"
-                :class="{ 'has-error': erros.name }"
-              >
-                <UserRound :size="17" />
-                <input
-                  id="profile-name"
-                  v-model="form.name"
-                  type="text"
-                  maxlength="255"
-                  autocomplete="name"
-                  placeholder="Seu nome completo"
-                  @input="limparErro('name')"
-                />
-              </div>
-              <p v-if="erros.name" class="profile-field-error" role="alert">
+          <p class="profile-section-intro">
+            Mantenha seu nome e telefone atualizados.
+          </p>
+          <form class="profile-form" novalidate :aria-busy="salvando" @submit.prevent="salvarPerfil">
+            <div class="profile-field">
+              <label for="profile-name">
+                Nome completo
+              </label>
+              <input
+                id="profile-name"
+                v-model="form.name"
+                type="text"
+                maxlength="255"
+                autocomplete="name"
+                required
+                :disabled="salvando"
+                :aria-invalid="Boolean(erros.name)"
+                :aria-describedby="erros.name ? 'profile-name-error' : undefined"
+                @input="limparErro('name')"
+              />
+              <p v-if="erros.name" id="profile-name-error" class="profile-field-error">
                 {{ erros.name }}
               </p>
             </div>
-
-            <div class="profile-form__field">
-              <label for="profile-phone">Telefone</label>
-              <div
-                class="profile-form__control"
-                :class="{ 'has-error': erros.phone }"
-              >
-                <Phone :size="17" />
-                <input
-                  id="profile-phone"
-                  :value="form.phone"
-                  type="tel"
-                  inputmode="tel"
-                  autocomplete="tel"
-                  placeholder="(47) 99999-9999"
-                  maxlength="15"
-                  @input="atualizarTelefone"
-                />
-              </div>
-              <p v-if="erros.phone" class="profile-field-error" role="alert">
+            <div class="profile-field">
+              <label for="profile-phone">
+                Telefone
+              </label>
+              <input
+                id="profile-phone"
+                :value="form.phone"
+                type="tel"
+                inputmode="tel"
+                autocomplete="tel"
+                placeholder="(47) 99999-9999"
+                maxlength="15"
+                :disabled="salvando"
+                :aria-invalid="Boolean(erros.phone)"
+                :aria-describedby="erros.phone ? 'profile-phone-help profile-phone-error' : 'profile-phone-help'"
+                @input="atualizarTelefone"
+              />
+              <p id="profile-phone-help" class="profile-hint">
+                Informe o DDD e o número.
+              </p>
+              <p v-if="erros.phone" id="profile-phone-error" class="profile-field-error">
                 {{ erros.phone }}
               </p>
             </div>
-
-            <div class="profile-form__field">
-              <label for="profile-email">E-mail</label>
-              <div
-                class="profile-form__control profile-form__control--readonly"
-              >
-                <Mail :size="17" />
+            <div class="profile-field profile-field--wide">
+              <label for="profile-email">
+                E-mail
+              </label>
+              <div class="profile-readonly">
                 <input
                   id="profile-email"
-                  :value="auth.usuario?.email || ''"
+                  :value="auth.usuario.email || ''"
                   type="email"
                   readonly
+                  aria-describedby="profile-email-help"
                 />
-                <Lock :size="14" class="profile-form__lock" />
+                <LockKeyhole :size="17" aria-hidden="true" />
               </div>
-              <span class="profile-form__hint"
-                >A alteração de e-mail exige nova verificação da conta.</span
-              >
+              <p id="profile-email-help" class="profile-hint">
+                Este é o e-mail de acesso à sua conta. Ele não pode ser alterado nesta tela.
+              </p>
             </div>
-
             <div class="profile-form__actions">
+              <button
+                type="submit"
+                class="profile-btn profile-btn--primary"
+                :disabled="salvando || !temAlteracoes"
+              >
+                <LoaderCircle v-if="salvando" :size="18" class="profile-spin" aria-hidden="true" />
+                <Save v-else :size="18" aria-hidden="true" />
+                {{ salvando ? 'Salvando...' : 'Salvar alterações' }}
+              </button>
               <button
                 type="button"
                 class="profile-btn profile-btn--secondary"
@@ -175,303 +204,268 @@
               >
                 Cancelar
               </button>
-
-              <button
-                type="submit"
-                class="profile-btn profile-btn--primary"
-                :disabled="salvando || !temAlteracoes"
+            </div>
+            <div class="profile-feedback-region" aria-live="polite" aria-atomic="true">
+              <motion.div
+                v-if="mensagem"
+                :key="mensagem.texto"
+                class="profile-feedback"
+                :class="`profile-feedback--${mensagem.tipo}`"
+                :initial="{ opacity: reduzir ? 1 : 0 }"
+                :animate="{ opacity: 1 }"
+                :transition="{ duration: reduzir ? 0 : 0.18 }"
               >
-                <LoaderCircle v-if="salvando" :size="17" class="profile-spin" />
-                <Save v-else :size="17" />
-                {{ salvando ? "Salvando..." : "Salvar alterações" }}
-              </button>
+                <CheckCircle2 v-if="mensagem.tipo === 'success'" :size="20" aria-hidden="true" />
+                <CircleAlert v-else :size="20" aria-hidden="true" />
+                <p>
+                  {{ mensagem.texto }}
+                </p>
+              </motion.div>
             </div>
           </form>
         </section>
-      </main>
-
-      <aside class="profile-page__aside">
-        <section class="profile-card" aria-labelledby="perfil-seguranca">
-          <div class="profile-card__head profile-card__head--with-icon">
+      </motion.div>
+      <motion.aside
+        class="profile-page__aside"
+        aria-label="Informações da conta"
+        :initial="{ opacity: reduzir ? 1 : 0.85, y: reduzir ? 0 : 6 }"
+        :animate="{ opacity: 1, y: 0 }"
+        :transition="{ duration: reduzir ? 0 : 0.2 }"
+      >
+        <section class="profile-security" aria-labelledby="perfil-seguranca">
+          <div class="profile-aside-heading">
+            <ShieldCheck :size="20" aria-hidden="true" />
             <h2 id="perfil-seguranca">Segurança da conta</h2>
-            <ShieldCheck :size="20" />
           </div>
-
-          <div class="profile-security-list">
-            <div class="profile-security-item">
-              <span class="profile-security-item__icon"
-                ><MailCheck :size="18"
-              /></span>
-              <div>
-                <strong>E-mail</strong>
-                <span>{{
-                  auth.usuario?.email_verified
-                    ? "Verificado"
-                    : "Pendente de verificação"
-                }}</span>
-              </div>
-              <span
-                class="profile-security-item__state"
-                :class="{ 'is-positive': auth.usuario?.email_verified }"
-              >
-                {{ auth.usuario?.email_verified ? "Ativo" : "Pendente" }}
-              </span>
-            </div>
-
-            <div class="profile-security-item">
-              <span class="profile-security-item__icon"
-                ><Chrome :size="18"
-              /></span>
-              <div>
-                <strong>Conta Google</strong>
-                <span>{{
-                  auth.usuario?.google_connected ? "Conectada" : "Não vinculada"
-                }}</span>
-              </div>
-              <span
-                class="profile-security-item__state"
-                :class="{ 'is-positive': auth.usuario?.google_connected }"
-              >
-                {{ auth.usuario?.google_connected ? "Conectada" : "Opcional" }}
-              </span>
-            </div>
-
-            <div class="profile-security-item">
-              <span class="profile-security-item__icon"
-                ><KeyRound :size="18"
-              /></span>
-              <div>
-                <strong>Senha</strong>
-                <span>{{
-                  auth.usuario?.has_usable_password
-                    ? "Senha configurada"
-                    : "Somente provedor externo"
-                }}</span>
-              </div>
-              <span
-                class="profile-security-item__state"
-                :class="{ 'is-positive': auth.usuario?.has_usable_password }"
-              >
-                {{
-                  auth.usuario?.has_usable_password
-                    ? "Configurada"
-                    : "Não definida"
-                }}
-              </span>
-            </div>
-          </div>
-
-          <div class="profile-security-note">
-            <LockKeyhole :size="16" />
-            <p>O e-mail não é alterado diretamente nesta tela por segurança.</p>
-          </div>
-        </section>
-
-        <section class="profile-card" aria-labelledby="perfil-resumo">
-          <div class="profile-card__head">
-            <h2 id="perfil-resumo">Conta</h2>
-          </div>
-
-          <dl class="profile-summary-list">
+          <dl class="profile-security-list">
             <div>
-              <dt>Tipo de conta</dt>
-              <dd>{{ auth.isAdmin ? "Administração" : "Aluno" }}</dd>
+              <dt>
+                <MailCheck :size="18" aria-hidden="true" />
+                E-mail
+              </dt>
+              <dd :class="{ 'is-positive': auth.usuario.email_verified === true }">
+                {{ estadoBooleano(auth.usuario.email_verified, 'Verificado', 'Não verificado') }}
+              </dd>
             </div>
             <div>
-              <dt>Último acesso</dt>
-              <dd>{{ ultimoAcesso }}</dd>
+              <dt>
+                <Chrome :size="18" aria-hidden="true" />
+                Conta Google
+              </dt>
+              <dd>
+                {{ estadoBooleano(auth.usuario.google_connected, 'Conectada', 'Não vinculada') }}
+              </dd>
             </div>
             <div>
-              <dt>Login disponível</dt>
-              <dd>{{ metodosLogin }}</dd>
+              <dt>
+                <KeyRound :size="18" aria-hidden="true" />
+                Senha
+              </dt>
+              <dd>
+                {{ estadoBooleano(auth.usuario.has_usable_password, 'Configurada', 'Não definida') }}
+              </dd>
             </div>
           </dl>
         </section>
-      </aside>
+        <section class="profile-account" aria-labelledby="perfil-resumo">
+          <div class="profile-aside-heading">
+            <UserRound :size="20" aria-hidden="true" />
+            <h2 id="perfil-resumo">Sua conta</h2>
+          </div>
+          <dl class="profile-summary-list">
+            <div>
+              <dt>
+                Tipo de conta
+              </dt>
+              <dd>
+                {{ estadoBooleano(auth.usuario.is_staff, 'Administração', 'Aluno') }}
+              </dd>
+            </div>
+            <div>
+              <dt>
+                Último acesso
+              </dt>
+              <dd>
+                {{ ultimoAcesso }}
+              </dd>
+            </div>
+            <div>
+              <dt>
+                Formas de acesso
+              </dt>
+              <dd>
+                {{ metodosLogin }}
+              </dd>
+            </div>
+          </dl>
+        </section>
+      </motion.aside>
     </div>
-
-    <Transition name="profile-toast">
-      <div
-        v-if="mensagem"
-        class="profile-toast"
-        :class="`profile-toast--${mensagem.tipo}`"
-        role="status"
-      >
-        <CheckCircle2 v-if="mensagem.tipo === 'success'" :size="19" />
-        <CircleAlert v-else :size="19" />
-        <span>{{ mensagem.texto }}</span>
-      </div>
-    </Transition>
   </div>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, reactive, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
+import { motion, useReducedMotion } from "motion-v";
 import {
-  BadgeCheck,
-  Camera,
   CheckCircle2,
   Chrome,
   CircleAlert,
   CircleDot,
   KeyRound,
   LoaderCircle,
-  Lock,
   LockKeyhole,
-  Mail,
   MailCheck,
-  Phone,
   Save,
   ShieldCheck,
   Trash2,
   Upload,
   UserRound,
 } from "lucide-vue-next";
-
 import { useAuthStore } from "@/stores/auth";
+import { getSessionVersion } from "@/services/api";
 
 const MAX_AVATAR_BYTES = 3 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
-
 const auth = useAuthStore();
+const reduzir = useReducedMotion();
 const avatarInput = ref(null);
 const avatarFile = ref(null);
 const avatarPreview = ref("");
 const removerAvatar = ref(false);
 const avatarRemotoComErro = ref(false);
 const salvando = ref(false);
+const carregandoPerfil = ref(!auth.usuario);
+const erroCarregamento = ref("");
 const mensagem = ref(null);
-let toastTimer = null;
+const confirmado = ref(null);
+const form = reactive({ name: "", phone: "" });
+const erros = reactive({ name: "", phone: "", avatar: "" });
+let ativo = true;
+let versaoFormulario = getSessionVersion();
+let operacao = 0;
+let buscaPendente = false;
 
-const form = reactive({
-  name: "",
-  phone: "",
-});
-
-const erros = reactive({
-  name: "",
-  phone: "",
-  avatar: "",
-});
-
-const iniciais = computed(() => {
-  const nome = form.name || auth.usuario?.name || "";
-  return (
-    nome
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((parte) => parte[0]?.toUpperCase())
-      .join("") || "A"
-  );
-});
-
-const avatarExibido = computed(() => {
-  if (avatarPreview.value) return avatarPreview.value;
-  if (removerAvatar.value || avatarRemotoComErro.value) return "";
-  return auth.usuario?.avatar || "";
-});
-
-const telefoneOriginal = computed(() =>
-  formatarTelefone(auth.usuario?.phone || ""),
+const iniciais = computed(() =>
+  String(auth.usuario?.name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(parte => parte[0]?.toUpperCase())
+    .join(""),
 );
-
-const temAlteracoes = computed(() => {
-  const nomeMudou =
-    form.name.trim() !== String(auth.usuario?.name || "").trim();
-  const telefoneMudou = form.phone !== telefoneOriginal.value;
-
-  return (
-    nomeMudou ||
-    telefoneMudou ||
-    Boolean(avatarFile.value) ||
-    removerAvatar.value
-  );
+const avatarExibido = computed(() => {
+  if (avatarRemotoComErro.value) return "";
+  if (avatarPreview.value) return avatarPreview.value;
+  return removerAvatar.value ? "" : auth.usuario?.avatar || "";
 });
-
+const temAlteracoes = computed(() => Boolean(confirmado.value) && (
+  form.name.trim() !== String(confirmado.value.name || "").trim() ||
+  form.phone !== mascararTelefone(confirmado.value.phone) ||
+  Boolean(avatarFile.value) ||
+  removerAvatar.value
+));
 const ultimoAcesso = computed(() => {
   const valor = auth.usuario?.last_login;
-  if (!valor) return "Primeiro acesso";
-
+  if (!valor) return "Não disponível";
   const data = new Date(valor);
   if (Number.isNaN(data.getTime())) return "Não disponível";
-
   return new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "short",
     timeStyle: "short",
   }).format(data);
 });
-
 const metodosLogin = computed(() => {
   const metodos = [];
-  if (auth.usuario?.has_usable_password) metodos.push("E-mail e senha");
-  if (auth.usuario?.google_connected) metodos.push("Google");
-  return metodos.length ? metodos.join(" + ") : "Sessão autenticada";
+  if (auth.usuario?.has_usable_password === true) metodos.push("E-mail e senha");
+  if (auth.usuario?.google_connected === true) metodos.push("Google");
+  return metodos.join(" + ") || "Não disponível";
 });
 
+// Confirmações acompanham o servidor; refresh da mesma conta não é edição do rascunho.
 watch(
   () => auth.usuario,
-  () => {
-    restaurarFormulario({ preservarMensagem: true });
-    avatarRemotoComErro.value = false;
+  (usuario) => {
+    const novaSessao = versaoFormulario !== getSessionVersion() ||
+      confirmado.value?.id !== usuario?.id;
+    const preservarRascunho = !novaSessao && temAlteracoes.value;
+    const avatarAnterior = confirmado.value?.avatar;
+    confirmado.value = usuario ? { ...usuario } : null;
+    if (novaSessao) {
+      versaoFormulario = getSessionVersion();
+      operacao++;
+      salvando.value = false;
+      erroCarregamento.value = "";
+    }
+    if (!preservarRascunho) restaurarFormulario();
+    if (avatarAnterior !== usuario?.avatar) avatarRemotoComErro.value = false;
   },
-  { immediate: true, deep: true },
+  { immediate: true, deep: true, flush: "sync" },
 );
 
-function restaurarFormulario({ preservarMensagem = false } = {}) {
-  form.name = String(auth.usuario?.name || "");
-  form.phone = telefoneOriginal.value;
+function estadoBooleano(valor, sim, nao) {
+  return valor === true ? sim : valor === false ? nao : "Não disponível";
+}
 
+function contextoAtual(contexto) {
+  return ativo &&
+    contexto.versao === getSessionVersion() &&
+    contexto.id === auth.usuario?.id &&
+    contexto.operacao === operacao;
+}
+
+function restaurarFormulario() {
+  if (salvando.value) return;
+  form.name = String(confirmado.value?.name || "");
+  form.phone = mascararTelefone(confirmado.value?.phone);
   avatarFile.value = null;
   removerAvatar.value = false;
   avatarRemotoComErro.value = false;
   limparPreview();
   limparErros();
-
+  mensagem.value = null;
   if (avatarInput.value) avatarInput.value.value = "";
-  if (!preservarMensagem) mensagem.value = null;
 }
-
 function abrirSeletorFoto() {
-  avatarInput.value?.click();
+  if (!salvando.value) avatarInput.value?.click();
 }
 
 function selecionarFoto(event) {
+  if (salvando.value) return;
   limparErro("avatar");
-
   const arquivo = event.target.files?.[0];
   if (!arquivo) return;
-
-  if (!ALLOWED_AVATAR_TYPES.has(arquivo.type)) {
-    erros.avatar = "Escolha uma imagem JPG, PNG ou WebP.";
+  if (!ALLOWED_AVATAR_TYPES.has(arquivo.type) || arquivo.size > MAX_AVATAR_BYTES) {
+    erros.avatar = !ALLOWED_AVATAR_TYPES.has(arquivo.type)
+      ? "Escolha uma imagem JPG, PNG ou WebP."
+      : "A foto de perfil deve ter no máximo 3 MB.";
     event.target.value = "";
+    focarPrimeiroErro();
     return;
   }
-
-  if (arquivo.size > MAX_AVATAR_BYTES) {
-    erros.avatar = "A foto de perfil deve ter no máximo 3 MB.";
-    event.target.value = "";
-    return;
-  }
-
   limparPreview();
   avatarFile.value = arquivo;
   avatarPreview.value = URL.createObjectURL(arquivo);
   removerAvatar.value = false;
+  avatarRemotoComErro.value = false;
 }
 
 function marcarRemocaoAvatar() {
+  if (salvando.value) return;
   avatarFile.value = null;
-  removerAvatar.value = Boolean(auth.usuario?.avatar);
+  removerAvatar.value = Boolean(confirmado.value?.avatar);
   avatarRemotoComErro.value = false;
   limparPreview();
   limparErro("avatar");
-
   if (avatarInput.value) avatarInput.value.value = "";
+  document.getElementById("profile-avatar-trigger")?.focus();
 }
 
 function atualizarTelefone(event) {
+  if (salvando.value) return;
   form.phone = mascararTelefone(event.target.value);
+  event.target.value = form.phone;
   limparErro("phone");
 }
 
@@ -480,102 +474,120 @@ function mascararTelefone(valor) {
     .replace(/\D/g, "")
     .replace(/^55(?=\d{10,11}$)/, "")
     .slice(0, 11);
-
   if (!digitos) return "";
   if (digitos.length <= 2) return `(${digitos}`;
-  if (digitos.length <= 6)
-    return `(${digitos.slice(0, 2)}) ${digitos.slice(2)}`;
-  if (digitos.length <= 10) {
-    return `(${digitos.slice(0, 2)}) ${digitos.slice(2, 6)}-${digitos.slice(6)}`;
-  }
-
-  return `(${digitos.slice(0, 2)}) ${digitos.slice(2, 7)}-${digitos.slice(7)}`;
-}
-
-function formatarTelefone(valor) {
-  return mascararTelefone(valor);
+  if (digitos.length <= 6) return `(${digitos.slice(0, 2)}) ${digitos.slice(2)}`;
+  const corte = digitos.length <= 10 ? 6 : 7;
+  return `(${digitos.slice(0, 2)}) ${digitos.slice(2, corte)}-${digitos.slice(corte)}`;
 }
 
 async function salvarPerfil() {
+  if (salvando.value || !auth.usuario || !temAlteracoes.value) return;
   limparErros();
-
+  mensagem.value = null;
   if (!form.name.trim()) {
     erros.name = "Informe seu nome completo.";
+    await focarPrimeiroErro();
     return;
   }
-
+  const contexto = {
+    versao: getSessionVersion(),
+    id: auth.usuario.id,
+    operacao: ++operacao,
+  };
   salvando.value = true;
-
   try {
     const payload = new FormData();
     payload.append("name", form.name.trim());
     payload.append("phone", form.phone.trim());
-
-    if (avatarFile.value) {
-      payload.append("avatar", avatarFile.value);
-    } else if (removerAvatar.value) {
-      payload.append("remove_avatar", "true");
-    }
-
+    if (avatarFile.value) payload.append("avatar", avatarFile.value);
+    else if (removerAvatar.value) payload.append("remove_avatar", "true");
     const resultado = await auth.atualizarPerfil(payload);
-
-    if (!resultado.ok) {
+    if (!contextoAtual(contexto) || resultado?.ignorado) return;
+    if (!resultado?.ok) {
       Object.assign(erros, {
-        name: resultado.campos?.name || "",
-        phone: resultado.campos?.phone || "",
-        avatar: resultado.campos?.avatar || "",
+        name: resultado?.campos?.name || "",
+        phone: resultado?.campos?.phone || "",
+        avatar: resultado?.campos?.avatar || "",
       });
-
-      exibirMensagem(
-        "error",
-        resultado.erro || "Não foi possível salvar seu perfil.",
-      );
+      mensagem.value = {
+        tipo: "error",
+        texto: resultado?.erro || "Não foi possível salvar seu perfil. Tente novamente.",
+      };
+      salvando.value = false;
+      await focarPrimeiroErro(contexto);
       return;
     }
-
-    avatarFile.value = null;
-    removerAvatar.value = false;
-    avatarRemotoComErro.value = false;
-    limparPreview();
-    form.name = String(auth.usuario?.name || "");
-    form.phone = formatarTelefone(auth.usuario?.phone || "");
-
-    if (avatarInput.value) avatarInput.value.value = "";
-
-    exibirMensagem("success", "Perfil atualizado com sucesso.");
-  } finally {
+    confirmado.value = { ...auth.usuario };
     salvando.value = false;
+    restaurarFormulario();
+    mensagem.value = { tipo: "success", texto: "Perfil atualizado com sucesso." };
+  } catch {
+    if (contextoAtual(contexto)) {
+      mensagem.value = {
+        tipo: "error",
+        texto: "Não foi possível salvar seu perfil. Verifique sua conexão e tente novamente.",
+      };
+    }
+  } finally {
+    if (contextoAtual(contexto)) salvando.value = false;
+  }
+}
+
+async function focarPrimeiroErro(contexto) {
+  await nextTick();
+  if (!ativo || (contexto && !contextoAtual(contexto))) return;
+  const campo = ["name", "phone", "avatar"].find(chave => erros[chave]);
+  if (campo) {
+    document.getElementById(
+      campo === "avatar" ? "profile-avatar-trigger" : `profile-${campo}`,
+    )?.focus();
+  }
+}
+
+async function carregarPerfil() {
+  if (buscaPendente || !ativo) return;
+  const versao = getSessionVersion();
+  buscaPendente = true;
+  carregandoPerfil.value = true;
+  erroCarregamento.value = "";
+  try {
+    const usuario = await auth.buscarUsuarioLogado();
+    if (ativo && versao === getSessionVersion() && !usuario && !auth.usuario) {
+      erroCarregamento.value = "Seus dados não estão disponíveis. Tente novamente.";
+    }
+  } catch {
+    if (ativo && versao === getSessionVersion()) {
+      erroCarregamento.value = "Verifique sua conexão e tente novamente.";
+    }
+  } finally {
+    buscaPendente = false;
+    if (ativo && versao === getSessionVersion()) carregandoPerfil.value = false;
   }
 }
 
 function limparErro(campo) {
   erros[campo] = "";
+  mensagem.value = null;
 }
 
 function limparErros() {
-  erros.name = "";
-  erros.phone = "";
-  erros.avatar = "";
+  Object.assign(erros, { name: "", phone: "", avatar: "" });
 }
 
 function limparPreview() {
-  if (avatarPreview.value) {
-    URL.revokeObjectURL(avatarPreview.value);
-    avatarPreview.value = "";
-  }
+  if (avatarPreview.value) URL.revokeObjectURL(avatarPreview.value);
+  avatarPreview.value = "";
 }
 
-function exibirMensagem(tipo, texto) {
-  mensagem.value = { tipo, texto };
-  window.clearTimeout(toastTimer);
-  toastTimer = window.setTimeout(() => {
-    mensagem.value = null;
-  }, 4200);
-}
+onMounted(() => {
+  if (!auth.usuario) return carregarPerfil();
+});
 
 onBeforeUnmount(() => {
+  ativo = false;
+  operacao++;
   limparPreview();
-  window.clearTimeout(toastTimer);
 });
 </script>
 
@@ -583,578 +595,604 @@ onBeforeUnmount(() => {
 .profile-page {
   width: min(1120px, 100%);
   margin: 0 auto;
-  color: var(--student-text, #28231f);
+  padding: 8px 0 0;
+  color: var(--pp-marrom);
+}
+
+.profile-page :is(button, input) {
+  scroll-margin-block: calc(var(--pp-space-6) * 2 + var(--pp-space-4));
+}
+
+.profile-page :is(button, input):focus-visible {
+  outline: 3px solid var(--pp-dourado-profundo);
+  outline-offset: 4px;
+}
+
+.profile-page ::selection {
+  background: var(--pp-creme-borda);
+  color: var(--pp-marrom);
 }
 
 .profile-page__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .profile-page__header h1 {
   margin: 0;
-  color: #211d1a;
-  font-size: 30px;
-  line-height: 1.15;
-  letter-spacing: -0.025em;
+  font-family: var(--pp-font-titulo);
+  font-size: clamp(50px, 7vw, 92px);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -.025em;
 }
 
 .profile-page__header p {
-  margin: 6px 0 0;
-  color: #756e67;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.profile-page__status {
-  min-height: 34px;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 0 10px;
-  border: 1px solid #dfd9d3;
-  border-radius: 8px;
-  background: #fff;
-  color: #706961;
-  font-size: 10.5px;
-  font-weight: 700;
-}
-
-.profile-page__status.is-verified {
-  border-color: #cbdccf;
-  background: #f4f8f4;
-  color: #4c6e52;
+  margin: 12px 0 0;
+  color: var(--pp-texto-2);
+  font-size: 16px;
+  line-height: 1.6;
 }
 
 .profile-page__layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(290px, 0.75fr);
+  grid-template-columns: minmax(0, 1fr) 320px;
   align-items: start;
-  gap: 20px;
+  gap: 24px;
 }
 
 .profile-page__main,
-.profile-page__aside {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+.profile-page__aside,
+.profile-identity__content {
+  min-width: 0;
 }
 
-.profile-card {
-  padding: 22px;
-  border: 1px solid #dfdbd6;
-  border-radius: 12px;
-  background: #fff;
+.profile-page__main {
+  overflow: hidden;
+  border-radius: var(--pp-radius-card-lg);
+  background: var(--pp-surface-card);
 }
 
-.profile-card__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  margin-bottom: 18px;
-}
-
-.profile-card__head--with-icon > svg {
-  color: #766e67;
-}
-
-.profile-card__head h2 {
-  margin: 0;
-  color: #29231f;
-  font-size: 17px;
-  line-height: 1.25;
-}
-
-.profile-avatar-editor {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-
-.profile-avatar-editor__preview {
-  width: 78px;
-  height: 78px;
+.profile-identity {
   position: relative;
-  flex: 0 0 78px;
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+  padding: 28px;
+  background: var(--pp-marrom);
+  color: var(--pp-creme);
+}
+
+.profile-identity :is(button, input):focus-visible {
+  outline-color: var(--pp-gold);
+}
+
+.profile-avatar {
   display: grid;
   place-items: center;
-  overflow: visible;
-  border: 1px solid #ded8d2;
+  width: 128px;
+  height: 128px;
+  overflow: hidden;
+  border: 3px solid var(--pp-creme);
   border-radius: 50%;
-  background: #eee7dd;
-  color: #7c561a;
-  font-size: 22px;
-  font-weight: 750;
+  background: var(--pp-creme-2);
+  color: var(--pp-marrom-2);
+  font-size: 40px;
+  font-weight: 600;
 }
 
-.profile-avatar-editor__preview img {
-  position: absolute;
-  inset: 0;
+.profile-avatar img {
   width: 100%;
   height: 100%;
-  display: block;
-  border-radius: inherit;
   object-fit: cover;
 }
 
-.profile-avatar-editor__camera {
-  width: 30px;
-  height: 30px;
-  position: absolute;
-  right: -2px;
-  bottom: -2px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 2px solid #fff;
-  border-radius: 50%;
-  background: #2b1d15;
-  color: #fff;
-  cursor: pointer;
+.profile-avatar.is-preview img {
+  animation: profile-preview 180ms ease-out;
 }
 
-.profile-avatar-editor__content {
-  min-width: 0;
-  flex: 1;
+.profile-identity h2 {
+  margin: 0;
+  color: var(--pp-creme);
+  font-size: clamp(26px, 2.5vw, 34px);
+  font-weight: 700;
+  letter-spacing: -.025em;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
-.profile-avatar-editor__content > strong {
-  display: block;
-  color: #2b2521;
+.profile-identity__email {
+  margin: 8px 0;
+  font-size: 16px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.profile-identity__verification {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
   font-size: 14px;
+  line-height: 1.5;
 }
 
-.profile-avatar-editor__content > span {
-  display: block;
-  margin-top: 3px;
-  overflow: hidden;
-  color: #7b746e;
-  font-size: 11px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.profile-identity__verification svg {
+  flex-shrink: 0;
 }
 
-.profile-avatar-editor__content > p {
-  margin: 8px 0 0;
-  color: #98918b;
-  font-size: 12px;
-}
-
-.profile-avatar-editor__actions {
+.profile-avatar-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 11px;
+  align-items: center;
+  gap: 4px 18px;
+  margin: 18px 0 8px;
 }
 
-.profile-avatar-editor__input {
+.profile-text-btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 0;
+  border: 1px solid transparent;
+  border-radius: var(--pp-radius-btn);
+  background: transparent;
+  color: var(--pp-creme);
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+  transition: background-color 150ms, color 150ms, transform 150ms;
+}
+
+.profile-text-btn:hover:not(:disabled) {
+  color: var(--pp-gold);
+}
+
+.profile-text-btn--upload {
+  padding-inline: 14px;
+  background: var(--pp-creme);
+  color: var(--pp-marrom);
+  text-decoration: none;
+}
+
+.profile-text-btn--upload:hover:not(:disabled) {
+  background: var(--pp-creme-2);
+  color: var(--pp-marrom);
+}
+
+.profile-file-input {
   display: none;
 }
 
-.profile-link-btn {
-  min-height: 32px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 10px;
-  border: 1px solid #dcd7d1;
-  border-radius: 8px;
-  background: #fff;
-  color: #5d5650;
-  font: inherit;
-  font-size: 10.5px;
-  font-weight: 650;
-  cursor: pointer;
+.profile-hint {
+  margin: 0;
+  color: var(--pp-texto-2);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
-.profile-link-btn--danger {
-  color: #a54b43;
+.profile-identity .profile-hint {
+  color: var(--pp-creme);
+  font-size: 13px;
+}
+
+.profile-avatar-pending {
+  margin: 6px 0 0;
+  color: var(--pp-creme);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.profile-details {
+  padding: 28px;
+}
+
+.profile-section-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.profile-details h2,
+.profile-page__aside h2,
+.profile-load-state h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -.02em;
+}
+
+.profile-section-intro {
+  margin: 6px 0 22px;
+  color: var(--pp-texto-2);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .profile-unsaved {
   display: inline-flex;
+  gap: 6px;
   align-items: center;
-  gap: 5px;
-  color: #8a641f;
-  font-size: 12px;
-  font-weight: 650;
+  color: var(--pp-dourado-profundo);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .profile-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 22px 20px;
 }
 
-.profile-form__field {
+.profile-field {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.profile-form__field--wide {
+.profile-field--wide {
   grid-column: 1 / -1;
 }
 
-.profile-form__field label {
+.profile-field label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.profile-field input {
   display: block;
-  margin-bottom: 7px;
-  color: #4b443e;
-  font-size: 11px;
-  font-weight: 650;
-}
-
-.profile-form__control {
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 0 12px;
-  border: 1px solid #dcd7d1;
-  border-radius: 8px;
-  background: #fff;
-  color: #8e8780;
-  transition:
-    border-color 150ms ease,
-    box-shadow 150ms ease;
-}
-
-.profile-form__control:focus-within {
-  border-color: #aa7a35;
-  box-shadow: 0 0 0 3px rgba(167, 107, 23, 0.08);
-}
-
-.profile-form__control.has-error {
-  border-color: #c86459;
-  box-shadow: 0 0 0 3px rgba(200, 100, 89, 0.08);
-}
-
-.profile-form__control--readonly {
-  background: #f6f4f1;
-}
-
-.profile-form__control input {
+  width: 100%;
   min-width: 0;
-  flex: 1;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: #312b27;
-  font: inherit;
-  font-size: 12px;
+  height: 50px;
+  padding: 12px 15px;
+  border: 1px solid var(--pp-texto-3);
+  border-radius: var(--pp-radius-input);
+  background: var(--pp-surface-card);
+  color: var(--pp-marrom);
+  font: 400 16px/1.5 var(--pp-font-body);
+  caret-color: var(--pp-dourado-profundo);
 }
 
-.profile-form__control input[readonly] {
-  color: #7e7771;
+.profile-field input::placeholder {
+  color: var(--pp-texto-3);
+  opacity: 1;
 }
 
-.profile-form__lock {
-  flex: 0 0 auto;
-  color: #aaa39d;
+.profile-field input[aria-invalid="true"] {
+  border-color: var(--pp-marrom-2);
+  border-width: 2px;
 }
 
-.profile-form__hint {
-  display: block;
-  margin: 6px 2px 0;
-  color: #98918b;
-  font-size: 9.5px;
-  line-height: 1.45;
+.profile-readonly {
+  position: relative;
+}
+
+.profile-readonly input {
+  padding-right: 44px;
+  background: var(--pp-creme-2);
+  color: var(--pp-texto-2);
+}
+
+.profile-readonly > svg {
+  position: absolute;
+  right: 15px;
+  top: 16px;
+  color: var(--pp-texto-2);
+  pointer-events: none;
 }
 
 .profile-field-error {
-  margin: 6px 2px 0;
-  color: #b34e45;
-  font-size: 12px;
+  margin: 0;
+  color: var(--pp-marrom-2);
+  font-size: 14px;
   font-weight: 600;
+  line-height: 1.5;
+}
+
+.profile-identity .profile-field-error {
+  margin-top: 6px;
+  color: var(--pp-creme);
 }
 
 .profile-form__actions {
   grid-column: 1 / -1;
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
   padding-top: 2px;
 }
 
 .profile-btn {
-  min-height: 40px;
   display: inline-flex;
-  align-items: center;
   justify-content: center;
-  gap: 7px;
-  padding: 0 14px;
-  border-radius: 8px;
-  font: inherit;
-  font-size: 11px;
-  font-weight: 700;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 13px 20px;
+  border: 1px solid transparent;
+  border-radius: var(--pp-radius-btn);
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 600;
   cursor: pointer;
-}
-
-.profile-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.profile-btn--secondary {
-  border: 1px solid #dcd7d1;
-  background: #fff;
-  color: #5e5751;
+  transition: background-color 150ms, color 150ms, transform 150ms;
 }
 
 .profile-btn--primary {
-  border: 1px solid #2b1d15;
-  background: #2b1d15;
-  color: #fff;
+  background: var(--pp-marrom);
+  color: var(--pp-creme);
 }
 
 .profile-btn--primary:hover:not(:disabled) {
-  background: #1f1510;
+  background: var(--pp-marrom-2);
 }
 
-.profile-security-list {
-  border-top: 1px solid #eeeae6;
+.profile-btn--secondary {
+  border-color: var(--pp-texto-3);
+  background: transparent;
+  color: var(--pp-marrom);
 }
 
-.profile-security-item {
-  display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) auto;
+.profile-btn--secondary:hover:not(:disabled) {
+  background: var(--pp-creme-2);
+}
+
+.profile-page button:active:not(:disabled) {
+  transform: scale(.98);
+}
+
+.profile-page button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.profile-field input:disabled {
+  opacity: .7;
+  cursor: wait;
+}
+
+.profile-feedback-region {
+  grid-column: 1 / -1;
+}
+
+.profile-feedback-region:empty {
+  margin-top: -22px;
+}
+
+.profile-feedback {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--pp-marrom-2);
+}
+
+.profile-feedback > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.profile-feedback p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.profile-feedback--success {
+  color: var(--pp-verde);
+}
+
+.profile-page__aside {
+  padding: 24px;
+  border-radius: var(--pp-radius-card-lg);
+  background: var(--pp-creme-2);
+}
+
+.profile-aside-heading {
+  display: flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 0;
-  border-bottom: 1px solid #eeeae6;
 }
 
-.profile-security-item__icon {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border-radius: 8px;
-  background: #f3f0ec;
-  color: #7e6a4d;
+.profile-aside-heading > svg {
+  flex-shrink: 0;
+  color: var(--pp-dourado-profundo);
 }
 
-.profile-security-item strong,
-.profile-security-item div > span {
-  display: block;
-}
-
-.profile-security-item strong {
-  color: #332d28;
-  font-size: 11.5px;
-}
-
-.profile-security-item div > span {
-  margin-top: 2px;
-  color: #8c857f;
-  font-size: 9.5px;
-}
-
-.profile-security-item__state {
-  color: #7d756e;
-  font-size: 8.5px;
-  font-weight: 750;
-  text-transform: uppercase;
-}
-
-.profile-security-item__state.is-positive {
-  color: #52705a;
-}
-
-.profile-security-note {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin-top: 15px;
-  padding: 11px 12px;
-  border-radius: 8px;
-  background: #f6f4f1;
-  color: #837b75;
-}
-
-.profile-security-note svg {
-  flex: 0 0 auto;
-  margin-top: 1px;
-}
-
-.profile-security-note p {
-  margin: 0;
-  font-size: 9.5px;
-  line-height: 1.45;
-}
-
+.profile-security-list,
 .profile-summary-list {
-  margin: 0;
+  display: grid;
+  gap: 18px;
+  margin: 22px 0 0;
 }
 
+.profile-security-list > div,
 .profile-summary-list > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  align-items: baseline;
+  gap: 12px;
+}
+
+.profile-security-list dt {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 12px 0;
-  border-bottom: 1px solid #eeeae6;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
 }
 
-.profile-summary-list > div:first-child {
-  padding-top: 0;
+.profile-security-list dt svg {
+  flex-shrink: 0;
+  width: 16px;
+  color: var(--pp-texto-2);
 }
 
-.profile-summary-list > div:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
+.profile-security-list dd,
+.profile-summary-list dd {
+  margin: 0;
+  color: var(--pp-marrom);
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: right;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
 }
 
 .profile-summary-list dt {
-  color: #817a74;
-  font-size: 12px;
+  color: var(--pp-texto-2);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
-.profile-summary-list dd {
-  margin: 0;
-  color: #332d28;
-  font-size: 12px;
-  font-weight: 700;
-  text-align: right;
+.profile-account {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--pp-creme-borda);
 }
 
-.profile-toast {
-  position: fixed;
-  right: 24px;
-  bottom: 24px;
-  z-index: 80;
-  max-width: min(380px, calc(100vw - 32px));
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 12px 14px;
-  border: 1px solid #c9ddcd;
-  border-radius: 9px;
-  background: #f2f8f3;
-  color: #3f6748;
-  box-shadow: 0 10px 24px rgba(42, 31, 23, 0.12);
-  font-size: 11px;
-  font-weight: 650;
+.profile-load-state {
+  max-width: 600px;
+  padding: 40px 0;
 }
 
-.profile-toast--error {
-  border-color: #ead0cc;
-  background: #fff5f3;
-  color: #a34d44;
+.profile-load-state > svg {
+  margin-bottom: 18px;
+  color: var(--pp-dourado-profundo);
+}
+
+.profile-load-state p {
+  margin: 12px 0 24px;
+  color: var(--pp-texto-2);
+  line-height: 1.6;
 }
 
 .profile-spin {
-  animation: profile-spin 700ms linear infinite;
-}
-
-.profile-toast-enter-active,
-.profile-toast-leave-active {
-  transition:
-    opacity 180ms ease,
-    transform 180ms ease;
-}
-
-.profile-toast-enter-from,
-.profile-toast-leave-to {
-  opacity: 0;
-  transform: translateY(8px);
+  animation: profile-spin 900ms linear infinite;
 }
 
 @keyframes profile-spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
-@media (max-width: 900px) {
+@keyframes profile-preview {
+  from { opacity: .5; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 999px) {
   .profile-page__layout {
-    grid-template-columns: 1fr;
-  }
-
-  .profile-page__aside {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 600px) {
   .profile-page__header {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 12px;
+    margin-bottom: 24px;
   }
 
   .profile-page__header h1 {
-    font-size: 25px;
+    font-size: clamp(50px, 12vw, 70px);
   }
 
-  .profile-card {
-    padding: 18px;
-    border-radius: 10px;
+  .profile-page__header p {
+    font-size: 15px;
   }
 
-  .profile-page__aside {
-    display: flex;
+  .profile-identity {
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 12px 16px;
+    padding: 22px 18px;
   }
 
-  .profile-avatar-editor {
+  .profile-avatar {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    width: 96px;
+    height: 96px;
+    font-size: 32px;
+  }
+
+  .profile-identity__content {
+    display: contents;
+  }
+
+  .profile-identity h2 {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
+    font-size: 24px;
+  }
+
+  .profile-identity__verification {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
     align-items: flex-start;
   }
 
+  .profile-identity__email,
+  .profile-avatar-actions,
+  .profile-identity .profile-hint,
+  .profile-avatar-pending,
+  .profile-identity .profile-field-error {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+
+  .profile-identity__email {
+    grid-row: 3;
+  }
+
+  .profile-avatar-actions {
+    gap: 4px 12px;
+  }
+
+  .profile-details {
+    padding: 22px 18px;
+  }
+
   .profile-form {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .profile-form__field--wide,
-  .profile-form__actions {
-    grid-column: auto;
-  }
-
-  .profile-form__actions {
-    flex-direction: column-reverse;
-  }
-
-  .profile-btn {
-    width: 100%;
-  }
-
-  .profile-security-item {
-    grid-template-columns: 32px minmax(0, 1fr);
-  }
-
-  .profile-security-item__state {
-    grid-column: 2;
-    justify-self: start;
-  }
-
-  .profile-toast {
-    left: 16px;
-    right: 16px;
-    bottom: 80px;
-    justify-content: center;
+  .profile-page__aside {
+    padding: 22px 18px;
   }
 }
 
-@media (max-width: 420px) {
-  .profile-avatar-editor {
-    flex-direction: column;
+@media (max-width: 360px) {
+  .profile-form__actions {
+    align-items: stretch;
   }
 
-  .profile-avatar-editor__content {
+  .profile-form__actions .profile-btn {
     width: 100%;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .profile-spin {
+  .profile-spin,
+  .profile-avatar.is-preview img {
     animation: none;
   }
 
-  .profile-toast-enter-active,
-  .profile-toast-leave-active {
+  .profile-page button {
     transition: none;
+  }
+
+  .profile-page button:active:not(:disabled) {
+    transform: none;
   }
 }
 </style>

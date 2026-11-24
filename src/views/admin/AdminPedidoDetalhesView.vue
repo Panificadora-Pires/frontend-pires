@@ -13,21 +13,9 @@
           {{ formatarData(pedido.data) }}
         </p>
       </div>
-      <div class="admin-actions">
-        <BaseRefreshStatus
-          class="admin-refresh-status"
-          :ultima-atualizacao="ultimaAtualizacao"
-          :atualizando="carregando"
-          :erro="pedido ? erroAtualizacao : null"
-        />
-        <button class="admin-btn" :disabled="carregando" @click="atualizar">
-          <RefreshCw
-            :size="16"
-            :class="{ 'admin-spin': carregando }"
-            aria-hidden="true"
-          />
-          Atualizar
-        </button>
+      <div v-if="erro || erroAtualizacao" class="admin-detail-retry" role="status">
+        <span>Não foi possível sincronizar os dados.</span>
+        <button type="button" class="admin-btn pp-card-action pp-admin-action--secondary" data-card-action-radius @click="atualizarAgora"><CardActionContent>Tentar novamente</CardActionContent></button>
       </div>
     </header>
 
@@ -113,28 +101,28 @@
             <div class="order-actions">
               <button
                 v-if="pedido.status === 'pendente'"
-                class="admin-btn admin-btn--primary order-actions__main"
+                class="admin-btn admin-btn--primary order-actions__main pp-card-action pp-admin-action--primary" data-card-action-radius
                 :disabled="acao || confirmacaoBloqueada"
                 @click="alterar('confirmado')"
-              >
+              ><CardActionContent>
                 <BadgeCheck :size="17" />Confirmar pedido
-              </button>
+              </CardActionContent></button>
               <button
                 v-if="pedido.status === 'confirmado'"
-                class="admin-btn admin-btn--primary order-actions__main"
+                class="admin-btn admin-btn--primary order-actions__main pp-card-action pp-admin-action--primary" data-card-action-radius
                 :disabled="acao"
                 @click="alterar('pronto')"
-              >
+              ><CardActionContent>
                 <PackageCheck :size="17" />Marcar como pronto
-              </button>
+              </CardActionContent></button>
               <button
                 v-if="pedido.status === 'pronto'"
-                class="admin-btn admin-btn--primary order-actions__main"
+                class="admin-btn admin-btn--primary order-actions__main pp-card-action pp-admin-action--primary" data-card-action-radius
                 :disabled="acao"
                 @click="scannerAberto = true"
-              >
+              ><CardActionContent>
                 <QrCode :size="17" />Confirmar retirada por QR
-              </button>
+              </CardActionContent></button>
               <div
                 v-if="['retirado', 'cancelado'].includes(pedido.status)"
                 class="order-actions__done"
@@ -149,12 +137,12 @@
                 v-if="
                   ['pendente', 'confirmado', 'pronto'].includes(pedido.status)
                 "
-                class="admin-btn admin-btn--danger order-actions__main"
+                class="admin-btn admin-btn--danger order-actions__main pp-card-action pp-admin-action--danger" data-card-action-radius
                 :disabled="acao"
                 @click="abrirCancelamento"
-              >
+              ><CardActionContent>
                 <CircleX :size="16" />Cancelar pedido
-              </button>
+              </CardActionContent></button>
             </div>
           </section>
 
@@ -184,10 +172,6 @@
               <div>
                 <dt>Cliente</dt>
                 <dd>{{ pedido.usuario_nome || "Cliente" }}</dd>
-              </div>
-              <div>
-                <dt>Código de retirada</dt>
-                <dd class="order-info__code">{{ pedido.codigo_retirada }}</dd>
               </div>
               <div>
                 <dt>Forma de pagamento</dt>
@@ -263,21 +247,21 @@
         <div class="admin-modal-footer">
           <button
             type="button"
-            class="admin-btn"
+            class="admin-btn pp-card-action pp-admin-action--secondary" data-card-action-radius
             :disabled="acao"
             @click="fecharCancelamento"
-          >
+          ><CardActionContent>
             Voltar
-          </button>
+          </CardActionContent></button>
           <button
             type="button"
-            class="admin-btn admin-btn--danger"
+            class="admin-btn admin-btn--danger pp-card-action pp-admin-action--danger" data-card-action-radius
             :disabled="acao"
             @click="confirmarCancelamento"
-          >
+          ><CardActionContent>
             <CircleX :size="16" />
             {{ acao ? "Cancelando..." : "Cancelar pedido" }}
-          </button>
+          </CardActionContent></button>
         </div>
       </div>
     </div>
@@ -285,6 +269,7 @@
 </template>
 
 <script setup>
+import CardActionContent from "@/components/ui/CardActionContent.vue";
 import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import {
@@ -295,12 +280,10 @@ import {
   CircleX,
   PackageCheck,
   QrCode,
-  RefreshCw,
   WalletCards,
 } from "lucide-vue-next";
 import AdminQRCodeScanner from "@/components/admin/AdminQRCodeScanner.vue";
 import OrderChatPanel from "@/components/chat/OrderChatPanel.vue";
-import BaseRefreshStatus from "@/components/ui/BaseRefreshStatus.vue";
 import { useAutoRefresh } from "@/composables/useAutoRefresh";
 import { mensagemErroApi } from "@/services/admin.service";
 import { useAdminOrdersStore } from "@/stores/adminOrders";
@@ -387,15 +370,9 @@ async function carregar() {
 }
 
 const {
-  atualizando: carregando,
-  ultimaAtualizacao,
   erro: erroAtualizacao,
   atualizarAgora,
 } = useAutoRefresh(carregar, { intervalo: INTERVALO_DETALHE_MS });
-
-function atualizar() {
-  atualizarAgora();
-}
 
 // Navegar de um pedido para outro reaproveita o componente.
 watch(
@@ -493,6 +470,7 @@ function onRetirado(p) {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.65fr);
   gap: 14px;
+  align-items: start;
 }
 .order-items-card {
   overflow: hidden;
@@ -675,4 +653,34 @@ function onRetirado(p) {
   color: #b91c1c;
 }
 
+
+/* O resumo dos itens não deve ocupar toda a altura do chat lateral. */
+.order-items-card {
+  align-self: start;
+}
+.admin-detail-retry {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  color: var(--pp-admin-danger);
+  font-size: 12px;
+}
+.admin-detail-retry .admin-btn { min-height: 40px; }
+.order-actions .admin-btn,
+.admin-detail-retry .admin-btn {
+  transition: transform 240ms cubic-bezier(.22,1,.36,1), box-shadow 240ms ease, background-color 240ms ease;
+}
+.order-actions .admin-btn:hover:not(:disabled),
+.admin-detail-retry .admin-btn:hover:not(:disabled) {
+
+  box-shadow: 0 8px 22px rgba(42, 23, 11, .14);
+}
+.order-actions .admin-btn:active:not(:disabled) { transform: scale(.985); }
+@media (prefers-reduced-motion: reduce) {
+  .order-actions .admin-btn,
+  .admin-detail-retry .admin-btn { transition: none; }
+  .order-actions .admin-btn:hover:not(:disabled),
+  .admin-detail-retry .admin-btn:hover:not(:disabled) { transform: none; }
+}
 </style>

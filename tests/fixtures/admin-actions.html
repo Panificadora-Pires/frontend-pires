@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<title>Fixture de ações administrativas</title>
+<div id="fixture"></div>
+<script type="module">
+import { createApp, h } from 'vue';
+import CardActionContent from '/src/components/ui/CardActionContent.vue';
+import '/src/assets/styles/tokens.css';
+import '/src/assets/styles/card-actions.css';
+import '/src/assets/styles/admin.css';
+import '/src/assets/styles/admin-tokens.css';
+const action = (variant, disabled = false) => h('button', {
+  class: `admin-btn pp-card-action pp-admin-action--${variant}`,
+  'data-card-action-radius': '', disabled,
+}, [h(CardActionContent, null, () => variant)]);
+createApp({ render: () => h('div', [
+  h('div', { class: 'admin-layout' }, [action('primary'), action('secondary'), action('danger'), action('cancel'), action('danger', true)]),
+  h('div', { class: 'student' }, [action('danger')]),
+]) }).mount('#fixture');
+</script>
+</html>
