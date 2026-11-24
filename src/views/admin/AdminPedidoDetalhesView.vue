@@ -597,10 +597,6 @@ function onRetirado(p) {
   text-align: right;
   overflow-wrap: anywhere;
 }
-.order-info__code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 10px !important;
-}
 @media (max-width: 980px) {
   .order-detail__grid {
     grid-template-columns: 1fr;
