@@ -23,7 +23,7 @@ async function handleRegister() {
   if (ocupado.value) return;
   erroGeral.value = "";
   validarNome(); validarEmail(); validarTelefone(); validarSenha(); validarConfirmacao();
-  erros.acceptedTerms = form.acceptedTerms ? "" : "Confirme a leitura do aviso antes de continuar.";
+  erros.acceptedTerms = form.acceptedTerms ? "" : "Aceite os Termos de Uso e a Política de Privacidade para continuar.";
   if (Object.values(erros).some(Boolean)) { await focarErro(); return; }
   const resultado = await executar(() => auth.register({ name: form.name, email: form.email, phone: form.phone, password: form.password }));
   if (resultado.ignorado) return;
@@ -57,9 +57,8 @@ function formatarTelefone(valor) {
           <div class="auth-form__full"><BaseInput v-model="form.passwordConfirm" label="Confirmar senha" type="password" placeholder="Repita sua senha" :icon="Lock" :error="erros.passwordConfirm" autocomplete="new-password" name="password-confirm" required @blur="validarConfirmacao" /></div>
         </div>
         <p id="register-password-help" class="auth-small">Use pelo menos 8 caracteres. Evite senhas comuns, apenas números ou semelhantes aos seus dados pessoais.</p>
-        <details class="auth-legal"><summary>Termos de Uso e Política de Privacidade</summary><p>Os documentos ainda não foram disponibilizados neste projeto. O aceite jurídico verificável está pendente; não há documentos publicados para consultar nesta tela.</p></details>
-        <label class="auth-checkbox"><input v-model="form.acceptedTerms" type="checkbox" name="accepted-terms" :aria-invalid="Boolean(erros.acceptedTerms || erroAceite)" :aria-describedby="erros.acceptedTerms || erroAceite ? 'terms-error' : undefined" /><span>Li o aviso sobre a indisponibilidade dos Termos de Uso e da Política de Privacidade.</span></label>
-        <p v-if="erros.acceptedTerms || erroAceite" id="terms-error" class="auth-inline-error" role="alert">{{ erros.acceptedTerms || 'Confirme a leitura do aviso antes de continuar com o Google.' }}</p>
+        <label class="auth-checkbox"><input v-model="form.acceptedTerms" type="checkbox" name="accepted-terms" :aria-invalid="Boolean(erros.acceptedTerms || erroAceite)" :aria-describedby="erros.acceptedTerms || erroAceite ? 'terms-error' : undefined" /><span>Li e aceito os <a href="/termos" target="_blank" rel="noopener">Termos de Uso</a> e a <a href="/privacidade" target="_blank" rel="noopener">Política de Privacidade</a>.</span></label>
+        <p v-if="erros.acceptedTerms || erroAceite" id="terms-error" class="auth-inline-error" role="alert">{{ erros.acceptedTerms || 'Aceite os Termos de Uso e a Política de Privacidade para continuar com o Google.' }}</p>
         <BaseButton type="submit" block :loading="ocupado" loading-text="Criando conta...">Criar conta</BaseButton>
       </fieldset>
     </form>
