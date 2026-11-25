@@ -1,6 +1,6 @@
-# Pires Panificadora — Frontend
+# Panificadora Pires - Frontend
 
-Aplicação web (PWA) do sistema de pedidos antecipados da Pires Panificadora, Projeto Integrador do Curso Técnico em Informática do IFC — Campus Araquari. O cliente escolhe o lanche, paga por Pix, cartão ou em dinheiro na retirada e retira o pedido no balcão mostrando um QR Code. A equipe da padaria acompanha a fila de pedidos, confirma a retirada pela câmera e consulta os relatórios.
+Aplicação web (PWA) do sistema de pedidos antecipados da Panificadora Pires, Projeto Integrador do Curso Técnico em Informática do IFC — Campus Araquari. O cliente escolhe o lanche, paga por Pix, cartão ou em dinheiro na retirada e retira o pedido no balcão mostrando um QR Code. A equipe da padaria acompanha a fila de pedidos, confirma a retirada pela câmera e consulta os relatórios.
 
 - Documentação do projeto: [Panificadora-Pires](https://github.com/Panificadora-Pires/.github)
 - Backend: [backend-pires](https://github.com/Panificadora-Pires/backend-pires)
