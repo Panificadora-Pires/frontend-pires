@@ -1,0 +1,167 @@
+.kanban-card {
+  min-width: 0;
+  border: 1px solid var(--pp-admin-border);
+  background: var(--pp-admin-surface);
+  border-radius: 11px;
+  padding: 15px;
+  box-shadow: 0 3px 10px #321c0a08;
+}
+.kanban-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 9px;
+}
+.kanban-order-id {
+  font-size: 13px;
+  font-weight: 750;
+  color: var(--pp-admin-accent);
+}
+.kanban-card time {
+  font-size: 11px;
+  color: var(--pp-admin-muted);
+}
+.kanban-client {
+  font-size: 15px;
+  line-height: 1.4;
+  display: block;
+  overflow-wrap: anywhere;
+}
+.kanban-items {
+  color: var(--pp-admin-muted);
+  font-size: 12px;
+  line-height: 1.55;
+  margin: 7px 0 12px;
+  overflow-wrap: anywhere;
+}
+.kanban-payment-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  color: var(--pp-admin-muted);
+  font-size: 11px;
+}
+.kanban-payment-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 6px;
+  padding: 4px 6px;
+  background: var(--pp-creme-2);
+  color: var(--pp-admin-text);
+  font-weight: 600;
+}
+.payment-aprovado {
+  background: var(--pp-admin-success-bg);
+}
+.payment-pendente,
+.payment-processando {
+  background: var(--pp-admin-warning-bg);
+}
+.payment-recusado,
+.payment-erro {
+  background: var(--pp-admin-danger-bg);
+}
+.kanban-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--pp-admin-border);
+  margin-top: 14px;
+  padding-top: 12px;
+}
+.kanban-card-bottom strong {
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.kanban-unread {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--pp-admin-accent);
+  font-size: 11px;
+  font-weight: 600;
+}
+.kanban-card-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+}
+.kanban-card-actions a,
+.kanban-card-actions button {
+  display: grid;
+  place-items: center;
+  flex: 1;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--pp-admin-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--pp-admin-text);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 650;
+  text-align: center;
+  cursor: pointer;
+}
+.kanban-card-actions button,
+.kanban-card-actions .kanban-retirada {
+  background: var(--pp-admin-text);
+  color: var(--pp-admin-bg);
+  border-color: var(--pp-admin-text);
+}
+.kanban-card-actions button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+.kanban-waiting {
+  color: var(--pp-admin-muted);
+  font-size: 11px;
+  margin: 10px 0 0;
+  line-height: 1.5;
+}
+@media (max-width: 1200px) {
+  .kanban-card {
+    padding: 12px;
+  }
+}
+@media (max-width: 440px) {
+  .kanban-card {
+    padding: 14px;
+  }
+}
+
+.kanban-card,
+.kanban-card-actions a,
+.kanban-card-actions button {
+  transition:
+    border-color 220ms ease,
+    background-color 220ms ease,
+    color 220ms ease,
+    box-shadow 250ms ease,
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.kanban-card:hover {
+  border-color: rgba(156, 98, 29, 0.35);
+  box-shadow: 0 9px 23px rgba(53, 27, 10, 0.09);
+  transform: translateY(-2px);
+}
+.kanban-card-actions a:hover,
+.kanban-card-actions button:hover:not(:disabled) {
+  border-color: var(--pp-admin-accent);
+  box-shadow: 0 5px 14px rgba(53, 27, 10, 0.1);
+}
+.kanban-card-actions a:active,
+.kanban-card-actions button:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+@media (prefers-reduced-motion: reduce) {
+  .kanban-card:hover,
+  .kanban-card-actions a:hover,
+  .kanban-card-actions button:hover:not(:disabled) {
+    transform: none;
+  }
+}
