@@ -178,7 +178,6 @@ async function montarCardBrick() {
         },
         onError: (error) => {
           console.error("Mercado Pago Card Payment Brick:", error);
-          // Erro não crítico (ex.: cartão não reconhecido) mantém o formulário para correção.
           if (!erroBrickBloqueante(error)) {
             avisoCartao.value = mensagemAvisoBrick(error);
             return;

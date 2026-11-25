@@ -155,17 +155,13 @@ import { useChatStore } from "@/stores/chat";
 import { useNotificationsStore } from "@/stores/notifications";
 import { REALTIME_ENABLED, realtimeClient } from "@/services/realtime";
 
-// Com a conversa aberta, a resposta precisa aparecer rápido.
 const INTERVALO_CONVERSA_MS = 5_000;
-// Igual ao CHAT_MENSAGEM_TAMANHO_MAXIMO padrão do backend.
 const LIMITE_CARACTERES = 1000;
 const AVISO_LIMITE = 150;
-// Distância do fim da lista (px) em que ainda consideramos que a pessoa está "no fim".
 const MARGEM_FIM_DA_LISTA = 80;
 
 const props = defineProps({
   pedidoId: { type: [Number, String], required: true },
-  // "cliente": o lado de lá é a padaria. "admin": o lado de lá é o cliente.
   variante: {
     type: String,
     default: "cliente",
@@ -244,8 +240,6 @@ function recarregar() {
   atualizarAgora();
 }
 
-// Com o chat aberto, só ouvimos sinais deste pedido; nunca recebemos conteúdo
-// de mensagens via WS. A API autenticada continua sendo a fonte de verdade.
 onMounted(() => {
   if (!REALTIME_ENABLED) return;
   desinscreverRealtime = realtimeClient.inscrever(evento => {
@@ -278,7 +272,6 @@ function rolarParaOFim() {
   if (el) el.scrollTop = el.scrollHeight;
 }
 
-// Mensagem nova rola a lista só se a pessoa já estava no fim (não atrapalha quem lê o histórico).
 watch(
   () => itens.value.length,
   async (atual, anterior) => {
@@ -290,19 +283,16 @@ watch(
   { flush: "post" },
 );
 
-// Conversa aberta e visível: o que chegou do outro lado conta como lido.
 watch(
   () => conversa.value?.nao_lidas,
   async (quantidade) => {
     if (!quantidade || document.visibilityState === "hidden") return;
     try {
       const marcadas = await chat.marcarLidas(props.pedidoId);
-      // O backend também marca a notificação "nova mensagem" como lida; atualiza o sininho.
       if (marcadas && props.variante === "cliente") {
         notifications.carregar({ force: true, silencioso: true }).catch(() => {});
       }
     } catch {
-      // Tenta de novo na próxima atualização da conversa.
     }
   },
   { immediate: true },

@@ -383,7 +383,6 @@ const metodosLogin = computed(() => {
   return metodos.join(" + ") || "Não disponível";
 });
 
-// Confirmações acompanham o servidor; refresh da mesma conta não é edição do rascunho.
 watch(
   () => auth.usuario,
   (usuario) => {

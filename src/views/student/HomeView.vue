@@ -139,7 +139,6 @@ const MAXIMO_DESTAQUES = 4;
 const MAXIMO_PROMOCOES_NO_BANNER = 3;
 const MAXIMO_DESTAQUES_NO_BANNER = 2;
 
-// Ilustrações geradas com IA e fornecidas por Arthur; não são registros documentais da loja.
 const fotosBalcao = [
   { id: "preparo", src: preparoBalcao, alt: "Coxinhas douradas em uma bandeja sobre o balcão.", legenda: "Coxinhas na bandeja", width: 1200, height: 896 },
   { id: "vitrine", src: vitrineBalcao, alt: "Brigadeiros e pães de queijo em uma vitrine de vidro.", legenda: "Brigadeiros e pães de queijo", width: 1200, height: 896 },
@@ -193,14 +192,12 @@ function formatarPreco(valor) {
   }).format(Number(valor || 0));
 }
 
-// Produtos em destaque primeiro; sem destaque marcado, os primeiros ativos.
 const destaques = computed(() => {
   const marcados = produtos.value.filter((produto) => produto.destaque);
   const restantes = produtos.value.filter((produto) => !produto.destaque);
   return [...marcados, ...restantes].slice(0, MAXIMO_DESTAQUES);
 });
 
-// Só produtos com promoção vigente (a API marca em_promocao; a lista de promoções confirma a vigência).
 const produtosEmPromocao = computed(() => {
   const vigentes = new Map(
     promocoes.value
@@ -212,7 +209,6 @@ const produtosEmPromocao = computed(() => {
   );
 });
 
-// A listagem não traz estoque: confirmar pelo detalhe antes de oferecer a compra.
 const promocaoEmDestaque = ref(null);
 watch(produtosEmPromocao, async (candidatos, anterior, onCleanup) => {
   let atual = true;
@@ -228,13 +224,11 @@ watch(produtosEmPromocao, async (candidatos, anterior, onCleanup) => {
         return;
       }
     } catch {
-      // Sem confirmar disponibilidade, tentar a próxima oferta vigente.
       if (!atual) return;
     }
   }
 });
 
-// Comercial v3 aprovado, sem texto gravado; demais produtos mantêm foto/ilustração.
 
 function slideDeProduto(produto, { etiqueta, destaque, texto, nota }) {
   const preco = formatarPreco(produto.preco_atual ?? produto.preco);
@@ -258,7 +252,6 @@ function slideDeProduto(produto, { etiqueta, destaque, texto, nota }) {
   };
 }
 
-// Banner: promoções reais primeiro; sem promoção, os destaques da casa. "Como funciona" fecha a fila.
 const slidesBanner = computed(() => {
   const emPromocao = produtosEmPromocao.value.slice(0, MAXIMO_PROMOCOES_NO_BANNER);
   const slides = emPromocao.length
@@ -436,7 +429,6 @@ async function carregarPromocoes() {
   try {
     promocoes.value = await catalogService.listarPromocoes();
   } catch {
-    // Sem a lista de promoções, o banner usa os destaques da casa.
     promocoes.value = [];
   } finally {
     carregandoPromos.value = false;
@@ -461,7 +453,6 @@ onBeforeUnmount(() => {
   margin: 0 auto;
   color: var(--student-text);
 }
-/* Só os controles da Home herdam o tempo comum; conteúdo e outras rotas não mudam. */
 .home :deep(:is(button, a, .pp-card-action__fill)) {
   transition-duration: var(--pp-home-action-duration);
   transition-timing-function: var(--pp-ease);

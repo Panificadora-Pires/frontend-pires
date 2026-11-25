@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { ref, computed, watch, nextTick, shallowRef, effectScope } from 'vue';
 
-// Executa o script setup real com serviços e ciclo de vida controlados, sem DOM/API.
 export function executarScript(caminho, dependencias, expor) {
   const fonte = readFileSync(new URL(`../../src/${caminho}`, import.meta.url), 'utf8');
   const script = fonte.match(/<script setup>([\s\S]*?)<\/script>/)[1]

@@ -91,7 +91,6 @@ function fecharPeloFundo(event) {
 }
 function diminuir() { if (!enviando.value) quantidade.value = Math.max(1, quantidade.value - 1); }
 function aumentar() { if (!enviando.value) quantidade.value = Math.min(limiteQuantidade.value, quantidade.value + 1); }
-// O voo até o carrinho parte da imagem do modal (só acontece se o item entrar no carrinho).
 async function adicionar() {
   if (!props.open || props.loading || !props.produto || !statusEstoque.value.disponivel || enviando.value) return;
   solicitando.value = true;

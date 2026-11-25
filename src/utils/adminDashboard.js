@@ -19,7 +19,6 @@ export function serieRetiradas(pedidos, hoje) {
   });
   const centavos = new Map(pontos.map(({ dia }) => [dia, 0]));
   for (const pedido of pedidos) {
-    // Criação não substitui uma data de retirada ausente.
     if (pedido.status !== 'retirado' || !pedido.status_atualizado_em) continue;
     const dia = diaEmSaoPaulo(pedido.status_atualizado_em);
     const valor = Number(pedido.total);

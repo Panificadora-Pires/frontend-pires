@@ -80,7 +80,6 @@ import {
 
 const props = defineProps({
   mensagem: { type: Object, required: true },
-  // Só a última resposta do assistente mostra os botões de próximo passo.
   mostrarAcoes: { type: Boolean, default: false },
 });
 

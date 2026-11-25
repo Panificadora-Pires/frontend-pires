@@ -1,9 +1,3 @@
-/**
- * PR6B.1 — Eventos de invalidação por WebSocket, somente leitura.
- *
- * Desativado por padrão. REST continua fonte de verdade e o polling não é
- * interrompido nesta fase. JWT jamais é colocado em URL/subprotocol.
- */
 import api, {
   getAccessToken,
   getSessionVersion,
@@ -31,7 +25,6 @@ export function validarEventoRealtime(valor) {
   if (typeof valor.event_id !== "string" || !/^[0-9a-f]{32}$/i.test(valor.event_id)) return null;
   if (typeof valor.emitido_em !== "string" || !Number.isFinite(Date.parse(valor.emitido_em))) return null;
   if (valor.pedido_id != null && (!Number.isSafeInteger(valor.pedido_id) || valor.pedido_id < 1)) return null;
-  // Descarta qualquer atributo extra, inclusive dados inesperados/sensíveis.
   return {
     v: 1, tipo: valor.tipo, event_id: valor.event_id,
     emitido_em: valor.emitido_em,
@@ -80,7 +73,7 @@ export function createRealtimeClient({
     if (estado === proximo) return;
     estado = proximo;
     for (const ouvir of estados) {
-      try { ouvir(estado); } catch { /* Uma tela não pode quebrar o transporte. */ }
+      try { ouvir(estado); } catch {}
     }
   };
   function limparTimers() {
@@ -95,7 +88,7 @@ export function createRealtimeClient({
       anterior.onmessage = null;
       anterior.onclose = null;
       anterior.onerror = null;
-      try { anterior.close(); } catch { /* Pode já estar desconectado. */ }
+      try { anterior.close(); } catch {}
     }
   }
   function sessaoAtual(geracaoDaChamada, versao) {
@@ -154,9 +147,8 @@ export function createRealtimeClient({
         falhas = 0;
         recebidos.clear();
         avisarEstado("conectado");
-        // Em toda reconexão o consumidor deve refazer uma consulta REST.
         for (const ouvir of ouvintes) {
-          try { ouvir(null); } catch { /* Snapshot deve ser solicitado pela tela. */ }
+          try { ouvir(null); } catch {}
         }
       };
       ws.onmessage = mensagem => {
@@ -168,7 +160,7 @@ export function createRealtimeClient({
         recebidos.add(dados.event_id);
         if (recebidos.size > MAX_EVENTOS_VISTOS) recebidos.delete(recebidos.values().next().value);
         for (const ouvir of ouvintes) {
-          try { ouvir(dados); } catch { /* Ignora erros de componentes desmontados. */ }
+          try { ouvir(dados); } catch {}
         }
       };
       ws.onerror = falhou;
@@ -218,5 +210,4 @@ export function createRealtimeClient({
   };
 }
 
-// Uma conexão por aba. Múltiplos componentes podem assinar os mesmos sinais.
 export const realtimeClient = createRealtimeClient();

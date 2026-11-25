@@ -1,7 +1,3 @@
-/**
- * Consolida rajadas de sinais WebSocket em uma consulta REST por recurso.
- * Nunca aplica payload remoto diretamente a stores ou dados financeiros.
- */
 export function createRealtimeInvalidations({
   pedidos = () => {},
   chat = () => {},
@@ -22,10 +18,8 @@ export function createRealtimeInvalidations({
     pendentes.clear();
     for (const recurso of lote) {
       try {
-        // Um recurso falhando não impede a atualização dos demais.
         Promise.resolve(destinos[recurso]()).catch(() => {});
       } catch {
-        // O polling existente continua cobrindo perdas de eventos.
       }
     }
   }

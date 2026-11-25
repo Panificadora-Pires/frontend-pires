@@ -7,7 +7,6 @@ const paginaVazia = () => ({
   next: null, previous: null, results: [],
 });
 
-// Página e indicadores sempre vêm do Django; nunca derivar totais da página atual.
 export const useAdminPromocoesStore = defineStore("adminPromocoes", {
   state: () => ({
     pagina: paginaVazia(),

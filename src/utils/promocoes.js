@@ -1,4 +1,3 @@
-// Mesmo calendário comercial do backend (TIME_ZONE); não usar o fuso do aparelho para a vigência.
 export function dataDaPires(agora = new Date()) {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit",
@@ -15,7 +14,6 @@ export function selecionarOfertas(produtos, promocoes, hoje = dataDaPires()) {
     const produto = porProduto.get(id);
     if (!produto?.em_promocao || selecionadas.has(id)) continue;
     const original = Number(produto.preco), atual = Number(produto.preco_atual);
-    // O preço escolhido pelo servidor prevalece sobre registros legados sobrepostos.
     if (!Number.isFinite(original) || !Number.isFinite(atual) || atual <= 0 || atual >= original || atual !== Number(promocao.preco_promocional)) continue;
     selecionadas.set(id, {
       promocao,

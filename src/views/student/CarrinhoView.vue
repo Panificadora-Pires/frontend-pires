@@ -553,7 +553,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-/* Modal nativo sem janela do Chrome: o estilo e as ações pertencem à Pires. */
 .cart-clear-dialog {
   width: min(440px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
@@ -1071,7 +1070,6 @@ onBeforeUnmount(() => {
     transform: rotate(360deg);
   }
 }
-/* Transições sutis nos estados vazio/preenchido, remoção de item e total. */
 .cart-content-enter-active,.cart-content-leave-active {
   transition: opacity 240ms ease, transform 240ms ease;
 }

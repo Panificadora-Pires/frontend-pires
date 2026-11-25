@@ -40,8 +40,6 @@ export const useNotificationsStore = defineStore("notifications", {
       try {
         const recebidas = await notificationService.listar();
         if (geracao !== this.geracaoSessao) return;
-        // Leitura é monotônica neste contrato: não existe marcar novamente como não lida.
-        // Um GET iniciado antes do PATCH não pode desfazer uma confirmação posterior.
         const lidas = new Set(
           this.itens.filter((item) => item.lida).map((item) => String(item.id)),
         );
@@ -114,7 +112,6 @@ export const useNotificationsStore = defineStore("notifications", {
       try {
         await notificationService.marcarTodasLidas();
         if (geracao !== this.geracaoSessao) return false;
-        // A resposta não informa corte temporal. Não confirmar avisos que chegaram durante o POST.
         this.itens = this.itens.map((item) =>
           ids.has(String(item.id)) ? { ...item, lida: true } : item,
         );

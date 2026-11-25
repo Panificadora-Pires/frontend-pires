@@ -21,7 +21,6 @@ const disponibilidade = computed(() => disponibilidadeProduto(props.produto));
 const indisponivel = computed(() => ['indisponivel', 'sem-estoque'].includes(disponibilidade.value) || preco.value === null);
 const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 function remover() {
-  // A ref Vue será limpa no teardown, mas o DOM permanece durante a saída.
   const elemento = coracao.value;
   emit('favorite', props.produto, () => {
     removido.value = true;

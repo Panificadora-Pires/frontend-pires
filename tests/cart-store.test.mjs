@@ -104,7 +104,6 @@ test('F5 restaura somente o rascunho da conta autenticada, sem precisar persisti
   cart.alterarQuantidade(1, 3);
   assert.equal(cart.totalPreco, 18);
 
-  // Reinicializa todo o Pinia como faria um reload; o perfil já foi autenticado.
   setActivePinia(createPinia());
   const novo = useCartStore();
   assert.equal(novo.vazio, true);
@@ -127,7 +126,6 @@ test('troca de conta em reload não mistura itens de contas diferentes', () => {
   restaurado.sincronizarConta(2);
   assert.equal(restaurado.totalItens, 3);
   assert.equal(restaurado.itens[0].produto.id, 2);
-  // A continua com seu proprio carrinho, sem enxergar itens de B.
   restaurado.sincronizarConta(1);
   assert.equal(restaurado.totalItens, 2);
   assert.equal(restaurado.itens[0].produto.id, 1);

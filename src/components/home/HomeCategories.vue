@@ -22,7 +22,6 @@ function normalizar(valor) {
     .trim().toLocaleLowerCase("pt-BR");
 }
 
-// A apresentação é fixa; disponibilidade e destino pertencem ao catálogo real.
 const categorias = computed(() => apresentacoes.map((apresentacao) => {
   const categoria = catalogo.categorias.find((item) => item.ativa &&
     (normalizar(item.slug) === apresentacao.slug || normalizar(item.nome) === apresentacao.slug));

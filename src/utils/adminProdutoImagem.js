@@ -1,4 +1,3 @@
-// Espelha os limites do catálogo no Django. A validação definitiva é do servidor.
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const EXTENSOES = /\.(jpe?g|png|webp)$/i;
 

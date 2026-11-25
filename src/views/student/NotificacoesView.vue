@@ -56,8 +56,6 @@ const todasLidas = computed(
     notifications.naoLidas === 0,
 );
 
-// O StudentLayout mantém as notificações atualizadas; esta tela só exibe o estado.
-// Este relógio apenas troca Hoje/Ontem na meia-noite local, sem consultar a API.
 function atualizarCalendario() {
   agora.value = new Date();
   clearTimeout(timerDia);
@@ -113,13 +111,11 @@ async function atualizar() {
   try {
     await notifications.atualizarAgora();
   } catch {
-    /* O estado de erro já aparece na tela. */
   }
 }
 
 async function recuperarFoco(origem, id) {
   await nextTick();
-  // Não roubar foco de quem já continuou a navegar durante a requisição.
   if (
     !montado ||
     origem?.isConnected ||
@@ -714,7 +710,6 @@ async function marcarTodas() {
   }
 }
 @media (max-width: 390px) {
-  /* A palavra longa mantém a mesma presença editorial sem estourar 320px. */
   .notifications-page__header h1 {
     font-size: clamp(42px, 12.6vw, 50px);
   }

@@ -26,7 +26,7 @@ export function proximaAcao(pedido) {
   if (pedido.status === "confirmado") {
     return { status: "pronto", label: "Marcar pronto" };
   }
-  return null; // Retirada e QR Code continuam na tela de detalhes.
+  return null;
 }
 
 export function itensDoPedido(pedido) {

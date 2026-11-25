@@ -2,7 +2,6 @@
 import { ChevronDown } from "lucide-vue-next";
 import HomeSectionHeader from "@/components/home/HomeSectionHeader.vue";
 
-// Conteúdo conferido nos fluxos de pedidos, notificações e retirada por QR Code.
 const duvidas = [
   {
     id: "acompanhar",

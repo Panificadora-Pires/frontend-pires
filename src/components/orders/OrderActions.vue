@@ -90,7 +90,6 @@ const rotuloChat = computed(
   .order-card__actions button {
     flex: 1;
   }
-  /* Reserva a coluna do chatbot quando a ação cruza a faixa fixa. */
   .order-card__actions {
     padding-right: 56px;
   }

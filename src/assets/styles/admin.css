@@ -62,7 +62,6 @@
   flex-wrap: wrap;
 }
 
-/* Indicador "Atualizado há X" ao lado do botão Atualizar. */
 .admin-refresh-status {
   color: var(--admin-muted);
 }
@@ -511,7 +510,6 @@
   }
 }
 
-/* Transição de páginas do Admin: sem reiniciar a tela quando apenas filtros na URL mudam. */
 .admin-layout .admin-route-enter-active {
   transition: opacity 220ms ease, transform 260ms var(--pp-ease);
 }

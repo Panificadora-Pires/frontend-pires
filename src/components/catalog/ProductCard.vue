@@ -115,7 +115,6 @@ const emit = defineEmits(["open", "favorite", "add"]);
 
 const midia = useTemplateRef("midia");
 
-// O voo até o carrinho parte da imagem do card; ele só acontece se o item entrar no carrinho.
 function adicionar() {
   registrarOrigemVoo(midia.value);
   emit("add", props.produto);
@@ -158,7 +157,6 @@ function formatarPreco(valor) {
   overflow: hidden;
   border-radius: 14px;
 }
-/* Zoom só na imagem: o card não muda de tamanho. */
 .product-card__media-button :deep(img),
 .product-card__media-button :deep(svg) {
   transition: transform 0.45s var(--pp-ease);
@@ -321,7 +319,6 @@ function formatarPreco(valor) {
 .product-card--home .product-card__media-button {
   position: relative;
   height: 0;
-  /* A mídia perde a moldura, conservando a altura anterior. */
   padding-top: calc((100% - 20px) / 1.18);
   border-radius: calc(var(--pp-radius-card-lg) - 1px) calc(var(--pp-radius-card-lg) - 1px) 0 0;
 }

@@ -16,7 +16,6 @@ let mounted = false
 
 app.use(pinia)
 const stopSessionListener = onExternalSessionChange(() => {
-  // Descarta também estado privado local às views/modais e seus timers/polling.
   if (mounted) app.unmount()
   for (const store of pinia._s.values()) store.$reset()
   document.getElementById('app')?.replaceChildren()
@@ -24,7 +23,6 @@ const stopSessionListener = onExternalSessionChange(() => {
 })
 if (import.meta.hot) import.meta.hot.dispose(stopSessionListener)
 app.use(router)
-// Seções que aparecem suavemente na rolagem (área do cliente).
 app.directive('revelar', revelar)
 app.mount('#app')
 mounted = true

@@ -90,7 +90,6 @@ function agendarRealtime(evento) {
   if (!evento || evento.tipo.startsWith("pedido.")) atualizarPedidosRealtime = true;
   if (!evento || evento.tipo.startsWith("chat.")) atualizarChatRealtime = true;
   if (timerRealtime !== null || (!atualizarPedidosRealtime && !atualizarChatRealtime)) return;
-  // Rajadas de eventos viram uma única consulta por recurso em 400 ms.
   timerRealtime = setTimeout(() => {
     timerRealtime = null;
     const pedidos = atualizarPedidosRealtime;
@@ -162,13 +161,10 @@ async function handleLogout() {
   await auth.logout();
   await router.replace({ name: "login" });
 }
-// O Dashboard e o Kanban já consultam listas paginadas e agregados;
-// o layout não deve buscar milhares de pedidos em segundo plano.
 onMounted(() => {
   desktopMedia = window.matchMedia("(min-width: 1024px)");
   desktopMedia.addEventListener("change", ajustarDesktop);
   queueSummary.iniciarAutoAtualizacao();
-  // Mensagens de clientes ainda não lidas, no mesmo ritmo da fila.
   chat.iniciarPollingNaoLidas(15_000);
   if (REALTIME_ENABLED) {
     desinscreverRealtime = realtimeClient.inscrever(agendarRealtime);

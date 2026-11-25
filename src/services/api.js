@@ -28,8 +28,6 @@ function readTokens() {
     return { sessionId, access: revoked ? null : tokens?.access ?? null, refresh: revoked ? null : tokens?.refresh ?? null };
   }
 
-  // Compatibilidade somente leitura com os JWTs das versões anteriores.
-  // Não migra o ponteiro no bootstrap, que poderia concorrer com outro login.
   const sourceAccess = localStorage.getItem(ACCESS_TOKEN_KEY);
   const sourceRefresh = localStorage.getItem(REFRESH_TOKEN_KEY);
   const source = { sourceAccess, sourceRefresh };
@@ -55,7 +53,6 @@ function sameTokens(a, b) {
   return a.access === b.access && a.refresh === b.refresh && a.sessionId === b.sessionId;
 }
 
-// Só identifica continuidade local. Validação/permissões do JWT continuam no servidor.
 function tokenOwner(token) {
   try {
     const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
@@ -82,7 +79,6 @@ function reconcileSession() {
     return true;
   }
 
-  // Não adota credenciais de outra aba sobre stores/componentes da conta anterior.
   sessionSuspended = true;
   sessionVersion += 1;
   for (const listener of externalSessionListeners) listener();
@@ -94,7 +90,6 @@ if (typeof window !== "undefined") {
     if (event.storageArea !== localStorage) return;
     if (event.key === null || [ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, SESSION_ID_KEY].includes(event.key) ||
       event.key.startsWith('pp_session_tokens:') || event.key.startsWith('pp_session_revoked:')) {
-      // Lê o par atual: eventos atrasados de uma rotação não devem causar falso logout.
       reconcileSession();
     }
   });
@@ -127,7 +122,6 @@ export function persistTokens({ access, refresh }) {
   if (!reconcileSession()) return;
   const previous = localTokens;
   sessionVersion += 1;
-  // Login (inclusive A→B→A) muda a geração; refresh nunca muda este marcador.
   const sessionId = crypto.randomUUID();
   const tokens = { sessionId, access, refresh };
   localStorage.setItem(tokensKey(sessionId), JSON.stringify(tokens));
@@ -139,7 +133,6 @@ export function persistTokens({ access, refresh }) {
 
 function saveTokens({ access, refresh }) {
   const tokens = { ...localTokens, access, refresh };
-  // A gravação atômica pertence ao UUID capturado: nunca escreve no bundle B.
   localStorage.setItem(tokensKey(tokens.sessionId), JSON.stringify(tokens));
   localTokens = tokens;
   reconcileSession();
@@ -157,8 +150,6 @@ export function clearTokens() {
 
 function revokeSession(previous) {
   if (!previous.sessionId) return;
-  // Revogação prevalece mesmo se um refresh de outra aba gravar A depois.
-  // Nunca remove o ponteiro ativo: ele já pode ter sido substituído por B.
   const tombstone = previous.sessionId === 'legacy'
     ? { sourceAccess: previous.sourceAccess, sourceRefresh: previous.sourceRefresh }
     : true;
@@ -230,8 +221,6 @@ api.interceptors.response.use(
 
       const { data } = await flight.promise;
       if (!reconcileSession() || version !== sessionVersion) throw sessionChanged(originalRequest);
-      // Renovação da mesma sessão mantém válidos os consumidores em andamento.
-      // Outra aba pode ter renovado antes: não sobrescreve a credencial mais recente.
       if (sameTokens(localTokens, flight.tokens)) {
         saveTokens({
           access: data.access,
@@ -246,10 +235,7 @@ api.interceptors.response.use(
       return api(originalRequest);
     } catch (refreshError) {
       if (!reconcileSession() || version !== sessionVersion) return Promise.reject(sessionChanged(originalRequest));
-      // Uma rotação já concluída em outra aba também torna irrelevante a falha antiga.
       if (flight && !sameTokens(localTokens, flight.tokens)) return api(originalRequest);
-      // Sem resposta (rede caiu, servidor acordando) não significa sessão expirada:
-      // mantém os tokens para a próxima tentativa em vez de deslogar o usuário.
       if (refreshError?.response) {
         clearTokens();
         redirectToLoginAfterExpiredSession();

@@ -31,7 +31,6 @@ let redirecionamentos;
 let storageInicializado = false;
 beforeEach(() => {
   setActivePinia(createPinia());
-  // Encerra pela API dona da sessão antes de reiniciar o storage de teste.
   if (storageInicializado) clearTokens();
   globalThis.localStorage = { getItem: k => dados.get(k) ?? null, setItem: (k,v) => dados.set(k,v), removeItem: k => dados.delete(k) };
   storageInicializado = true;
@@ -90,7 +89,6 @@ test('finally de refresh A não apaga singleflight de B e refresh legítimo mant
   const pedidoB = api.get('/b/'); await iniciouB.promise;
   refreshA.resolve({ data: { access: 'access-a-novo' } }); await assert.rejects(pedidoA);
   const outroB = api.get('/b2/'); await entrouSegundoB.promise;
-  // Deixa o segundo 401 alcançar o interceptor antes de concluir o refresh B.
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(refreshes, 2);
   refreshB.resolve({ data: { access: 'access-b-novo', refresh: 'refresh-b-novo' } });

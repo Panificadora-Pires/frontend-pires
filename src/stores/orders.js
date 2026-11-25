@@ -2,7 +2,6 @@ import { defineStore } from "pinia";
 
 import orderService from "@/services/order.service";
 
-// Compartilha o resultado real entre polling, navegação e atualizações do layout.
 const carregamentos = new WeakMap();
 
 export const useOrdersStore = defineStore("orders", {
