@@ -165,6 +165,7 @@ import { useAutoRefresh } from "@/composables/useAutoRefresh";
 import { useChatStore } from "@/stores/chat";
 import { useNotificationsStore } from "@/stores/notifications";
 import { REALTIME_ENABLED, realtimeClient } from "@/services/realtime";
+import { formatarDataCompleta, formatarHora } from "@/utils/chat";
 
 const INTERVALO_CONVERSA_MS = 5_000;
 const LIMITE_CARACTERES = 1000;
@@ -325,28 +326,6 @@ async function enviar() {
   texto.value = "";
   noFim.value = true;
   await chat.enviar(props.pedidoId, mensagem);
-}
-
-function formatarHora(valor) {
-  const data = new Date(valor);
-  if (Number.isNaN(data.getTime())) return "";
-  const hoje = new Date().toDateString() === data.toDateString();
-  return new Intl.DateTimeFormat("pt-BR", {
-    ...(hoje ? {} : { day: "2-digit", month: "2-digit" }),
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(data);
-}
-
-function formatarDataCompleta(valor) {
-  const data = new Date(valor);
-  if (Number.isNaN(data.getTime())) return "—";
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(data);
 }
 
 defineExpose({

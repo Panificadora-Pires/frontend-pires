@@ -1,13 +1,5 @@
 <script setup>
-import {
-  computed,
-  nextTick,
-  onBeforeUnmount,
-  shallowRef,
-  useId,
-  useTemplateRef,
-  watch,
-} from "vue";
+import { computed, nextTick, shallowRef, useId, useTemplateRef, watch } from "vue";
 import {
   CircleAlert,
   Heart,
@@ -19,6 +11,7 @@ import {
 } from "lucide-vue-next";
 import ProductImage from "@/components/catalog/ProductImage.vue";
 import CardActionContent from "@/components/ui/CardActionContent.vue";
+import { useDialogoProduto } from "@/composables/useDialogoProduto";
 import { registrarOrigemVoo } from "@/utils/vooAoCarrinho";
 
 const props = defineProps({
@@ -67,40 +60,12 @@ const moeda = new Intl.NumberFormat("pt-BR", {
   currency: "BRL",
 });
 const subtotal = computed(() => moeda.format(preco.value * quantidade.value));
-let overflowAnterior = null;
-let gatilho = null;
-let fundoPressionado = false;
-
-function restaurarPagina() {
-  if (overflowAnterior !== null) {
-    const { valor, prioridade } = overflowAnterior;
-    if (valor) document.body.style.setProperty("overflow", valor, prioridade);
-    else document.body.style.removeProperty("overflow");
-    overflowAnterior = null;
-  }
-  if (gatilho?.isConnected) gatilho.focus({ preventScroll: true });
-  gatilho = null;
-}
-watch(
-  [() => props.open, dialogo],
-  ([aberto, elemento]) => {
-    if (!elemento) return;
-    if (aberto && !elemento.open) {
-      gatilho = document.activeElement;
-      overflowAnterior = {
-        valor: document.body.style.getPropertyValue("overflow"),
-        prioridade: document.body.style.getPropertyPriority("overflow"),
-      };
-      document.body.style.setProperty("overflow", "hidden");
-      elemento.showModal();
-      fechar.value?.focus({ preventScroll: true });
-    } else if (!aberto && elemento.open) {
-      elemento.close();
-      restaurarPagina();
-    }
-  },
-  { immediate: true, flush: "post" },
-);
+const { conterTab, marcarFundo, fecharPeloFundo } = useDialogoProduto({
+  aberto: () => props.open,
+  dialogo,
+  fechar,
+  aoFecharPeloFundo: () => emit("close"),
+});
 watch(
   () => [props.open, props.produto?.id],
   () => {
@@ -116,35 +81,6 @@ watch(
 watch(limiteQuantidade, (limite) => {
   quantidade.value = Math.min(quantidade.value, limite);
 });
-onBeforeUnmount(() => {
-  dialogo.value?.close();
-  restaurarPagina();
-});
-
-function conterTab(event) {
-  if (event.key !== "Tab") return;
-  const controles = [
-    ...dialogo.value.querySelectorAll(
-      'button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), [tabindex="0"]',
-    ),
-  ].filter((elemento) => elemento.getClientRects().length);
-  const primeiro = controles[0];
-  const ultimo = controles.at(-1);
-  if (event.shiftKey && document.activeElement === primeiro) {
-    event.preventDefault();
-    ultimo?.focus();
-  } else if (!event.shiftKey && document.activeElement === ultimo) {
-    event.preventDefault();
-    primeiro?.focus();
-  }
-}
-function marcarFundo(event) {
-  fundoPressionado = event.target === dialogo.value;
-}
-function fecharPeloFundo(event) {
-  if (fundoPressionado && event.target === dialogo.value) emit("close");
-  fundoPressionado = false;
-}
 function diminuir() {
   if (!enviando.value) quantidade.value = Math.max(1, quantidade.value - 1);
 }
