@@ -4,7 +4,6 @@ import { useRoute } from "vue-router";
 import { X } from "lucide-vue-next";
 import { VERSAO_DOCUMENTOS } from "@/content/documentosLegais";
 
-// Aviso apenas informativo: o site só usa armazenamento essencial e terceiros necessários.
 const CHAVE = "pp_aviso_cookies";
 const route = useRoute();
 const visivel = ref(false);
@@ -14,7 +13,7 @@ onMounted(() => {
 });
 function fechar() {
   visivel.value = false;
-  try { localStorage.setItem(CHAVE, VERSAO_DOCUMENTOS); } catch { /* navegador sem armazenamento: some só nesta visita */ }
+  try { localStorage.setItem(CHAVE, VERSAO_DOCUMENTOS); } catch {}
 }
 </script>
 
@@ -46,8 +45,7 @@ function fechar() {
 }
 .aviso-cookies__fechar:hover { background: var(--pp-creme-2); }
 .aviso-cookies a:focus-visible, .aviso-cookies__fechar:focus-visible { outline: 3px solid var(--pp-dourado-escuro); outline-offset: 2px; }
-/* Acima da barra inferior do celular (64px em StudentLayout). */
 @media (max-width: 980px) {
-  .aviso-cookies { right: 16px; bottom: calc(76px + env(safe-area-inset-bottom)); max-width: none; }
+  .aviso-cookies { right: 16px; bottom: calc(64px + 14px + 52px + 12px + env(safe-area-inset-bottom)); max-width: none; }
 }
 </style>

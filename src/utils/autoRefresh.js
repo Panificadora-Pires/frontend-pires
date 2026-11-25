@@ -1,15 +1,6 @@
-/**
- * Atualização automática "inteligente" (polling) usada pelas telas e stores.
- *
- * - não roda com a aba escondida; ao voltar para a aba, ganhar foco ou reconectar, atualiza na hora;
- * - nunca executa duas vezes ao mesmo tempo;
- * - em erro, espera cada vez mais (backoff exponencial com jitter) até o limite;
- * - o intervalo pode ser um número ou uma função (ex.: mais curto com pedido em andamento).
- */
 
 const INTERVALO_PADRAO_MS = 30_000;
 const INTERVALO_MAXIMO_ERRO_MS = 5 * 60_000;
-// Evita disparar duas vezes seguidas quando "focus" e "visibilitychange" chegam juntos.
 const INTERVALO_MINIMO_ENTRE_EXECUCOES_MS = 2_000;
 
 function comJitter(ms) {
@@ -105,7 +96,6 @@ export function createAutoRefresh(
     if (abaVisivel()) {
       aoRetomar();
     } else {
-      // Aba escondida: nenhuma requisição até o usuário voltar.
       limparTimer();
     }
   }
@@ -136,9 +126,7 @@ export function createAutoRefresh(
   return {
     iniciar,
     parar,
-    // Executa agora (ou aguarda a execução em andamento) e reinicia a contagem do intervalo.
     atualizarAgora: () => executar(),
-    // Recalcula o próximo disparo, por exemplo quando o intervalo dinâmico mudou.
     reagendar: () => {
       if (!executando) agendar();
     },

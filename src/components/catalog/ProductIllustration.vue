@@ -7,7 +7,6 @@
     :aria-hidden="rotulo ? undefined : 'true'"
     focusable="false"
   >
-    <!-- Ilustrações próprias da Pires (cardápio fictício: nada de foto de banco). -->
     <ellipse class="c-sombra" cx="100" cy="180" rx="64" ry="9" />
 
     <g v-if="tipo === 'coxinha'">
@@ -132,7 +131,6 @@
     </g>
 
     <g v-else>
-      <!-- Salgado genérico: pãozinho dourado. -->
       <ellipse class="c-massa" cx="100" cy="128" rx="66" ry="42" />
       <ellipse class="c-massa-clara" cx="94" cy="116" rx="46" ry="24" />
       <path class="t-tostado-grosso" d="M72 112 C80 104 92 104 100 112 M104 112 C112 104 124 104 132 112" />
@@ -142,9 +140,7 @@
 
 <script setup>
 defineProps({
-  // Um dos tipos de ilustracaoParaProduto() (utils/ilustracaoProduto.js).
   tipo: { type: String, default: "salgado" },
-  // Texto para leitor de tela; sem ele, a ilustração é decorativa.
   rotulo: { type: String, default: "" },
 });
 </script>

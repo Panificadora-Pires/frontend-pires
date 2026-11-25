@@ -291,7 +291,6 @@ async function carregar() {
   try {
     await store.carregar(parametros());
   } catch (error) {
-    // Uma exclusão ou mudança de filtro pode invalidar a última página.
     if (pagina.value > 1 && error?.response?.status === 404) {
       pagina.value = 1;
       await store.carregar(parametros());
@@ -398,7 +397,6 @@ async function carregarProdutoExistente(id) {
     if (Number(form.produto) !== Number(produto.id)) return;
     produtoSelecionado.value = produto;
   } catch {
-    // Em falha, preserve nome/ID retornados pela promoção; o Django validará preço no PATCH.
   }
 }
 function preencherFormulario(promocao = null) {

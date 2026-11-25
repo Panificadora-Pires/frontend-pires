@@ -25,7 +25,6 @@ const props = defineProps({
   erro: { type: [Object, String, Boolean], default: null },
 });
 
-// Relógio só para o texto relativo ("há 2 min"); não faz requisições.
 const agora = ref(Date.now());
 let relogio = null;
 

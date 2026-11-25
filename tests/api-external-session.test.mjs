@@ -90,7 +90,6 @@ test('storage event descobre remoção e ignora chaves alheias', async () => {
   tab.onExternalSessionChange(() => suspended++);
   tab.escrever({}); tab.evento('preferencia');
   assert.equal(suspended, 0);
-  // Observa a versão somente depois do evento relevante, sem depender de polling.
   tab.evento();
   assert.equal(suspended, 1);
   assert.notEqual(tab.getSessionVersion(), version);

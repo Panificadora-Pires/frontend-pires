@@ -1,10 +1,3 @@
-/**
- * Animação do produto "voando" até o carrinho.
- *
- * O card (ou o modal) registra de onde saiu o clique; o layout chama `animarVooAoCarrinho`
- * só depois que `cart.adicionar` terminou sem erro. Sem origem recente ou com movimento
- * reduzido, não há voo: o layout só anima o contador.
- */
 
 const VALIDADE_ORIGEM_MS = 1500;
 const DURACAO_MS = 650;
@@ -40,7 +33,6 @@ export function animarVooAoCarrinho(destino) {
   const para = destino.getBoundingClientRect();
   if (!para.width || !para.height) return Promise.resolve();
 
-  // Clona só o conteúdo visual (foto ou ilustração) num círculo creme.
   const clone = document.createElement("div");
   clone.className = "pp-voo-carrinho";
   clone.setAttribute("aria-hidden", "true");

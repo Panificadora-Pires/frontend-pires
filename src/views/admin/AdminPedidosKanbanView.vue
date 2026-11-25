@@ -225,8 +225,6 @@ async function carregarColunas() {
       try {
         return await adminService.listarPedidosPagina(parametros);
       } catch (error) {
-        // O último pedido de uma página pode ter mudado de etapa durante o polling.
-        // Nesse caso voltamos à primeira página sem perder o filtro atual.
         if (!paginaExpirada(error, parametros.page) || chamada !== sequencia || getSessionVersion() !== versao) throw error;
         paginas[status] = 1;
         return adminService.listarPedidosPagina({ ...parametros, page: 1 });
@@ -257,11 +255,8 @@ let timerRealtime = null;
 onMounted(() => {
   if (!REALTIME_ENABLED) return;
   desinscreverRealtime = realtimeClient.inscrever(evento => {
-    // Uma mudança de status reconsulta as mesmas páginas/filtros já em uso.
-    // O polling de 15 segundos continua sendo o fallback de segurança.
     if (!evento || evento.tipo.startsWith("pedido.")) {
       if (timerRealtime !== null) return;
-      // No máximo um refresh em cada janela, inclusive sob eventos simultâneos.
       timerRealtime = setTimeout(() => {
         timerRealtime = null;
         void atualizacao.atualizarAgora();
@@ -356,7 +351,6 @@ function prepararMovimentoCard(elemento) {
       const dy = destino.top - origem.top;
       const escala = Math.min(1, destino.width / origem.width);
 
-      // O card percorre a distância real entre as duas colunas.
       const animacao = fantasma.animate(
         [
           { transform: "translate3d(0, 0, 0) scale(1)", opacity: 1 },
@@ -382,7 +376,6 @@ async function avancar(pedido, event) {
   emAcao.value = pedido.id;
   erroAcao.value = "";
   try {
-    // A animação só começa depois de o Django confirmar a mudança.
     await pedidosStore.alterarStatus(pedido.id, acao.status);
     movimento?.montar();
     if (window.matchMedia?.("(max-width: 820px)")?.matches) {
@@ -463,7 +456,6 @@ onBeforeUnmount(() => {
 .kanban-footer{font-size:12px;color:var(--pp-admin-muted);margin:20px 0 0;line-height:1.6}
 .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .kanban-page button:focus-visible,.kanban-page a:focus-visible,.kanban-page input:focus-visible{outline:3px solid var(--pp-admin-accent);outline-offset:3px}
-/* A busca já destaca o contêiner inteiro no foco: não desenhar outra borda sobre o input. */
 .kanban-page .kanban-search input:focus-visible{outline:none;box-shadow:none}
 @media(max-width:1200px){.kanban-board{gap:10px}.kanban-column{padding:10px}.kanban-card{padding:12px}}
 @media(max-width:820px){
@@ -479,7 +471,6 @@ onBeforeUnmount(() => {
 }
 @media(max-width:440px){.kanban-header h1{font-size:27px}.kanban-overview{grid-template-columns:1fr 1fr}.kanban-overview>div:nth-child(3){grid-column:1/-1}.kanban-overview>div:nth-child(3) strong{font-size:22px}.kanban-toolbar{grid-template-columns:1fr}.kanban-card{padding:14px}}
 
-/* Acabamento editorial: estados interativos visíveis sem excesso de efeitos. */
 .kanban-modes button,
 .kanban-search,
 .kanban-payment,

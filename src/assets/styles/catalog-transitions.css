@@ -1,4 +1,3 @@
-/* Capturas isoladas: header, navegação e controles não participam da troca da grade. */
 :root[data-pp-transition="route"] .student-layout__main { view-transition-name: pp-content; }
 :root[data-pp-transition="grid"] .menu-page__grid--products { view-transition-name: pp-grid; }
 :root[data-pp-transition]::view-transition { pointer-events: none; }

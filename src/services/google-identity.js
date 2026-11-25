@@ -22,7 +22,6 @@ export async function renderGoogleButton({
   activeCredentialHandler = onCredential;
   const google = await initializeGoogleIdentity(clientId);
 
-  // O carregamento pode concluir depois da saída do shell de autenticação.
   if (activeCredentialHandler !== onCredential || !element.isConnected) return;
 
   element.replaceChildren();

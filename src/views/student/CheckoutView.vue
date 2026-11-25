@@ -459,8 +459,6 @@ import {
   etapaPagamentoAprovada,
 } from "@/utils/checkoutProgress";
 
-// Pix/cartão: confere o pagamento a cada 5 s com a aba visível e na hora em que o cliente
-// volta para a aba (ex.: depois de pagar no app do banco).
 const INTERVALO_PAGAMENTO_MS = 5_000;
 
 const auth = useAuthStore();
@@ -1543,8 +1541,6 @@ onBeforeUnmount(() => {
   }
 }
 
-/* PR7-UX2 — Balcão Editorial: checkout em continuidade com o Carrinho V2.
-   Contratos financeiros, SDK do Mercado Pago e UX3 permanecem inalterados. */
 .checkout-page {
   width: min(100%, 1160px);
   color: var(--pp-marrom);
@@ -2022,8 +2018,6 @@ onBeforeUnmount(() => {
 }
 
 
-/* PR7-UX3 — Status do pedido: composição editorial sem divisórias vazias.
-   A lógica e a API de pagamento continuam as mesmas. */
 .checkout-result {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 312px;

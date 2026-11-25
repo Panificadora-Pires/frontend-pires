@@ -243,7 +243,6 @@ const opcoesSituacao = [
 ];
 const indicadores = computed(() => resumo.value || { total: 0, ativas: 0, inativas: 0 });
 const visiveis = computed(() => dadosPagina.value.results);
-// A leitura direta após salvar também limpa erros antigos do polling.
 const erroExibido = computed(() => erroLeitura.value);
 
 function parametros() {
@@ -346,7 +345,6 @@ async function salvar() {
     if (!editando) pagina.value = 1;
     dialogRef.value?.close();
     mensagemSucesso.value = editando ? "Categoria atualizada com sucesso." : "Categoria criada com sucesso.";
-    // O envio já foi concluído; uma eventual falha ao reler não repete o cadastro.
     await carregar().catch(() => {});
   } catch (error) {
     erroSalvar.value = mensagemErroApi(error, "Não foi possível salvar a categoria.");

@@ -8,7 +8,6 @@ export const adiar = () => {
   return { promise, resolve, reject };
 };
 
-// Executa o script setup da tela real; só serviços, DOM e lifecycle são controlados.
 export function criarPerfil({ usuario, atualizarPerfil, buscarUsuarioLogado } = {}) {
   let versao = 1;
   const auth = reactive({

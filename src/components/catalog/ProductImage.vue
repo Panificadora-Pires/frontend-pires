@@ -47,7 +47,6 @@ const temImagem = computed(
   () => Boolean(urlImagem.value) && !imagemComErro.value,
 );
 
-// Sem foto: ilustração própria escolhida pelo nome/categoria (o cardápio é fictício).
 const tipoIlustracao = computed(() => ilustracaoParaProduto(props.produto));
 </script>
 

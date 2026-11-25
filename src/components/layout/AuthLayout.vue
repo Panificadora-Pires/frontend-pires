@@ -83,7 +83,6 @@ function guardarNavegacao(evento) {
 }
 watch(() => route.fullPath, () => {
   sequencia += 1;
-  // O layout persiste entre telas; uma navegação concluída invalida os efeitos do HTTP antigo na store.
   auth.invalidarOperacao();
   ocupado.value = false;
   erroGoogle.value = "";

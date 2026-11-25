@@ -131,14 +131,12 @@ import { movimentoReduzido } from "@/utils/vooAoCarrinho";
 const cart = useCartStore();
 const favorites = useFavoritesStore();
 
-// Estoque e disponibilidade mudam a cada pedido; o cardápio confere a cada minuto.
 const INTERVALO_CARDAPIO_MS = 60_000;
 const PRODUTOS_POR_PAGINA = 8;
 
 const categorias = ref([]);
 const produtos = ref([]);
 const route = useRoute();
-// A busca do menu do topo chega por /cardapio?busca=termo.
 const router = useRouter();
 const tituloProdutos = useTemplateRef("tituloProdutos");
 function textoDaUrl(valor) { return typeof valor === "string" ? valor : ""; }
@@ -146,7 +144,6 @@ const busca = computed({
   get: () => textoDaUrl(route.query.busca),
   set: (valor) => atualizarFiltros({ busca: valor.trim() }, true),
 });
-// O mega menu usa o filtro existente por id, sem criar uma nova página.
 function categoriaDaUrl(valor) {
   const numero = Number(valor);
   return Number.isSafeInteger(numero) && numero > 0 ? numero : null;
@@ -155,7 +152,6 @@ const categoriaAtiva = computed({
   get: () => categoriaDaUrl(route.query.categoria),
   set: (valor) => atualizarFiltros({ categoria: valor ? String(valor) : undefined }),
 });
-// Um único replace evita que limpar os dois filtros restaure parte da URL anterior.
 function atualizarFiltros(alteracoes, substituir = false) {
   const query = { ...route.query, ...alteracoes };
   delete query.pagina;
@@ -277,7 +273,6 @@ const inicioPagina = computed(() => (paginaAtual.value - 1) * PRODUTOS_POR_PAGIN
 const produtosPagina = computed(() => produtosFiltrados.value.slice(inicioPagina.value, inicioPagina.value + PRODUTOS_POR_PAGINA));
 const resumoPagina = computed(() => `${inicioPagina.value + 1}–${Math.min(inicioPagina.value + PRODUTOS_POR_PAGINA, produtosFiltrados.value.length)} de ${produtosFiltrados.value.length}`);
 
-// Só limitar uma entrada quando a listagem já confirmou a quantidade de resultados.
 watch([() => route.query.pagina, totalPaginas, carregando, erro], () => {
   if (carregando.value || erro.value || route.query.pagina === undefined) return;
   const canonica = paginaAtual.value > 1 ? String(paginaAtual.value) : undefined;
@@ -290,7 +285,6 @@ watch([() => route.query.pagina, totalPaginas, carregando, erro], () => {
 
 async function mudarPagina(numero) {
   if (numero < 1 || numero > totalPaginas.value || numero === paginaAtual.value) return;
-  // Alinhar a grade antes da captura evita somar rolagem suave à transição horizontal.
   tituloProdutos.value?.scrollIntoView({ block: "start", behavior: "instant" });
   const query = { ...route.query };
   if (numero > 1) query.pagina = String(numero);
@@ -347,8 +341,6 @@ async function alternarFavorito(produto) {
   }
 }
 
-// `carregando` só vale para a primeira carga; as seguintes são silenciosas e,
-// se falharem, mantêm o cardápio que já está na tela.
 let carregouUmaVez = false;
 
 async function carregarDados() {
@@ -366,7 +358,6 @@ async function carregarDados() {
 
     categorias.value = categoriasData;
     produtos.value = produtosData;
-    // Detalhes guardados podem ter estoque antigo.
     detalhesCache.clear();
     carregouUmaVez = true;
     erro.value = false;
@@ -533,7 +524,6 @@ onBeforeUnmount(() => {
 .menu-page__content-head p { margin: 0; color: var(--pp-texto-2); font-size: 14px; line-height: 1.5; }
 .menu-page__clear { flex: none; min-height: 44px; padding: 0; border: 0; background: transparent; color: var(--pp-dourado-profundo); font: 600 13px/1.5 var(--pp-font-body); text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
 .menu-page__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: stretch; gap: 24px 16px; }
-/* Acabamento restrito ao Card?pio; Home e demais consumidores preservam suas variantes. */
 .menu-page :deep(.product-card) { display: grid; grid-template-columns: minmax(0, 1fr) 44px; grid-template-rows: auto 1fr auto; column-gap: 10px; row-gap: 4px; padding: 0 0 12px; border: 0; border-bottom: 1px solid var(--pp-creme-borda); border-radius: 0; background: transparent; color: var(--pp-marrom); box-shadow: none; }
 .menu-page :deep(.product-card__media-button) { grid-column: 1 / -1; grid-row: 1; border-radius: 0; }
 .menu-page :deep(.catalog-product-image--card) { aspect-ratio: 1.18; }

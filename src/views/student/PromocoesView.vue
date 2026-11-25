@@ -81,7 +81,7 @@ async function abrirProduto(produto) {
   try {
     const detalhe = await catalogService.obterProduto(produto.id);
     if (contextoAtual(contexto) && pedido === requisicaoDetalhe) produtoDetalhado.value = detalhe;
-  } catch { /* O diálogo compartilhado apresenta o estado de falha. */ }
+  } catch {}
   finally { if (contextoAtual(contexto) && pedido === requisicaoDetalhe) carregandoDetalhe.value = false; }
 }
 function fecharModal() { requisicaoDetalhe++; modalAberto.value = false; produtoDetalhado.value = null; carregandoDetalhe.value = false; }
@@ -96,7 +96,6 @@ async function adicionar(produto, quantidade = 1, origem = 'direta') {
   if (!contextoAtual(contexto)) return;
   produtoAdicionando.value = produto.id; origemAdicao.value = origem;
   try {
-    // Nenhum cache: preço, promoção e estoque são conferidos em cada tentativa, inclusive no modal.
     const detalhe = await catalogService.obterProduto(produto.id);
     if (!contextoAtual(contexto)) return;
     if (origem === 'modal' && produtoDetalhado.value?.id === produto.id) produtoDetalhado.value = detalhe;
@@ -108,7 +107,6 @@ async function adicionar(produto, quantidade = 1, origem = 'direta') {
     const existente = cart.itens.find(item => item.produto.id === detalhe.id);
     if (estoque <= 0) { mostrarToast(`${produto.nome} está sem estoque no momento.`); return; }
     if ((existente?.quantidade || 0) + quantidade > estoque) { mostrarToast(`Há somente ${estoque} ${estoque === 1 ? 'unidade disponível' : 'unidades disponíveis'} de ${produto.nome}.`); return; }
-    // O store existente soma quantidades; atualizar também o preço do item já presente.
     if (existente) existente.produto = detalhe;
     if (!cart.adicionar(detalhe, quantidade, contexto)) return;
     mostrarToast(`${produto.nome} adicionado ao carrinho.`);

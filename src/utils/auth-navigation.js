@@ -1,6 +1,5 @@
 const AUTH_PATHS = new Set(['/login', '/cadastro', '/recuperar-senha', '/redefinir-senha', '/confirmar-email']);
 
-// Destinos de autenticação vêm da URL: nunca aceitar origens externas ou ciclos de login.
 export function safeAuthRedirect(value) {
   if (typeof value !== 'string' || !value.startsWith('/') || /[\\\s]/u.test(value)) return '';
   try {

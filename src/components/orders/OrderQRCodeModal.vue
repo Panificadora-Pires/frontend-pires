@@ -48,7 +48,6 @@ async function carregarQRCode() {
     dados.value = data;
   } catch (error) {
     if (!ativo || atual !== consulta) return;
-    // Não registrar o objeto Axios: ele pode conter o código de retirada.
     erro.value =
       error?.response?.status === 404
         ? "O pedido não foi encontrado ou não pertence a esta conta."

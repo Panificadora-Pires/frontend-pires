@@ -1,4 +1,3 @@
-// Identidade discreta e datas legíveis; não expor informações extras da conta.
 export function iniciaisUsuario(nome, email) {
   const identificador = String(nome || "").trim() ||
     String(email || "").split("@")[0].replace(/[._-]+/g, " ").trim();

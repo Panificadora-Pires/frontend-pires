@@ -1,4 +1,3 @@
-// Textos legais do projeto acadêmico. Ao mudar o conteúdo, atualize ATUALIZADO_EM e VERSAO_DOCUMENTOS.
 export const VERSAO_DOCUMENTOS = "2026-11-24";
 export const ATUALIZADO_EM = "24 de novembro de 2026";
 export const RESPONSAVEL = "Projeto Pires Panificadora — TCC IFC Araquari";

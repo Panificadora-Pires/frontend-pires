@@ -98,7 +98,6 @@ const serie = computed(() => (dashboard.relatorioSemana?.serie_diaria || []).map
 })));
 const totalSemana = computed(() => Number(dashboard.relatorioSemana?.resumo.total_vendido || 0));
 const rotuloFaturamento = computed(() => !dashboard.dia || dashboard.dia === diaAtual.value ? 'Faturamento do dia' : `Faturamento de ${formatarDia(dashboard.dia)}`);
-// Histórico recente e receita semanal vêm de endpoints paginados/agregados.
 const extras = useAutoRefresh(() => {
   referencia.value = new Date();
   return dashboard.carregar({ agora: referencia.value });

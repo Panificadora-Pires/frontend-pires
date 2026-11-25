@@ -1,8 +1,5 @@
 import { onBeforeUnmount, onMounted } from "vue";
 
-// QR e conversa compartilham a mesma propriedade do foco e do bloqueio de rolagem.
-// O diálogo nativo torna o restante da página inerte. A contenção explícita evita
-// que Shift+Tab no primeiro controle passe pela barra do navegador.
 export function useOrderDialog(dialogo, aoFechar) {
   let focoAnterior;
   let overflowAnterior;

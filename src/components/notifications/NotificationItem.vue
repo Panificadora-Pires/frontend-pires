@@ -29,7 +29,6 @@ const icone = computed(
       apresentacao.value.tipo
     ],
 );
-// Apenas a montagem de um ID realmente novo recebe entrada; mudanças de leitura não a reiniciam.
 const entrada =
   props.animar && !reduzir.value ? { opacity: 0.65, y: 8 } : false;
 const tituloId = `notificacao-titulo-${props.notificacao.id}`;
@@ -284,7 +283,6 @@ onMounted(() => emit("apareceu", props.notificacao.id));
     align-items: flex-start;
     gap: 8px;
   }
-  /* Deixa o corredor do chatbot livre quando ações cruzam a faixa flutuante. */
   .notification-item__actions {
     width: 100%;
     padding-right: 48px;

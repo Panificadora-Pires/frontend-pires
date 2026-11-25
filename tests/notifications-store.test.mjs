@@ -4,7 +4,6 @@ import { registerHooks } from "node:module";
 import { createPinia, setActivePinia } from "pinia";
 import service from "./fixtures/notification.service.mjs";
 
-// Resolver somente os dois aliases deste store, sem transpilar ou copiar sua lógica.
 const hooks = registerHooks({
   resolve(specifier, context, next) {
     if (specifier === "@/services/notification.service")

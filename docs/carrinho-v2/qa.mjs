@@ -15,7 +15,6 @@ const products = [
 ].map(p => ({ ativo: true, estoque: 10, descricao: 'Produto fictício de validação.', ...p }));
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
 const results = [];
-// Cache opcional da máquina de QA; sem ele, usa as fontes públicas do projeto.
 const fonts = process.env.QA_FONT_CACHE ? JSON.parse(await readFile(process.env.QA_FONT_CACHE, 'utf8')) : null;
 async function fixture(width = 1440, reducedMotion = 'no-preference') {
   const context = await browser.newContext({ viewport: { width, height: 1000 }, reducedMotion });

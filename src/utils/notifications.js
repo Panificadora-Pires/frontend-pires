@@ -4,8 +4,6 @@ function pedidoValido(valor) {
   return Number.isSafeInteger(id) && id > 0 ? id : null;
 }
 
-// O contrato não fornece tipo. Só estes textos integrais são emitidos pelos receivers.
-// O texto original nunca é reescrito; desconhecidos não ganham destinos por aproximação.
 export function apresentarNotificacao(notificacao) {
   const pedido = pedidoValido(notificacao.pedido);
   if (
@@ -54,7 +52,6 @@ function chaveDia(data) {
 
 export function agruparNotificacoes(itens, agora = new Date()) {
   const hoje = chaveDia(agora);
-  // Subtrair um dia no calendário, não 24 horas: respeita viradas de mês/ano e DST.
   const ontem = chaveDia(
     new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() - 1),
   );

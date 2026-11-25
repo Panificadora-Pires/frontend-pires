@@ -243,8 +243,6 @@ export const useAuthStore = defineStore("auth", {
         if (status === 401 || status === 403) {
           this._limparSessaoLocal();
         } else {
-          // Falha temporária: não renderiza itens sem perfil confirmado,
-          // mas preserva o rascunho da aba para que o F5 seguinte restaure.
           this.usuario = null;
           useCartStore().suspenderConta();
           this.sessaoInicializada = false;
@@ -281,8 +279,6 @@ export const useAuthStore = defineStore("auth", {
     },
 
     _salvarPendencia(chave, valor) {
-      // A conta pode já ter sido criada; storage bloqueado não deve simular falha no cadastro.
-      // O fallback vive apenas nesta página e nunca recebe senhas ou códigos.
       try {
         sessionStorage.setItem(chave, JSON.stringify(valor));
         delete this.pendenciasTemporarias[chave];
@@ -303,8 +299,6 @@ export const useAuthStore = defineStore("auth", {
     },
 
     async _executar(callback, chave = null) {
-      // Repetir uma submissão não duplica HTTP. Uma nova identidade de login
-      // pode substituir a anterior; a geração invalida seus efeitos tardios.
       if (this.carregando && (!chave || !this.chaveOperacao || chave === this.chaveOperacao)) {
         return { ok: false, ignorado: true, campos: {} };
       }
@@ -322,8 +316,6 @@ export const useAuthStore = defineStore("auth", {
         return { ok: true, data, campos: {} };
       } catch (error) {
         if (!operacaoAtual()) return ignorado;
-        // O refresh recusado encerra os tokens, mas esta operação ainda precisa
-        // liberar o formulário e mostrar a falha. Outra conta/ação não é dona dela.
         if (contexto.versao !== getSessionVersion() && (getAccessToken() || getRefreshToken() || !error.response)) return ignorado;
         const normalizado = normalizarErroApi(error);
         this.erro = normalizado.mensagem;
@@ -406,7 +398,7 @@ function lerJsonSessao(chave) {
     const valor = sessionStorage.getItem(chave);
     return valor ? JSON.parse(valor) : null;
   } catch {
-    try { sessionStorage.removeItem(chave); } catch { /* Storage indisponível. */ }
+    try { sessionStorage.removeItem(chave); } catch {}
     return null;
   }
 }

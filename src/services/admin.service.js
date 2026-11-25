@@ -6,7 +6,6 @@ export function mensagemErroApi(error, fallback = "Não foi possível concluir a
   function primeiraMensagem(valor) {
     if (typeof valor === "string") {
       const texto = valor.trim();
-      // Página HTML do servidor (ex.: 404 do Django) não é mensagem para o usuário
       if (texto.startsWith("<")) return "";
       return texto || "";
     }
@@ -77,7 +76,6 @@ function produtoFormData(payload) {
 }
 
 const adminService = {
-  // Novo contrato para a fila/Kanban: uma página por vez, sem baixar o histórico.
   async listarPedidosPagina({ page = 1, page_size = 30, ...filtros } = {}) {
     const pagina = Number(page);
     const tamanho = Number(page_size);
@@ -153,7 +151,6 @@ const adminService = {
     }).then(({ data }) => data);
   },
 
-  // Listagem operacional: uma página por requisição, estoque e promoções vêm do servidor.
   async listarProdutosAdminPagina({ page = 1, page_size = 18, busca = "", categoria = "", situacao = "" } = {}) {
     const numeroPagina = Number(page);
     const tamanhoPagina = Number(page_size);

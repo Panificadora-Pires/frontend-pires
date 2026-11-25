@@ -1,4 +1,3 @@
-// DateField do Django é uma data civil (YYYY-MM-DD), não um instante UTC.
 export function diaEmSaoPaulo(agora = new Date()) {
   const partes = new Intl.DateTimeFormat("pt-BR", {
     timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit",

@@ -9,7 +9,6 @@ const props = defineProps({
 const emit = defineEmits(['apareceu']);
 const reduzir = useReducedMotion();
 const elemento = ref(null);
-// O valor inicial pertence à montagem deste ID, nunca ao render da página.
 const entrada = props.animar && !reduzir.value ? { opacity: 0, y: 8 } : false;
 let dom = null;
 onMounted(() => {
@@ -18,8 +17,6 @@ onMounted(() => {
 });
 usePresence({
   element: () => dom,
-  // A saída mantém o DOM por 160 ms depois do teardown Vue. Aplicar inert
-  // no próprio DOM impede teclado/toque também em filtros e remoção no modal.
   onExit() {
     if (!dom) return;
     dom.inert = true;

@@ -40,8 +40,6 @@ export function informacaoStatus(status) {
   );
 }
 
-// Prontos exigem ação. Dentro de cada estado ativo, atende primeiro o mais antigo.
-// Finalizados aparecem do mais recente para o mais antigo, sem modificar o store.
 export function ordenarPedidos(itens) {
   const prioridade = { pronto: 0, confirmado: 1, pendente: 2 };
   return [...itens].sort((a, b) => {

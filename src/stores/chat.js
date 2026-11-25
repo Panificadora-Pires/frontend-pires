@@ -12,8 +12,6 @@ function chave(pedidoId) {
   return String(pedidoId);
 }
 
-// Uma busca que começou antes de um envio pode chegar sem a mensagem recém-enviada:
-// mantém as mensagens locais mais novas que a última recebida do servidor.
 function mesclarMensagens(recebidas, locais = []) {
   const ultimoId = recebidas.reduce((maior, m) => Math.max(maior, Number(m.id)), 0);
   const novasLocais = locais.filter((m) => Number(m.id) > ultimoId);
@@ -22,9 +20,7 @@ function mesclarMensagens(recebidas, locais = []) {
 
 export const useChatStore = defineStore("chat", {
   state: () => ({
-    // pedidoId -> { pedido, status_pedido, somente_leitura, encerra_em, nao_lidas, mensagens }
     conversas: {},
-    // pedidoId -> [{ idLocal, texto, criada_em, estado: "enviando" | "erro", erro }]
     pendentes: {},
     carregando: {},
     erros: {},
@@ -66,7 +62,6 @@ export const useChatStore = defineStore("chat", {
         return this.conversas[id];
       } catch (error) {
         if (!aindaAtual()) return null;
-        // Falha em segundo plano não apaga a conversa já exibida.
         if (!this.conversas[id]) {
           this.erros[id] = mensagemErroApi(
             error,
@@ -138,7 +133,6 @@ export const useChatStore = defineStore("chat", {
               : mensagemErroApi(error, "Não foi possível enviar. Verifique sua conexão.");
         }
 
-        // Chat encerrado enquanto a tela estava aberta: busca a situação nova.
         if (error?.response?.status === 400) {
           this.carregarConversa(pedidoId, { silencioso: true }).catch(() => {});
         }

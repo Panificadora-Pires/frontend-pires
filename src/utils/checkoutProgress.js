@@ -1,5 +1,3 @@
-// Somente rótulos de progresso; nunca deduzir que a compra foi paga
-// porque o backend retornou um pedido ou um checkout.
 const STATUS_FINAIS_SEM_APROVACAO = new Set([
   "recusado", "cancelado", "reembolsado", "erro",
 ]);

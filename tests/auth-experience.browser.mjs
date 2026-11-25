@@ -1,5 +1,3 @@
-// API e Google inteiramente sintéticos. Nenhum e-mail, conta ou token real.
-// PLAYWRIGHT_MODULE aponta à instalação de QA, sem dependência de produção nova.
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { writeFile, mkdir } from 'node:fs/promises';
@@ -147,7 +145,6 @@ try {
           await page.goForward(); await shown('cadastro');
           await page.locator('.auth-create-link').click(); await shown('login');
         }
-        // Observar a conclusão real da navegação, sem substituir os guards.
         await page.evaluate(() => {
           document.querySelector('#app').__vue_app__.config.globalProperties.$router.afterEach((to, from, failure) => {
             window.historyNavigation = { aborted: Boolean(failure), from: from.fullPath, to: to.fullPath };
@@ -193,7 +190,6 @@ try {
             if (name === 'loginWithGoogle') after(result => { window.historyLoginResult = result; });
           });
         });
-        // O callback GIS pode chegar quando o formulário de saída já perdeu seu guard.
         if (direction === 'Voltar') await page.locator('.auth-create-link').evaluate(el => el.click());
         else await page.goForward();
         await page.waitForURL('**/login');
@@ -222,7 +218,6 @@ try {
         assert.equal(state.calls.filter(call => call.path === '/usuarios/me/').length, 0);
         assert.equal(page.url(), base + '/cadastro');
         assert.deepEqual(state.errors, []);
-        // A navegação cancela somente a tentativa antiga; uma nova continua legítima.
         state.hold = null;
         await page.locator('.auth-create-link').click(); await page.waitForURL('**/login'); await idle(page);
         await page.getByRole('button', { name: 'Continuar com Google (teste)' }).click();

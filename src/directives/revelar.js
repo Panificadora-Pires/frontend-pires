@@ -1,7 +1,3 @@
-/**
- * v-revelar: a seção aparece suavemente quando entra na tela (uma vez só).
- * O estilo fica em student.css (.pp-revelar / .is-visivel); com movimento reduzido, aparece direto.
- */
 
 let observador = null;
 
@@ -15,8 +11,6 @@ function obterObservador() {
         observador.unobserve(entrada.target);
       });
     },
-    // Basta a borda da seção entrar na tela: em seções altas (grade de produtos no celular),
-    // exigir uma fração da área deixaria um vazio abaixo do banner.
     { threshold: 0, rootMargin: "0px 0px -10% 0px" },
   );
   return observador;

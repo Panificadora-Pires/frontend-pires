@@ -228,7 +228,6 @@ function pararCamera() {
   try {
     controles?.stop?.();
   } catch {
-    // A câmera já pode ter sido encerrada pelo próprio navegador.
   }
 
   controles = null;
