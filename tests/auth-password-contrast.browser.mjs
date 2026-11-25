@@ -79,7 +79,7 @@ try {
           assert.equal(await input.inputValue(), 'Senha-sintetica!2026');
         }
       }
-      const others = page.locator('.auth-link, .auth-layout__back, .auth-layout .pp-btn, .auth-legal summary, .auth-resend:not(:disabled)');
+      const others = page.locator('.auth-link, .auth-layout__back, .auth-layout .pp-btn, .auth-checkbox a, .auth-resend:not(:disabled)');
       for (let i = 0; i < await others.count(); i++) {
         await others.nth(i).hover(); await record(others.nth(i), { width, route, state: 'other-hover', text: (await others.nth(i).innerText()).trim() }, 4.5);
       }

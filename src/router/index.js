@@ -153,6 +153,13 @@ const routes = [
     ],
   },
 
+  ...["termos", "privacidade", "cookies"].map((documento) => ({
+    path: `/${documento}`,
+    name: documento,
+    component: () => import("@/views/legal/DocumentoLegalView.vue"),
+    meta: { publica: true, documento },
+  })),
+
   {
     path: "/:pathMatch(.*)*",
     redirect: "/",

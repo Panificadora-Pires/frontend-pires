@@ -46,10 +46,9 @@
 .auth-checkbox { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; color: var(--pp-texto-2); font-size: 12px; line-height: 1.6; cursor: pointer; }
 .auth-checkbox input { flex: 0 0 auto; width: 20px; height: 20px; margin: 2px 2px 0; accent-color: var(--pp-dourado-profundo); }
 .auth-checkbox span { padding-bottom: 6px; }
+.auth-checkbox a { color: var(--pp-dourado-profundo); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.auth-checkbox a:hover { color: var(--pp-marrom); }
 .auth-inline-error { margin: -10px 0 0; color: var(--pp-auth-error); font-size: 12px; line-height: 1.5; }
-.auth-legal { color: var(--pp-texto-2); font-size: 12px; line-height: 1.6; }
-.auth-legal summary { min-height: 44px; padding-block: 12px; color: var(--pp-dourado-profundo); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
-.auth-legal p { margin: 0 0 8px; }
 .auth-code .pp-field__input { font-size: 24px; letter-spacing: .22em; font-variant-numeric: tabular-nums; }
 .auth-secure { display: flex; align-items: center; justify-content: center; gap: 7px; margin: 28px 0 0; color: var(--pp-texto-2); font-size: 11px; line-height: 1.5; }
 .auth-secure svg { flex-shrink: 0; }
