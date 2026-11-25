@@ -23,6 +23,10 @@ for (const [arquivo, adicionar] of [['HomeView', 'adicionarAoCarrinho'], ['Carda
       preparoBalcao: '', vitrineBalcao: '', retiradaBalcao: '', dataDaPires: () => '2026-11-12',
       selecionarOfertas: () => [],
       useCompraCatalogo: compra({ obterProduto: () => detalhe.promise }), useFiltrosCardapio: () => ({}), useTrilhaCategorias: () => ({}),
+      usePromocoes: carregarComposable('composables/usePromocoes.js', 'usePromocoes', {
+        useCartStore: () => cart, useFavoritesStore: () => ({}), useAutoRefresh: () => ({}), useTemplateRef: () => ({ value: null }),
+        catalogService: { obterProduto: () => detalhe.promise }, dataDaPires: () => '2026-11-12', selecionarOfertas: () => [],
+      }),
     }, [adicionar, 'toast']);
     const adicionando = view[adicionar](produto); trocarConta(); cart.sincronizarConta(1); cart.adicionar(produto, 2);
     detalhe.resolve({ ...produto, em_promocao: true }); await adicionando;
@@ -59,11 +63,14 @@ test('recomendação atual preserva fallback existente quando detalhe falha', as
 });
 test('Favoritos valida também a geração do carrinho e ignora detalhe de sessão anterior', async () => {
   const detalhe = adiar(); let voos = 0;
-  const view = executarScript('views/student/FavoritosView.vue', {
-    useCartStore: () => cart, useAuthStore: () => ({ usuario: { id: 1 } }),
-    useFavoritesStore: () => ({ produtos: [], obterDetalhe: () => detalhe.promise }),
+  const favoritos = { produtos: [], obterDetalhe: () => detalhe.promise };
+  const useColecaoFavoritos = carregarComposable('composables/useColecaoFavoritos.js', 'useColecaoFavoritos', {
+    useCartStore: () => cart, useAuthStore: () => ({ usuario: { id: 1 } }), useFavoritesStore: () => favoritos,
     categoriasFavoritas, filtrarFavoritos, precoProduto, validarAdicao,
     registrarOrigemVoo: () => voos++,
+  });
+  const view = executarScript('views/student/FavoritosView.vue', {
+    useFavoritesStore: () => favoritos, useColecaoFavoritos,
   }, ['adicionarRapido', 'toast']);
   const adicionando = view.adicionarRapido(produto); trocarConta(); cart.sincronizarConta(1); cart.adicionar(produto, 2);
   detalhe.resolve(produto); await adicionando;
