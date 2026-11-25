@@ -12,206 +12,230 @@
       </RouterLink>
     </header>
 
-    <Transition name="cart-content" mode="out-in" @after-enter="focarVazioAposTransicao">
+    <Transition
+      name="cart-content"
+      mode="out-in"
+      @after-enter="focarVazioAposTransicao"
+    >
       <section v-if="cart.vazio" key="vazio" class="cart-page__empty">
-      <div class="cart-page__empty-copy">
-        <span class="cart-page__eyebrow">Falta só escolher</span>
-        <h2>Um intervalo<br>com seu sabor.</h2>
-        <p>Seu carrinho está vazio. Encontre seu próximo favorito no cardápio.</p>
-        <RouterLink :to="{ name: 'cardapio' }" class="cart-page__primary-link">Explorar cardápio <ArrowRight :size="18" aria-hidden="true" /></RouterLink>
-      </div>
-      <div class="cart-page__empty-art" aria-hidden="true"><ProductIllustration tipo="coxinha" /><span>feito para o seu intervalo</span></div>
-    </section>
+        <div class="cart-page__empty-copy">
+          <span class="cart-page__eyebrow">Falta só escolher</span>
+          <h2>Um intervalo<br />com seu sabor.</h2>
+          <p>
+            Seu carrinho está vazio. Encontre seu próximo favorito no cardápio.
+          </p>
+          <RouterLink :to="{ name: 'cardapio' }" class="cart-page__primary-link"
+            >Explorar cardápio <ArrowRight :size="18" aria-hidden="true"
+          /></RouterLink>
+        </div>
+        <div class="cart-page__empty-art" aria-hidden="true">
+          <ProductIllustration tipo="coxinha" /><span
+            >feito para o seu intervalo</span
+          >
+        </div>
+      </section>
 
       <div v-else key="com-itens" class="cart-page__content">
-      <div class="cart-page__layout">
-        <section class="cart-page__items" aria-labelledby="cart-items-title">
-          <div class="cart-page__section-head">
-            <div>
-              <h2 id="cart-items-title">Itens do pedido</h2>
-              <p>
-                {{ cart.totalItens }}
-                {{
-                  cart.totalItens === 1
-                    ? "item selecionado"
-                    : "itens selecionados"
-                }}
-              </p>
-            </div>
-
-            <button
-              type="button"
-              ref="botaoLimparRef"
-              class="cart-page__clear"
-              :disabled="finalizando"
-              @click="abrirConfirmacaoLimpeza"
-            >
-              <Trash2 :size="14" />
-              Limpar
-            </button>
-          </div>
-
-          <div v-if="sincronizando" class="cart-page__sync" role="status">
-            <LoaderCircle :size="15" class="cart-page__spinner" />
-            Conferindo preços e disponibilidade...
-          </div>
-
-          <TransitionGroup name="cart-item-list" tag="div" class="cart-page__item-list">
-            <article
-              v-for="item in cart.itens"
-              :key="item.produto.id"
-              class="cart-item"
-              :class="{ 'cart-item--problem': problemaItem(item) }"
-            >
-              <ProductImage :produto="item.produto" variant="compact" />
-
-              <div class="cart-item__info">
-                <span class="cart-item__category">
-                  {{ item.produto.categoria_nome || "Produto" }}
-                </span>
-                <h3>{{ item.produto.nome }}</h3>
-
-                <div class="cart-item__prices">
-                  <span
-                    v-if="item.produto.em_promocao"
-                    class="cart-item__old-price"
-                  >
-                    {{ formatarPreco(item.produto.preco) }}
-                  </span>
-                  <strong>{{ formatarPreco(precoUnitario(item)) }}</strong>
-                  <span>un.</span>
-                </div>
-
-                <p v-if="problemaItem(item)" class="cart-item__problem-text">
-                  <CircleAlert :size="14" />
-                  {{ problemaItem(item) }}
-                </p>
-              </div>
-
-              <div class="cart-item__actions">
-                <div
-                  class="cart-item__quantity"
-                  aria-label="Controle de quantidade"
-                >
-                  <button
-                    type="button"
-                    class="pp-card-action"
-                    :disabled="finalizando || item.quantidade <= 1"
-                    :aria-label="`Diminuir quantidade de ${item.produto.nome}`"
-                    @click="alterarQuantidade(item, item.quantidade - 1)"
-                  >
-                    <CardActionContent><Minus :size="15" /></CardActionContent>
-                  </button>
-                  <strong>{{ item.quantidade }}</strong>
-                  <button
-                    type="button"
-                    class="pp-card-action"
-                    :disabled="finalizando || !podeAumentar(item)"
-                    :aria-label="`Aumentar quantidade de ${item.produto.nome}`"
-                    @click="alterarQuantidade(item, item.quantidade + 1)"
-                  >
-                    <CardActionContent><Plus :size="15" /></CardActionContent>
-                  </button>
-                </div>
-
-                <small v-if="estoqueConhecido(item)" class="cart-item__stock">
-                  {{ estoqueDisponivel(item) }}
+        <div class="cart-page__layout">
+          <section class="cart-page__items" aria-labelledby="cart-items-title">
+            <div class="cart-page__section-head">
+              <div>
+                <h2 id="cart-items-title">Itens do pedido</h2>
+                <p>
+                  {{ cart.totalItens }}
                   {{
-                    estoqueDisponivel(item) === 1 ? "disponível" : "disponíveis"
+                    cart.totalItens === 1
+                      ? "item selecionado"
+                      : "itens selecionados"
                   }}
-                </small>
-              </div>
-
-              <div class="cart-item__subtotal">
-                <span>Subtotal</span>
-                <strong>
-                  {{ formatarPreco(precoUnitario(item) * item.quantidade) }}
-                </strong>
+                </p>
               </div>
 
               <button
                 type="button"
-                class="cart-item__remove"
+                ref="botaoLimparRef"
+                class="cart-page__clear"
                 :disabled="finalizando"
-                :aria-label="`Remover ${item.produto.nome} do carrinho`"
-                @click="removerItem(item.produto.id)"
+                @click="abrirConfirmacaoLimpeza"
               >
-                <X :size="18" aria-hidden="true" />
+                <Trash2 :size="14" />
+                Limpar
               </button>
-            </article>
-          </TransitionGroup>
-        </section>
+            </div>
 
-        <aside class="cart-summary" aria-labelledby="cart-summary-title">
-          <span class="cart-summary__eyebrow">Balcão Pires</span>
-          <div class="cart-summary__head">
-            <h2 id="cart-summary-title">Seu pedido</h2>
-            <span
-              >{{ cart.totalItens }}
-              {{ cart.totalItens === 1 ? "item" : "itens" }}</span
+            <div v-if="sincronizando" class="cart-page__sync" role="status">
+              <LoaderCircle :size="15" class="cart-page__spinner" />
+              Conferindo preços e disponibilidade...
+            </div>
+
+            <TransitionGroup
+              name="cart-item-list"
+              tag="div"
+              class="cart-page__item-list"
             >
-          </div>
+              <article
+                v-for="item in cart.itens"
+                :key="item.produto.id"
+                class="cart-item"
+                :class="{ 'cart-item--problem': problemaItem(item) }"
+              >
+                <ProductImage :produto="item.produto" variant="compact" />
 
-          <div class="cart-summary__rows">
-            <div>
-              <span>Subtotal</span>
-              <strong>{{ formatarPreco(cart.totalPreco) }}</strong>
+                <div class="cart-item__info">
+                  <span class="cart-item__category">
+                    {{ item.produto.categoria_nome || "Produto" }}
+                  </span>
+                  <h3>{{ item.produto.nome }}</h3>
+
+                  <div class="cart-item__prices">
+                    <span
+                      v-if="item.produto.em_promocao"
+                      class="cart-item__old-price"
+                    >
+                      {{ formatarPreco(item.produto.preco) }}
+                    </span>
+                    <strong>{{ formatarPreco(precoUnitario(item)) }}</strong>
+                    <span>un.</span>
+                  </div>
+
+                  <p v-if="problemaItem(item)" class="cart-item__problem-text">
+                    <CircleAlert :size="14" />
+                    {{ problemaItem(item) }}
+                  </p>
+                </div>
+
+                <div class="cart-item__actions">
+                  <div
+                    class="cart-item__quantity"
+                    aria-label="Controle de quantidade"
+                  >
+                    <button
+                      type="button"
+                      class="pp-card-action"
+                      :disabled="finalizando || item.quantidade <= 1"
+                      :aria-label="`Diminuir quantidade de ${item.produto.nome}`"
+                      @click="alterarQuantidade(item, item.quantidade - 1)"
+                    >
+                      <CardActionContent
+                        ><Minus :size="15"
+                      /></CardActionContent>
+                    </button>
+                    <strong>{{ item.quantidade }}</strong>
+                    <button
+                      type="button"
+                      class="pp-card-action"
+                      :disabled="finalizando || !podeAumentar(item)"
+                      :aria-label="`Aumentar quantidade de ${item.produto.nome}`"
+                      @click="alterarQuantidade(item, item.quantidade + 1)"
+                    >
+                      <CardActionContent><Plus :size="15" /></CardActionContent>
+                    </button>
+                  </div>
+
+                  <small v-if="estoqueConhecido(item)" class="cart-item__stock">
+                    {{ estoqueDisponivel(item) }}
+                    {{
+                      estoqueDisponivel(item) === 1
+                        ? "disponível"
+                        : "disponíveis"
+                    }}
+                  </small>
+                </div>
+
+                <div class="cart-item__subtotal">
+                  <span>Subtotal</span>
+                  <strong>
+                    {{ formatarPreco(precoUnitario(item) * item.quantidade) }}
+                  </strong>
+                </div>
+
+                <button
+                  type="button"
+                  class="cart-item__remove"
+                  :disabled="finalizando"
+                  :aria-label="`Remover ${item.produto.nome} do carrinho`"
+                  @click="removerItem(item.produto.id)"
+                >
+                  <X :size="18" aria-hidden="true" />
+                </button>
+              </article>
+            </TransitionGroup>
+          </section>
+
+          <aside class="cart-summary" aria-labelledby="cart-summary-title">
+            <span class="cart-summary__eyebrow">Balcão Pires</span>
+            <div class="cart-summary__head">
+              <h2 id="cart-summary-title">Seu pedido</h2>
+              <span
+                >{{ cart.totalItens }}
+                {{ cart.totalItens === 1 ? "item" : "itens" }}</span
+              >
             </div>
-            <div>
-              <span>Taxa de retirada</span>
-              <strong>Grátis</strong>
+
+            <div class="cart-summary__rows">
+              <div>
+                <span>Subtotal</span>
+                <strong>{{ formatarPreco(cart.totalPreco) }}</strong>
+              </div>
+              <div>
+                <span>Taxa de retirada</span>
+                <strong>Grátis</strong>
+              </div>
             </div>
-          </div>
 
-          <div class="cart-summary__total">
-            <span>Total</span>
-            <Transition name="cart-price" mode="out-in">
-              <strong :key="cart.totalPreco">{{ formatarPreco(cart.totalPreco) }}</strong>
-            </Transition>
-          </div>
-
-          <div class="cart-summary__pickup">
-            <Clock3 :size="18" />
-            <div>
-              <strong>Retirada no balcão</strong>
-              <p>
-                Você acompanha o preparo e retira quando o pedido estiver
-                pronto.
-              </p>
+            <div class="cart-summary__total">
+              <span>Total</span>
+              <Transition name="cart-price" mode="out-in">
+                <strong :key="cart.totalPreco">{{
+                  formatarPreco(cart.totalPreco)
+                }}</strong>
+              </Transition>
             </div>
-          </div>
 
-          <div v-if="erroFinalizar" class="cart-summary__error" role="alert">
-            <CircleAlert :size="17" />
-            <span>{{ erroFinalizar }}</span>
-          </div>
+            <div class="cart-summary__pickup">
+              <Clock3 :size="18" />
+              <div>
+                <strong>Retirada no balcão</strong>
+                <p>
+                  Você acompanha o preparo e retira quando o pedido estiver
+                  pronto.
+                </p>
+              </div>
+            </div>
 
-          <button
-            type="button"
-            class="cart-summary__checkout"
-            :disabled="finalizando || sincronizando || temProblemas"
-            @click="finalizarPedido"
-          >
-            <LoaderCircle
-              v-if="finalizando"
-              :size="18"
-              class="cart-page__spinner"
-            />
-            <ShoppingBag v-else :size="18" />
-            {{
-              finalizando ? "Conferindo pedido..." : "Continuar para pagamento"
-            }}
-            <ArrowRight v-if="!finalizando" :size="16" />
-          </button>
+            <div v-if="erroFinalizar" class="cart-summary__error" role="alert">
+              <CircleAlert :size="17" />
+              <span>{{ erroFinalizar }}</span>
+            </div>
 
-          <div class="cart-summary__safe">
-            <CircleCheckBig :size="15" />
-            Preços e estoque verificados antes do pagamento
-          </div>
-        </aside>
-      </div>
+            <button
+              type="button"
+              class="cart-summary__checkout"
+              :disabled="finalizando || sincronizando || temProblemas"
+              @click="finalizarPedido"
+            >
+              <LoaderCircle
+                v-if="finalizando"
+                :size="18"
+                class="cart-page__spinner"
+              />
+              <ShoppingBag v-else :size="18" />
+              {{
+                finalizando
+                  ? "Conferindo pedido..."
+                  : "Continuar para pagamento"
+              }}
+              <ArrowRight v-if="!finalizando" :size="16" />
+            </button>
 
-      <CartRecommendations />
+            <div class="cart-summary__safe">
+              <CircleCheckBig :size="15" />
+              Preços e estoque verificados antes do pagamento
+            </div>
+          </aside>
+        </div>
+
+        <CartRecommendations />
       </div>
     </Transition>
 
@@ -226,8 +250,12 @@
       <h2 id="cart-clear-dialog-title" class="cart-clear-dialog__title">
         Tirar tudo do carrinho?
       </h2>
-      <p id="cart-clear-dialog-description" class="cart-clear-dialog__description">
-        Todos os produtos escolhidos serão removidos. Você pode adicioná-los novamente pelo cardápio.
+      <p
+        id="cart-clear-dialog-description"
+        class="cart-clear-dialog__description"
+      >
+        Todos os produtos escolhidos serão removidos. Você pode adicioná-los
+        novamente pelo cardápio.
       </p>
       <div class="cart-clear-dialog__actions">
         <button
@@ -264,7 +292,14 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from "vue";
 import { useRouter } from "vue-router";
 import {
   ArrowLeft,
@@ -305,18 +340,22 @@ const botaoCancelarLimpezaRef = ref(null);
 const focarAoEsvaziar = ref(false);
 let toastTimer = null;
 let montado = true;
-const contextoAtual = contexto => montado && cart.contextoAtual(contexto);
-watch(() => cart.geracao, () => {
-  estoques.value = {};
-  ativos.value = {};
-  sincronizando.value = false;
-  finalizando.value = false;
-  erroFinalizar.value = "";
-  toast.value = "";
-  focarAoEsvaziar.value = false;
-  if (dialogoLimpezaRef.value?.open) dialogoLimpezaRef.value.close();
-  window.clearTimeout(toastTimer);
-}, { flush: "sync" });
+const contextoAtual = (contexto) => montado && cart.contextoAtual(contexto);
+watch(
+  () => cart.geracao,
+  () => {
+    estoques.value = {};
+    ativos.value = {};
+    sincronizando.value = false;
+    finalizando.value = false;
+    erroFinalizar.value = "";
+    toast.value = "";
+    focarAoEsvaziar.value = false;
+    if (dialogoLimpezaRef.value?.open) dialogoLimpezaRef.value.close();
+    window.clearTimeout(toastTimer);
+  },
+  { flush: "sync" },
+);
 
 const temProblemas = computed(() =>
   cart.itens.some((item) => Boolean(problemaItem(item))),
@@ -503,7 +542,8 @@ async function finalizarPedido() {
 
     await router.push({ name: "checkout" });
   } catch (error) {
-    if (contextoAtual(contexto)) erroFinalizar.value = mensagemErroPedido(error);
+    if (contextoAtual(contexto))
+      erroFinalizar.value = mensagemErroPedido(error);
   } finally {
     if (contextoAtual(contexto)) finalizando.value = false;
   }
@@ -563,11 +603,11 @@ onBeforeUnmount(() => {
   border-radius: 18px 18px 18px 6px;
   background: var(--pp-creme);
   color: var(--pp-marrom);
-  box-shadow: 0 24px 80px rgba(35, 19, 9, .25);
+  box-shadow: 0 24px 80px rgba(35, 19, 9, 0.25);
   font-family: var(--pp-font-body);
 }
 .cart-clear-dialog::backdrop {
-  background: rgba(30, 18, 9, .58);
+  background: rgba(30, 18, 9, 0.58);
 }
 .cart-clear-dialog__eyebrow {
   display: block;
@@ -575,7 +615,7 @@ onBeforeUnmount(() => {
   color: var(--pp-dourado-profundo);
   font-size: 12px;
   font-weight: 750;
-  letter-spacing: .12em;
+  letter-spacing: 0.12em;
 }
 .cart-clear-dialog__title {
   margin: 0;
@@ -603,7 +643,10 @@ onBeforeUnmount(() => {
   border-radius: 9px;
   font: 650 14px/1.3 var(--pp-font-body);
   cursor: pointer;
-  transition: transform .15s ease, background .15s ease, border-color .15s ease;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
 }
 .cart-clear-dialog__cancel {
   border: 1px solid var(--pp-creme-borda);
@@ -622,7 +665,7 @@ onBeforeUnmount(() => {
   background: #442718;
 }
 .cart-clear-dialog__actions button:active {
-  transform: scale(.985);
+  transform: scale(0.985);
 }
 .cart-clear-dialog__actions button:focus-visible {
   outline: 3px solid var(--pp-dourado-escuro);
@@ -646,7 +689,7 @@ onBeforeUnmount(() => {
   }
 }
 .cart-page {
-  width: min(100%,1280px);
+  width: min(100%, 1280px);
   margin: auto;
   color: var(--pp-marrom);
   font-family: var(--pp-font-body);
@@ -663,8 +706,8 @@ onBeforeUnmount(() => {
 }
 .cart-page__header h1 {
   margin: 0;
-  font: 400 clamp(50px,7vw,92px)/1.08 var(--pp-font-titulo);
-  letter-spacing: -.025em;
+  font: 400 clamp(50px, 7vw, 92px)/1.08 var(--pp-font-titulo);
+  letter-spacing: -0.025em;
 }
 .cart-page__header p {
   margin: 8px 0 0;
@@ -682,7 +725,7 @@ onBeforeUnmount(() => {
 }
 .cart-page__layout {
   display: grid;
-  grid-template-columns: minmax(0,1fr) 350px;
+  grid-template-columns: minmax(0, 1fr) 350px;
   gap: 48px;
   align-items: start;
 }
@@ -715,8 +758,11 @@ onBeforeUnmount(() => {
   padding: 9px 15px;
   font: 600 14px/1.4 var(--pp-font-body);
   cursor: pointer;
-  transition: background-color 180ms ease, color 180ms ease,
-    border-color 180ms ease, transform 180ms ease;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease;
 }
 .cart-page__clear svg {
   transition: transform 180ms ease;
@@ -739,7 +785,7 @@ onBeforeUnmount(() => {
 .cart-item {
   position: relative;
   display: grid;
-  grid-template-columns: 128px minmax(0,1fr) auto;
+  grid-template-columns: 128px minmax(0, 1fr) auto;
   gap: 16px 22px;
   align-items: center;
   padding: 26px 0;
@@ -755,12 +801,13 @@ onBeforeUnmount(() => {
   min-width: 0;
   padding-right: 30px;
 }
-.cart-item__category,.cart-page__eyebrow {
+.cart-item__category,
+.cart-page__eyebrow {
   color: var(--pp-texto-2);
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: .1em;
+  letter-spacing: 0.1em;
 }
 .cart-item h3 {
   margin: 7px 0 10px;
@@ -841,7 +888,10 @@ onBeforeUnmount(() => {
   background: transparent;
   color: var(--pp-texto-2);
   cursor: pointer;
-  transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
 }
 @media (hover: hover) {
   .cart-item__remove:hover:not(:disabled) {
@@ -857,10 +907,12 @@ onBeforeUnmount(() => {
 }
 .cart-item__remove:disabled {
   cursor: not-allowed;
-  opacity: .5;
+  opacity: 0.5;
 }
 @media (prefers-reduced-motion: reduce) {
-  .cart-item__remove { transition: none; }
+  .cart-item__remove {
+    transition: none;
+  }
 }
 .cart-item--problem {
   border-bottom-color: var(--student-danger);
@@ -883,7 +935,7 @@ onBeforeUnmount(() => {
 }
 .cart-summary__eyebrow {
   font-size: 12px;
-  letter-spacing: .15em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--pp-gold);
 }
@@ -895,7 +947,7 @@ onBeforeUnmount(() => {
   font: 400 38px/1.15 var(--pp-font-titulo);
   margin: 0 0 8px;
 }
-.cart-summary__head>span {
+.cart-summary__head > span {
   font-size: 14px;
   color: var(--pp-cream-dim);
 }
@@ -904,7 +956,7 @@ onBeforeUnmount(() => {
   gap: 16px;
   font-size: 14px;
 }
-.cart-summary__rows>div {
+.cart-summary__rows > div {
   display: flex;
   justify-content: space-between;
   gap: 12px;
@@ -920,7 +972,7 @@ onBeforeUnmount(() => {
 }
 .cart-summary__total strong {
   font-size: 32px;
-  letter-spacing: -.04em;
+  letter-spacing: -0.04em;
   white-space: nowrap;
 }
 .cart-summary__pickup {
@@ -928,7 +980,8 @@ onBeforeUnmount(() => {
   gap: 10px;
   padding-bottom: 24px;
 }
-.cart-summary__pickup svg,.cart-summary__safe svg {
+.cart-summary__pickup svg,
+.cart-summary__safe svg {
   flex-shrink: 0;
 }
 .cart-summary__pickup strong {
@@ -940,7 +993,8 @@ onBeforeUnmount(() => {
   line-height: 1.5;
   color: var(--pp-cream-dim);
 }
-.cart-summary__checkout,.cart-page__primary-link {
+.cart-summary__checkout,
+.cart-page__primary-link {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -954,17 +1008,21 @@ onBeforeUnmount(() => {
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: background 180ms,transform 180ms;
+  transition:
+    background 180ms,
+    transform 180ms;
   text-decoration: none;
 }
 .cart-summary__checkout {
   width: 100%;
 }
-.cart-summary__checkout:hover:not(:disabled),.cart-page__primary-link:hover {
+.cart-summary__checkout:hover:not(:disabled),
+.cart-page__primary-link:hover {
   background: var(--pp-gold-hover);
   transform: translateY(-2px);
 }
-.cart-summary__checkout:active:not(:disabled),.cart-page__primary-link:active {
+.cart-summary__checkout:active:not(:disabled),
+.cart-page__primary-link:active {
   transform: translateY(1px);
 }
 .cart-summary__safe {
@@ -994,7 +1052,7 @@ onBeforeUnmount(() => {
   font-size: 14px;
   color: var(--pp-texto-2);
 }
-.cart-page :is(a,button):focus-visible {
+.cart-page :is(a, button):focus-visible {
   outline: 3px solid var(--pp-dourado-escuro);
   outline-offset: 4px;
 }
@@ -1002,7 +1060,7 @@ onBeforeUnmount(() => {
   outline-color: var(--pp-creme);
 }
 .cart-page button:disabled {
-  opacity: .5;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 .cart-page__empty {
@@ -1014,9 +1072,9 @@ onBeforeUnmount(() => {
   padding: 24px 40px 48px;
 }
 .cart-page__empty h2 {
-  font: 400 clamp(42px,5.4vw,76px)/1.08 var(--pp-font-titulo);
+  font: 400 clamp(42px, 5.4vw, 76px)/1.08 var(--pp-font-titulo);
   margin: 18px 0;
-  letter-spacing: -.02em;
+  letter-spacing: -0.02em;
 }
 .cart-page__empty p {
   max-width: 350px;
@@ -1063,15 +1121,18 @@ onBeforeUnmount(() => {
   font-size: 14px;
 }
 .cart-page__spinner {
-  animation: cart-spin .8s linear infinite;
+  animation: cart-spin 0.8s linear infinite;
 }
 @keyframes cart-spin {
   to {
     transform: rotate(360deg);
   }
 }
-.cart-content-enter-active,.cart-content-leave-active {
-  transition: opacity 240ms ease, transform 240ms ease;
+.cart-content-enter-active,
+.cart-content-leave-active {
+  transition:
+    opacity 240ms ease,
+    transform 240ms ease;
 }
 .cart-content-enter-from {
   opacity: 0;
@@ -1081,8 +1142,11 @@ onBeforeUnmount(() => {
   opacity: 0;
   transform: translateY(-8px);
 }
-.cart-item-list-enter-active,.cart-item-list-leave-active {
-  transition: opacity 200ms ease, transform 200ms ease;
+.cart-item-list-enter-active,
+.cart-item-list-leave-active {
+  transition:
+    opacity 200ms ease,
+    transform 200ms ease;
 }
 .cart-item-list-enter-from {
   opacity: 0;
@@ -1092,8 +1156,11 @@ onBeforeUnmount(() => {
   opacity: 0;
   transform: translateX(12px);
 }
-.cart-price-enter-active,.cart-price-leave-active {
-  transition: opacity 140ms ease, transform 140ms ease;
+.cart-price-enter-active,
+.cart-price-leave-active {
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
 }
 .cart-price-enter-from {
   opacity: 0;
@@ -1103,19 +1170,21 @@ onBeforeUnmount(() => {
   opacity: 0;
   transform: translateY(-5px);
 }
-.cart-toast-enter-active,.cart-toast-leave-active {
+.cart-toast-enter-active,
+.cart-toast-leave-active {
   transition: opacity 180ms;
 }
-.cart-toast-enter-from,.cart-toast-leave-to {
+.cart-toast-enter-from,
+.cart-toast-leave-to {
   opacity: 0;
 }
-@media(max-width:1100px) {
+@media (max-width: 1100px) {
   .cart-page__layout {
-    grid-template-columns: minmax(0,1fr) 310px;
+    grid-template-columns: minmax(0, 1fr) 310px;
     gap: 24px;
   }
   .cart-item {
-    grid-template-columns: 100px minmax(0,1fr);
+    grid-template-columns: 100px minmax(0, 1fr);
     gap: 16px;
   }
   .cart-item :deep(.catalog-product-image--compact) {
@@ -1135,7 +1204,7 @@ onBeforeUnmount(() => {
     font-size: 18px;
   }
 }
-@media(max-width:800px) {
+@media (max-width: 800px) {
   .cart-page__layout {
     grid-template-columns: 1fr;
     gap: 32px;
@@ -1144,7 +1213,7 @@ onBeforeUnmount(() => {
     position: static;
   }
   .cart-item {
-    grid-template-columns: 128px minmax(0,1fr) auto;
+    grid-template-columns: 128px minmax(0, 1fr) auto;
   }
   .cart-item :deep(.catalog-product-image--compact) {
     width: 128px;
@@ -1162,7 +1231,7 @@ onBeforeUnmount(() => {
     padding: 24px 0;
   }
 }
-@media(max-width:520px) {
+@media (max-width: 520px) {
   .cart-page__header {
     align-items: flex-start;
     flex-direction: column;
@@ -1172,13 +1241,13 @@ onBeforeUnmount(() => {
     padding-bottom: 20px;
   }
   .cart-page__header h1 {
-    font-size: clamp(44px,12vw,62px);
+    font-size: clamp(44px, 12vw, 62px);
   }
   .cart-page__header p {
     font-size: 24px;
   }
   .cart-item {
-    grid-template-columns: 88px minmax(0,1fr);
+    grid-template-columns: 88px minmax(0, 1fr);
     gap: 12px;
     padding: 24px 0;
   }
@@ -1239,16 +1308,20 @@ onBeforeUnmount(() => {
     font-size: 16px;
   }
 }
-@media(prefers-reduced-motion:reduce) {
-  .cart-page *, .cart-page *::before {
-    animation: none!important;
-    transition: none!important;
+@media (prefers-reduced-motion: reduce) {
+  .cart-page *,
+  .cart-page *::before {
+    animation: none !important;
+    transition: none !important;
   }
-  .cart-content-enter-active,.cart-content-leave-active,
-  .cart-item-list-enter-active,.cart-item-list-leave-active,
-  .cart-price-enter-active,.cart-price-leave-active {
-    transition: none!important;
-    transform: none!important;
+  .cart-content-enter-active,
+  .cart-content-leave-active,
+  .cart-item-list-enter-active,
+  .cart-item-list-leave-active,
+  .cart-price-enter-active,
+  .cart-price-leave-active {
+    transition: none !important;
+    transform: none !important;
   }
 }
 </style>

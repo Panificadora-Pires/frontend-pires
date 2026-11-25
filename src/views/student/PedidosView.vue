@@ -224,7 +224,14 @@ watch(
             para retirada</span
           ><span v-else>. Acompanhe as atualizações por aqui.</span>
         </p>
-        <button v-if="erroAtualizacao" type="button" class="orders-page__retry" @click="atualizarAgora">Tentar novamente</button>
+        <button
+          v-if="erroAtualizacao"
+          type="button"
+          class="orders-page__retry"
+          @click="atualizarAgora"
+        >
+          Tentar novamente
+        </button>
       </div>
 
       <p v-if="avisoPedido" class="orders-page__target-notice" role="status">
@@ -351,8 +358,20 @@ watch(
 </template>
 
 <style scoped>
-.orders-page__retry{border:1px solid var(--pp-dourado-profundo);border-radius:8px;background:transparent;color:var(--pp-marrom);padding:9px 12px;min-height:40px;font-size:12px;font-weight:650;cursor:pointer}
-.orders-page__retry:hover{background:var(--pp-dourado-suave)}
+.orders-page__retry {
+  border: 1px solid var(--pp-dourado-profundo);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--pp-marrom);
+  padding: 9px 12px;
+  min-height: 40px;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.orders-page__retry:hover {
+  background: var(--pp-dourado-suave);
+}
 
 .orders-page {
   max-width: 1120px;

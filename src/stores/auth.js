@@ -90,7 +90,11 @@ export const useAuthStore = defineStore("auth", {
           code,
         });
 
-        if (!contexto.atual() || this.obterAtivacaoPendente()?.requestId !== pendencia.requestId) return;
+        if (
+          !contexto.atual() ||
+          this.obterAtivacaoPendente()?.requestId !== pendencia.requestId
+        )
+          return;
         this.limparAtivacaoPendente();
         return data;
       });
@@ -167,7 +171,11 @@ export const useAuthStore = defineStore("auth", {
           new_password: newPassword,
         });
 
-        if (!contexto.atual() || this.obterRedefinicaoPendente()?.requestId !== pendencia.requestId) return;
+        if (
+          !contexto.atual() ||
+          this.obterRedefinicaoPendente()?.requestId !== pendencia.requestId
+        )
+          return;
         this.limparRedefinicaoPendente();
         this._limparSessaoLocal();
         contexto.versao = getSessionVersion();
@@ -203,7 +211,8 @@ export const useAuthStore = defineStore("auth", {
     async buscarUsuarioLogado(contexto = null) {
       const versao = getSessionVersion();
       const { data } = await authService.getProfile();
-      if (versao !== getSessionVersion() || (contexto && !contexto.atual())) return null;
+      if (versao !== getSessionVersion() || (contexto && !contexto.atual()))
+        return null;
       this.usuario = data;
       useCartStore().sincronizarConta(data?.id);
       return data;
@@ -259,8 +268,7 @@ export const useAuthStore = defineStore("auth", {
         if (refresh) {
           await authService.logout(refresh);
         }
-      } catch {
-      }
+      } catch {}
     },
 
     _limparSessaoLocal() {
@@ -282,14 +290,18 @@ export const useAuthStore = defineStore("auth", {
       try {
         sessionStorage.setItem(chave, JSON.stringify(valor));
         delete this.pendenciasTemporarias[chave];
-      } catch { this.pendenciasTemporarias[chave] = valor; }
+      } catch {
+        this.pendenciasTemporarias[chave] = valor;
+      }
     },
 
     _removerPendencia(chave) {
       try {
         sessionStorage.removeItem(chave);
         delete this.pendenciasTemporarias[chave];
-      } catch { this.pendenciasTemporarias[chave] = null; }
+      } catch {
+        this.pendenciasTemporarias[chave] = null;
+      }
     },
 
     _lerPendencia(chave) {
@@ -299,11 +311,19 @@ export const useAuthStore = defineStore("auth", {
     },
 
     async _executar(callback, chave = null) {
-      if (this.carregando && (!chave || !this.chaveOperacao || chave === this.chaveOperacao)) {
+      if (
+        this.carregando &&
+        (!chave || !this.chaveOperacao || chave === this.chaveOperacao)
+      ) {
         return { ok: false, ignorado: true, campos: {} };
       }
-      const contexto = { versao: getSessionVersion(), operacao: ++this.geracaoOperacao };
-      contexto.atual = () => contexto.operacao === this.geracaoOperacao && contexto.versao === getSessionVersion();
+      const contexto = {
+        versao: getSessionVersion(),
+        operacao: ++this.geracaoOperacao,
+      };
+      contexto.atual = () =>
+        contexto.operacao === this.geracaoOperacao &&
+        contexto.versao === getSessionVersion();
       const operacaoAtual = () => contexto.operacao === this.geracaoOperacao;
       const ignorado = { ok: false, ignorado: true, campos: {} };
       this.carregando = true;
@@ -312,11 +332,20 @@ export const useAuthStore = defineStore("auth", {
 
       try {
         const data = await callback(contexto);
-        if (data === undefined || !operacaoAtual() || contexto.versao !== getSessionVersion()) return ignorado;
+        if (
+          data === undefined ||
+          !operacaoAtual() ||
+          contexto.versao !== getSessionVersion()
+        )
+          return ignorado;
         return { ok: true, data, campos: {} };
       } catch (error) {
         if (!operacaoAtual()) return ignorado;
-        if (contexto.versao !== getSessionVersion() && (getAccessToken() || getRefreshToken() || !error.response)) return ignorado;
+        if (
+          contexto.versao !== getSessionVersion() &&
+          (getAccessToken() || getRefreshToken() || !error.response)
+        )
+          return ignorado;
         const normalizado = normalizarErroApi(error);
         this.erro = normalizado.mensagem;
 
@@ -398,7 +427,9 @@ function lerJsonSessao(chave) {
     const valor = sessionStorage.getItem(chave);
     return valor ? JSON.parse(valor) : null;
   } catch {
-    try { sessionStorage.removeItem(chave); } catch {}
+    try {
+      sessionStorage.removeItem(chave);
+    } catch {}
     return null;
   }
 }

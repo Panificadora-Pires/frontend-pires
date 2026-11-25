@@ -91,7 +91,10 @@ export const useChatbotStore = defineStore("chatbot", {
           texto:
             error?.response?.status === 429
               ? "Muitas perguntas seguidas. Aguarde um pouco e tente de novo."
-              : mensagemErroApi(error, "Não consegui responder agora. Verifique sua conexão."),
+              : mensagemErroApi(
+                  error,
+                  "Não consegui responder agora. Verifique sua conexão.",
+                ),
         });
       } finally {
         this.respondendo = false;

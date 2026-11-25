@@ -2,7 +2,9 @@
 import { inject } from "vue";
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from "vue-router";
 const { ocupado } = inject("authExperience");
-onBeforeRouteLeave((to) => ocupado.value && to.meta.somenteVisitante ? false : true);
+onBeforeRouteLeave((to) =>
+  ocupado.value && to.meta.somenteVisitante ? false : true,
+);
 onBeforeRouteUpdate(() => !ocupado.value);
 </script>
 

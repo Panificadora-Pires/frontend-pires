@@ -2,28 +2,57 @@
   <section
     ref="raiz"
     class="home-banner"
-    :class="{ 'is-pausado': abaEscondida, 'is-estatico': movimentoReduzido, 'tem-comercial': temComercial(slidesVisuais[atual]) }"
+    :class="{
+      'is-pausado': abaEscondida,
+      'is-estatico': movimentoReduzido,
+      'tem-comercial': temComercial(slidesVisuais[atual]),
+    }"
     aria-roledescription="carrossel"
     aria-label="Destaques da Pires"
   >
     <div class="home-banner__cena" aria-hidden="true">
-      <svg class="home-banner__camada home-banner__camada--fundo" viewBox="0 0 1200 380" preserveAspectRatio="none">
-        <path d="M0 250 C160 200 330 235 520 205 C720 172 900 228 1200 190 L1200 380 L0 380 Z" />
+      <svg
+        class="home-banner__camada home-banner__camada--fundo"
+        viewBox="0 0 1200 380"
+        preserveAspectRatio="none"
+      >
+        <path
+          d="M0 250 C160 200 330 235 520 205 C720 172 900 228 1200 190 L1200 380 L0 380 Z"
+        />
       </svg>
-      <svg class="home-banner__camada home-banner__camada--meio" viewBox="0 0 1200 380" preserveAspectRatio="none">
-        <path d="M0 300 C220 250 430 300 680 262 C880 232 1040 280 1200 255 L1200 380 L0 380 Z" />
+      <svg
+        class="home-banner__camada home-banner__camada--meio"
+        viewBox="0 0 1200 380"
+        preserveAspectRatio="none"
+      >
+        <path
+          d="M0 300 C220 250 430 300 680 262 C880 232 1040 280 1200 255 L1200 380 L0 380 Z"
+        />
         <g class="home-banner__farinha">
-          <ellipse cx="180" cy="300" rx="6" ry="2.5" /><ellipse cx="420" cy="292" rx="5" ry="2" />
-          <ellipse cx="760" cy="270" rx="6" ry="2.5" /><ellipse cx="980" cy="276" rx="5" ry="2" />
+          <ellipse cx="180" cy="300" rx="6" ry="2.5" />
+          <ellipse cx="420" cy="292" rx="5" ry="2" />
+          <ellipse cx="760" cy="270" rx="6" ry="2.5" />
+          <ellipse cx="980" cy="276" rx="5" ry="2" />
           <ellipse cx="1110" cy="268" rx="4" ry="2" />
         </g>
       </svg>
-      <svg class="home-banner__camada home-banner__camada--frente" viewBox="0 0 1200 380" preserveAspectRatio="none">
-        <path d="M0 345 C260 318 520 350 800 326 C980 312 1100 334 1200 324 L1200 380 L0 380 Z" />
+      <svg
+        class="home-banner__camada home-banner__camada--frente"
+        viewBox="0 0 1200 380"
+        preserveAspectRatio="none"
+      >
+        <path
+          d="M0 345 C260 318 520 350 800 326 C980 312 1100 334 1200 324 L1200 380 L0 380 Z"
+        />
       </svg>
     </div>
 
-    <div v-if="carregando" class="home-banner__skeleton" role="status" aria-label="Carregando destaques">
+    <div
+      v-if="carregando"
+      class="home-banner__skeleton"
+      role="status"
+      aria-label="Carregando destaques"
+    >
       <span /><span /><span />
     </div>
 
@@ -32,7 +61,10 @@
         v-for="(slide, indice) in slidesVisuais"
         :key="slide.id"
         class="home-banner__slide"
-        :class="{ 'is-ativo': indice === atual, 'home-banner__slide--comercial': temComercial(slide) }"
+        :class="{
+          'is-ativo': indice === atual,
+          'home-banner__slide--comercial': temComercial(slide),
+        }"
         aria-roledescription="slide"
         :aria-label="`${indice + 1} de ${slides.length}`"
         :aria-hidden="indice !== atual"
@@ -85,7 +117,9 @@
             @error="registrarFotoComErro(slide.poster)"
           />
           <video
-            v-if="slide.video && !movimentoReduzido && !videosComErro.has(slide.id)"
+            v-if="
+              slide.video && !movimentoReduzido && !videosComErro.has(slide.id)
+            "
             :ref="(el) => registrarVideo(slide.id, el)"
             class="home-banner__video"
             :src="slide.video"
@@ -99,7 +133,11 @@
             @canplay="sincronizarVideos"
           />
           <img
-            v-else-if="(!slide.poster || fotosComErro.has(slide.poster)) && slide.imagem && !fotosComErro.has(slide.id)"
+            v-else-if="
+              (!slide.poster || fotosComErro.has(slide.poster)) &&
+              slide.imagem &&
+              !fotosComErro.has(slide.id)
+            "
             :src="slide.imagem"
             :alt="slide.titulo.join(' ')"
             class="home-banner__foto"
@@ -112,16 +150,36 @@
             aria-hidden="true"
           >
             <ellipse class="qr-sombra" cx="100" cy="184" rx="58" ry="8" />
-            <rect class="qr-celular" x="40" y="26" width="120" height="150" rx="20" />
-            <rect class="qr-tela" x="52" y="44" width="96" height="104" rx="10" />
+            <rect
+              class="qr-celular"
+              x="40"
+              y="26"
+              width="120"
+              height="150"
+              rx="20"
+            />
+            <rect
+              class="qr-tela"
+              x="52"
+              y="44"
+              width="96"
+              height="104"
+              rx="10"
+            />
             <g class="qr-celular">
-              <rect x="62" y="54" width="24" height="24" rx="3" /><rect x="114" y="54" width="24" height="24" rx="3" />
-              <rect x="62" y="114" width="24" height="24" rx="3" /><rect x="96" y="96" width="10" height="10" />
-              <rect x="114" y="114" width="10" height="10" /><rect x="128" y="126" width="10" height="10" />
-              <rect x="96" y="124" width="10" height="10" /><rect x="96" y="60" width="8" height="18" />
+              <rect x="62" y="54" width="24" height="24" rx="3" />
+              <rect x="114" y="54" width="24" height="24" rx="3" />
+              <rect x="62" y="114" width="24" height="24" rx="3" />
+              <rect x="96" y="96" width="10" height="10" />
+              <rect x="114" y="114" width="10" height="10" />
+              <rect x="128" y="126" width="10" height="10" />
+              <rect x="96" y="124" width="10" height="10" />
+              <rect x="96" y="60" width="8" height="18" />
             </g>
             <g class="qr-tela">
-              <rect x="68" y="60" width="12" height="12" /><rect x="120" y="60" width="12" height="12" /><rect x="68" y="120" width="12" height="12" />
+              <rect x="68" y="60" width="12" height="12" />
+              <rect x="120" y="60" width="12" height="12" />
+              <rect x="68" y="120" width="12" height="12" />
             </g>
             <circle class="qr-botao" cx="100" cy="162" r="5" />
           </svg>
@@ -149,12 +207,19 @@
         </div>
       </div>
     </template>
-
   </section>
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, shallowRef, useTemplateRef, watch } from "vue";
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  shallowRef,
+  useTemplateRef,
+  watch,
+} from "vue";
 import { ArrowRight, ShoppingBag } from "lucide-vue-next";
 
 import ProductIllustration from "@/components/catalog/ProductIllustration.vue";
@@ -178,11 +243,17 @@ const movimentoReduzido = shallowRef(false);
 const abaEscondida = shallowRef(document.hidden);
 const consultaLayout = window.matchMedia("(max-width: 760px)");
 const telaMobile = shallowRef(consultaLayout.matches);
-const slidesVisuais = computed(() => props.slides.map((slide) => ({
-  ...slide,
-  video: telaMobile.value && slide.videoMobile ? slide.videoMobile : slide.video,
-  poster: telaMobile.value && slide.posterMobile ? slide.posterMobile : slide.poster,
-})));
+const slidesVisuais = computed(() =>
+  props.slides.map((slide) => ({
+    ...slide,
+    video:
+      telaMobile.value && slide.videoMobile ? slide.videoMobile : slide.video,
+    poster:
+      telaMobile.value && slide.posterMobile
+        ? slide.posterMobile
+        : slide.poster,
+  })),
+);
 const fotosComErro = shallowRef(new Set());
 let timer = null;
 let consultaMovimento = null;
@@ -193,8 +264,10 @@ const videos = new Map();
 
 function temComercial(slide) {
   if (!slide?.video) return false;
-  return (!movimentoReduzido.value && !videosComErro.value.has(slide.id)) ||
-    (slide.poster && !fotosComErro.value.has(slide.poster));
+  return (
+    (!movimentoReduzido.value && !videosComErro.value.has(slide.id)) ||
+    (slide.poster && !fotosComErro.value.has(slide.poster))
+  );
 }
 
 function registrarVideoComErro(id) {
@@ -211,23 +284,37 @@ function sincronizarVideos() {
   props.slides.forEach((slide, indice) => {
     const video = videos.get(slide.id);
     if (!video) return;
-    if (indice === atual.value && !movimentoReduzido.value && !abaEscondida.value) {
-      if (video.paused) video.play().catch((erro) => {
-        if (erro.name !== "AbortError") registrarVideoComErro(slide.id);
-      });
+    if (
+      indice === atual.value &&
+      !movimentoReduzido.value &&
+      !abaEscondida.value
+    ) {
+      if (video.paused)
+        video.play().catch((erro) => {
+          if (erro.name !== "AbortError") registrarVideoComErro(slide.id);
+        });
     } else {
       video.pause();
-      if (indice !== atual.value && video.currentTime !== 0) video.currentTime = 0;
+      if (indice !== atual.value && video.currentTime !== 0)
+        video.currentTime = 0;
     }
   });
 }
 
-watch([atual, movimentoReduzido, abaEscondida, telaMobile, () => props.slides], () => {
-  nextTick(() => { sincronizarVideos(); agendar(); });
-}, { flush: "post" });
+watch(
+  [atual, movimentoReduzido, abaEscondida, telaMobile, () => props.slides],
+  () => {
+    nextTick(() => {
+      sincronizarVideos();
+      agendar();
+    });
+  },
+  { flush: "post" },
+);
 
 function aoTerminarVideo(id) {
-  if (props.slides[atual.value]?.id === id && !abaEscondida.value) irPara(atual.value + 1);
+  if (props.slides[atual.value]?.id === id && !abaEscondida.value)
+    irPara(atual.value + 1);
 }
 
 function aoMudarVisibilidade() {
@@ -251,16 +338,22 @@ function irPara(indice) {
 
 function agendar() {
   window.clearTimeout(timer);
-  if (movimentoReduzido.value || abaEscondida.value || props.slides.length < 2) return;
+  if (movimentoReduzido.value || abaEscondida.value || props.slides.length < 2)
+    return;
   const slide = props.slides[atual.value];
   if (slide?.video && !videosComErro.value.has(slide.id)) return;
-  timer = window.setTimeout(() => irPara(atual.value + 1), slide?.duracao || DURACAO_SLIDE_MS);
+  timer = window.setTimeout(
+    () => irPara(atual.value + 1),
+    slide?.duracao || DURACAO_SLIDE_MS,
+  );
 }
 
 function adicionar(slide, event) {
   const produto = event.currentTarget
     .closest(".home-banner__slide")
-    ?.querySelector(".home-banner__video, .home-banner__foto, .home-banner__ilustracao");
+    ?.querySelector(
+      ".home-banner__video, .home-banner__foto, .home-banner__ilustracao",
+    );
   registrarOrigemVoo(produto);
   emit("adicionar", slide.acao.produto);
 }
@@ -295,7 +388,8 @@ watch(
 
 onMounted(() => {
   consultaLayout.addEventListener("change", aoMudarLayout);
-  consultaMovimento = window.matchMedia?.("(prefers-reduced-motion: reduce)") || null;
+  consultaMovimento =
+    window.matchMedia?.("(prefers-reduced-motion: reduce)") || null;
   consultaMovimento?.addEventListener?.("change", aoMudarMovimento);
   movimentoReduzido.value = Boolean(consultaMovimento?.matches);
   window.addEventListener("scroll", aoRolar, { passive: true });
@@ -452,7 +546,8 @@ onBeforeUnmount(() => {
   height: 300px;
   display: grid;
   place-items: center;
-  transform: translateY(calc((1 - var(--p)) * 60px)) scale(calc(0.94 + var(--p) * 0.06));
+  transform: translateY(calc((1 - var(--p)) * 60px))
+    scale(calc(0.94 + var(--p) * 0.06));
 }
 .home-banner__video {
   width: 360px;
@@ -555,7 +650,9 @@ onBeforeUnmount(() => {
   background: var(--pp-gold);
   color: var(--pp-marrom);
 }
-.home-banner__slide--comercial .home-banner__botao :deep(.pp-card-action__fill) {
+.home-banner__slide--comercial
+  .home-banner__botao
+  :deep(.pp-card-action__fill) {
   background: var(--pp-marrom);
   color: var(--pp-creme);
 }

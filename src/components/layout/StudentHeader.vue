@@ -83,7 +83,10 @@ watch(
 );
 watch(
   () => route.fullPath,
-  () => { fechar(); nextTick(atualizarIndicador); },
+  () => {
+    fechar();
+    nextTick(atualizarIndicador);
+  },
 );
 watch(
   () => auth.usuario?.avatar,
@@ -98,10 +101,12 @@ function registrarGatilho(tipo, el) {
 }
 function atualizarIndicador() {
   const ativo = navegacao.value?.querySelector(".is-active");
-  indicador.value = ativo ? {
-    opacity: 1,
-    transform: `translateX(${ativo.offsetLeft + 10}px) scaleX(${Math.max(0, ativo.offsetWidth - 20)})`,
-  } : { opacity: 0 };
+  indicador.value = ativo
+    ? {
+        opacity: 1,
+        transform: `translateX(${ativo.offsetLeft + 10}px) scaleX(${Math.max(0, ativo.offsetWidth - 20)})`,
+      }
+    : { opacity: 0 };
 }
 function cancelarFechamento() {
   window.clearTimeout(timerFechamento);
@@ -223,7 +228,10 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
   <header
     ref="raiz"
     class="student-header"
-    :class="{ 'is-expanded': painel || mobileAberto, 'student-header--without-search': !mostrarBusca }"
+    :class="{
+      'is-expanded': painel || mobileAberto,
+      'student-header--without-search': !mostrarBusca,
+    }"
     @keydown.esc="aoEscape"
     @focusout="sairFoco"
     @pointerleave="agendarFechamento"
@@ -253,8 +261,16 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
       >
         <img src="/logo.png" alt="Pires Panificadora" />
       </RouterLink>
-      <nav ref="navegacao" class="student-header__nav" aria-label="Navegação principal">
-        <span class="student-header__nav-indicator" :style="indicador" aria-hidden="true" />
+      <nav
+        ref="navegacao"
+        class="student-header__nav"
+        aria-label="Navegação principal"
+      >
+        <span
+          class="student-header__nav-indicator"
+          :style="indicador"
+          aria-hidden="true"
+        />
         <RouterLink
           :to="{ name: 'home' }"
           class="student-header__nav-link"
@@ -571,19 +587,33 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
   background: var(--pp-gold);
   transform-origin: left;
   pointer-events: none;
-  transition: transform 240ms var(--pp-ease), opacity 150ms var(--pp-ease);
+  transition:
+    transform 240ms var(--pp-ease),
+    opacity 150ms var(--pp-ease);
 }
 
-.student-header__cart.is-added > svg { animation: cart-confirmed 400ms var(--pp-ease); }
-.student-header__cart.is-added .student-header__cart-count { animation: pp-pulo 400ms var(--pp-ease); }
+.student-header__cart.is-added > svg {
+  animation: cart-confirmed 400ms var(--pp-ease);
+}
+.student-header__cart.is-added .student-header__cart-count {
+  animation: pp-pulo 400ms var(--pp-ease);
+}
 @keyframes cart-confirmed {
-  30% { transform: rotate(-12deg) translateY(-2px); }
-  65% { transform: rotate(6deg); }
+  30% {
+    transform: rotate(-12deg) translateY(-2px);
+  }
+  65% {
+    transform: rotate(6deg);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .student-header__nav-indicator { transition: none; }
+  .student-header__nav-indicator {
+    transition: none;
+  }
   .student-header__cart.is-added > svg,
-  .student-header__cart.is-added .student-header__cart-count { animation: none; }
+  .student-header__cart.is-added .student-header__cart-count {
+    animation: none;
+  }
 }
 
 .student-header__nav-link:hover,
@@ -660,7 +690,9 @@ defineExpose({ elementoCarrinho: () => carrinho.value?.$el || null });
   gap: 6px;
   flex: none;
 }
-.student-header--without-search .student-header__actions { margin-left: auto; }
+.student-header--without-search .student-header__actions {
+  margin-left: auto;
+}
 
 .student-header__icon {
   position: relative;

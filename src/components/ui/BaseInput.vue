@@ -28,7 +28,11 @@
         :autocomplete="autocomplete"
         :disabled="disabled"
         :aria-invalid="Boolean(error)"
-        :aria-describedby="[ $attrs['aria-describedby'], error ? errorId : '' ].filter(Boolean).join(' ') || undefined"
+        :aria-describedby="
+          [$attrs['aria-describedby'], error ? errorId : '']
+            .filter(Boolean)
+            .join(' ') || undefined
+        "
         class="pp-field__input"
         @input="$emit('update:modelValue', $event.target.value)"
         @blur="$emit('blur')"

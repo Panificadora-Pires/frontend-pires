@@ -9,15 +9,13 @@
       @keydown.esc="fechar"
     >
       <header class="chatbot__topo">
-        <img
-          class="chatbot__logo"
-          src="/logo.png"
-          alt=""
-          aria-hidden="true"
-        />
+        <img class="chatbot__logo" src="/logo.png" alt="" aria-hidden="true" />
         <div class="chatbot__topo-texto">
           <h2 id="chatbot-titulo">Dúvidas sobre o pedido?</h2>
-          <p>Respostas rápidas da Pires. Para falar com a equipe, use o chat do pedido.</p>
+          <p>
+            Respostas rápidas da Pires. Para falar com a equipe, use o chat do
+            pedido.
+          </p>
         </div>
         <button
           type="button"
@@ -45,7 +43,11 @@
       >
         <CircleAlert :size="20" aria-hidden="true" />
         <span>{{ chatbot.erroInicio }}</span>
-        <button type="button" class="chatbot__tentar" @click="chatbot.iniciar()">
+        <button
+          type="button"
+          class="chatbot__tentar"
+          @click="chatbot.iniciar()"
+        >
           Tentar novamente
         </button>
       </div>
@@ -62,12 +64,16 @@
           v-for="mensagem in chatbot.mensagens"
           :key="mensagem.id"
           :mensagem="mensagem"
-          :mostrar-acoes="mensagem.id === chatbot.ultimaMensagemId && !chatbot.respondendo"
+          :mostrar-acoes="
+            mensagem.id === chatbot.ultimaMensagemId && !chatbot.respondendo
+          "
           @acao="executarAcao"
           @repetir="chatbot.repetir"
         />
         <li v-if="chatbot.respondendo" class="chatbot__digitando">
-          <span class="chatbot__pontos" aria-hidden="true"><i /><i /><i /></span>
+          <span class="chatbot__pontos" aria-hidden="true"
+            ><i /><i /><i
+          /></span>
           <span class="chatbot__sr">Assistente respondendo...</span>
         </li>
       </ol>
@@ -101,12 +107,16 @@
       class="chatbot__botao"
       :aria-expanded="aberto"
       aria-controls="chatbot-painel"
-      :aria-label="aberto ? 'Fechar assistente de dúvidas' : 'Abrir assistente de dúvidas'"
+      :aria-label="
+        aberto ? 'Fechar assistente de dúvidas' : 'Abrir assistente de dúvidas'
+      "
       @click="alternar"
     >
       <X v-if="aberto" :size="22" aria-hidden="true" />
       <MessageCircleQuestion v-else :size="22" aria-hidden="true" />
-      <span class="chatbot__botao-texto">{{ aberto ? "Fechar" : "Dúvidas?" }}</span>
+      <span class="chatbot__botao-texto">{{
+        aberto ? "Fechar" : "Dúvidas?"
+      }}</span>
     </button>
   </div>
 </template>
@@ -138,7 +148,8 @@ const campo = useTemplateRef("campo");
 const botao = useTemplateRef("botao");
 
 const podeEnviar = computed(
-  () => chatbot.iniciado && !chatbot.respondendo && texto.value.trim().length > 0,
+  () =>
+    chatbot.iniciado && !chatbot.respondendo && texto.value.trim().length > 0,
 );
 
 async function abrir() {
@@ -347,7 +358,8 @@ watch(
   align-self: flex-start;
   padding: 12px 14px;
   border: 1px solid var(--student-border);
-  border-radius: 4px var(--student-radius) var(--student-radius) var(--student-radius);
+  border-radius: 4px var(--student-radius) var(--student-radius)
+    var(--student-radius);
   background: var(--student-surface);
 }
 .chatbot__pontos {

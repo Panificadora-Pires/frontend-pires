@@ -10,7 +10,11 @@
     <p class="cb-msg__texto">{{ mensagem.texto }}</p>
 
     <ul v-if="mensagem.pedidos?.length" class="cb-msg__cards">
-      <li v-for="pedido in mensagem.pedidos" :key="pedido.id" class="cb-msg__card">
+      <li
+        v-for="pedido in mensagem.pedidos"
+        :key="pedido.id"
+        class="cb-msg__card"
+      >
         <Package :size="15" aria-hidden="true" />
         <span class="cb-msg__card-nome">Pedido #{{ pedido.id }}</span>
         <span class="cb-msg__card-info">
@@ -59,8 +63,16 @@
         :class="`cb-msg__acao--${acao.tipo}`"
         @click="emit('acao', acao)"
       >
-        <MessageCircle v-if="acao.tipo === 'chat'" :size="14" aria-hidden="true" />
-        <ArrowRight v-else-if="acao.tipo === 'rota'" :size="14" aria-hidden="true" />
+        <MessageCircle
+          v-if="acao.tipo === 'chat'"
+          :size="14"
+          aria-hidden="true"
+        />
+        <ArrowRight
+          v-else-if="acao.tipo === 'rota'"
+          :size="14"
+          aria-hidden="true"
+        />
         {{ acao.rotulo }}
       </button>
     </div>
@@ -107,14 +119,16 @@ function moeda(valor) {
   align-self: flex-start;
   padding: 10px 12px;
   border: 1px solid var(--student-border);
-  border-radius: 4px var(--student-radius) var(--student-radius) var(--student-radius);
+  border-radius: 4px var(--student-radius) var(--student-radius)
+    var(--student-radius);
   background: var(--student-surface);
   color: var(--student-text);
 }
 .cb-msg--usuario {
   align-self: flex-end;
   border-color: var(--student-accent-soft);
-  border-radius: var(--student-radius) 4px var(--student-radius) var(--student-radius);
+  border-radius: var(--student-radius) 4px var(--student-radius)
+    var(--student-radius);
   background: var(--student-accent-soft);
 }
 .cb-msg--erro {

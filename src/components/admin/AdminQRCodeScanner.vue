@@ -14,7 +14,10 @@
       <header class="qr-scanner__header">
         <div>
           <h2 id="qr-scanner-title">Confirmar retirada</h2>
-          <p>Leia o QR Code do cliente ou informe o código de retirada manualmente.</p>
+          <p>
+            Leia o QR Code do cliente ou informe o código de retirada
+            manualmente.
+          </p>
         </div>
 
         <button
@@ -67,7 +70,10 @@
             <div class="qr-scanner__scan-line" />
           </div>
 
-          <div v-if="!cameraIniciando && !cameraErro" class="qr-scanner__camera-caption">
+          <div
+            v-if="!cameraIniciando && !cameraErro"
+            class="qr-scanner__camera-caption"
+          >
             <QrCode :size="15" />
             Aponte a câmera para o QR Code
           </div>
@@ -227,8 +233,7 @@ async function iniciarCamera() {
 function pararCamera() {
   try {
     controles?.stop?.();
-  } catch {
-  }
+  } catch {}
 
   controles = null;
   leitor = null;

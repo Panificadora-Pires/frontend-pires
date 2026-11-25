@@ -9,36 +9,36 @@ const routes = [
     redirect: { name: "login" },
     meta: { publica: true, somenteVisitante: true },
     children: [
-  {
-    path: "/login",
-    name: "login",
-    component: () => import("@/views/auth/LoginView.vue"),
-    meta: { publica: true, somenteVisitante: true },
-  },
-  {
-    path: "/cadastro",
-    name: "cadastro",
-    component: () => import("@/views/auth/RegisterView.vue"),
-    meta: { publica: true, somenteVisitante: true },
-  },
-  {
-    path: "/confirmar-email",
-    name: "confirmar-email",
-    component: () => import("@/views/auth/VerifyAccountView.vue"),
-    meta: { publica: true, somenteVisitante: true },
-  },
-  {
-    path: "/recuperar-senha",
-    name: "recuperar-senha",
-    component: () => import("@/views/auth/ForgotPasswordView.vue"),
-    meta: { publica: true, somenteVisitante: true },
-  },
-  {
-    path: "/redefinir-senha",
-    name: "redefinir-senha",
-    component: () => import("@/views/auth/ResetPasswordView.vue"),
-    meta: { publica: true, somenteVisitante: true },
-  },
+      {
+        path: "/login",
+        name: "login",
+        component: () => import("@/views/auth/LoginView.vue"),
+        meta: { publica: true, somenteVisitante: true },
+      },
+      {
+        path: "/cadastro",
+        name: "cadastro",
+        component: () => import("@/views/auth/RegisterView.vue"),
+        meta: { publica: true, somenteVisitante: true },
+      },
+      {
+        path: "/confirmar-email",
+        name: "confirmar-email",
+        component: () => import("@/views/auth/VerifyAccountView.vue"),
+        meta: { publica: true, somenteVisitante: true },
+      },
+      {
+        path: "/recuperar-senha",
+        name: "recuperar-senha",
+        component: () => import("@/views/auth/ForgotPasswordView.vue"),
+        meta: { publica: true, somenteVisitante: true },
+      },
+      {
+        path: "/redefinir-senha",
+        name: "redefinir-senha",
+        component: () => import("@/views/auth/ResetPasswordView.vue"),
+        meta: { publica: true, somenteVisitante: true },
+      },
     ],
   },
 
@@ -169,7 +169,8 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior: (to, from, savedPosition) => savedPosition || (to.path === from.path ? false : { top: 0 }),
+  scrollBehavior: (to, from, savedPosition) =>
+    savedPosition || (to.path === from.path ? false : { top: 0 }),
 });
 
 router.beforeEach(async (to) => {

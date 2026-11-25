@@ -69,7 +69,10 @@ import {
   ShieldCheck,
   Zap,
 } from "lucide-vue-next";
-import { erroBrickBloqueante, mensagemAvisoBrick } from "@/utils/mercadoPagoBrick.js";
+import {
+  erroBrickBloqueante,
+  mensagemAvisoBrick,
+} from "@/utils/mercadoPagoBrick.js";
 
 const props = defineProps({
   amount: { type: Number, required: true },
@@ -202,8 +205,7 @@ onBeforeUnmount(async () => {
   if (controller?.unmount) {
     try {
       await controller.unmount();
-    } catch {
-    }
+    } catch {}
   }
 });
 </script>

@@ -80,7 +80,9 @@ export const documentosLegais = {
           "Códigos de verificação: enviados por e-mail para confirmar a conta e redefinir a senha, guardados só como hash.",
           "Dados técnicos: o endereço IP é usado para limitar excesso de requisições e proteger o sistema.",
         ],
-        paragrafos: ["Não usamos ferramentas de análise de navegação (analytics) nem publicidade."],
+        paragrafos: [
+          "Não usamos ferramentas de análise de navegação (analytics) nem publicidade.",
+        ],
       },
       {
         titulo: "Com quem compartilhamos",
@@ -92,7 +94,9 @@ export const documentosLegais = {
           "Vercel: hospeda o site.",
           "Serviço de e-mail (SMTP): envia os códigos de verificação.",
         ],
-        paragrafos: ["Cada serviço recebe só o necessário para a sua função e segue a própria política de privacidade."],
+        paragrafos: [
+          "Cada serviço recebe só o necessário para a sua função e segue a própria política de privacidade.",
+        ],
       },
       {
         titulo: "Quanto tempo guardamos",
@@ -140,7 +144,7 @@ export const documentosLegais = {
       {
         titulo: "Cookies de terceiros necessários",
         itens: [
-          "Google: o botão \"Entrar com Google\" pode usar cookies do Google para identificar sua conta Google e proteger o login.",
+          'Google: o botão "Entrar com Google" pode usar cookies do Google para identificar sua conta Google e proteger o login.',
           "Mercado Pago: no pagamento, o formulário do Mercado Pago usa cookies e identificação do dispositivo para prevenção a fraudes.",
           "Google Fonts: as fontes do site vêm dos servidores do Google, que recebem dados técnicos da conexão, como o endereço IP.",
         ],
