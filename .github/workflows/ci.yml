@@ -45,4 +45,3 @@ jobs:
           test -d dist/assets
           find dist/assets -maxdepth 1 -type f \( -name '*.js' -o -name '*.css' \) | grep -q .
 
-# O CI valida testes Node e build/PWA; cenários browser continuam em suítes específicas.
