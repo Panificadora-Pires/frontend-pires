@@ -128,7 +128,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { Check, CircleAlert, ShoppingBag } from "lucide-vue-next";
 
 import ProductCard from "@/components/catalog/ProductCard.vue";
@@ -144,18 +144,13 @@ import HomeSectionHeader from "@/components/home/HomeSectionHeader.vue";
 import preparoBalcao from "@/assets/images/home/galeria/preparo.webp";
 import vitrineBalcao from "@/assets/images/home/galeria/vitrine.webp";
 import retiradaBalcao from "@/assets/images/home/galeria/retirada.webp";
-import catalogService, {
-  promocaoEstaAtiva,
-  resolverUrlMidia,
-} from "@/services/catalog.service";
+import { useCompraCatalogo } from "@/composables/useCompraCatalogo";
+import catalogService, { promocaoEstaAtiva } from "@/services/catalog.service";
 import { useAuthStore } from "@/stores/auth";
-import { useCartStore } from "@/stores/cart";
 import { useFavoritesStore } from "@/stores/favorites";
-import { ilustracaoParaProduto } from "@/utils/ilustracaoProduto";
+import { montarSlidesBanner } from "@/utils/slidesBanner";
 
 const MAXIMO_DESTAQUES = 4;
-const MAXIMO_PROMOCOES_NO_BANNER = 3;
-const MAXIMO_DESTAQUES_NO_BANNER = 2;
 
 const fotosBalcao = [
   {
@@ -185,37 +180,26 @@ const fotosBalcao = [
 ];
 
 const auth = useAuthStore();
-const cart = useCartStore();
 const favorites = useFavoritesStore();
+const {
+  modalAberto,
+  carregandoDetalhe,
+  produtoDetalhado,
+  produtoAdicionando,
+  adicionandoModal,
+  toast,
+  alternarFavorito,
+  abrirProduto,
+  fecharModal,
+  adicionarRapido: adicionarAoCarrinho,
+  adicionarDoModal,
+} = useCompraCatalogo({ duracaoToast: 2200 });
 
 const produtos = ref([]);
 const promocoes = ref([]);
 const carregandoProdutos = ref(true);
 const carregandoPromos = ref(true);
 const erroProdutos = ref(false);
-const modalAberto = ref(false);
-const carregandoDetalhe = ref(false);
-const produtoDetalhado = ref(null);
-const produtoAdicionando = ref(null);
-const adicionandoModal = ref(false);
-const toast = ref("");
-const detalhesCache = new Map();
-let timeoutToast = null;
-let montado = true;
-const contextoAtual = (contexto) => montado && cart.contextoAtual(contexto);
-watch(
-  () => cart.geracao,
-  () => {
-    fecharModal();
-    carregandoDetalhe.value = false;
-    produtoAdicionando.value = null;
-    adicionandoModal.value = false;
-    toast.value = "";
-    detalhesCache.clear();
-    window.clearTimeout(timeoutToast);
-  },
-  { flush: "sync" },
-);
 
 const primeiroNome = computed(
   () => (auth.usuario?.name || "Aluno").trim().split(/\s+/)[0] || "Aluno",
@@ -227,13 +211,6 @@ const saudacao = computed(() => {
   if (hora < 18) return "Boa tarde";
   return "Boa noite";
 });
-
-function formatarPreco(valor) {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(Number(valor || 0));
-}
 
 const destaques = computed(() => {
   const marcados = produtos.value.filter((produto) => produto.destaque);
@@ -274,194 +251,9 @@ watch(produtosEmPromocao, async (candidatos, anterior, onCleanup) => {
   }
 });
 
-function slideDeProduto(produto, { etiqueta, destaque, texto, nota }) {
-  const preco = formatarPreco(produto.preco_atual ?? produto.preco);
-  return {
-    id: `produto-${produto.id}`,
-    etiqueta,
-    titulo: [produto.nome],
-    destaque,
-    texto,
-    nota,
-    ilustracao: ilustracaoParaProduto(produto),
-    imagem: resolverUrlMidia(produto.imagem) || null,
-    ...(ilustracaoParaProduto(produto) === "coxinha" && {
-      video: "/videos/coxinha-banner.mp4",
-      poster: "/videos/coxinha-banner-poster.jpg",
-      videoMobile: "/videos/coxinha-banner-mobile-v2.mp4",
-      posterMobile: "/videos/coxinha-banner-mobile-v2-poster.jpg",
-      duracao: 16000,
-    }),
-    acao: { tipo: "adicionar", rotulo: `Adicionar · ${preco}`, produto },
-  };
-}
-
-const slidesBanner = computed(() => {
-  const emPromocao = produtosEmPromocao.value.slice(
-    0,
-    MAXIMO_PROMOCOES_NO_BANNER,
-  );
-  const slides = emPromocao.length
-    ? emPromocao.map((produto) => {
-        const original = Number(produto.preco);
-        const atual = Number(produto.preco_atual ?? produto.preco);
-        const desconto =
-          original > atual
-            ? Math.round(((original - atual) / original) * 100)
-            : 0;
-        return slideDeProduto(produto, {
-          etiqueta: "Promoção de hoje",
-          destaque: `por ${formatarPreco(atual)}`,
-          texto: `De ${formatarPreco(original)} por ${formatarPreco(atual)} enquanto durar a promoção.`,
-          nota: desconto ? `${desconto}% mais barato` : "",
-        });
-      })
-    : produtos.value
-        .filter((produto) => produto.destaque)
-        .slice(0, MAXIMO_DESTAQUES_NO_BANNER)
-        .map((produto) =>
-          slideDeProduto(produto, {
-            etiqueta: "Destaque da casa",
-            destaque: "sem fila.",
-            texto:
-              "Peça agora pelo app e retire no balcão mostrando o QR Code.",
-            nota: "direto do balcão",
-          }),
-        );
-
-  return [
-    ...slides,
-    {
-      id: "como-funciona",
-      etiqueta: "Como funciona",
-      titulo: ["Pediu,", "pagou,"],
-      destaque: "mostrou.",
-      texto:
-        "Pix, cartão ou dinheiro na retirada. Quando ficar pronto, você recebe o aviso e mostra o QR Code no balcão.",
-      nota: "é só mostrar no balcão",
-      ilustracao: "qr",
-      imagem: null,
-      acao: { tipo: "rota", rotulo: "Ver meus pedidos", rota: "pedidos" },
-    },
-  ];
-});
-
-async function alternarFavorito(produto) {
-  if (!produto?.id) return;
-  const estavaFavoritado = favorites.tem(produto.id);
-
-  try {
-    await favorites.alternar(produto);
-    mostrarToast(
-      estavaFavoritado
-        ? `${produto.nome} removido dos favoritos.`
-        : `${produto.nome} adicionado aos favoritos.`,
-    );
-  } catch {
-    mostrarToast("Não foi possível atualizar seus favoritos.");
-  }
-}
-
-async function obterDetalhes(produto) {
-  if (!produto?.id) return null;
-  if (detalhesCache.has(produto.id)) return detalhesCache.get(produto.id);
-
-  const contexto = cart.capturarContexto();
-  const detalhe = await catalogService.obterProduto(produto.id);
-  if (contextoAtual(contexto)) detalhesCache.set(produto.id, detalhe);
-  return detalhe;
-}
-
-async function abrirProduto(produto) {
-  if (!produto?.id) return;
-  const contexto = cart.capturarContexto();
-  toast.value = "";
-  modalAberto.value = true;
-  carregandoDetalhe.value = true;
-  produtoDetalhado.value = null;
-
-  try {
-    const detalhe = await obterDetalhes(produto);
-    if (contextoAtual(contexto)) produtoDetalhado.value = detalhe;
-  } catch {
-    if (contextoAtual(contexto)) produtoDetalhado.value = null;
-  } finally {
-    if (contextoAtual(contexto)) carregandoDetalhe.value = false;
-  }
-}
-
-function fecharModal() {
-  modalAberto.value = false;
-  produtoDetalhado.value = null;
-}
-
-async function adicionarAoCarrinho(produto) {
-  if (!produto?.id || produtoAdicionando.value) return;
-  const contexto = cart.capturarContexto();
-  if (!contextoAtual(contexto)) return;
-  produtoAdicionando.value = produto.id;
-
-  try {
-    const detalhe = await obterDetalhes(produto);
-    if (!contextoAtual(contexto)) return;
-    const estoque = Number(detalhe?.estoque ?? 0);
-
-    if (estoque <= 0) {
-      mostrarToast(`${produto.nome} está sem estoque no momento.`);
-      return;
-    }
-
-    const itemAtual = cart.itens.find((item) => item.produto.id === produto.id);
-    if ((itemAtual?.quantidade || 0) >= estoque) {
-      mostrarToast(
-        `Você já adicionou todo o estoque disponível de ${produto.nome}.`,
-      );
-      return;
-    }
-
-    if (!cart.adicionar({ ...produto, ...detalhe }, 1, contexto)) return;
-    mostrarToast(`${produto.nome} adicionado ao carrinho.`);
-  } catch {
-    if (contextoAtual(contexto))
-      mostrarToast("Não foi possível verificar a disponibilidade do produto.");
-  } finally {
-    if (contextoAtual(contexto)) produtoAdicionando.value = null;
-  }
-}
-
-async function adicionarDoModal({ produto, quantidade }) {
-  if (!produto || adicionandoModal.value) return;
-  const contexto = cart.capturarContexto();
-  if (!contextoAtual(contexto)) return;
-  adicionandoModal.value = true;
-
-  try {
-    const estoque = Number(produto.estoque || 0);
-    const itemAtual = cart.itens.find((item) => item.produto.id === produto.id);
-    const novaQuantidade = (itemAtual?.quantidade || 0) + quantidade;
-
-    if (novaQuantidade > estoque) {
-      mostrarToast(
-        `Há somente ${estoque} ${estoque === 1 ? "unidade disponível" : "unidades disponíveis"}.`,
-      );
-      return;
-    }
-
-    if (!cart.adicionar(produto, quantidade, contexto)) return;
-    mostrarToast(`${produto.nome} adicionado ao carrinho.`);
-    fecharModal();
-  } finally {
-    adicionandoModal.value = false;
-  }
-}
-
-function mostrarToast(mensagem) {
-  toast.value = mensagem;
-  window.clearTimeout(timeoutToast);
-  timeoutToast = window.setTimeout(() => {
-    toast.value = "";
-  }, 2200);
-}
+const slidesBanner = computed(() =>
+  montarSlidesBanner(produtosEmPromocao.value, produtos.value),
+);
 
 async function carregarProdutos() {
   carregandoProdutos.value = true;
@@ -492,11 +284,6 @@ async function carregarPromocoes() {
 onMounted(() => {
   favorites.carregar().catch(() => {});
   Promise.allSettled([carregarProdutos(), carregarPromocoes()]);
-});
-
-onBeforeUnmount(() => {
-  montado = false;
-  window.clearTimeout(timeoutToast);
 });
 </script>
 

@@ -1,0 +1,71 @@
+.profile-security h2,
+.profile-account h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+}
+
+.profile-aside-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-aside-heading > svg {
+  flex-shrink: 0;
+  color: var(--pp-dourado-profundo);
+}
+
+.profile-security-list,
+.profile-summary-list {
+  display: grid;
+  gap: 18px;
+  margin: 22px 0 0;
+}
+
+.profile-security-list > div,
+.profile-summary-list > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  align-items: baseline;
+  gap: 12px;
+}
+
+.profile-security-list dt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.profile-security-list dt svg {
+  flex-shrink: 0;
+  width: 16px;
+  color: var(--pp-texto-2);
+}
+
+.profile-security-list dd,
+.profile-summary-list dd {
+  margin: 0;
+  color: var(--pp-marrom);
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: right;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.profile-summary-list dt {
+  color: var(--pp-texto-2);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.profile-account {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--pp-creme-borda);
+}
