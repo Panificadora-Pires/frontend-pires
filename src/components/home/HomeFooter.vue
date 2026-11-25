@@ -32,6 +32,11 @@ onBeforeUnmount(() => observer?.disconnect());
         <RouterLink :to="{ name: 'promocoes' }">Promoções</RouterLink>
         <RouterLink :to="{ name: 'pedidos' }">Meus pedidos</RouterLink>
       </nav>
+      <nav class="home-footer__links home-footer__legal" aria-label="Documentos do projeto">
+        <RouterLink :to="{ name: 'termos' }">Termos de Uso</RouterLink>
+        <RouterLink :to="{ name: 'privacidade' }">Privacidade</RouterLink>
+        <RouterLink :to="{ name: 'cookies' }">Cookies</RouterLink>
+      </nav>
       <button type="button" class="home-footer__top-link" @click="voltarAoTopo">
         Voltar ao topo <ArrowUp :size="18" aria-hidden="true" />
       </button>
@@ -58,6 +63,7 @@ onBeforeUnmount(() => observer?.disconnect());
 .home-footer__marca img { display: block; object-fit: contain; }
 .home-footer__marca span { font-family: var(--pp-font-titulo); font-size: 22px; font-weight: 400; }
 .home-footer__links { display: flex; flex-wrap: wrap; gap: var(--pp-space-1) var(--pp-space-4); }
+.home-footer__legal a { color: var(--pp-texto-2); font-weight: 500; }
 .home-footer__links a,
 .home-footer__top-link {
   display: inline-flex;

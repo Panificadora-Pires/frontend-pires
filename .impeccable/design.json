@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-04T23:13:50.112Z",
+  "generatedAt": "2026-11-24T21:51:55.000Z",
   "title": "Design System: Pires Panificadora",
   "extensions": {
     "colorMeta": {
@@ -159,6 +159,42 @@
       "section-title": {
         "displayName": "Título de seção da Home",
         "purpose": "Autoridade: Seu intervalo, do seu jeito."
+      },
+      "section-intro": {
+        "displayName": "Introdução de seção",
+        "purpose": "Descrição Inter sob o título de seção da Home; 14px até 760px (section-intro-mobile)."
+      },
+      "section-note": {
+        "displayName": "Nota cursiva",
+        "purpose": "Anotação Caveat breve ligada ao conteúdo; 21px até 760px (section-note-mobile)."
+      },
+      "section-action": {
+        "displayName": "Ação secundária",
+        "purpose": "Link “Ver …” com seta nos cabeçalhos da Home."
+      },
+      "product-title-home": {
+        "displayName": "Nome do produto na Home",
+        "purpose": "Anton 20px só nos cards da Home; não usar o tamanho de chamada."
+      },
+      "category-title": {
+        "displayName": "Título de categoria",
+        "purpose": "Anton nos cards de categoria; 24px até 760px."
+      },
+      "step-number": {
+        "displayName": "Número do passo",
+        "purpose": "Numeração Anton dos três passos de Como funciona."
+      },
+      "step-title": {
+        "displayName": "Título do passo",
+        "purpose": "Inter 700 dos passos de Como funciona."
+      },
+      "greeting": {
+        "displayName": "Saudação",
+        "purpose": "Saudação Inter 700 no topo da Home; 23px até 760px."
+      },
+      "status-title": {
+        "displayName": "Título de estado",
+        "purpose": "Mensagens de carregamento, vazio e erro."
       }
     },
     "shadows": [
@@ -183,6 +219,41 @@
         "name": "pp-home-action-duration",
         "value": "450ms",
         "purpose": "Tempo herdado apenas por ações da Home, com pp-ease; loading/disabled imediatos e movimento reduzido sem transição."
+      },
+      {
+        "name": "catalogo-saida",
+        "value": "160ms",
+        "purpose": "Saída da View Transition entre Home/Cardápio e na paginação (deslocamento de 14px), com --pp-ease. Movimento reduzido remove a animação."
+      },
+      {
+        "name": "catalogo-entrada",
+        "value": "300ms",
+        "purpose": "Entrada da View Transition do catálogo (deslocamento de 18px); a volta inverte a direção. Movimento reduzido remove a animação."
+      },
+      {
+        "name": "categoria-indicador",
+        "value": "220ms",
+        "purpose": "Deslocamento e largura do sublinhado dourado das categorias do Cardápio. Movimento reduzido remove a animação."
+      },
+      {
+        "name": "header-indicador-rota",
+        "value": "240ms",
+        "purpose": "Indicador único do header acompanhando a rota, via transform. Movimento reduzido remove a animação."
+      },
+      {
+        "name": "carrinho-confirmacao",
+        "value": "400ms",
+        "purpose": "Confirmação no ícone/contador e barra inferior após adição confirmada. Movimento reduzido remove a animação."
+      },
+      {
+        "name": "promocoes-entrada",
+        "value": "350ms",
+        "purpose": "Entrada da campanha de Promoções em CSS. Movimento reduzido remove a animação."
+      },
+      {
+        "name": "promocoes-troca",
+        "value": "250ms",
+        "purpose": "Troca do conjunto de ofertas via Transition. Movimento reduzido remove a animação."
       }
     ],
     "breakpoints": [
@@ -201,6 +272,14 @@
       {
         "name": "header-mobile",
         "value": "1179px"
+      },
+      {
+        "name": "promocoes-mobile",
+        "value": "767px"
+      },
+      {
+        "name": "grade-tres-colunas",
+        "value": "1000px"
       }
     ]
   },
@@ -262,6 +341,22 @@
       "description": "Trecho estático da faixa escura. No aplicativo, mídia à esquerda acompanha scroll somente com metadados válidos e painel inteiro visível; erro, altura insuficiente e movimento reduzido usam pôster sem distância extra. Outras ofertas usam ProductImage.",
       "html": "<section class=\"ds-promotion-copy\"><h2>Promoções de hoje</h2><a href=\"/promocoes\">Ver promoções</a><h3>Coxinha de frango</h3><p>Coxinha de frango, fresquinho, feito na cantina.</p></section>",
       "css": ".ds-promotion-copy{padding:var(--pp-space-5);border-radius:var(--pp-radius-card-lg);background:var(--pp-promotion-stage);color:var(--pp-creme)}.ds-promotion-copy h2{margin:0 0 var(--pp-space-1);color:var(--pp-creme);font:400 var(--pp-home-section-title-size)/1.18 var(--pp-font-titulo)}.ds-promotion-copy a{display:inline-flex;align-items:center;min-height:44px;color:var(--pp-gold);font:700 14px var(--pp-font-body);text-decoration:underline;text-underline-offset:4px;text-decoration-color:transparent;transition:text-decoration-color var(--pp-home-action-duration,450ms) var(--pp-ease)}.ds-promotion-copy a:focus-visible{text-decoration-color:currentColor;outline:3px solid var(--pp-gold);outline-offset:4px}.ds-promotion-copy h3{margin:var(--pp-space-4) 0 var(--pp-space-3);color:var(--pp-creme);font:400 clamp(28px,2.8vw,40px)/1.2 var(--pp-font-titulo)}.ds-promotion-copy p{margin:0;color:var(--pp-cream-dim);font:15px/1.6 var(--pp-font-body)}@media(hover:hover){.ds-promotion-copy a:hover{text-decoration-color:currentColor}}@media(prefers-reduced-motion:reduce){.ds-promotion-copy a{transition:none}}"
+    },
+    {
+      "name": "Categoria do Cardápio",
+      "kind": "chip",
+      "refersTo": null,
+      "description": "Trilha horizontal de categorias: seleção com aria-pressed, peso 700 e sublinhado dourado de 2px; alvo mínimo de 44px.",
+      "html": "<div class=\"ds-categorias\" role=\"group\" aria-label=\"Categorias\"><button class=\"ds-categoria\" aria-pressed=\"true\">Todos</button><button class=\"ds-categoria\" aria-pressed=\"false\">Salgados</button><button class=\"ds-categoria\" aria-pressed=\"false\">Doces</button></div>",
+      "css": ".ds-categorias { display: flex; gap: clamp(16px, 3vw, 38px); border-bottom: 1px solid var(--pp-creme-borda); } .ds-categoria { min-height: 44px; padding: 0 3px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--pp-marrom); font: 400 15px/1.5 var(--pp-font-body); cursor: pointer; transition: border-color 220ms var(--pp-ease); } .ds-categoria[aria-pressed=\"true\"] { font-weight: 700; border-bottom-color: var(--pp-dourado-escuro); } .ds-categoria:focus-visible { outline: 3px solid var(--pp-dourado-escuro); outline-offset: -3px; } @media (prefers-reduced-motion: reduce) { .ds-categoria { transition: none; } }"
+    },
+    {
+      "name": "Paginador do Cardápio",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "Paginação real de oito produtos: página atual com aria-current, sublinhado dourado e peso 700; controles de 44px e resumo em algarismos tabulares.",
+      "html": "<nav class=\"ds-paginador\" aria-label=\"Páginas do cardápio\"><button class=\"ds-pagina\" disabled>Anterior</button><button class=\"ds-pagina\" aria-current=\"page\">1</button><button class=\"ds-pagina\">2</button><button class=\"ds-pagina\">Próxima</button><p class=\"ds-paginador__resumo\">Exibindo 1–8 de 13</p></nav>",
+      "css": ".ds-paginador { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 16px; } .ds-pagina { min-width: 44px; min-height: 44px; padding: 0 6px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: var(--pp-marrom); font: 400 14px/1.5 var(--pp-font-body); cursor: pointer; } .ds-pagina[aria-current=\"page\"] { border-bottom-color: var(--pp-dourado-escuro); font-weight: 700; } .ds-pagina:hover:not(:disabled):not([aria-current=\"page\"]) { border-bottom-color: var(--pp-creme-borda); } .ds-pagina:disabled { opacity: .45; cursor: default; } .ds-pagina:focus-visible { outline: 3px solid var(--pp-dourado-escuro); outline-offset: 3px; } .ds-paginador__resumo { margin: 0; color: var(--pp-texto-2); font-size: 14px; font-variant-numeric: tabular-nums; }"
     }
   ],
   "narrative": {
