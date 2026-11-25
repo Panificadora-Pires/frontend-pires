@@ -13,9 +13,20 @@
           {{ formatarData(pedido.data) }}
         </p>
       </div>
-      <div v-if="erro || erroAtualizacao" class="admin-detail-retry" role="status">
+      <div
+        v-if="erro || erroAtualizacao"
+        class="admin-detail-retry"
+        role="status"
+      >
         <span>Não foi possível sincronizar os dados.</span>
-        <button type="button" class="admin-btn pp-card-action pp-admin-action--secondary" data-card-action-radius @click="atualizarAgora"><CardActionContent>Tentar novamente</CardActionContent></button>
+        <button
+          type="button"
+          class="admin-btn pp-card-action pp-admin-action--secondary"
+          data-card-action-radius
+          @click="atualizarAgora"
+        >
+          <CardActionContent>Tentar novamente</CardActionContent>
+        </button>
       </div>
     </header>
 
@@ -101,28 +112,37 @@
             <div class="order-actions">
               <button
                 v-if="pedido.status === 'pendente'"
-                class="admin-btn admin-btn--primary order-actions__main pp-card-action pp-admin-action--primary" data-card-action-radius
+                class="admin-btn admin-btn--primary order-actions__main pp-card-action pp-admin-action--primary"
+                data-card-action-radius
                 :disabled="acao || confirmacaoBloqueada"
                 @click="alterar('confirmado')"
-              ><CardActionContent>
-                <BadgeCheck :size="17" />Confirmar pedido
-              </CardActionContent></button>
+              >
+                <CardActionContent>
+                  <BadgeCheck :size="17" />Confirmar pedido
+                </CardActionContent>
+              </button>
               <button
                 v-if="pedido.status === 'confirmado'"
-                class="admin-btn admin-btn--primary order-actions__main pp-card-action pp-admin-action--primary" data-card-action-radius
+                class="admin-btn admin-btn--primary order-actions__main pp-card-action pp-admin-action--primary"
+                data-card-action-radius
                 :disabled="acao"
                 @click="alterar('pronto')"
-              ><CardActionContent>
-                <PackageCheck :size="17" />Marcar como pronto
-              </CardActionContent></button>
+              >
+                <CardActionContent>
+                  <PackageCheck :size="17" />Marcar como pronto
+                </CardActionContent>
+              </button>
               <button
                 v-if="pedido.status === 'pronto'"
-                class="admin-btn admin-btn--primary order-actions__main pp-card-action pp-admin-action--primary" data-card-action-radius
+                class="admin-btn admin-btn--primary order-actions__main pp-card-action pp-admin-action--primary"
+                data-card-action-radius
                 :disabled="acao"
                 @click="scannerAberto = true"
-              ><CardActionContent>
-                <QrCode :size="17" />Confirmar retirada por QR
-              </CardActionContent></button>
+              >
+                <CardActionContent>
+                  <QrCode :size="17" />Confirmar retirada por QR
+                </CardActionContent>
+              </button>
               <div
                 v-if="['retirado', 'cancelado'].includes(pedido.status)"
                 class="order-actions__done"
@@ -137,12 +157,15 @@
                 v-if="
                   ['pendente', 'confirmado', 'pronto'].includes(pedido.status)
                 "
-                class="admin-btn admin-btn--danger order-actions__main pp-card-action pp-admin-action--danger" data-card-action-radius
+                class="admin-btn admin-btn--danger order-actions__main pp-card-action pp-admin-action--danger"
+                data-card-action-radius
                 :disabled="acao"
                 @click="abrirCancelamento"
-              ><CardActionContent>
-                <CircleX :size="16" />Cancelar pedido
-              </CardActionContent></button>
+              >
+                <CardActionContent>
+                  <CircleX :size="16" />Cancelar pedido
+                </CardActionContent>
+              </button>
             </div>
           </section>
 
@@ -238,8 +261,8 @@
             </p>
             <p v-else>
               O sistema verificará o pagamento no Mercado Pago antes de concluir
-              o cancelamento. Se já houver pagamento aprovado, o fluxo financeiro
-              correspondente será processado primeiro.
+              o cancelamento. Se já houver pagamento aprovado, o fluxo
+              financeiro correspondente será processado primeiro.
             </p>
           </div>
         </div>
@@ -247,21 +270,25 @@
         <div class="admin-modal-footer">
           <button
             type="button"
-            class="admin-btn pp-card-action pp-admin-action--secondary" data-card-action-radius
+            class="admin-btn pp-card-action pp-admin-action--secondary"
+            data-card-action-radius
             :disabled="acao"
             @click="fecharCancelamento"
-          ><CardActionContent>
-            Voltar
-          </CardActionContent></button>
+          >
+            <CardActionContent> Voltar </CardActionContent>
+          </button>
           <button
             type="button"
-            class="admin-btn admin-btn--danger pp-card-action pp-admin-action--danger" data-card-action-radius
+            class="admin-btn admin-btn--danger pp-card-action pp-admin-action--danger"
+            data-card-action-radius
             :disabled="acao"
             @click="confirmarCancelamento"
-          ><CardActionContent>
-            <CircleX :size="16" />
-            {{ acao ? "Cancelando..." : "Cancelar pedido" }}
-          </CardActionContent></button>
+          >
+            <CardActionContent>
+              <CircleX :size="16" />
+              {{ acao ? "Cancelando..." : "Cancelar pedido" }}
+            </CardActionContent>
+          </button>
         </div>
       </div>
     </div>
@@ -270,8 +297,6 @@
 
 <script setup>
 import CardActionContent from "@/components/ui/CardActionContent.vue";
-import { computed, ref, watch } from "vue";
-import { useRoute } from "vue-router";
 import {
   ArrowLeft,
   BadgeCheck,
@@ -284,393 +309,30 @@ import {
 } from "lucide-vue-next";
 import AdminQRCodeScanner from "@/components/admin/AdminQRCodeScanner.vue";
 import OrderChatPanel from "@/components/chat/OrderChatPanel.vue";
-import { useAutoRefresh } from "@/composables/useAutoRefresh";
-import { mensagemErroApi } from "@/services/admin.service";
-import { useAdminOrdersStore } from "@/stores/adminOrders";
-
-const INTERVALO_DETALHE_MS = 15_000;
-
-const route = useRoute();
-const adminOrders = useAdminOrdersStore();
-const pedido = ref(adminOrders.porId(route.params.id));
-const erro = ref("");
-let versaoLocal = 0;
-const acao = ref(false);
-const scannerAberto = ref(false);
-const cancelamentoAberto = ref(false);
-
-const totalItens = computed(() =>
-  (pedido.value?.itens || []).reduce(
-    (s, i) => s + Number(i.quantidade || 0),
-    0,
-  ),
-);
-const confirmacaoBloqueada = computed(() =>
-  Boolean(
-    pedido.value &&
-    ["pix", "cartao"].includes(pedido.value.forma_pagamento) &&
-    pedido.value.status_pagamento !== "aprovado",
-  ),
-);
-const avisoPagamento = computed(() =>
-  confirmacaoBloqueada.value
-    ? "O pagamento online ainda não foi aprovado. A confirmação do pedido será liberada após a aprovação."
-    : "",
-);
-
-function moeda(v) {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(Number(v || 0));
-}
-function formatarData(v) {
-  return v
-    ? new Intl.DateTimeFormat("pt-BR", {
-        dateStyle: "long",
-        timeStyle: "short",
-      }).format(new Date(v))
-    : "—";
-}
-function badgePedido(status) {
-  if (status === "pendente") return "admin-badge--warning";
-  if (status === "confirmado") return "admin-badge--info";
-  if (status === "pronto") return "admin-badge--success";
-  if (status === "cancelado") return "admin-badge--danger";
-  return "admin-badge--neutral";
-}
-function badgePagamento(status) {
-  if (status === "aprovado") return "admin-badge--success";
-  if (["recusado", "cancelado", "erro"].includes(status))
-    return "admin-badge--danger";
-  if (status === "processando") return "admin-badge--info";
-  if (status === "reembolsado") return "admin-badge--neutral";
-  return "admin-badge--warning";
-}
-function msgErro(e) {
-  return mensagemErroApi(e, "Não foi possível concluir a operação.");
-}
-
-async function carregar() {
-  const versaoNoInicio = versaoLocal;
-  try {
-    const atualizado = await adminOrders.obterPedido(route.params.id);
-    if (versaoNoInicio === versaoLocal && !acao.value) {
-      pedido.value = atualizado;
-    }
-    erro.value = "";
-  } catch (error) {
-    if (!pedido.value) erro.value = "Não foi possível carregar este pedido.";
-    throw error;
-  }
-}
+import { useAdminPedidoDetalhes } from "@/composables/useAdminPedidoDetalhes";
 
 const {
-  erro: erroAtualizacao,
+  abrirCancelamento,
+  acao,
+  alterar,
   atualizarAgora,
-} = useAutoRefresh(carregar, { intervalo: INTERVALO_DETALHE_MS });
-
-watch(
-  () => route.params.id,
-  (id, anterior) => {
-    if (!id || id === anterior) return;
-    pedido.value = adminOrders.porId(id);
-    erro.value = "";
-    versaoLocal += 1;
-    atualizarAgora();
-  },
-);
-
-async function alterar(status) {
-  acao.value = true;
-  erro.value = "";
-  try {
-    versaoLocal += 1;
-    pedido.value = await adminOrders.alterarStatus(pedido.value.id, status);
-    return true;
-  } catch (e) {
-    erro.value = msgErro(e);
-    return false;
-  } finally {
-    acao.value = false;
-  }
-}
-
-function abrirCancelamento() {
-  erro.value = "";
-  cancelamentoAberto.value = true;
-}
-
-function fecharCancelamento() {
-  if (acao.value) return;
-  cancelamentoAberto.value = false;
-}
-
-async function confirmarCancelamento() {
-  const sucesso = await alterar("cancelado");
-  if (sucesso) {
-    cancelamentoAberto.value = false;
-  }
-}
-
-function onRetirado(p) {
-  scannerAberto.value = false;
-  versaoLocal += 1;
-  pedido.value = p;
-  adminOrders.substituirPedido(p);
-}
+  avisoPagamento,
+  badgePagamento,
+  badgePedido,
+  cancelamentoAberto,
+  confirmacaoBloqueada,
+  confirmarCancelamento,
+  erro,
+  erroAtualizacao,
+  fecharCancelamento,
+  formatarData,
+  moeda,
+  onRetirado,
+  pedido,
+  route,
+  scannerAberto,
+  totalItens,
+} = useAdminPedidoDetalhes();
 </script>
 
-<style scoped>
-.order-detail__back {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-bottom: 10px;
-  color: var(--admin-muted);
-  font-size: 12px;
-  font-weight: 650;
-}
-.order-detail__back:hover {
-  color: var(--admin-text);
-}
-.order-summary {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-bottom: 14px;
-  overflow: hidden;
-}
-.order-summary__item {
-  padding: 15px 17px;
-  border-right: 1px solid var(--admin-border);
-}
-.order-summary__item:last-child {
-  border-right: 0;
-}
-.order-summary__item > span,
-.order-summary__item > strong {
-  display: block;
-}
-.order-summary__item > span {
-  color: var(--admin-muted);
-  font-size: 11px;
-  font-weight: 600;
-}
-.order-summary__item > strong {
-  margin-top: 7px;
-  color: var(--admin-text);
-  font-size: 14px;
-}
-.order-detail__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.65fr);
-  gap: 14px;
-  align-items: start;
-}
-.order-items-card {
-  overflow: hidden;
-}
-.order-items {
-  padding: 0 18px;
-}
-.order-item {
-  min-height: 66px;
-  display: grid;
-  grid-template-columns: 46px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  border-bottom: 1px solid #efeeec;
-}
-.order-item:last-child {
-  border-bottom: 0;
-}
-.order-item__qty {
-  width: 36px;
-  height: 30px;
-  display: grid;
-  place-items: center;
-  border-radius: 7px;
-  background: #f5f5f4;
-  color: var(--admin-text-soft);
-  font-size: 12px;
-  font-weight: 700;
-}
-.order-item__main strong,
-.order-item__main span {
-  display: block;
-}
-.order-item__main strong {
-  color: var(--admin-text);
-  font-size: 13px;
-}
-.order-item__main span {
-  margin-top: 4px;
-  color: var(--admin-muted);
-  font-size: 11px;
-}
-.order-item__subtotal {
-  color: var(--admin-text);
-  font-size: 13px;
-}
-.order-total {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 16px 18px;
-  border-top: 1px solid var(--admin-border);
-  background: var(--admin-surface-subtle);
-  color: var(--admin-text-soft);
-  font-size: 13px;
-}
-.order-total strong {
-  color: var(--admin-text);
-  font-size: 18px;
-}
-.order-detail__side {
-  display: grid;
-  align-content: start;
-  gap: 14px;
-}
-.order-chat-card {
-  overflow: hidden;
-}
-.order-chat-card__panel {
-  height: 440px;
-}
-.order-actions {
-  display: grid;
-  gap: 8px;
-  padding: 16px;
-}
-.order-actions__main {
-  width: 100%;
-}
-.order-actions__done {
-  display: flex;
-  gap: 9px;
-  padding: 11px 12px;
-  border: 1px solid #bbf7d0;
-  border-radius: 9px;
-  background: var(--admin-success-soft);
-  color: #166534;
-}
-.order-actions__done strong,
-.order-actions__done span {
-  display: block;
-}
-.order-actions__done strong {
-  font-size: 12px;
-}
-.order-actions__done span {
-  margin-top: 3px;
-  font-size: 11px;
-}
-.order-info {
-  margin: 0;
-  padding: 4px 16px 10px;
-}
-.order-info div {
-  display: grid;
-  grid-template-columns: 120px minmax(0, 1fr);
-  gap: 10px;
-  padding: 12px 0;
-  border-bottom: 1px solid #efeeec;
-}
-.order-info div:last-child {
-  border-bottom: 0;
-}
-.order-info dt {
-  color: var(--admin-muted);
-  font-size: 11px;
-}
-.order-info dd {
-  margin: 0;
-  color: var(--admin-text);
-  font-size: 12px;
-  font-weight: 600;
-  text-align: right;
-  overflow-wrap: anywhere;
-}
-@media (max-width: 980px) {
-  .order-detail__grid {
-    grid-template-columns: 1fr;
-  }
-}
-@media (max-width: 700px) {
-  .order-summary {
-    grid-template-columns: 1fr 1fr;
-  }
-  .order-summary__item:nth-child(2) {
-    border-right: 0;
-  }
-  .order-summary__item:nth-child(-n + 2) {
-    border-bottom: 1px solid var(--admin-border);
-  }
-}
-
-.order-cancel-modal {
-  width: min(520px, calc(100vw - 32px));
-}
-.order-cancel-modal__subtitle {
-  margin: 5px 0 0;
-  color: var(--admin-muted);
-  font-size: 12px;
-}
-.order-cancel-modal__body {
-  display: flex;
-  align-items: flex-start;
-  gap: 13px;
-}
-.order-cancel-modal__body strong {
-  display: block;
-  color: var(--admin-text);
-  font-size: 14px;
-}
-.order-cancel-modal__body p {
-  margin: 7px 0 0;
-  color: var(--admin-text-soft);
-  font-size: 12px;
-  line-height: 1.55;
-}
-.order-cancel-modal__icon {
-  width: 38px;
-  height: 38px;
-  flex: 0 0 38px;
-  display: grid;
-  place-items: center;
-  border-radius: 10px;
-  background: #fef2f2;
-  color: #b91c1c;
-}
-
-
-.order-items-card {
-  align-self: start;
-}
-.admin-detail-retry {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  color: var(--pp-admin-danger);
-  font-size: 12px;
-}
-.admin-detail-retry .admin-btn { min-height: 40px; }
-.order-actions .admin-btn,
-.admin-detail-retry .admin-btn {
-  transition: transform 240ms cubic-bezier(.22,1,.36,1), box-shadow 240ms ease, background-color 240ms ease;
-}
-.order-actions .admin-btn:hover:not(:disabled),
-.admin-detail-retry .admin-btn:hover:not(:disabled) {
-
-  box-shadow: 0 8px 22px rgba(42, 23, 11, .14);
-}
-.order-actions .admin-btn:active:not(:disabled) { transform: scale(.985); }
-@media (prefers-reduced-motion: reduce) {
-  .order-actions .admin-btn,
-  .admin-detail-retry .admin-btn { transition: none; }
-  .order-actions .admin-btn:hover:not(:disabled),
-  .admin-detail-retry .admin-btn:hover:not(:disabled) { transform: none; }
-}
-</style>
+<style scoped src="./AdminPedidoDetalhesView.css"></style>

@@ -1,7 +1,5 @@
 <script setup>
-import { computed, nextTick, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { motion, useReducedMotion } from "motion-v";
+import { motion } from "motion-v";
 import {
   ArrowUpRight,
   Search,
@@ -11,155 +9,30 @@ import {
 import OrderCard from "@/components/orders/OrderCard.vue";
 import OrderQRCodeModal from "@/components/orders/OrderQRCodeModal.vue";
 import OrderChatDrawer from "@/components/chat/OrderChatDrawer.vue";
-import { useOrdersStore } from "@/stores/orders";
-import { useChatStore } from "@/stores/chat";
-import { useAutoRefresh } from "@/composables/useAutoRefresh";
-import { filtrarPedidos } from "@/utils/orders";
+import { useMeusPedidos } from "@/composables/useMeusPedidos";
 
-const route = useRoute();
-const router = useRouter();
-const orders = useOrdersStore();
-const chat = useChatStore();
-const reduzir = useReducedMotion();
-const filtro = ref("todos");
-const busca = ref("");
-const pedidoQRCodeId = ref(null);
-const pedidoChat = ref(null);
-const avisoPedido = ref("");
-let pedidoLocalizado = null;
-const filtros = [
-  { valor: "todos", label: "Todos" },
-  { valor: "andamento", label: "Em andamento" },
-  { valor: "finalizados", label: "Finalizados" },
-];
-const pedidosFiltrados = computed(() =>
-  filtrarPedidos(orders.itens, filtro.value, busca.value),
-);
-const destaque = computed(() =>
-  pedidosFiltrados.value.find((pedido) =>
-    ["pendente", "confirmado", "pronto"].includes(pedido.status),
-  ),
-);
-const colecao = computed(() =>
-  pedidosFiltrados.value.filter((pedido) => pedido.id !== destaque.value?.id),
-);
-const pedidoQRCode = computed(
-  () =>
-    orders.itens.find(
-      (pedido) =>
-        pedido.id === pedidoQRCodeId.value && pedido.status === "pronto",
-    ) || null,
-);
-const filtrosAtivos = computed(
-  () => filtro.value !== "todos" || busca.value.trim(),
-);
-
-function quantidadeFiltro(valor) {
-  return valor === "todos"
-    ? orders.itens.length
-    : valor === "andamento"
-      ? orders.emAndamento.length
-      : orders.finalizados.length;
-}
 const {
-  atualizando,
-  ultimaAtualizacao,
-  erro: erroAtualizacao,
+  abrirChat,
+  abrirQRCode,
   atualizarAgora,
-  reagendar,
-} = useAutoRefresh(
-  () => orders.carregar({ force: true, silencioso: orders.inicializado }),
-  { intervalo: () => (orders.emAndamento.length ? 10_000 : 60_000) },
-);
-watch(
-  () => orders.emAndamento.length,
-  () => reagendar(),
-);
-
-watch(
-  () => route.query.pedido,
-  () => {
-    pedidoLocalizado = null;
-    avisoPedido.value = "";
-    if (route.query.pedido && ultimaAtualizacao.value) atualizarAgora();
-  },
-);
-watch(
-  [
-    () => route.query.pedido,
-    ultimaAtualizacao,
-    atualizando,
-    () => orders.carregando || orders.atualizandoSilenciosamente,
-  ],
-  async ([valor, atualizacao, sincronizando, carregando], _, onCleanup) => {
-    const id = Number(valor);
-    if (
-      !/^\d+$/.test(String(valor)) ||
-      !Number.isSafeInteger(id) ||
-      id <= 0 ||
-      pedidoLocalizado === id ||
-      !atualizacao ||
-      sincronizando ||
-      carregando ||
-      erroAtualizacao.value ||
-      pedidoChat.value ||
-      pedidoQRCode.value
-    )
-      return;
-    let cancelado = false;
-    onCleanup(() => {
-      cancelado = true;
-    });
-    pedidoLocalizado = id;
-    filtro.value = "todos";
-    busca.value = "";
-    await nextTick();
-    if (cancelado) return;
-    const elemento = document.getElementById(`pedido-${id}`);
-    if (!elemento) {
-      avisoPedido.value =
-        "Não encontramos esse pedido nesta lista. Confira os pedidos disponíveis abaixo.";
-      return;
-    }
-    elemento.focus({ preventScroll: true });
-    elemento.scrollIntoView({
-      behavior: reduzir.value ? "instant" : "smooth",
-      block: "start",
-    });
-  },
-  { immediate: true },
-);
-watch(pedidoQRCode, (pedido) => {
-  if (!pedido) pedidoQRCodeId.value = null;
-});
-function limparFiltros() {
-  filtro.value = "todos";
-  busca.value = "";
-}
-function abrirQRCode(pedido) {
-  if (pedido?.status === "pronto") {
-    pedidoChat.value = null;
-    pedidoQRCodeId.value = pedido.id;
-  }
-}
-function abrirChat(pedido) {
-  pedidoQRCodeId.value = null;
-  pedidoChat.value = pedido;
-}
-
-watch(
-  [() => route.query.chat, () => orders.inicializado],
-  ([chatId, carregado]) => {
-    if (!chatId || !carregado) return;
-    const pedido = orders.itens.find(
-      (item) => Number(item.id) === Number(chatId),
-    );
-    if (pedido) abrirChat(pedido);
-    const { chat: _chat, ...query } = route.query;
-    router.replace({ query });
-  },
-  { immediate: true },
-);
+  avisoPedido,
+  busca,
+  chat,
+  colecao,
+  destaque,
+  erroAtualizacao,
+  filtro,
+  filtros,
+  filtrosAtivos,
+  limparFiltros,
+  orders,
+  pedidoChat,
+  pedidoQRCode,
+  pedidoQRCodeId,
+  pedidosFiltrados,
+  quantidadeFiltro,
+  reduzir,
+} = useMeusPedidos();
 </script>
 
 <template>
@@ -224,7 +97,14 @@ watch(
             para retirada</span
           ><span v-else>. Acompanhe as atualizações por aqui.</span>
         </p>
-        <button v-if="erroAtualizacao" type="button" class="orders-page__retry" @click="atualizarAgora">Tentar novamente</button>
+        <button
+          v-if="erroAtualizacao"
+          type="button"
+          class="orders-page__retry"
+          @click="atualizarAgora"
+        >
+          Tentar novamente
+        </button>
       </div>
 
       <p v-if="avisoPedido" class="orders-page__target-notice" role="status">
@@ -350,292 +230,4 @@ watch(
   </div>
 </template>
 
-<style scoped>
-.orders-page__retry{border:1px solid var(--pp-dourado-profundo);border-radius:8px;background:transparent;color:var(--pp-marrom);padding:9px 12px;min-height:40px;font-size:12px;font-weight:650;cursor:pointer}
-.orders-page__retry:hover{background:var(--pp-dourado-suave)}
-
-.orders-page {
-  max-width: 1120px;
-  margin: 12px auto 0;
-  padding-bottom: 64px;
-  color: var(--pp-marrom);
-}
-.orders-page :deep(.order-card) {
-  scroll-margin-top: calc(var(--pp-altura-topo) + 24px);
-}
-.orders-page :deep(.order-card:focus-visible) {
-  outline: 2px solid var(--pp-dourado-escuro);
-  outline-offset: 4px;
-}
-.orders-page__target-notice {
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--pp-texto-2);
-  margin: 16px 0;
-}
-.orders-page__intro {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 32px;
-  padding-bottom: 30px;
-}
-.orders-page__intro h1 {
-  margin: 0;
-  font: 400 clamp(50px, 7vw, 92px)/1.08 var(--pp-font-titulo);
-  letter-spacing: -0.025em;
-}
-.orders-page__note {
-  display: block;
-  margin: 7px 0 11px;
-  font: 700 28px/1.2 var(--pp-font-nota);
-  color: var(--pp-dourado-profundo);
-}
-.orders-page__intro p {
-  color: var(--pp-texto-2);
-  font-size: 15px;
-  margin: 0;
-}
-.orders-page__intro a {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--pp-marrom);
-  text-decoration: underline;
-  text-underline-offset: 5px;
-}
-.orders-page__summary {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
-  border-top: 1px solid var(--pp-creme-borda);
-}
-.orders-page__summary p {
-  margin: 18px 0;
-  color: var(--pp-texto-2);
-  font-size: 13px;
-  line-height: 1.6;
-}
-.orders-page__summary strong {
-  color: var(--pp-marrom);
-}
-.orders-page__refresh {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--pp-texto-2);
-  font-size: 12px;
-  cursor: pointer;
-}
-.orders-page__toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 20px;
-  margin-top: 20px;
-}
-.orders-page__filters {
-  display: flex;
-  gap: 24px;
-}
-.orders-page__filters button {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 0 12px;
-  min-height: 44px;
-  border: 0;
-  background: transparent;
-  font-size: 13px;
-  color: var(--pp-texto-2);
-  cursor: pointer;
-  white-space: nowrap;
-}
-.orders-page__filters button[aria-pressed="true"] {
-  color: var(--pp-marrom);
-  font-weight: 700;
-}
-.orders-page__filters button > span:not(.orders-page__indicator) {
-  font-size: 11px;
-  font-weight: 500;
-}
-.orders-page__indicator {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: var(--pp-gold);
-}
-.orders-page__search {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 260px;
-  min-height: 44px;
-  border-bottom: 1px solid var(--pp-creme-borda);
-  color: var(--pp-texto-2);
-}
-.orders-page__search input {
-  width: 100%;
-  min-width: 0;
-  min-height: 44px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  outline: none;
-  color: var(--pp-marrom);
-  font-size: 14px;
-}
-.orders-page__search:focus-within {
-  outline: 2px solid var(--pp-dourado-escuro);
-  outline-offset: 4px;
-}
-.orders-page__search input::placeholder {
-  color: var(--pp-texto-3);
-}
-.orders-page__results {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  min-height: 52px;
-  color: var(--pp-texto-3);
-  font-size: 12px;
-}
-.orders-page__results button {
-  min-height: 44px;
-  border: 0;
-  padding: 0;
-  background: transparent;
-  color: var(--pp-dourado-profundo);
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  cursor: pointer;
-}
-.orders-page__featured > h2 {
-  font-size: 14px;
-  margin: 4px 0 14px;
-  font-weight: 600;
-}
-.orders-page__collection {
-  margin-top: 44px;
-}
-.orders-page__collection-heading {
-  border-bottom: 1px solid var(--pp-creme-borda);
-  padding-bottom: 18px;
-}
-.orders-page__collection-heading h2 {
-  font-family: var(--pp-font-titulo);
-  font-size: 30px;
-  font-weight: 400;
-  margin: 0 0 8px;
-}
-.orders-page__collection-heading p {
-  margin: 0;
-  font-size: 13px;
-  color: var(--pp-texto-2);
-  line-height: 1.6;
-}
-.orders-page__state {
-  display: flex;
-  align-items: flex-start;
-  flex-direction: column;
-  gap: 18px;
-  padding: 50px 0 70px;
-  max-width: 60ch;
-}
-.orders-page__state h2 {
-  font-family: var(--pp-font-titulo);
-  font-size: clamp(28px, 4vw, 40px);
-  font-weight: 400;
-  margin: 0;
-}
-.orders-page__state p {
-  color: var(--pp-texto-2);
-  margin: 0;
-  line-height: 1.7;
-  font-size: 15px;
-}
-.orders-page__state :is(a, button) {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 13px 18px;
-  min-height: 46px;
-  border: 0;
-  border-radius: 8px;
-  background: var(--pp-marrom);
-  color: var(--pp-creme);
-  text-decoration: none;
-  cursor: pointer;
-}
-.orders-page__loading {
-  padding: 36px 0;
-  color: var(--pp-texto-2);
-  font-size: 14px;
-}
-.orders-page__skeleton {
-  height: 350px;
-  border-radius: 16px;
-  background: var(--pp-creme-2);
-  margin-top: 22px;
-}
-.orders-page :is(button, a):focus-visible {
-  outline: 3px solid var(--pp-dourado-escuro);
-  outline-offset: 4px;
-}
-@media (max-width: 760px) {
-  .orders-page {
-    margin-top: 0;
-  }
-  .orders-page__intro {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 14px;
-    padding-bottom: 18px;
-  }
-  .orders-page__intro h1 {
-    font-size: clamp(50px, 12vw, 70px);
-  }
-  .orders-page__note {
-    font-size: 23px;
-  }
-  .orders-page__toolbar {
-    gap: 10px;
-  }
-  .orders-page__search {
-    width: 100%;
-    order: -1;
-  }
-}
-@media (max-width: 390px) {
-  .orders-page__note {
-    font-size: 23px;
-  }
-  .orders-page__filters {
-    width: 100%;
-    justify-content: space-between;
-    gap: 10px;
-  }
-  .orders-page__filters button {
-    font-size: 12px;
-    gap: 5px;
-  }
-  .orders-page__summary {
-    gap: 12px;
-  }
-  .orders-page__summary p {
-    font-size: 12px;
-  }
-}
-</style>
+<style scoped src="./PedidosView.css"></style>

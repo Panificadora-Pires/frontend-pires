@@ -4,7 +4,7 @@ export function createRealtimeInvalidations({
   notificacoes = () => {},
   delay = 400,
   schedule = (fn, ms) => setTimeout(fn, ms),
-  cancel = id => clearTimeout(id),
+  cancel = (id) => clearTimeout(id),
 } = {}) {
   const pendentes = new Set();
   const destinos = { pedidos, chat, notificacoes };
@@ -19,8 +19,7 @@ export function createRealtimeInvalidations({
     for (const recurso of lote) {
       try {
         Promise.resolve(destinos[recurso]()).catch(() => {});
-      } catch {
-      }
+      } catch {}
     }
   }
 

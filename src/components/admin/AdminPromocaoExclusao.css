@@ -1,0 +1,182 @@
+.promotions-spin {
+  animation: promotions-spin 0.9s linear infinite;
+}
+.promotions-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(610px, calc(100vw - 28px));
+  max-width: 610px;
+  max-height: min(90dvh, 900px);
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  background: var(--pp-admin-surface);
+  color: var(--pp-admin-text);
+  box-shadow: 0 24px 80px color-mix(in srgb, var(--pp-marrom) 25%, transparent);
+  overflow: auto;
+}
+.promotions-dialog::backdrop {
+  background: var(--pp-admin-backdrop);
+}
+.promotions-dialog[open] .promotions-dialog-panel {
+  animation: promotions-enter 250ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.promotions-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 23px 25px 19px;
+  border-bottom: 1px solid var(--pp-admin-border);
+}
+.promotions-dialog-header > div > span {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--pp-admin-accent);
+  font-weight: 700;
+}
+.promotions-dialog-header h2 {
+  font-size: 23px;
+  margin: 6px 0;
+  letter-spacing: -0.025em;
+}
+.promotions-dialog-header p {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--pp-admin-muted);
+  margin: 0;
+}
+.promotions-close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--pp-creme-2);
+  color: var(--pp-admin-muted);
+  cursor: pointer;
+}
+.promotions-close:hover {
+  color: var(--pp-admin-text);
+}
+.promotions-form-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 12px;
+  border-radius: 9px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.promotions-form-error {
+  background: var(--pp-admin-danger-bg);
+  color: var(--pp-admin-danger);
+  margin: 0;
+}
+.promotions-form-error svg {
+  flex: none;
+}
+.promotions-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  padding: 17px 25px 22px;
+  border-top: 1px solid var(--pp-admin-border);
+}
+.promotions-cancel,
+.promotions-delete-confirm {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  min-height: 43px;
+  padding: 10px 16px;
+  border: 1px solid var(--pp-admin-border);
+  border-radius: 9px;
+  background: var(--pp-admin-surface);
+  color: var(--pp-admin-text);
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.promotions-delete-confirm {
+  color: var(--pp-admin-danger);
+  border-color: var(--pp-admin-border);
+}
+.promotions-cancel:disabled,
+.promotions-delete-confirm:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.promotions-delete-dialog {
+  max-width: 510px;
+}
+.promotions-delete-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 13px;
+  padding: 25px;
+}
+.promotions-delete-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 45px;
+  height: 45px;
+  border-radius: 10px;
+  background: var(--pp-admin-danger-bg);
+  color: var(--pp-admin-danger);
+}
+.promotions-delete-body > div:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+.promotions-delete-body strong {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.promotions-delete-body p {
+  font-size: 12px;
+  color: var(--pp-admin-muted);
+  margin: 7px 0 0;
+  line-height: 1.55;
+}
+.promotions-delete-body .promotions-form-error {
+  flex-basis: 100%;
+}
+@media (max-width: 720px) {
+  .promotions-dialog-header {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .promotions-dialog-actions {
+    padding: 16px 18px 20px;
+  }
+  .promotions-dialog-actions > button {
+    flex: 1;
+    padding: 9px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .promotions-dialog[open] .promotions-dialog-panel {
+    animation: none;
+  }
+}
+@keyframes promotions-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes promotions-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

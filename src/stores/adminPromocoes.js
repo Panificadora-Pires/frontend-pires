@@ -3,8 +3,13 @@ import adminService from "@/services/admin.service";
 import { getSessionVersion } from "@/services/api";
 
 const paginaVazia = () => ({
-  count: 0, page: 1, page_size: 12, total_pages: 1,
-  next: null, previous: null, results: [],
+  count: 0,
+  page: 1,
+  page_size: 12,
+  total_pages: 1,
+  next: null,
+  previous: null,
+  results: [],
 });
 
 export const useAdminPromocoesStore = defineStore("adminPromocoes", {
@@ -21,7 +26,8 @@ export const useAdminPromocoesStore = defineStore("adminPromocoes", {
     async carregar(filtros = {}) {
       const chamada = ++this.geracao;
       const sessao = getSessionVersion();
-      const atual = () => chamada === this.geracao && sessao === getSessionVersion();
+      const atual = () =>
+        chamada === this.geracao && sessao === getSessionVersion();
       this.carregando = true;
       try {
         const [pagina, resumo] = await Promise.all([
@@ -45,7 +51,9 @@ export const useAdminPromocoesStore = defineStore("adminPromocoes", {
       }
     },
     salvar({ id = null, payload }) {
-      return id ? adminService.atualizarPromocao(id, payload) : adminService.criarPromocao(payload);
+      return id
+        ? adminService.atualizarPromocao(id, payload)
+        : adminService.criarPromocao(payload);
     },
     excluir(id) {
       return adminService.excluirPromocao(id);

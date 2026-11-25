@@ -1,5 +1,6 @@
 const MENSAGENS = {
-  no_payment_method_for_provided_bin: "Não reconhecemos esse cartão. Confira o número ou use outro cartão.",
+  no_payment_method_for_provided_bin:
+    "Não reconhecemos esse cartão. Confira o número ou use outro cartão.",
 };
 
 const MENSAGEM_PADRAO = "Confira os dados do cartão e tente novamente.";

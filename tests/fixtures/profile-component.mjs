@@ -25,6 +25,9 @@ export function criarPerfil({ usuario, atualizarPerfil, buscarUsuarioLogado } = 
     document: { getElementById: id => ({ focus: () => focados.push(id) }) },
     URL: { createObjectURL: () => `blob:perfil-${revogados.length}`, revokeObjectURL: url => revogados.push(url) },
   };
+  const fonteComposable = readFileSync(new URL('../../src/composables/usePerfil.js', import.meta.url), 'utf8')
+    .replace(/^import\s[\s\S]*?;\s*/gm, '').replace(/^export\s+/gm, '');
+  contexto.usePerfil = new Function(...Object.keys(contexto), `${fonteComposable}\nreturn usePerfil;`)(...Object.values(contexto));
   const fonte = readFileSync(new URL('../../src/views/student/ProfileView.vue', import.meta.url), 'utf8');
   const script = fonte.match(/<script setup>([\s\S]*?)<\/script>/)[1].replace(/^import\s[\s\S]*?;\s*/gm, '');
   const escopo = effectScope();

@@ -50,7 +50,9 @@
           <span class="order-chat__author">{{ item.autor }}</span>
           <p class="order-chat__text">{{ item.texto }}</p>
           <span class="order-chat__meta">
-            <time :datetime="item.criada_em">{{ formatarHora(item.criada_em) }}</time>
+            <time :datetime="item.criada_em">{{
+              formatarHora(item.criada_em)
+            }}</time>
             <template v-if="item.estado === 'enviando'">
               <Clock3 :size="12" aria-hidden="true" /> Enviando...
             </template>
@@ -112,7 +114,9 @@
             rows="1"
             :maxlength="LIMITE_CARACTERES"
             :placeholder="placeholder"
-            :aria-describedby="restantes <= AVISO_LIMITE ? idContador : undefined"
+            :aria-describedby="
+              restantes <= AVISO_LIMITE ? idContador : undefined
+            "
             @keydown.enter.exact.prevent="enviar"
           />
           <button
@@ -137,7 +141,14 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from "vue";
 import {
   Check,
   CheckCheck,
@@ -154,6 +165,7 @@ import { useAutoRefresh } from "@/composables/useAutoRefresh";
 import { useChatStore } from "@/stores/chat";
 import { useNotificationsStore } from "@/stores/notifications";
 import { REALTIME_ENABLED, realtimeClient } from "@/services/realtime";
+import { formatarDataCompleta, formatarHora } from "@/utils/chat";
 
 const INTERVALO_CONVERSA_MS = 5_000;
 const LIMITE_CARACTERES = 1000;
@@ -181,16 +193,22 @@ const idCampo = `chat-campo-${props.pedidoId}`;
 const idContador = `chat-contador-${props.pedidoId}`;
 
 const conversa = computed(() => chat.conversa(props.pedidoId));
-const carregando = computed(() => Boolean(chat.carregando[String(props.pedidoId)]));
+const carregando = computed(() =>
+  Boolean(chat.carregando[String(props.pedidoId)]),
+);
 const erro = computed(() => chat.erros[String(props.pedidoId)]);
 const textoValido = computed(() => texto.value.trim().length > 0);
 const restantes = computed(() => LIMITE_CARACTERES - texto.value.length);
 
 const nomeOutroLado = computed(() =>
-  props.variante === "admin" ? props.nomeCliente || "Cliente" : "Pires Panificadora",
+  props.variante === "admin"
+    ? props.nomeCliente || "Cliente"
+    : "Pires Panificadora",
 );
 const placeholder = computed(() =>
-  props.variante === "admin" ? "Responder ao cliente" : "Escreva para a padaria",
+  props.variante === "admin"
+    ? "Responder ao cliente"
+    : "Escreva para a padaria",
 );
 const textoVazio = computed(() => {
   if (conversa.value?.somente_leitura) {
@@ -242,10 +260,12 @@ function recarregar() {
 
 onMounted(() => {
   if (!REALTIME_ENABLED) return;
-  desinscreverRealtime = realtimeClient.inscrever(evento => {
+  desinscreverRealtime = realtimeClient.inscrever((evento) => {
     if (evento) {
-      const tipoRelevante = evento.tipo.startsWith("chat.") || evento.tipo.startsWith("pedido.");
-      if (!tipoRelevante || Number(evento.pedido_id) !== Number(props.pedidoId)) return;
+      const tipoRelevante =
+        evento.tipo.startsWith("chat.") || evento.tipo.startsWith("pedido.");
+      if (!tipoRelevante || Number(evento.pedido_id) !== Number(props.pedidoId))
+        return;
     }
     if (timerRealtime !== null) return;
     timerRealtime = setTimeout(() => {
@@ -264,7 +284,8 @@ onBeforeUnmount(() => {
 function registrarRolagem() {
   const el = lista.value;
   if (!el) return;
-  noFim.value = el.scrollHeight - el.scrollTop - el.clientHeight < MARGEM_FIM_DA_LISTA;
+  noFim.value =
+    el.scrollHeight - el.scrollTop - el.clientHeight < MARGEM_FIM_DA_LISTA;
 }
 
 function rolarParaOFim() {
@@ -290,10 +311,11 @@ watch(
     try {
       const marcadas = await chat.marcarLidas(props.pedidoId);
       if (marcadas && props.variante === "cliente") {
-        notifications.carregar({ force: true, silencioso: true }).catch(() => {});
+        notifications
+          .carregar({ force: true, silencioso: true })
+          .catch(() => {});
       }
-    } catch {
-    }
+    } catch {}
   },
   { immediate: true },
 );
@@ -306,267 +328,9 @@ async function enviar() {
   await chat.enviar(props.pedidoId, mensagem);
 }
 
-function formatarHora(valor) {
-  const data = new Date(valor);
-  if (Number.isNaN(data.getTime())) return "";
-  const hoje = new Date().toDateString() === data.toDateString();
-  return new Intl.DateTimeFormat("pt-BR", {
-    ...(hoje ? {} : { day: "2-digit", month: "2-digit" }),
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(data);
-}
-
-function formatarDataCompleta(valor) {
-  const data = new Date(valor);
-  if (Number.isNaN(data.getTime())) return "—";
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(data);
-}
-
 defineExpose({
   focar: () => campo.value?.focus(),
 });
 </script>
 
-<style scoped>
-.order-chat--cliente {
-  --chat-surface: var(--student-surface);
-  --chat-surface-soft: var(--student-surface-soft);
-  --chat-border: var(--student-border);
-  --chat-text: var(--student-text);
-  --chat-muted: var(--student-muted);
-  --chat-accent: var(--student-accent);
-  --chat-accent-hover: var(--student-accent-hover);
-  --chat-accent-soft: var(--student-accent-soft);
-  --chat-danger: var(--student-danger);
-  --chat-danger-soft: var(--student-danger-soft);
-  --chat-radius: var(--student-radius);
-}
-.order-chat--admin {
-  --chat-surface: var(--admin-surface);
-  --chat-surface-soft: var(--admin-surface-subtle);
-  --chat-border: var(--admin-border);
-  --chat-text: var(--admin-text);
-  --chat-muted: var(--admin-muted);
-  --chat-accent: var(--admin-accent);
-  --chat-accent-hover: var(--admin-accent-hover);
-  --chat-accent-soft: var(--admin-accent-soft);
-  --chat-danger: var(--admin-danger);
-  --chat-danger-soft: var(--admin-danger-soft);
-  --chat-radius: var(--admin-radius);
-}
-.order-chat {
-  height: 100%;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  color: var(--chat-text);
-}
-.order-chat__state {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--pp-space-1);
-  padding: var(--pp-space-4);
-  color: var(--chat-muted);
-  font-size: 13px;
-  text-align: center;
-}
-.order-chat__state--error {
-  color: var(--chat-danger);
-}
-.order-chat__state--error strong {
-  color: var(--chat-text);
-}
-.order-chat__spin {
-  animation: order-chat-spin 0.8s linear infinite;
-}
-@keyframes order-chat-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-.order-chat__messages {
-  flex: 1;
-  min-height: 0;
-  margin: 0;
-  padding: var(--pp-space-3);
-  display: flex;
-  flex-direction: column;
-  gap: var(--pp-space-2);
-  overflow-y: auto;
-  list-style: none;
-  overscroll-behavior: contain;
-}
-.order-chat__empty {
-  margin: auto 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--pp-space-1);
-  padding: var(--pp-space-4) var(--pp-space-2);
-  color: var(--chat-muted);
-  text-align: center;
-}
-.order-chat__empty p {
-  max-width: 280px;
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.5;
-}
-.order-chat__message {
-  max-width: 85%;
-  align-self: flex-start;
-  padding: 9px 12px;
-  border: 1px solid var(--chat-border);
-  border-radius: var(--chat-radius) var(--chat-radius) var(--chat-radius) 3px;
-  background: var(--chat-surface-soft);
-}
-.order-chat__message.is-mine {
-  align-self: flex-end;
-  border-color: var(--chat-accent-soft);
-  border-radius: var(--chat-radius) var(--chat-radius) 3px var(--chat-radius);
-  background: var(--chat-accent-soft);
-}
-.order-chat__message.is-failed {
-  border-color: var(--chat-danger);
-  background: var(--chat-danger-soft);
-}
-.order-chat__author {
-  display: block;
-  margin-bottom: 2px;
-  color: var(--chat-muted);
-  font-size: 11px;
-  font-weight: 700;
-}
-.order-chat__text {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.45;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-.order-chat__meta {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
-  margin-top: 4px;
-  color: var(--chat-muted);
-  font-size: 11px;
-}
-.order-chat__retry {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px var(--pp-space-1);
-  margin-top: 6px;
-  color: var(--chat-danger);
-  font-size: 12px;
-}
-.order-chat__link-btn {
-  min-height: 32px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0 8px;
-  border: 1px solid var(--chat-border);
-  border-radius: var(--pp-radius-sm);
-  background: var(--chat-surface);
-  color: var(--chat-text);
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.order-chat__link-btn--muted {
-  color: var(--chat-muted);
-}
-.order-chat__notice {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--pp-space-1);
-  margin: 0;
-  padding: var(--pp-space-2) var(--pp-space-3);
-  border-top: 1px solid var(--chat-border);
-  background: var(--chat-surface-soft);
-  color: var(--chat-muted);
-  font-size: 12px;
-  line-height: 1.4;
-}
-.order-chat__notice svg {
-  flex: 0 0 auto;
-  margin-top: 1px;
-}
-.order-chat__composer {
-  display: grid;
-  gap: 6px;
-  padding: var(--pp-space-2) var(--pp-space-3);
-  border-top: 1px solid var(--chat-border);
-  background: var(--chat-surface);
-}
-.order-chat__hint,
-.order-chat__counter {
-  margin: 0;
-  color: var(--chat-muted);
-  font-size: 11px;
-}
-.order-chat__field {
-  display: flex;
-  align-items: flex-end;
-  gap: var(--pp-space-1);
-}
-.order-chat__field textarea {
-  flex: 1;
-  min-width: 0;
-  min-height: 44px;
-  max-height: 140px;
-  padding: 11px 12px;
-  border: 1px solid var(--chat-border);
-  border-radius: var(--pp-radius-sm);
-  background: var(--chat-surface);
-  color: var(--chat-text);
-  font: inherit;
-  font-size: 16px;
-  line-height: 1.35;
-  resize: none;
-  field-sizing: content;
-}
-.order-chat__field textarea:focus-visible {
-  outline: 2px solid var(--chat-accent);
-  outline-offset: 1px;
-}
-.order-chat__send {
-  width: 44px;
-  height: 44px;
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  border: 0;
-  border-radius: var(--pp-radius-sm);
-  background: var(--chat-accent);
-  color: var(--chat-surface);
-  cursor: pointer;
-}
-.order-chat__send:hover:not(:disabled) {
-  background: var(--chat-accent-hover);
-}
-.order-chat__send:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-.order-chat__sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
-</style>
+<style scoped src="./OrderChatPanel.css"></style>

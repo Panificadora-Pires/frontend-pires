@@ -48,8 +48,7 @@ export async function disableGoogleAutoSelect() {
   try {
     const google = await waitForGoogleIdentity();
     google.accounts.id.disableAutoSelect();
-  } catch {
-  }
+  } catch {}
 }
 
 async function initializeGoogleIdentity(clientId) {

@@ -1,0 +1,114 @@
+.ilustracao {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.c-sombra {
+  fill: var(--ilu-sombra);
+}
+.c-massa {
+  fill: var(--ilu-massa);
+}
+.c-massa-clara {
+  fill: var(--ilu-massa-clara);
+}
+.c-tostado {
+  fill: var(--ilu-tostado);
+}
+.c-queijo {
+  fill: var(--ilu-queijo);
+}
+.c-queijo-claro {
+  fill: var(--ilu-queijo-claro);
+}
+.c-queijo-escuro {
+  fill: var(--ilu-queijo-escuro);
+}
+.c-queijo-escuro-claro {
+  fill: var(--ilu-queijo);
+  filter: brightness(0.97);
+}
+.c-chocolate {
+  fill: var(--ilu-chocolate);
+}
+.c-chocolate-claro {
+  fill: var(--ilu-chocolate-claro);
+}
+.c-cenoura {
+  fill: var(--ilu-cenoura);
+}
+.c-laranja {
+  fill: var(--ilu-laranja);
+}
+.c-laranja-clara {
+  fill: var(--ilu-laranja-clara);
+}
+.c-uva {
+  fill: var(--ilu-uva);
+}
+.c-uva-clara {
+  fill: var(--ilu-uva-clara);
+}
+.c-agua {
+  fill: var(--ilu-agua);
+}
+.c-agua-tampa {
+  fill: var(--ilu-agua-tampa);
+}
+.c-lata {
+  fill: var(--ilu-lata);
+}
+.c-lata-clara {
+  fill: var(--ilu-lata-clara);
+}
+.c-papel {
+  fill: var(--ilu-papel);
+}
+.c-vidro {
+  fill: var(--ilu-vidro);
+  stroke: var(--ilu-sombra);
+  stroke-width: 3;
+}
+.t-tostado,
+.t-tostado-grosso,
+.t-brilho,
+.t-brilho-fino,
+.t-papel,
+.t-chocolate,
+.t-canudo {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.t-tostado {
+  stroke: var(--ilu-tostado);
+  stroke-width: 3;
+  opacity: 0.5;
+}
+.t-tostado-grosso {
+  stroke: var(--ilu-tostado);
+  stroke-width: 4;
+  opacity: 0.55;
+}
+.t-brilho {
+  stroke: var(--ilu-brilho);
+  stroke-width: 5;
+  opacity: 0.7;
+}
+.t-brilho-fino {
+  stroke: var(--ilu-chocolate-claro);
+  stroke-width: 3;
+}
+.t-papel {
+  stroke: var(--ilu-tostado);
+  stroke-width: 2;
+  opacity: 0.6;
+}
+.t-chocolate {
+  stroke: var(--ilu-chocolate);
+  stroke-width: 6;
+}
+.t-canudo {
+  stroke: var(--pp-dourado-escuro);
+  stroke-width: 6;
+}

@@ -1,12 +1,12 @@
-import { defineStore } from 'pinia';
-import adminService from '@/services/admin.service';
-import { getSessionVersion } from '@/services/api';
-import { diaEmSaoPaulo, normalizarRanking } from '@/utils/adminDashboard';
-import { somarDias, validarRelatorioAnalitico } from '@/utils/adminRelatorios';
+import { defineStore } from "pinia";
+import adminService from "@/services/admin.service";
+import { getSessionVersion } from "@/services/api";
+import { diaEmSaoPaulo, normalizarRanking } from "@/utils/adminDashboard";
+import { somarDias, validarRelatorioAnalitico } from "@/utils/adminRelatorios";
 
 const carregamentos = new WeakMap();
 
-export const useAdminDashboardStore = defineStore('adminDashboard', {
+export const useAdminDashboardStore = defineStore("adminDashboard", {
   state: () => ({
     resumoProdutos: null,
     resumoPromocoes: null,
@@ -26,9 +26,15 @@ export const useAdminDashboardStore = defineStore('adminDashboard', {
       const existente = carregamentos.get(this);
       if (existente) return existente.promise;
       const dia = diaEmSaoPaulo(agora);
-      const entrada = { geracao: this.geracao, versao: getSessionVersion(), promise: null };
-      const atual = () => carregamentos.get(this) === entrada && this.geracao === entrada.geracao;
-      const sessaoAtual = () => atual() && getSessionVersion() === entrada.versao;
+      const entrada = {
+        geracao: this.geracao,
+        versao: getSessionVersion(),
+        promise: null,
+      };
+      const atual = () =>
+        carregamentos.get(this) === entrada && this.geracao === entrada.geracao;
+      const sessaoAtual = () =>
+        atual() && getSessionVersion() === entrada.versao;
       this.carregando = true;
       this.erro = null;
       carregamentos.set(this, entrada);
@@ -36,20 +42,41 @@ export const useAdminDashboardStore = defineStore('adminDashboard', {
         try {
           const periodo = { dataInicio: dia, dataFim: dia };
           const inicioSemana = somarDias(dia, -6);
-          const [resumoProdutos, resumoPromocoes, relatorioHoje, respostaRanking, paginaRecentes, relatorioSemana] = await Promise.all([
+          const [
+            resumoProdutos,
+            resumoPromocoes,
+            relatorioHoje,
+            respostaRanking,
+            paginaRecentes,
+            relatorioSemana,
+          ] = await Promise.all([
             adminService.resumoProdutosAdmin(),
             adminService.resumoPromocoesAdmin(),
             adminService.relatorioVendas(periodo),
             adminService.maisVendidos({ ...periodo, limite: 3 }),
             adminService.listarPedidosPagina({ page: 1, page_size: 4 }),
-            adminService.relatorioAnaliticoAdmin({ dataInicio: inicioSemana, dataFim: dia }),
+            adminService.relatorioAnaliticoAdmin({
+              dataInicio: inicioSemana,
+              dataFim: dia,
+            }),
           ]);
           if (!sessaoAtual()) return;
           const ranking = normalizarRanking(respostaRanking, []);
-          if (!relatorioHoje || [relatorioHoje.total_vendido, relatorioHoje.total_pedidos].some(valor => valor == null || valor === '' || !Number.isFinite(Number(valor)))) {
-            throw new Error('Resposta de faturamento inválida.');
+          if (
+            !relatorioHoje ||
+            [relatorioHoje.total_vendido, relatorioHoje.total_pedidos].some(
+              (valor) =>
+                valor == null ||
+                valor === "" ||
+                !Number.isFinite(Number(valor)),
+            )
+          ) {
+            throw new Error("Resposta de faturamento inválida.");
           }
-          const semanaValidada = validarRelatorioAnalitico(relatorioSemana, { inicio: inicioSemana, fim: dia });
+          const semanaValidada = validarRelatorioAnalitico(relatorioSemana, {
+            inicio: inicioSemana,
+            fim: dia,
+          });
           this.resumoProdutos = resumoProdutos;
           this.resumoPromocoes = resumoPromocoes;
           this.relatorioHoje = relatorioHoje;
@@ -61,9 +88,10 @@ export const useAdminDashboardStore = defineStore('adminDashboard', {
           this.ultimaAtualizacao = new Date(agora);
         } catch (error) {
           if (!sessaoAtual()) return;
-          this.erro = error.code === 'ADMIN_COLLECTION_INCOMPLETE'
-            ? 'A consulta não foi concluída. Os indicadores não representam uma coleção completa.'
-            : 'Não foi possível atualizar os dados do Dashboard. Tente novamente.';
+          this.erro =
+            error.code === "ADMIN_COLLECTION_INCOMPLETE"
+              ? "A consulta não foi concluída. Os indicadores não representam uma coleção completa."
+              : "Não foi possível atualizar os dados do Dashboard. Tente novamente.";
           throw error;
         } finally {
           if (atual()) {

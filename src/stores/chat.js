@@ -13,7 +13,10 @@ function chave(pedidoId) {
 }
 
 function mesclarMensagens(recebidas, locais = []) {
-  const ultimoId = recebidas.reduce((maior, m) => Math.max(maior, Number(m.id)), 0);
+  const ultimoId = recebidas.reduce(
+    (maior, m) => Math.max(maior, Number(m.id)),
+    0,
+  );
   const novasLocais = locais.filter((m) => Number(m.id) > ultimoId);
   return [...recebidas, ...novasLocais];
 }
@@ -31,7 +34,8 @@ export const useChatStore = defineStore("chat", {
 
   getters: {
     conversa: (state) => (pedidoId) => state.conversas[chave(pedidoId)] || null,
-    pendentesDe: (state) => (pedidoId) => state.pendentes[chave(pedidoId)] || [],
+    pendentesDe: (state) => (pedidoId) =>
+      state.pendentes[chave(pedidoId)] || [],
     naoLidasDoPedido: (state) => (pedidoId) =>
       state.naoLidas.porPedido[chave(pedidoId)] || 0,
     pedidosComNaoLidas: (state) => Object.keys(state.naoLidas.porPedido).length,
@@ -42,7 +46,8 @@ export const useChatStore = defineStore("chat", {
       const id = chave(pedidoId);
       const geracao = this.geracaoSessao;
       const sessao = getSessionVersion();
-      const aindaAtual = () => this.geracaoSessao === geracao && getSessionVersion() === sessao;
+      const aindaAtual = () =>
+        this.geracaoSessao === geracao && getSessionVersion() === sessao;
 
       if (!silencioso) {
         this.carregando[id] = true;
@@ -55,7 +60,10 @@ export const useChatStore = defineStore("chat", {
         const anterior = this.conversas[id];
         this.conversas[id] = {
           ...data,
-          mensagens: mesclarMensagens(data.mensagens || [], anterior?.mensagens),
+          mensagens: mesclarMensagens(
+            data.mensagens || [],
+            anterior?.mensagens,
+          ),
         };
         this.erros[id] = null;
         this._definirNaoLidas(id, data.nao_lidas);
@@ -108,7 +116,8 @@ export const useChatStore = defineStore("chat", {
     async _enviarPendente(pedidoId, idLocal) {
       const geracao = this.geracaoSessao;
       const sessao = getSessionVersion();
-      const aindaAtual = () => geracao === this.geracaoSessao && sessao === getSessionVersion();
+      const aindaAtual = () =>
+        geracao === this.geracaoSessao && sessao === getSessionVersion();
       const id = chave(pedidoId);
       const pendente = this._pendente(pedidoId, idLocal);
 
@@ -130,7 +139,10 @@ export const useChatStore = defineStore("chat", {
           atual.erro =
             error?.response?.status === 429
               ? "Muitas mensagens seguidas. Aguarde um pouco e tente de novo."
-              : mensagemErroApi(error, "Não foi possível enviar. Verifique sua conexão.");
+              : mensagemErroApi(
+                  error,
+                  "Não foi possível enviar. Verifique sua conexão.",
+                );
         }
 
         if (error?.response?.status === 400) {
@@ -154,7 +166,8 @@ export const useChatStore = defineStore("chat", {
       if (!conversa?.nao_lidas && !this.naoLidas.porPedido[id]) return 0;
 
       const { data } = await chatService.marcarLidas(pedidoId);
-      if (geracao !== this.geracaoSessao || sessao !== getSessionVersion()) return 0;
+      if (geracao !== this.geracaoSessao || sessao !== getSessionVersion())
+        return 0;
       if (conversa) conversa.nao_lidas = 0;
       this._definirNaoLidas(id, 0);
       return data?.marcadas || 0;
@@ -177,7 +190,8 @@ export const useChatStore = defineStore("chat", {
       const geracao = this.geracaoSessao;
       const sessao = getSessionVersion();
       const { data } = await chatService.naoLidas();
-      if (geracao !== this.geracaoSessao || sessao !== getSessionVersion()) return;
+      if (geracao !== this.geracaoSessao || sessao !== getSessionVersion())
+        return;
       const porPedido = {};
       for (const item of data?.por_pedido || []) {
         porPedido[chave(item.pedido)] = Number(item.nao_lidas) || 0;

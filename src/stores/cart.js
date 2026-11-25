@@ -3,8 +3,16 @@ import { acceptHMRUpdate, defineStore } from "pinia";
 const CART_DRAFT_PREFIX = "pp_cart_draft_v2_";
 const CART_DRAFT_LEGACY_KEY = "pp_cart_draft_v1";
 const PRODUCT_FIELDS = [
-  "id", "nome", "categoria", "categoria_nome", "imagem",
-  "preco", "preco_atual", "em_promocao", "estoque", "ativo",
+  "id",
+  "nome",
+  "categoria",
+  "categoria_nome",
+  "imagem",
+  "preco",
+  "preco_atual",
+  "em_promocao",
+  "estoque",
+  "ativo",
 ];
 
 function draftKey(accountId) {
@@ -14,23 +22,40 @@ function draftKey(accountId) {
 function readDraft(accountId) {
   let serialized = null;
   let version = 2;
-  try { serialized = localStorage.getItem(draftKey(accountId)); } catch {}
+  try {
+    serialized = localStorage.getItem(draftKey(accountId));
+  } catch {}
   if (serialized === null) {
-    try { serialized = sessionStorage.getItem(CART_DRAFT_LEGACY_KEY); version = 1; } catch {}
+    try {
+      serialized = sessionStorage.getItem(CART_DRAFT_LEGACY_KEY);
+      version = 1;
+    } catch {}
   }
   try {
     const saved = JSON.parse(serialized || "null");
-    if (saved?.version !== version || saved.accountId !== accountId
-      || !Array.isArray(saved.items) || saved.items.length > 100) return [];
+    if (
+      saved?.version !== version ||
+      saved.accountId !== accountId ||
+      !Array.isArray(saved.items) ||
+      saved.items.length > 100
+    )
+      return [];
 
     return saved.items.flatMap(({ product, quantity } = {}) => {
       const id = Number(product?.id);
       const qty = Number(quantity);
-      if (!Number.isSafeInteger(id) || id <= 0
-        || !Number.isSafeInteger(qty) || qty <= 0 || qty > 10000) return [];
+      if (
+        !Number.isSafeInteger(id) ||
+        id <= 0 ||
+        !Number.isSafeInteger(qty) ||
+        qty <= 0 ||
+        qty > 10000
+      )
+        return [];
       const clean = Object.fromEntries(
-        PRODUCT_FIELDS.filter(field => Object.hasOwn(product, field))
-          .map(field => [field, product[field]])
+        PRODUCT_FIELDS.filter((field) => Object.hasOwn(product, field)).map(
+          (field) => [field, product[field]],
+        ),
       );
       return [{ produto: clean, quantidade: qty }];
     });
@@ -41,12 +66,13 @@ function readDraft(accountId) {
 
 function limparRascunhoLegado(accountId) {
   try {
-    const saved = JSON.parse(sessionStorage.getItem(CART_DRAFT_LEGACY_KEY) || "null");
+    const saved = JSON.parse(
+      sessionStorage.getItem(CART_DRAFT_LEGACY_KEY) || "null",
+    );
     if (saved?.version === 1 && saved.accountId === accountId) {
       sessionStorage.removeItem(CART_DRAFT_LEGACY_KEY);
     }
-  } catch {
-  }
+  } catch {}
 }
 
 function saveDraft(store) {
@@ -56,21 +82,24 @@ function saveDraft(store) {
     if (!store.itens.length) {
       localStorage.removeItem(key);
     } else {
-      localStorage.setItem(key, JSON.stringify({
-        version: 2,
-        accountId: store.contaId,
-        items: store.itens.map(({ produto, quantidade }) => ({
-          product: Object.fromEntries(
-            PRODUCT_FIELDS.filter(field => Object.hasOwn(produto, field))
-              .map(field => [field, produto[field]])
-          ),
-          quantity: quantidade,
-        })),
-      }));
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          version: 2,
+          accountId: store.contaId,
+          items: store.itens.map(({ produto, quantidade }) => ({
+            product: Object.fromEntries(
+              PRODUCT_FIELDS.filter((field) =>
+                Object.hasOwn(produto, field),
+              ).map((field) => [field, produto[field]]),
+            ),
+            quantity: quantidade,
+          })),
+        }),
+      );
     }
     limparRascunhoLegado(store.contaId);
-  } catch {
-  }
+  } catch {}
 }
 
 export const useCartStore = defineStore("cart", {
@@ -119,7 +148,11 @@ export const useCartStore = defineStore("cart", {
     },
 
     contextoAtual(contexto) {
-      return this.contaId !== null && contexto?.contaId === this.contaId && contexto?.geracao === this.geracao;
+      return (
+        this.contaId !== null &&
+        contexto?.contaId === this.contaId &&
+        contexto?.geracao === this.geracao
+      );
     },
 
     adicionar(produto, quantidade = 1, contexto = this.capturarContexto()) {
@@ -166,4 +199,5 @@ export const useCartStore = defineStore("cart", {
     },
   },
 });
-if (import.meta.hot) import.meta.hot.accept(acceptHMRUpdate(useCartStore, import.meta.hot));
+if (import.meta.hot)
+  import.meta.hot.accept(acceptHMRUpdate(useCartStore, import.meta.hot));

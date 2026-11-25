@@ -1,10 +1,17 @@
 export function iniciaisUsuario(nome, email) {
-  const identificador = String(nome || "").trim() ||
-    String(email || "").split("@")[0].replace(/[._-]+/g, " ").trim();
+  const identificador =
+    String(nome || "").trim() ||
+    String(email || "")
+      .split("@")[0]
+      .replace(/[._-]+/g, " ")
+      .trim();
   const palavras = identificador.split(/\s+/u).filter(Boolean);
   if (!palavras.length) return "—";
-  if (palavras.length === 1) return [...palavras[0]].slice(0, 2).join("").toLocaleUpperCase("pt-BR");
-  return (palavras[0].slice(0, 1) + palavras.at(-1).slice(0, 1)).toLocaleUpperCase("pt-BR");
+  if (palavras.length === 1)
+    return [...palavras[0]].slice(0, 2).join("").toLocaleUpperCase("pt-BR");
+  return (
+    palavras[0].slice(0, 1) + palavras.at(-1).slice(0, 1)
+  ).toLocaleUpperCase("pt-BR");
 }
 
 export function ultimoAcesso(valor) {

@@ -1,7 +1,20 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { ClipboardList, Home, LayoutGrid, ShoppingCart, User } from "lucide-vue-next";
+import {
+  ClipboardList,
+  Home,
+  LayoutGrid,
+  ShoppingCart,
+  User,
+} from "lucide-vue-next";
 import StudentHeader from "@/components/layout/StudentHeader.vue";
 import ChatbotWidget from "@/components/chatbot/ChatbotWidget.vue";
 import { useAuthStore } from "@/stores/auth";
@@ -26,10 +39,14 @@ const chatbot = useChatbotStore();
 const notifications = useNotificationsStore();
 const orders = useOrdersStore();
 const favorites = useFavoritesStore();
-watch(() => auth.usuario?.id ?? null, id => {
-  cart.sincronizarConta(id);
-  favorites.sincronizarConta(id);
-}, { immediate: true, flush: "sync" });
+watch(
+  () => auth.usuario?.id ?? null,
+  (id) => {
+    cart.sincronizarConta(id);
+    favorites.sincronizarConta(id);
+  },
+  { immediate: true, flush: "sync" },
+);
 const router = useRouter();
 const route = useRoute();
 const header = ref(null);
@@ -43,11 +60,18 @@ const mostrarChatbot = computed(() => route.name !== "checkout");
 const bottomNavItems = computed(() => [
   { name: "home", label: "Início", icon: Home },
   { name: "cardapio", label: "Cardápio", icon: LayoutGrid },
-  { name: "carrinho", label: "Carrinho", icon: ShoppingCart, badge: cart.totalItens || null },
+  {
+    name: "carrinho",
+    label: "Carrinho",
+    icon: ShoppingCart,
+    badge: cart.totalItens || null,
+  },
   { name: "pedidos", label: "Pedidos", icon: ClipboardList },
   { name: "perfil", label: "Perfil", icon: User },
 ]);
-function limitarBadge(valor) { return Number(valor || 0) > 99 ? "99+" : valor; }
+function limitarBadge(valor) {
+  return Number(valor || 0) > 99 ? "99+" : valor;
+}
 async function pularContador(contexto) {
   window.clearTimeout(timerPulo);
   carrinhoPulando.value = false;
@@ -55,7 +79,9 @@ async function pularContador(contexto) {
   await nextTick();
   if (!montado || !cart.contextoAtual(contexto)) return;
   carrinhoPulando.value = true;
-  timerPulo = window.setTimeout(() => { carrinhoPulando.value = false; }, 400);
+  timerPulo = window.setTimeout(() => {
+    carrinhoPulando.value = false;
+  }, 400);
 }
 async function handleLogout() {
   desinscreverRealtime?.();
@@ -70,24 +96,34 @@ async function handleLogout() {
   if (auth.usuario) return;
   await router.replace({ name: "login" });
 }
-watch(() => auth.usuario?.id ?? null, id => {
-  if (!REALTIME_ENABLED || !montado) return;
-  if (id && auth.autenticado) realtimeClient.iniciar();
-  else realtimeClient.parar();
-});
-watch(() => notifications.naoLidas, (atual, anterior) => {
-  if (atual > anterior && orders.inicializado) orders.carregar({ force: true, silencioso: true }).catch(() => {});
-});
+watch(
+  () => auth.usuario?.id ?? null,
+  (id) => {
+    if (!REALTIME_ENABLED || !montado) return;
+    if (id && auth.autenticado) realtimeClient.iniciar();
+    else realtimeClient.parar();
+  },
+);
+watch(
+  () => notifications.naoLidas,
+  (atual, anterior) => {
+    if (atual > anterior && orders.inicializado)
+      orders.carregar({ force: true, silencioso: true }).catch(() => {});
+  },
+);
 onMounted(() => {
   notifications.iniciarPolling();
   chat.iniciarPollingNaoLidas(30_000);
   if (REALTIME_ENABLED) {
     invalidacoesRealtime = createRealtimeInvalidations({
-      pedidos: () => orders.carregar({ force: true, silencioso: orders.inicializado }),
+      pedidos: () =>
+        orders.carregar({ force: true, silencioso: orders.inicializado }),
       chat: () => chat.carregarNaoLidas(),
       notificacoes: () => notifications.atualizarAgora(),
     });
-    desinscreverRealtime = realtimeClient.inscrever(invalidacoesRealtime.sinalizar);
+    desinscreverRealtime = realtimeClient.inscrever(
+      invalidacoesRealtime.sinalizar,
+    );
     if (auth.autenticado) realtimeClient.iniciar();
   }
   pararDeOuvirCarrinho = cart.$onAction(({ name, after }) => {
@@ -115,15 +151,38 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="student-layout" :class="{ 'has-chatbot': mostrarChatbot, 'student-layout--cart': route.name === 'carrinho' }">
-    <StudentHeader ref="header" :carrinho-pulando="carrinhoPulando" @logout="handleLogout" />
+  <div
+    class="student-layout"
+    :class="{
+      'has-chatbot': mostrarChatbot,
+      'student-layout--cart': route.name === 'carrinho',
+    }"
+  >
+    <StudentHeader
+      ref="header"
+      :carrinho-pulando="carrinhoPulando"
+      @logout="handleLogout"
+    />
     <main class="student-layout__main"><RouterView /></main>
     <ChatbotWidget v-if="mostrarChatbot" />
     <nav class="student-layout__bottom-nav" aria-label="Navegação rápida">
-      <RouterLink v-for="item in bottomNavItems" :key="item.name" :to="{ name: item.name }" class="student-layout__bottom-item" exact-active-class="is-active">
-        <span class="student-layout__bottom-icon-wrap" :class="{ 'is-added': item.name === 'carrinho' && carrinhoPulando }">
+      <RouterLink
+        v-for="item in bottomNavItems"
+        :key="item.name"
+        :to="{ name: item.name }"
+        class="student-layout__bottom-item"
+        exact-active-class="is-active"
+      >
+        <span
+          class="student-layout__bottom-icon-wrap"
+          :class="{ 'is-added': item.name === 'carrinho' && carrinhoPulando }"
+        >
           <component :is="item.icon" :size="20" aria-hidden="true" />
-          <span v-if="item.badge" class="student-layout__badge-dot student-layout__badge-dot--bottom">{{ limitarBadge(item.badge) }}</span>
+          <span
+            v-if="item.badge"
+            class="student-layout__badge-dot student-layout__badge-dot--bottom"
+            >{{ limitarBadge(item.badge) }}</span
+          >
         </span>
         <span>{{ item.label }}</span>
       </RouterLink>
@@ -154,7 +213,9 @@ onBeforeUnmount(() => {
 }
 @media (prefers-reduced-motion: reduce) {
   .student-layout__bottom-icon-wrap.is-added > svg,
-  .student-layout__bottom-icon-wrap.is-added > .student-layout__badge-dot { animation: none; }
+  .student-layout__bottom-icon-wrap.is-added > .student-layout__badge-dot {
+    animation: none;
+  }
 }
 
 @media (max-width: 980px) {
@@ -173,7 +234,8 @@ onBeforeUnmount(() => {
     height: 64px;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    padding: 5px max(4px, env(safe-area-inset-right)) max(5px, env(safe-area-inset-bottom)) max(4px, env(safe-area-inset-left));
+    padding: 5px max(4px, env(safe-area-inset-right))
+      max(5px, env(safe-area-inset-bottom)) max(4px, env(safe-area-inset-left));
     background: var(--pp-creme);
     border-top: 1px solid var(--student-border);
   }

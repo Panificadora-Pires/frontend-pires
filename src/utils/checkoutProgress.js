@@ -1,5 +1,8 @@
 const STATUS_FINAIS_SEM_APROVACAO = new Set([
-  "recusado", "cancelado", "reembolsado", "erro",
+  "recusado",
+  "cancelado",
+  "reembolsado",
+  "erro",
 ]);
 
 export function descreverEtapaPagamento({

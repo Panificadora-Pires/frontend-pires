@@ -2,7 +2,7 @@ import test, { beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { createPinia, setActivePinia } from 'pinia';
 import { useCartStore } from '../src/stores/cart.js';
-import { executarScript, adiar } from './fixtures/cart-component.mjs';
+import { executarScript, carregarComposable, adiar } from './fixtures/cart-component.mjs';
 import { categoriasFavoritas, filtrarFavoritos, precoProduto, validarAdicao } from '../src/utils/favoritos.js';
 const produto = { id: 1, nome: 'Pão fictício', preco: '5.00', estoque: 10, ativo: true };
 let cart;
@@ -11,6 +11,10 @@ beforeEach(() => {
   cart.sincronizarConta(1); cart.adicionar(produto);
   globalThis.window = { clearTimeout, setTimeout, crypto: { randomUUID: () => 'checkout-ficticio' }, scrollTo() {}, removeEventListener() {} };
 });
+const compra = (catalogService) => carregarComposable('composables/useCompraCatalogo.js', 'useCompraCatalogo', { useCartStore: () => cart, useFavoritesStore: () => ({}), catalogService });
+const abrirCheckout = (dependencias, expor) => executarScript('views/student/CheckoutView.vue', {
+  useCheckout: carregarComposable('composables/useCheckout.js', 'useCheckout', dependencias),
+}, expor);
 function trocarConta() { cart.sincronizarConta(2); cart.adicionar({ ...produto, preco: '7.00' }, 3); }
 for (const [arquivo, adicionar] of [['HomeView', 'adicionarAoCarrinho'], ['CardapioView', 'adicionarRapido'], ['PromocoesView', 'adicionar']]) {
   test(`${arquivo}: detalhe antigo não adiciona nem dá feedback após A→B→A`, async () => {
@@ -21,6 +25,11 @@ for (const [arquivo, adicionar] of [['HomeView', 'adicionarAoCarrinho'], ['Carda
       catalogService: { obterProduto: () => detalhe.promise },
       preparoBalcao: '', vitrineBalcao: '', retiradaBalcao: '', dataDaPires: () => '2026-11-12',
       selecionarOfertas: () => [],
+      useCompraCatalogo: compra({ obterProduto: () => detalhe.promise }), useFiltrosCardapio: () => ({}), useTrilhaCategorias: () => ({}),
+      usePromocoes: carregarComposable('composables/usePromocoes.js', 'usePromocoes', {
+        useCartStore: () => cart, useFavoritesStore: () => ({}), useAutoRefresh: () => ({}), useTemplateRef: () => ({ value: null }),
+        catalogService: { obterProduto: () => detalhe.promise }, dataDaPires: () => '2026-11-12', selecionarOfertas: () => [],
+      }),
     }, [adicionar, 'toast']);
     const adicionando = view[adicionar](produto); trocarConta(); cart.sincronizarConta(1); cart.adicionar(produto, 2);
     detalhe.resolve({ ...produto, em_promocao: true }); await adicionando;
@@ -33,6 +42,7 @@ for (const arquivo of ['HomeView', 'CardapioView']) {
       useCartStore: () => cart, useAuthStore: () => ({ usuario: { id: 1 } }), useFavoritesStore: () => ({}),
       useRoute: () => ({ query: {} }), useRouter: () => ({}), useAutoRefresh: () => ({}),
       preparoBalcao: '', vitrineBalcao: '', retiradaBalcao: '',
+      useCompraCatalogo: compra({}), useFiltrosCardapio: () => ({}), useTrilhaCategorias: () => ({}),
     }, ['adicionarDoModal', 'toast']);
     await view.adicionarDoModal({ produto, quantidade: 2 });
     assert.equal(cart.totalItens, 3); assert.equal(cart.totalPreco, 15);
@@ -56,11 +66,14 @@ test('recomendação atual preserva fallback existente quando detalhe falha', as
 });
 test('Favoritos valida também a geração do carrinho e ignora detalhe de sessão anterior', async () => {
   const detalhe = adiar(); let voos = 0;
-  const view = executarScript('views/student/FavoritosView.vue', {
-    useCartStore: () => cart, useAuthStore: () => ({ usuario: { id: 1 } }),
-    useFavoritesStore: () => ({ produtos: [], obterDetalhe: () => detalhe.promise }),
+  const favoritos = { produtos: [], obterDetalhe: () => detalhe.promise };
+  const useColecaoFavoritos = carregarComposable('composables/useColecaoFavoritos.js', 'useColecaoFavoritos', {
+    useCartStore: () => cart, useAuthStore: () => ({ usuario: { id: 1 } }), useFavoritesStore: () => favoritos,
     categoriasFavoritas, filtrarFavoritos, precoProduto, validarAdicao,
     registrarOrigemVoo: () => voos++,
+  });
+  const view = executarScript('views/student/FavoritosView.vue', {
+    useFavoritesStore: () => favoritos, useColecaoFavoritos,
   }, ['adicionarRapido', 'toast']);
   const adicionando = view.adicionarRapido(produto); trocarConta(); cart.sincronizarConta(1); cart.adicionar(produto, 2);
   detalhe.resolve(produto); await adicionando;
@@ -68,10 +81,11 @@ test('Favoritos valida também a geração do carrinho e ignora detalhe de sess�
 });
 test('sincronização e navegação pendentes de A não atualizam mesmo produto nem avançam checkout de B', async () => {
   const detalhe = adiar(), destinos = [];
-  const view = executarScript('views/student/CarrinhoView.vue', {
+  const useCarrinho = carregarComposable('composables/useCarrinho.js', 'useCarrinho', {
     useCartStore: () => cart, useRouter: () => ({ push: destino => destinos.push(destino) }),
     catalogService: { obterProduto: () => detalhe.promise },
-  }, ['finalizarPedido', 'erroFinalizar']);
+  });
+  const view = executarScript('views/student/CarrinhoView.vue', { useCarrinho }, ['finalizarPedido', 'erroFinalizar']);
   const finalizando = view.finalizarPedido(); trocarConta();
   detalhe.resolve({ ...produto, preco: '99.00', estoque: 0 }); await finalizando;
   assert.equal(cart.totalPreco, 21); assert.equal(cart.itens[0].produto.estoque, 10);
@@ -80,7 +94,7 @@ test('sincronização e navegação pendentes de A não atualizam mesmo produto 
 for (const metodo of ['finalizarDinheiro', 'processarMercadoPago']) {
   test(`resposta tardia ${metodo} não limpa B, mostra resultado ou inicia polling`, async () => {
     const http = adiar(); let pollings = 0;
-    const view = executarScript('views/student/CheckoutView.vue', {
+    const view = abrirCheckout({
       useCartStore: () => cart, useAuthStore: () => ({ usuario: { id: 1 } }),
       paymentService: { checkoutDinheiro: () => http.promise, checkoutMercadoPago: () => http.promise },
       createAutoRefresh: () => ({ iniciar: () => pollings++, parar() {} }),
@@ -93,7 +107,7 @@ for (const metodo of ['finalizarDinheiro', 'processarMercadoPago']) {
 }
 test('checkout atual continua limpando carrinho e iniciando polling existente', async () => {
   let pollings = 0;
-  const view = executarScript('views/student/CheckoutView.vue', {
+  const view = abrirCheckout({
     useCartStore: () => cart, useAuthStore: () => ({ usuario: { id: 1 } }),
     paymentService: { checkoutDinheiro: async () => ({ data: { pedido: { id: 50 }, pagamento: { status_pagamento: 'pendente' } } }) },
     createAutoRefresh: () => ({ iniciar: () => pollings++, parar() {} }),
@@ -103,7 +117,7 @@ test('checkout atual continua limpando carrinho e iniciando polling existente', 
 });
 test('consulta de pagamento pendente de A não expõe resultado em B', async () => {
   const http = adiar();
-  const view = executarScript('views/student/CheckoutView.vue', {
+  const view = abrirCheckout({
     useCartStore: () => cart, useAuthStore: () => ({ usuario: { id: 1 } }),
     paymentService: { consultar: () => http.promise }, createAutoRefresh: () => ({}),
   }, ['consultarPagamento', 'resultado']);
@@ -113,7 +127,7 @@ test('consulta de pagamento pendente de A não expõe resultado em B', async () 
 });
 test('falha de checkout de A não altera erro nem estado da operação atual de B', async () => {
   const httpA = adiar(), httpB = adiar(); let chamadas = 0;
-  const view = executarScript('views/student/CheckoutView.vue', {
+  const view = abrirCheckout({
     useCartStore: () => cart, useAuthStore: () => ({ usuario: { id: 1 } }),
     paymentService: { checkoutDinheiro: () => ++chamadas === 1 ? httpA.promise : httpB.promise }, createAutoRefresh: () => ({}),
   }, ['finalizarDinheiro', 'erro', 'processando']);
