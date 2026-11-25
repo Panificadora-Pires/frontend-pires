@@ -221,17 +221,7 @@
   </div>
 </template>
 <script setup>
-import {
-  computed,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  shallowRef,
-  useTemplateRef,
-  watch,
-} from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { onMounted, ref, useTemplateRef } from "vue";
 import {
   CheckCircle2,
   ChevronDown,
@@ -245,283 +235,64 @@ import {
 import ProductCard from "@/components/catalog/ProductCard.vue";
 import ProductDetailsModal from "@/components/catalog/ProductDetailsModal.vue";
 import { useAutoRefresh } from "@/composables/useAutoRefresh";
+import { useCompraCatalogo } from "@/composables/useCompraCatalogo";
+import { useFiltrosCardapio } from "@/composables/useFiltrosCardapio";
+import { useTrilhaCategorias } from "@/composables/useTrilhaCategorias";
 import catalogService from "@/services/catalog.service";
-import { useCartStore } from "@/stores/cart";
 import { useFavoritesStore } from "@/stores/favorites";
-import { movimentoReduzido } from "@/utils/vooAoCarrinho";
-
-const cart = useCartStore();
-const favorites = useFavoritesStore();
 
 const INTERVALO_CARDAPIO_MS = 60_000;
-const PRODUTOS_POR_PAGINA = 8;
 
+const favorites = useFavoritesStore();
 const categorias = ref([]);
 const produtos = ref([]);
-const route = useRoute();
-const router = useRouter();
-const tituloProdutos = useTemplateRef("tituloProdutos");
-function textoDaUrl(valor) {
-  return typeof valor === "string" ? valor : "";
-}
-const busca = computed({
-  get: () => textoDaUrl(route.query.busca),
-  set: (valor) => atualizarFiltros({ busca: valor.trim() }, true),
-});
-function categoriaDaUrl(valor) {
-  const numero = Number(valor);
-  return Number.isSafeInteger(numero) && numero > 0 ? numero : null;
-}
-const categoriaAtiva = computed({
-  get: () => categoriaDaUrl(route.query.categoria),
-  set: (valor) =>
-    atualizarFiltros({ categoria: valor ? String(valor) : undefined }),
-});
-function atualizarFiltros(alteracoes, substituir = false) {
-  const query = { ...route.query, ...alteracoes };
-  delete query.pagina;
-  for (const chave of Object.keys(query)) {
-    if (
-      query[chave] === undefined ||
-      query[chave] === null ||
-      query[chave] === ""
-    )
-      delete query[chave];
-  }
-  return substituir ? router.replace({ query }) : router.push({ query });
-}
-const filtroRapido = computed({
-  get: () =>
-    ["promocao", "destaque"].includes(route.query.filtro)
-      ? route.query.filtro
-      : "todos",
-  set: (valor) =>
-    atualizarFiltros({ filtro: valor === "todos" ? undefined : valor }),
-});
-const ordenacao = computed({
-  get: () =>
-    ["nome", "menor-preco", "maior-preco"].includes(route.query.ordenacao)
-      ? route.query.ordenacao
-      : "relevancia",
-  set: (valor) =>
-    atualizarFiltros({ ordenacao: valor === "relevancia" ? undefined : valor }),
-});
-const categoriasTrilha = useTemplateRef("categoriasTrilha");
-const indicadorCategoria = shallowRef({
-  width: "0px",
-  transform: "translateX(0px)",
-});
-let observerCategorias;
-function alinharCategoria(revelar = false) {
-  const trilha = categoriasTrilha.value;
-  const ativo = trilha?.querySelector('[aria-pressed="true"]');
-  indicadorCategoria.value = {
-    width: `${ativo?.offsetWidth || 0}px`,
-    transform: `translateX(${ativo?.offsetLeft || 0}px)`,
-  };
-  if (!ativo || !revelar) return;
-  const inicio = ativo.offsetLeft;
-  const fim = inicio + ativo.offsetWidth;
-  if (
-    inicio < trilha.scrollLeft ||
-    fim > trilha.scrollLeft + trilha.clientWidth
-  ) {
-    trilha.scrollTo({
-      left: inicio - (trilha.clientWidth - ativo.offsetWidth) / 2,
-      behavior: movimentoReduzido() ? "instant" : "smooth",
-    });
-  }
-}
-watch(
-  [categoriaAtiva, categorias],
-  async () => {
-    await nextTick();
-    alinharCategoria(true);
-  },
-  { flush: "post" },
-);
-const detalhesCache = new Map();
-
 const carregando = ref(true);
 const erro = ref(false);
-const modalAberto = ref(false);
-const carregandoDetalhe = ref(false);
-const produtoDetalhado = ref(null);
-const produtoAdicionando = ref(null);
-const adicionandoModal = ref(false);
-const toast = ref("");
-let toastTimer = null;
-let montado = true;
-const contextoAtual = (contexto) => montado && cart.contextoAtual(contexto);
-watch(
-  () => cart.geracao,
-  () => {
-    fecharModal();
-    carregandoDetalhe.value = false;
-    produtoAdicionando.value = null;
-    adicionandoModal.value = false;
-    toast.value = "";
-    detalhesCache.clear();
-    window.clearTimeout(toastTimer);
-  },
-  { flush: "sync" },
-);
+const tituloProdutos = useTemplateRef("tituloProdutos");
 
-const temFiltros = computed(() =>
-  Boolean(
-    busca.value.trim() ||
-    categoriaAtiva.value !== null ||
-    filtroRapido.value !== "todos" ||
-    ordenacao.value !== "relevancia",
-  ),
-);
+const {
+  modalAberto,
+  carregandoDetalhe,
+  produtoDetalhado,
+  produtoAdicionando,
+  adicionandoModal,
+  toast,
+  limparDetalhes,
+  alternarFavorito,
+  abrirProduto,
+  fecharModal,
+  adicionarRapido,
+  adicionarDoModal,
+} = useCompraCatalogo({ duracaoToast: 2400 });
 
-const produtosFiltrados = computed(() => {
-  let lista = [...produtos.value];
-
-  if (categoriaAtiva.value !== null) {
-    lista = lista.filter(
-      (produto) => produto.categoria === categoriaAtiva.value,
-    );
-  }
-
-  if (filtroRapido.value === "promocao") {
-    lista = lista.filter((produto) => produto.em_promocao);
-  } else if (filtroRapido.value === "destaque") {
-    lista = lista.filter((produto) => produto.destaque);
-  }
-
-  const termo = normalizarTexto(busca.value);
-  if (termo) {
-    lista = lista.filter((produto) => {
-      const alvo = normalizarTexto(
-        `${produto.nome || ""} ${produto.categoria_nome || ""}`,
-      );
-      return alvo.includes(termo);
-    });
-  }
-
-  if (ordenacao.value === "nome") {
-    lista.sort((a, b) =>
-      String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR"),
-    );
-  } else if (ordenacao.value === "menor-preco") {
-    lista.sort((a, b) => precoProduto(a) - precoProduto(b));
-  } else if (ordenacao.value === "maior-preco") {
-    lista.sort((a, b) => precoProduto(b) - precoProduto(a));
-  } else {
-    lista.sort((a, b) => {
-      const scoreA =
-        Number(Boolean(a.destaque)) * 2 + Number(Boolean(a.em_promocao));
-      const scoreB =
-        Number(Boolean(b.destaque)) * 2 + Number(Boolean(b.em_promocao));
-      if (scoreA !== scoreB) return scoreB - scoreA;
-      return String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR");
-    });
-  }
-
-  return lista;
+const {
+  busca,
+  categoriaAtiva,
+  filtroRapido,
+  ordenacao,
+  temFiltros,
+  produtosFiltrados,
+  totalPaginas,
+  paginaAtual,
+  produtosPagina,
+  resumoPagina,
+  mudarPagina,
+  tituloResultados,
+  textoContagem,
+  limparFiltros,
+} = useFiltrosCardapio({
+  produtos,
+  categorias,
+  carregando,
+  erro,
+  tituloProdutos,
 });
 
-function paginaDaUrl(valor) {
-  if (typeof valor !== "string" || !/^[1-9]\d*$/.test(valor)) return 1;
-  const numero = Number(valor);
-  return Number.isSafeInteger(numero) ? numero : 1;
-}
-const totalPaginas = computed(() =>
-  Math.max(1, Math.ceil(produtosFiltrados.value.length / PRODUTOS_POR_PAGINA)),
-);
-const paginaAtual = computed(() =>
-  Math.min(paginaDaUrl(route.query.pagina), totalPaginas.value),
-);
-const inicioPagina = computed(
-  () => (paginaAtual.value - 1) * PRODUTOS_POR_PAGINA,
-);
-const produtosPagina = computed(() =>
-  produtosFiltrados.value.slice(
-    inicioPagina.value,
-    inicioPagina.value + PRODUTOS_POR_PAGINA,
-  ),
-);
-const resumoPagina = computed(
-  () =>
-    `${inicioPagina.value + 1}–${Math.min(inicioPagina.value + PRODUTOS_POR_PAGINA, produtosFiltrados.value.length)} de ${produtosFiltrados.value.length}`,
-);
-
-watch(
-  [() => route.query.pagina, totalPaginas, carregando, erro],
-  () => {
-    if (carregando.value || erro.value || route.query.pagina === undefined)
-      return;
-    const canonica =
-      paginaAtual.value > 1 ? String(paginaAtual.value) : undefined;
-    if (route.query.pagina === canonica) return;
-    const query = { ...route.query };
-    if (canonica) query.pagina = canonica;
-    else delete query.pagina;
-    router.replace({ query });
-  },
-  { immediate: true },
-);
-
-async function mudarPagina(numero) {
-  if (numero < 1 || numero > totalPaginas.value || numero === paginaAtual.value)
-    return;
-  tituloProdutos.value?.scrollIntoView({ block: "start", behavior: "instant" });
-  const query = { ...route.query };
-  if (numero > 1) query.pagina = String(numero);
-  else delete query.pagina;
-  await router.push({ query });
-  await nextTick();
-  tituloProdutos.value?.focus({ preventScroll: true });
-}
-
-const tituloResultados = computed(() => {
-  const categoria = categorias.value.find(
-    (item) => item.id === categoriaAtiva.value,
-  );
-
-  if (busca.value.trim()) return `Resultados para “${busca.value.trim()}”`;
-  if (filtroRapido.value === "promocao") return "Produtos em promoção";
-  if (filtroRapido.value === "destaque") return "Destaques da Pires";
-  if (categoria) return categoria.nome;
-  return "Todos os produtos";
-});
-
-const textoContagem = computed(() => {
-  const total = produtosFiltrados.value.length;
-  if (!total) return "";
-  return `${total} ${total === 1 ? "produto" : "produtos"}`;
-});
-
-function normalizarTexto(valor) {
-  return String(valor || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLocaleLowerCase("pt-BR")
-    .trim();
-}
-
-function precoProduto(produto) {
-  return Number(produto?.preco_atual ?? produto?.preco ?? 0);
-}
-
-async function alternarFavorito(produto) {
-  if (!produto?.id) return;
-
-  const estavaFavoritado = favorites.tem(produto.id);
-
-  try {
-    await favorites.alternar(produto);
-    mostrarToast(
-      estavaFavoritado
-        ? `${produto.nome} removido dos favoritos.`
-        : `${produto.nome} adicionado aos favoritos.`,
-    );
-  } catch {
-    mostrarToast("Não foi possível atualizar seus favoritos.");
-  }
-}
+const categoriasTrilha = useTemplateRef("categoriasTrilha");
+const { indicadorCategoria } = useTrilhaCategorias(categoriasTrilha, [
+  categoriaAtiva,
+  categorias,
+]);
 
 let carregouUmaVez = false;
 
@@ -540,7 +311,7 @@ async function carregarDados() {
 
     categorias.value = categoriasData;
     produtos.value = produtosData;
-    detalhesCache.clear();
+    limparDetalhes();
     carregouUmaVez = true;
     erro.value = false;
   } catch (error) {
@@ -559,130 +330,8 @@ function tentarNovamente() {
   atualizarAgora();
 }
 
-async function obterDetalhes(produto) {
-  if (!produto?.id) return null;
-  if (detalhesCache.has(produto.id)) return detalhesCache.get(produto.id);
-
-  const contexto = cart.capturarContexto();
-  const detalhe = await catalogService.obterProduto(produto.id);
-  if (contextoAtual(contexto)) detalhesCache.set(produto.id, detalhe);
-  return detalhe;
-}
-
-async function abrirProduto(produto) {
-  const contexto = cart.capturarContexto();
-  toast.value = "";
-  modalAberto.value = true;
-  carregandoDetalhe.value = true;
-  produtoDetalhado.value = null;
-
-  try {
-    const detalhe = await obterDetalhes(produto);
-    if (contextoAtual(contexto)) produtoDetalhado.value = detalhe;
-  } catch {
-    if (contextoAtual(contexto)) produtoDetalhado.value = null;
-  } finally {
-    if (contextoAtual(contexto)) carregandoDetalhe.value = false;
-  }
-}
-
-function fecharModal() {
-  modalAberto.value = false;
-  produtoDetalhado.value = null;
-}
-
-async function adicionarRapido(produto) {
-  if (produtoAdicionando.value) return;
-  const contexto = cart.capturarContexto();
-  if (!contextoAtual(contexto)) return;
-  produtoAdicionando.value = produto.id;
-
-  try {
-    const detalhe = await obterDetalhes(produto);
-    if (!contextoAtual(contexto)) return;
-    const estoque = Number(detalhe?.estoque ?? 0);
-
-    if (estoque <= 0) {
-      mostrarToast(`${produto.nome} está sem estoque no momento.`);
-      return;
-    }
-
-    const itemAtual = cart.itens.find((item) => item.produto.id === produto.id);
-    if ((itemAtual?.quantidade || 0) >= estoque) {
-      mostrarToast(
-        `Você já adicionou todo o estoque disponível de ${produto.nome}.`,
-      );
-      return;
-    }
-
-    if (!cart.adicionar({ ...produto, ...detalhe }, 1, contexto)) return;
-    mostrarToast(`${produto.nome} adicionado ao carrinho.`);
-  } catch {
-    if (contextoAtual(contexto))
-      mostrarToast("Não foi possível verificar a disponibilidade do produto.");
-  } finally {
-    if (contextoAtual(contexto)) produtoAdicionando.value = null;
-  }
-}
-
-async function adicionarDoModal({ produto, quantidade }) {
-  if (!produto || adicionandoModal.value) return;
-  const contexto = cart.capturarContexto();
-  if (!contextoAtual(contexto)) return;
-  adicionandoModal.value = true;
-
-  try {
-    const estoque = Number(produto.estoque || 0);
-    const itemAtual = cart.itens.find((item) => item.produto.id === produto.id);
-    const novaQuantidade = (itemAtual?.quantidade || 0) + quantidade;
-
-    if (novaQuantidade > estoque) {
-      mostrarToast(
-        `Há somente ${estoque} ${estoque === 1 ? "unidade disponível" : "unidades disponíveis"}.`,
-      );
-      return;
-    }
-
-    if (!cart.adicionar(produto, quantidade, contexto)) return;
-    mostrarToast(`${produto.nome} adicionado ao carrinho.`);
-    fecharModal();
-  } finally {
-    adicionandoModal.value = false;
-  }
-}
-
-function limparFiltros() {
-  atualizarFiltros(
-    {
-      busca: undefined,
-      categoria: undefined,
-      filtro: undefined,
-      ordenacao: undefined,
-    },
-    true,
-  );
-}
-
-function mostrarToast(mensagem) {
-  toast.value = mensagem;
-  window.clearTimeout(toastTimer);
-  toastTimer = window.setTimeout(() => {
-    toast.value = "";
-  }, 2400);
-}
-
 onMounted(() => {
   favorites.carregar().catch(() => {});
-  observerCategorias = new ResizeObserver(() => alinharCategoria());
-  observerCategorias.observe(categoriasTrilha.value);
-  document.fonts.ready.then(() => alinharCategoria());
-  alinharCategoria();
-});
-
-onBeforeUnmount(() => {
-  montado = false;
-  window.clearTimeout(toastTimer);
-  observerCategorias?.disconnect();
 });
 </script>
 <style scoped src="./CardapioView.css"></style>

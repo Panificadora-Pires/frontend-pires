@@ -11,4 +11,10 @@ export function executarScript(caminho, dependencias, expor) {
   const resultado = escopo.run(() => new Function(...Object.keys(contexto), `${script}\nreturn { ${expor.join(',')} };`)(...Object.values(contexto)));
   return { ...resultado, desmontar: () => { desmontar.forEach(fn => fn()); escopo.stop(); } };
 }
+export function carregarComposable(caminho, nome, dependencias) {
+  const fonte = readFileSync(new URL(`../../src/${caminho}`, import.meta.url), 'utf8')
+    .replace(/^import\s[\s\S]*?;\s*/gm, '').replace(/^export\s+/gm, '');
+  const contexto = { ref, computed, watch, nextTick, shallowRef, onMounted() {}, onBeforeUnmount() {}, ...dependencias };
+  return new Function(...Object.keys(contexto), `${fonte}\nreturn ${nome};`)(...Object.values(contexto));
+}
 export const adiar = () => { let resolve, reject; const promise = new Promise((a,b) => { resolve=a; reject=b; }); return { promise, resolve, reject }; };
