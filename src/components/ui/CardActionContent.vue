@@ -6,7 +6,9 @@ let observer;
 
 onMounted(() => {
   const element = fill.value;
-  const action = element.closest(".home .pp-card-action, .pp-card-action[data-card-action-radius]");
+  const action = element.closest(
+    ".home .pp-card-action, .pp-card-action[data-card-action-radius]",
+  );
   if (!action) return;
 
   function ajustarRaio() {
@@ -14,8 +16,13 @@ onMounted(() => {
     const width = parseFloat(style.width);
     const height = parseFloat(style.height);
     const radius = style.borderTopLeftRadius;
-    const rounded = Math.min(width / 2, height / 2, radius.includes("%")
-      ? parseFloat(radius) * Math.min(width, height) / 100 : parseFloat(radius));
+    const rounded = Math.min(
+      width / 2,
+      height / 2,
+      radius.includes("%")
+        ? (parseFloat(radius) * Math.min(width, height)) / 100
+        : parseFloat(radius),
+    );
     const reach = Math.hypot(width / 2 - rounded, height - rounded) + rounded;
     action.style.setProperty("--pp-card-action-radius", `${reach}px`);
   }

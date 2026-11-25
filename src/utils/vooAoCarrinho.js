@@ -1,4 +1,3 @@
-
 const VALIDADE_ORIGEM_MS = 1500;
 const DURACAO_MS = 650;
 const ALTURA_ARCO_PX = 120;
@@ -7,7 +6,9 @@ const TAMANHO_PX = 64;
 let origem = null;
 
 export function movimentoReduzido() {
-  return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+  return (
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false
+  );
 }
 
 export function registrarOrigemVoo(elemento) {
@@ -18,14 +19,20 @@ export function registrarOrigemVoo(elemento) {
 function consumirOrigem() {
   const atual = origem;
   origem = null;
-  if (!atual || Date.now() - atual.registradaEm > VALIDADE_ORIGEM_MS) return null;
+  if (!atual || Date.now() - atual.registradaEm > VALIDADE_ORIGEM_MS)
+    return null;
   if (!atual.elemento.isConnected) return null;
   return atual.elemento;
 }
 
 export function animarVooAoCarrinho(destino) {
   const elementoOrigem = consumirOrigem();
-  if (!elementoOrigem || !destino || movimentoReduzido() || !destino.isConnected) {
+  if (
+    !elementoOrigem ||
+    !destino ||
+    movimentoReduzido() ||
+    !destino.isConnected
+  ) {
     return Promise.resolve();
   }
 

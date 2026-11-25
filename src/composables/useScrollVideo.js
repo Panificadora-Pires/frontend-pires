@@ -30,14 +30,30 @@ export function useScrollVideo(container, panel, video) {
     const bottom = bottomNav?.getBoundingClientRect().height || 0;
     const available = window.innerHeight - top - bottom - 16;
     panelHeight.value = surface.offsetHeight;
-    const valid = element && !failed && !element.error && element.readyState >= 1 &&
-      Number.isFinite(element.duration) && element.duration > 0 &&
-      element.videoWidth > 0 && element.videoHeight > 0;
-    active.value = Boolean(valid && canLoad.value && surface.offsetHeight <= available);
-    distance.value = active.value ? Math.max(window.innerHeight * 1.25, 720) : 0;
-    if (!active.value) { progress.value = 0; return; }
+    const valid =
+      element &&
+      !failed &&
+      !element.error &&
+      element.readyState >= 1 &&
+      Number.isFinite(element.duration) &&
+      element.duration > 0 &&
+      element.videoWidth > 0 &&
+      element.videoHeight > 0;
+    active.value = Boolean(
+      valid && canLoad.value && surface.offsetHeight <= available,
+    );
+    distance.value = active.value
+      ? Math.max(window.innerHeight * 1.25, 720)
+      : 0;
+    if (!active.value) {
+      progress.value = 0;
+      return;
+    }
 
-    progress.value = Math.min(1, Math.max(0, (top - section.getBoundingClientRect().top) / distance.value));
+    progress.value = Math.min(
+      1,
+      Math.max(0, (top - section.getBoundingClientRect().top) / distance.value),
+    );
     const target = progress.value * Math.max(0, element.duration - 1 / 24);
     if (!element.seeking && Math.abs(element.currentTime - target) > 1 / 96) {
       try {
@@ -49,20 +65,36 @@ export function useScrollVideo(container, panel, video) {
     }
   }
 
-  watch(video, (element) => {
-    detachVideo();
-    failed = false;
-    if (!element) { schedule(); return; }
-    const onError = () => { failed = true; schedule(); };
-    const events = ["loadedmetadata", "durationchange", "loadeddata", "seeked"];
-    for (const event of events) element.addEventListener(event, schedule);
-    element.addEventListener("error", onError);
-    detachVideo = () => {
-      for (const event of events) element.removeEventListener(event, schedule);
-      element.removeEventListener("error", onError);
-    };
-    schedule();
-  }, { flush: "post" });
+  watch(
+    video,
+    (element) => {
+      detachVideo();
+      failed = false;
+      if (!element) {
+        schedule();
+        return;
+      }
+      const onError = () => {
+        failed = true;
+        schedule();
+      };
+      const events = [
+        "loadedmetadata",
+        "durationchange",
+        "loadeddata",
+        "seeked",
+      ];
+      for (const event of events) element.addEventListener(event, schedule);
+      element.addEventListener("error", onError);
+      detachVideo = () => {
+        for (const event of events)
+          element.removeEventListener(event, schedule);
+        element.removeEventListener("error", onError);
+      };
+      schedule();
+    },
+    { flush: "post" },
+  );
 
   onMounted(() => {
     reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");

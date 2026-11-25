@@ -1,21 +1,30 @@
 <template>
   <div class="profile-page">
     <header class="profile-page__header">
-      <h1>
-        Meu perfil
-      </h1>
-      <p>
-        Seus dados, sua conta. Tudo em um só lugar.
-      </p>
+      <h1>Meu perfil</h1>
+      <p>Seus dados, sua conta. Tudo em um só lugar.</p>
     </header>
-    <div v-if="!auth.usuario" class="profile-load-state" :aria-busy="carregandoPerfil">
-      <LoaderCircle v-if="carregandoPerfil" :size="28" class="profile-spin" aria-hidden="true" />
+    <div
+      v-if="!auth.usuario"
+      class="profile-load-state"
+      :aria-busy="carregandoPerfil"
+    >
+      <LoaderCircle
+        v-if="carregandoPerfil"
+        :size="28"
+        class="profile-spin"
+        aria-hidden="true"
+      />
       <CircleAlert v-else :size="28" aria-hidden="true" />
       <h2>
-        {{ carregandoPerfil ? 'Carregando seu perfil' : 'Não foi possível carregar seu perfil' }}
+        {{
+          carregandoPerfil
+            ? "Carregando seu perfil"
+            : "Não foi possível carregar seu perfil"
+        }}
       </h2>
       <p role="status">
-        {{ erroCarregamento || 'Aguarde enquanto buscamos seus dados.' }}
+        {{ erroCarregamento || "Aguarde enquanto buscamos seus dados." }}
       </p>
       <button
         v-if="!carregandoPerfil"
@@ -53,15 +62,22 @@
           </div>
           <div class="profile-identity__content">
             <h2 id="perfil-identidade">
-              {{ auth.usuario.name || 'Nome não informado' }}
+              {{ auth.usuario.name || "Nome não informado" }}
             </h2>
             <p class="profile-identity__email">
-              {{ auth.usuario.email || 'E-mail não informado' }}
+              {{ auth.usuario.email || "E-mail não informado" }}
             </p>
             <p class="profile-identity__verification">
               <MailCheck :size="16" aria-hidden="true" />
               <span>
-                E-mail: {{ estadoBooleano(auth.usuario.email_verified, 'Verificado', 'Não verificado') }}
+                E-mail:
+                {{
+                  estadoBooleano(
+                    auth.usuario.email_verified,
+                    "Verificado",
+                    "Não verificado",
+                  )
+                }}
               </span>
             </p>
             <div class="profile-avatar-actions">
@@ -71,11 +87,15 @@
                 class="profile-text-btn profile-text-btn--upload"
                 :disabled="salvando"
                 :aria-invalid="Boolean(erros.avatar)"
-                :aria-describedby="erros.avatar ? 'profile-avatar-help profile-avatar-error' : 'profile-avatar-help'"
+                :aria-describedby="
+                  erros.avatar
+                    ? 'profile-avatar-help profile-avatar-error'
+                    : 'profile-avatar-help'
+                "
                 @click="abrirSeletorFoto"
               >
                 <Upload :size="17" aria-hidden="true" />
-                {{ avatarExibido ? 'Trocar foto' : 'Adicionar foto' }}
+                {{ avatarExibido ? "Trocar foto" : "Adicionar foto" }}
               </button>
               <button
                 v-if="avatarExibido || (!removerAvatar && auth.usuario.avatar)"
@@ -91,10 +111,22 @@
             <p id="profile-avatar-help" class="profile-hint">
               JPG, PNG ou WebP, com até 3 MB.
             </p>
-            <p v-if="avatarPreview || removerAvatar" class="profile-avatar-pending" role="status">
-              {{ removerAvatar ? 'Foto marcada para remoção. Salve para confirmar.' : 'Prévia da nova foto. Salve para confirmar.' }}
+            <p
+              v-if="avatarPreview || removerAvatar"
+              class="profile-avatar-pending"
+              role="status"
+            >
+              {{
+                removerAvatar
+                  ? "Foto marcada para remoção. Salve para confirmar."
+                  : "Prévia da nova foto. Salve para confirmar."
+              }}
             </p>
-            <p v-if="erros.avatar" id="profile-avatar-error" class="profile-field-error">
+            <p
+              v-if="erros.avatar"
+              id="profile-avatar-error"
+              class="profile-field-error"
+            >
               {{ erros.avatar }}
             </p>
           </div>
@@ -112,9 +144,7 @@
         </section>
         <section class="profile-details" aria-labelledby="perfil-dados">
           <div class="profile-section-heading">
-            <h2 id="perfil-dados">
-              Dados pessoais
-            </h2>
+            <h2 id="perfil-dados">Dados pessoais</h2>
             <span v-if="temAlteracoes" class="profile-unsaved">
               <CircleDot :size="14" aria-hidden="true" />
               Alterações não salvas
@@ -123,11 +153,14 @@
           <p class="profile-section-intro">
             Mantenha seu nome e telefone atualizados.
           </p>
-          <form class="profile-form" novalidate :aria-busy="salvando" @submit.prevent="salvarPerfil">
+          <form
+            class="profile-form"
+            novalidate
+            :aria-busy="salvando"
+            @submit.prevent="salvarPerfil"
+          >
             <div class="profile-field">
-              <label for="profile-name">
-                Nome completo
-              </label>
+              <label for="profile-name"> Nome completo </label>
               <input
                 id="profile-name"
                 v-model="form.name"
@@ -137,17 +170,21 @@
                 required
                 :disabled="salvando"
                 :aria-invalid="Boolean(erros.name)"
-                :aria-describedby="erros.name ? 'profile-name-error' : undefined"
+                :aria-describedby="
+                  erros.name ? 'profile-name-error' : undefined
+                "
                 @input="limparErro('name')"
               />
-              <p v-if="erros.name" id="profile-name-error" class="profile-field-error">
+              <p
+                v-if="erros.name"
+                id="profile-name-error"
+                class="profile-field-error"
+              >
                 {{ erros.name }}
               </p>
             </div>
             <div class="profile-field">
-              <label for="profile-phone">
-                Telefone
-              </label>
+              <label for="profile-phone"> Telefone </label>
               <input
                 id="profile-phone"
                 :value="form.phone"
@@ -158,20 +195,26 @@
                 maxlength="15"
                 :disabled="salvando"
                 :aria-invalid="Boolean(erros.phone)"
-                :aria-describedby="erros.phone ? 'profile-phone-help profile-phone-error' : 'profile-phone-help'"
+                :aria-describedby="
+                  erros.phone
+                    ? 'profile-phone-help profile-phone-error'
+                    : 'profile-phone-help'
+                "
                 @input="atualizarTelefone"
               />
               <p id="profile-phone-help" class="profile-hint">
                 Informe o DDD e o número.
               </p>
-              <p v-if="erros.phone" id="profile-phone-error" class="profile-field-error">
+              <p
+                v-if="erros.phone"
+                id="profile-phone-error"
+                class="profile-field-error"
+              >
                 {{ erros.phone }}
               </p>
             </div>
             <div class="profile-field profile-field--wide">
-              <label for="profile-email">
-                E-mail
-              </label>
+              <label for="profile-email"> E-mail </label>
               <div class="profile-readonly">
                 <input
                   id="profile-email"
@@ -183,7 +226,8 @@
                 <LockKeyhole :size="17" aria-hidden="true" />
               </div>
               <p id="profile-email-help" class="profile-hint">
-                Este é o e-mail de acesso à sua conta. Ele não pode ser alterado nesta tela.
+                Este é o e-mail de acesso à sua conta. Ele não pode ser alterado
+                nesta tela.
               </p>
             </div>
             <div class="profile-form__actions">
@@ -192,9 +236,14 @@
                 class="profile-btn profile-btn--primary"
                 :disabled="salvando || !temAlteracoes"
               >
-                <LoaderCircle v-if="salvando" :size="18" class="profile-spin" aria-hidden="true" />
+                <LoaderCircle
+                  v-if="salvando"
+                  :size="18"
+                  class="profile-spin"
+                  aria-hidden="true"
+                />
                 <Save v-else :size="18" aria-hidden="true" />
-                {{ salvando ? 'Salvando...' : 'Salvar alterações' }}
+                {{ salvando ? "Salvando..." : "Salvar alterações" }}
               </button>
               <button
                 type="button"
@@ -205,7 +254,11 @@
                 Cancelar
               </button>
             </div>
-            <div class="profile-feedback-region" aria-live="polite" aria-atomic="true">
+            <div
+              class="profile-feedback-region"
+              aria-live="polite"
+              aria-atomic="true"
+            >
               <motion.div
                 v-if="mensagem"
                 :key="mensagem.texto"
@@ -215,7 +268,11 @@
                 :animate="{ opacity: 1 }"
                 :transition="{ duration: reduzir ? 0 : 0.18 }"
               >
-                <CheckCircle2 v-if="mensagem.tipo === 'success'" :size="20" aria-hidden="true" />
+                <CheckCircle2
+                  v-if="mensagem.tipo === 'success'"
+                  :size="20"
+                  aria-hidden="true"
+                />
                 <CircleAlert v-else :size="20" aria-hidden="true" />
                 <p>
                   {{ mensagem.texto }}
@@ -243,8 +300,16 @@
                 <MailCheck :size="18" aria-hidden="true" />
                 E-mail
               </dt>
-              <dd :class="{ 'is-positive': auth.usuario.email_verified === true }">
-                {{ estadoBooleano(auth.usuario.email_verified, 'Verificado', 'Não verificado') }}
+              <dd
+                :class="{ 'is-positive': auth.usuario.email_verified === true }"
+              >
+                {{
+                  estadoBooleano(
+                    auth.usuario.email_verified,
+                    "Verificado",
+                    "Não verificado",
+                  )
+                }}
               </dd>
             </div>
             <div>
@@ -253,7 +318,13 @@
                 Conta Google
               </dt>
               <dd>
-                {{ estadoBooleano(auth.usuario.google_connected, 'Conectada', 'Não vinculada') }}
+                {{
+                  estadoBooleano(
+                    auth.usuario.google_connected,
+                    "Conectada",
+                    "Não vinculada",
+                  )
+                }}
               </dd>
             </div>
             <div>
@@ -262,7 +333,13 @@
                 Senha
               </dt>
               <dd>
-                {{ estadoBooleano(auth.usuario.has_usable_password, 'Configurada', 'Não definida') }}
+                {{
+                  estadoBooleano(
+                    auth.usuario.has_usable_password,
+                    "Configurada",
+                    "Não definida",
+                  )
+                }}
               </dd>
             </div>
           </dl>
@@ -274,25 +351,25 @@
           </div>
           <dl class="profile-summary-list">
             <div>
-              <dt>
-                Tipo de conta
-              </dt>
+              <dt>Tipo de conta</dt>
               <dd>
-                {{ estadoBooleano(auth.usuario.is_staff, 'Administração', 'Aluno') }}
+                {{
+                  estadoBooleano(
+                    auth.usuario.is_staff,
+                    "Administração",
+                    "Aluno",
+                  )
+                }}
               </dd>
             </div>
             <div>
-              <dt>
-                Último acesso
-              </dt>
+              <dt>Último acesso</dt>
               <dd>
                 {{ ultimoAcesso }}
               </dd>
             </div>
             <div>
-              <dt>
-                Formas de acesso
-              </dt>
+              <dt>Formas de acesso</dt>
               <dd>
                 {{ metodosLogin }}
               </dd>
@@ -305,7 +382,15 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from "vue";
 import { motion, useReducedMotion } from "motion-v";
 import {
   CheckCircle2,
@@ -352,7 +437,7 @@ const iniciais = computed(() =>
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
-    .map(parte => parte[0]?.toUpperCase())
+    .map((parte) => parte[0]?.toUpperCase())
     .join(""),
 );
 const avatarExibido = computed(() => {
@@ -360,12 +445,14 @@ const avatarExibido = computed(() => {
   if (avatarPreview.value) return avatarPreview.value;
   return removerAvatar.value ? "" : auth.usuario?.avatar || "";
 });
-const temAlteracoes = computed(() => Boolean(confirmado.value) && (
-  form.name.trim() !== String(confirmado.value.name || "").trim() ||
-  form.phone !== mascararTelefone(confirmado.value.phone) ||
-  Boolean(avatarFile.value) ||
-  removerAvatar.value
-));
+const temAlteracoes = computed(
+  () =>
+    Boolean(confirmado.value) &&
+    (form.name.trim() !== String(confirmado.value.name || "").trim() ||
+      form.phone !== mascararTelefone(confirmado.value.phone) ||
+      Boolean(avatarFile.value) ||
+      removerAvatar.value),
+);
 const ultimoAcesso = computed(() => {
   const valor = auth.usuario?.last_login;
   if (!valor) return "Não disponível";
@@ -378,7 +465,8 @@ const ultimoAcesso = computed(() => {
 });
 const metodosLogin = computed(() => {
   const metodos = [];
-  if (auth.usuario?.has_usable_password === true) metodos.push("E-mail e senha");
+  if (auth.usuario?.has_usable_password === true)
+    metodos.push("E-mail e senha");
   if (auth.usuario?.google_connected === true) metodos.push("Google");
   return metodos.join(" + ") || "Não disponível";
 });
@@ -386,7 +474,8 @@ const metodosLogin = computed(() => {
 watch(
   () => auth.usuario,
   (usuario) => {
-    const novaSessao = versaoFormulario !== getSessionVersion() ||
+    const novaSessao =
+      versaoFormulario !== getSessionVersion() ||
       confirmado.value?.id !== usuario?.id;
     const preservarRascunho = !novaSessao && temAlteracoes.value;
     const avatarAnterior = confirmado.value?.avatar;
@@ -408,10 +497,12 @@ function estadoBooleano(valor, sim, nao) {
 }
 
 function contextoAtual(contexto) {
-  return ativo &&
+  return (
+    ativo &&
     contexto.versao === getSessionVersion() &&
     contexto.id === auth.usuario?.id &&
-    contexto.operacao === operacao;
+    contexto.operacao === operacao
+  );
 }
 
 function restaurarFormulario() {
@@ -435,7 +526,10 @@ function selecionarFoto(event) {
   limparErro("avatar");
   const arquivo = event.target.files?.[0];
   if (!arquivo) return;
-  if (!ALLOWED_AVATAR_TYPES.has(arquivo.type) || arquivo.size > MAX_AVATAR_BYTES) {
+  if (
+    !ALLOWED_AVATAR_TYPES.has(arquivo.type) ||
+    arquivo.size > MAX_AVATAR_BYTES
+  ) {
     erros.avatar = !ALLOWED_AVATAR_TYPES.has(arquivo.type)
       ? "Escolha uma imagem JPG, PNG ou WebP."
       : "A foto de perfil deve ter no máximo 3 MB.";
@@ -475,7 +569,8 @@ function mascararTelefone(valor) {
     .slice(0, 11);
   if (!digitos) return "";
   if (digitos.length <= 2) return `(${digitos}`;
-  if (digitos.length <= 6) return `(${digitos.slice(0, 2)}) ${digitos.slice(2)}`;
+  if (digitos.length <= 6)
+    return `(${digitos.slice(0, 2)}) ${digitos.slice(2)}`;
   const corte = digitos.length <= 10 ? 6 : 7;
   return `(${digitos.slice(0, 2)}) ${digitos.slice(2, corte)}-${digitos.slice(corte)}`;
 }
@@ -511,7 +606,9 @@ async function salvarPerfil() {
       });
       mensagem.value = {
         tipo: "error",
-        texto: resultado?.erro || "Não foi possível salvar seu perfil. Tente novamente.",
+        texto:
+          resultado?.erro ||
+          "Não foi possível salvar seu perfil. Tente novamente.",
       };
       salvando.value = false;
       await focarPrimeiroErro(contexto);
@@ -520,12 +617,16 @@ async function salvarPerfil() {
     confirmado.value = { ...auth.usuario };
     salvando.value = false;
     restaurarFormulario();
-    mensagem.value = { tipo: "success", texto: "Perfil atualizado com sucesso." };
+    mensagem.value = {
+      tipo: "success",
+      texto: "Perfil atualizado com sucesso.",
+    };
   } catch {
     if (contextoAtual(contexto)) {
       mensagem.value = {
         tipo: "error",
-        texto: "Não foi possível salvar seu perfil. Verifique sua conexão e tente novamente.",
+        texto:
+          "Não foi possível salvar seu perfil. Verifique sua conexão e tente novamente.",
       };
     }
   } finally {
@@ -536,11 +637,13 @@ async function salvarPerfil() {
 async function focarPrimeiroErro(contexto) {
   await nextTick();
   if (!ativo || (contexto && !contextoAtual(contexto))) return;
-  const campo = ["name", "phone", "avatar"].find(chave => erros[chave]);
+  const campo = ["name", "phone", "avatar"].find((chave) => erros[chave]);
   if (campo) {
-    document.getElementById(
-      campo === "avatar" ? "profile-avatar-trigger" : `profile-${campo}`,
-    )?.focus();
+    document
+      .getElementById(
+        campo === "avatar" ? "profile-avatar-trigger" : `profile-${campo}`,
+      )
+      ?.focus();
   }
 }
 
@@ -553,7 +656,8 @@ async function carregarPerfil() {
   try {
     const usuario = await auth.buscarUsuarioLogado();
     if (ativo && versao === getSessionVersion() && !usuario && !auth.usuario) {
-      erroCarregamento.value = "Seus dados não estão disponíveis. Tente novamente.";
+      erroCarregamento.value =
+        "Seus dados não estão disponíveis. Tente novamente.";
     }
   } catch {
     if (ativo && versao === getSessionVersion()) {
@@ -622,7 +726,7 @@ onBeforeUnmount(() => {
   font-size: clamp(50px, 7vw, 92px);
   font-weight: 400;
   line-height: 1.08;
-  letter-spacing: -.025em;
+  letter-spacing: -0.025em;
 }
 
 .profile-page__header p {
@@ -695,7 +799,7 @@ onBeforeUnmount(() => {
   color: var(--pp-creme);
   font-size: clamp(26px, 2.5vw, 34px);
   font-weight: 700;
-  letter-spacing: -.025em;
+  letter-spacing: -0.025em;
   line-height: 1.2;
   overflow-wrap: anywhere;
 }
@@ -746,7 +850,10 @@ onBeforeUnmount(() => {
   text-decoration: underline;
   text-underline-offset: 4px;
   cursor: pointer;
-  transition: background-color 150ms, color 150ms, transform 150ms;
+  transition:
+    background-color 150ms,
+    color 150ms,
+    transform 150ms;
 }
 
 .profile-text-btn:hover:not(:disabled) {
@@ -807,7 +914,7 @@ onBeforeUnmount(() => {
   font-size: 20px;
   font-weight: 600;
   line-height: 1.4;
-  letter-spacing: -.02em;
+  letter-spacing: -0.02em;
 }
 
 .profile-section-intro {
@@ -925,7 +1032,10 @@ onBeforeUnmount(() => {
   line-height: 1.4;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 150ms, color 150ms, transform 150ms;
+  transition:
+    background-color 150ms,
+    color 150ms,
+    transform 150ms;
 }
 
 .profile-btn--primary {
@@ -948,16 +1058,16 @@ onBeforeUnmount(() => {
 }
 
 .profile-page button:active:not(:disabled) {
-  transform: scale(.98);
+  transform: scale(0.98);
 }
 
 .profile-page button:disabled {
-  opacity: .55;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
 .profile-field input:disabled {
-  opacity: .7;
+  opacity: 0.7;
   cursor: wait;
 }
 
@@ -1081,12 +1191,18 @@ onBeforeUnmount(() => {
 }
 
 @keyframes profile-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes profile-preview {
-  from { opacity: .5; }
-  to { opacity: 1; }
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @media (max-width: 999px) {

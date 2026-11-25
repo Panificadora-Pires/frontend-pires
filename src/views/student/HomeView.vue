@@ -1,7 +1,9 @@
 <template>
   <div class="home">
     <header class="home__intro">
-      <h1 id="inicio-home" tabindex="-1">{{ saudacao }}, {{ primeiroNome }}!</h1>
+      <h1 id="inicio-home" tabindex="-1">
+        {{ saudacao }}, {{ primeiroNome }}!
+      </h1>
       <p>Peça agora e retire no balcão antes do sinal tocar.</p>
     </header>
 
@@ -28,7 +30,12 @@
         class="home__grade"
         aria-label="Carregando produtos"
       >
-        <div v-for="indice in 4" :key="indice" class="home__skeleton" aria-hidden="true">
+        <div
+          v-for="indice in 4"
+          :key="indice"
+          class="home__skeleton"
+          aria-hidden="true"
+        >
           <span class="home__skeleton-img" />
           <span />
           <span class="home__skeleton-curto" />
@@ -39,7 +46,11 @@
         <CircleAlert :size="26" aria-hidden="true" />
         <strong>Não conseguimos carregar os produtos.</strong>
         <p>Verifique sua conexão e tente novamente.</p>
-        <button type="button" class="home__botao-secundario" @click="carregarProdutos">
+        <button
+          type="button"
+          class="home__botao-secundario"
+          @click="carregarProdutos"
+        >
           Tentar novamente
         </button>
       </div>
@@ -47,7 +58,10 @@
       <div v-else-if="!destaques.length" class="home__estado">
         <ShoppingBag :size="26" aria-hidden="true" />
         <strong>O cardápio de hoje ainda não foi publicado.</strong>
-        <p>Volte daqui a pouco: os produtos aparecem aqui assim que a padaria liberar.</p>
+        <p>
+          Volte daqui a pouco: os produtos aparecem aqui assim que a padaria
+          liberar.
+        </p>
       </div>
 
       <div v-else class="home__grade">
@@ -91,9 +105,13 @@
       :loading="carregandoDetalhe"
       :adding="adicionandoModal"
       :feedback="toast"
-      :favorito="Boolean(produtoDetalhado && favorites.tem(produtoDetalhado.id))"
+      :favorito="
+        Boolean(produtoDetalhado && favorites.tem(produtoDetalhado.id))
+      "
       :favoritando="
-        Boolean(produtoDetalhado && favorites.estaProcessando(produtoDetalhado.id))
+        Boolean(
+          produtoDetalhado && favorites.estaProcessando(produtoDetalhado.id),
+        )
       "
       @close="fecharModal"
       @favorite="alternarFavorito"
@@ -140,9 +158,30 @@ const MAXIMO_PROMOCOES_NO_BANNER = 3;
 const MAXIMO_DESTAQUES_NO_BANNER = 2;
 
 const fotosBalcao = [
-  { id: "preparo", src: preparoBalcao, alt: "Coxinhas douradas em uma bandeja sobre o balcão.", legenda: "Coxinhas na bandeja", width: 1200, height: 896 },
-  { id: "vitrine", src: vitrineBalcao, alt: "Brigadeiros e pães de queijo em uma vitrine de vidro.", legenda: "Brigadeiros e pães de queijo", width: 1200, height: 896 },
-  { id: "retirada", src: retiradaBalcao, alt: "Coxinha no prato ao lado de um copo de suco de laranja.", legenda: "Coxinha com suco de laranja", width: 1200, height: 896 },
+  {
+    id: "preparo",
+    src: preparoBalcao,
+    alt: "Coxinhas douradas em uma bandeja sobre o balcão.",
+    legenda: "Coxinhas na bandeja",
+    width: 1200,
+    height: 896,
+  },
+  {
+    id: "vitrine",
+    src: vitrineBalcao,
+    alt: "Brigadeiros e pães de queijo em uma vitrine de vidro.",
+    legenda: "Brigadeiros e pães de queijo",
+    width: 1200,
+    height: 896,
+  },
+  {
+    id: "retirada",
+    src: retiradaBalcao,
+    alt: "Coxinha no prato ao lado de um copo de suco de laranja.",
+    legenda: "Coxinha com suco de laranja",
+    width: 1200,
+    height: 896,
+  },
 ];
 
 const auth = useAuthStore();
@@ -163,16 +202,20 @@ const toast = ref("");
 const detalhesCache = new Map();
 let timeoutToast = null;
 let montado = true;
-const contextoAtual = contexto => montado && cart.contextoAtual(contexto);
-watch(() => cart.geracao, () => {
-  fecharModal();
-  carregandoDetalhe.value = false;
-  produtoAdicionando.value = null;
-  adicionandoModal.value = false;
-  toast.value = "";
-  detalhesCache.clear();
-  window.clearTimeout(timeoutToast);
-}, { flush: "sync" });
+const contextoAtual = (contexto) => montado && cart.contextoAtual(contexto);
+watch(
+  () => cart.geracao,
+  () => {
+    fecharModal();
+    carregandoDetalhe.value = false;
+    produtoAdicionando.value = null;
+    adicionandoModal.value = false;
+    toast.value = "";
+    detalhesCache.clear();
+    window.clearTimeout(timeoutToast);
+  },
+  { flush: "sync" },
+);
 
 const primeiroNome = computed(
   () => (auth.usuario?.name || "Aluno").trim().split(/\s+/)[0] || "Aluno",
@@ -212,7 +255,9 @@ const produtosEmPromocao = computed(() => {
 const promocaoEmDestaque = ref(null);
 watch(produtosEmPromocao, async (candidatos, anterior, onCleanup) => {
   let atual = true;
-  onCleanup(() => { atual = false; });
+  onCleanup(() => {
+    atual = false;
+  });
   promocaoEmDestaque.value = null;
 
   for (const produto of candidatos) {
@@ -228,7 +273,6 @@ watch(produtosEmPromocao, async (candidatos, anterior, onCleanup) => {
     }
   }
 });
-
 
 function slideDeProduto(produto, { etiqueta, destaque, texto, nota }) {
   const preco = formatarPreco(produto.preco_atual ?? produto.preco);
@@ -253,12 +297,18 @@ function slideDeProduto(produto, { etiqueta, destaque, texto, nota }) {
 }
 
 const slidesBanner = computed(() => {
-  const emPromocao = produtosEmPromocao.value.slice(0, MAXIMO_PROMOCOES_NO_BANNER);
+  const emPromocao = produtosEmPromocao.value.slice(
+    0,
+    MAXIMO_PROMOCOES_NO_BANNER,
+  );
   const slides = emPromocao.length
     ? emPromocao.map((produto) => {
         const original = Number(produto.preco);
         const atual = Number(produto.preco_atual ?? produto.preco);
-        const desconto = original > atual ? Math.round(((original - atual) / original) * 100) : 0;
+        const desconto =
+          original > atual
+            ? Math.round(((original - atual) / original) * 100)
+            : 0;
         return slideDeProduto(produto, {
           etiqueta: "Promoção de hoje",
           destaque: `por ${formatarPreco(atual)}`,
@@ -273,7 +323,8 @@ const slidesBanner = computed(() => {
           slideDeProduto(produto, {
             etiqueta: "Destaque da casa",
             destaque: "sem fila.",
-            texto: "Peça agora pelo app e retire no balcão mostrando o QR Code.",
+            texto:
+              "Peça agora pelo app e retire no balcão mostrando o QR Code.",
             nota: "direto do balcão",
           }),
         );
@@ -362,14 +413,17 @@ async function adicionarAoCarrinho(produto) {
 
     const itemAtual = cart.itens.find((item) => item.produto.id === produto.id);
     if ((itemAtual?.quantidade || 0) >= estoque) {
-      mostrarToast(`Você já adicionou todo o estoque disponível de ${produto.nome}.`);
+      mostrarToast(
+        `Você já adicionou todo o estoque disponível de ${produto.nome}.`,
+      );
       return;
     }
 
     if (!cart.adicionar({ ...produto, ...detalhe }, 1, contexto)) return;
     mostrarToast(`${produto.nome} adicionado ao carrinho.`);
   } catch {
-    if (contextoAtual(contexto)) mostrarToast("Não foi possível verificar a disponibilidade do produto.");
+    if (contextoAtual(contexto))
+      mostrarToast("Não foi possível verificar a disponibilidade do produto.");
   } finally {
     if (contextoAtual(contexto)) produtoAdicionando.value = null;
   }
@@ -457,29 +511,66 @@ onBeforeUnmount(() => {
   transition-duration: var(--pp-home-action-duration);
   transition-timing-function: var(--pp-ease);
 }
-.home :deep(:is(.home-promotion__favorito, .home-promotion__detalhes, .home__botao-secundario)) {
+.home
+  :deep(
+    :is(
+      .home-promotion__favorito,
+      .home-promotion__detalhes,
+      .home__botao-secundario
+    )
+  ) {
   transition-property: color, border-color, background-color;
 }
-.home :deep(:is(.home-section-header__action, .home-footer__links a, .home-promotion__detalhes)) {
+.home
+  :deep(
+    :is(
+      .home-section-header__action,
+      .home-footer__links a,
+      .home-promotion__detalhes
+    )
+  ) {
   text-decoration: underline;
   text-underline-offset: 4px;
   text-decoration-color: transparent;
   transition-property: text-decoration-color, color;
 }
-.home :deep(:is(.home-section-header__action, .home-footer__links a, .home-promotion__detalhes):focus-visible) {
+.home
+  :deep(
+    :is(
+      .home-section-header__action,
+      .home-footer__links a,
+      .home-promotion__detalhes
+    ):focus-visible
+  ) {
   text-decoration-color: currentColor;
 }
 @media (hover: hover) {
-  .home :deep(:is(.home-section-header__action, .home-footer__links a, .home-promotion__detalhes):hover) {
+  .home
+    :deep(
+      :is(
+        .home-section-header__action,
+        .home-footer__links a,
+        .home-promotion__detalhes
+      ):hover
+    ) {
     text-decoration-color: currentColor;
   }
 }
-.home :deep(:is(button, a):is(:active, :disabled, [aria-disabled="true"], .is-loading)),
-.home :deep(.pp-card-action:is(:disabled, [aria-disabled="true"], .is-loading) > .pp-card-action__fill) {
+.home
+  :deep(
+    :is(button, a):is(:active, :disabled, [aria-disabled="true"], .is-loading)
+  ),
+.home
+  :deep(
+    .pp-card-action:is(:disabled, [aria-disabled="true"], .is-loading)
+      > .pp-card-action__fill
+  ) {
   transition: none;
 }
 @media (prefers-reduced-motion: reduce) {
-  .home :deep(:is(button, a, .pp-card-action__fill)) { transition: none; }
+  .home :deep(:is(button, a, .pp-card-action__fill)) {
+    transition: none;
+  }
 }
 .home__intro {
   margin-bottom: 20px;

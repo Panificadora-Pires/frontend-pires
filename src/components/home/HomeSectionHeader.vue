@@ -16,11 +16,20 @@ defineProps({
     <div class="home-section-header__copy">
       <div class="home-section-header__heading">
         <h2 :id="titleId" class="home-section-header__title">{{ title }}</h2>
-        <span v-if="note" class="home-section-header__note" aria-hidden="true">{{ note }}</span>
+        <span
+          v-if="note"
+          class="home-section-header__note"
+          aria-hidden="true"
+          >{{ note }}</span
+        >
       </div>
       <p v-if="intro" class="home-section-header__intro">{{ intro }}</p>
     </div>
-    <RouterLink v-if="actionTo" :to="actionTo" class="home-section-header__action">
+    <RouterLink
+      v-if="actionTo"
+      :to="actionTo"
+      class="home-section-header__action"
+    >
       {{ actionLabel }} <ArrowUpRight :size="18" aria-hidden="true" />
     </RouterLink>
   </header>

@@ -4,7 +4,13 @@
       Login com Google não configurado neste ambiente.
     </div>
 
-    <div v-else class="google-auth__button" :class="{ 'is-loading': loading }" :aria-busy="loading" :inert="loading">
+    <div
+      v-else
+      class="google-auth__button"
+      :class="{ 'is-loading': loading }"
+      :aria-busy="loading"
+      :inert="loading"
+    >
       <div ref="buttonHost" class="google-auth__host" />
 
       <div
@@ -19,7 +25,15 @@
     <p v-if="erroLocal" class="google-auth__error" role="alert" tabindex="-1">
       {{ erroLocal }}
     </p>
-    <button v-if="erroLocal" type="button" class="google-auth__retry" :disabled="loading" @click="renderizarBotao({ force: true })">Tentar carregar o Google novamente</button>
+    <button
+      v-if="erroLocal"
+      type="button"
+      class="google-auth__retry"
+      :disabled="loading"
+      @click="renderizarBotao({ force: true })"
+    >
+      Tentar carregar o Google novamente
+    </button>
   </div>
 </template>
 
@@ -148,7 +162,7 @@ onBeforeUnmount(() => {
   place-items: center;
   border-radius: 6px;
   background: var(--pp-creme);
-  opacity: .9;
+  opacity: 0.9;
 }
 
 .google-auth__spinner {

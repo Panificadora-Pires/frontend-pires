@@ -25,32 +25,52 @@ function readTokens() {
   if (sessionId) {
     const tokens = readJson(tokensKey(sessionId));
     const revoked = localStorage.getItem(revokedKey(sessionId));
-    return { sessionId, access: revoked ? null : tokens?.access ?? null, refresh: revoked ? null : tokens?.refresh ?? null };
+    return {
+      sessionId,
+      access: revoked ? null : (tokens?.access ?? null),
+      refresh: revoked ? null : (tokens?.refresh ?? null),
+    };
   }
 
   const sourceAccess = localStorage.getItem(ACCESS_TOKEN_KEY);
   const sourceRefresh = localStorage.getItem(REFRESH_TOKEN_KEY);
   const source = { sourceAccess, sourceRefresh };
-  if (!sourceAccess && !sourceRefresh) return { sessionId: null, access: null, refresh: null };
-  const matchesSource = value => value?.sourceAccess === sourceAccess && value?.sourceRefresh === sourceRefresh;
-  const revoked = matchesSource(readJson(revokedKey('legacy')));
-  const saved = readJson(tokensKey('legacy'));
+  if (!sourceAccess && !sourceRefresh)
+    return { sessionId: null, access: null, refresh: null };
+  const matchesSource = (value) =>
+    value?.sourceAccess === sourceAccess &&
+    value?.sourceRefresh === sourceRefresh;
+  const revoked = matchesSource(readJson(revokedKey("legacy")));
+  const saved = readJson(tokensKey("legacy"));
   return {
-    sessionId: 'legacy', ...source,
+    sessionId: "legacy",
+    ...source,
     access: revoked ? null : matchesSource(saved) ? saved.access : sourceAccess,
-    refresh: revoked ? null : matchesSource(saved) ? saved.refresh : sourceRefresh,
+    refresh: revoked
+      ? null
+      : matchesSource(saved)
+        ? saved.refresh
+        : sourceRefresh,
   };
 }
 
-const tokensKey = id => `pp_session_tokens:${id}`;
-const revokedKey = id => `pp_session_revoked:${id}`;
+const tokensKey = (id) => `pp_session_tokens:${id}`;
+const revokedKey = (id) => `pp_session_revoked:${id}`;
 
 function readJson(key) {
-  try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
+  try {
+    return JSON.parse(localStorage.getItem(key));
+  } catch {
+    return null;
+  }
 }
 
 function sameTokens(a, b) {
-  return a.access === b.access && a.refresh === b.refresh && a.sessionId === b.sessionId;
+  return (
+    a.access === b.access &&
+    a.refresh === b.refresh &&
+    a.sessionId === b.sessionId
+  );
 }
 
 function tokenOwner(token) {
@@ -65,8 +85,13 @@ function tokenOwner(token) {
 
 function sameAccountRefresh(previous, current) {
   const owner = tokenOwner(previous.access);
-  return previous.sessionId === current.sessionId && owner !== null &&
-    [previous.refresh, current.access, current.refresh].every(token => tokenOwner(token) === owner);
+  return (
+    previous.sessionId === current.sessionId &&
+    owner !== null &&
+    [previous.refresh, current.access, current.refresh].every(
+      (token) => tokenOwner(token) === owner,
+    )
+  );
 }
 
 function reconcileSession() {
@@ -88,8 +113,14 @@ function reconcileSession() {
 if (typeof window !== "undefined") {
   window.addEventListener?.("storage", (event) => {
     if (event.storageArea !== localStorage) return;
-    if (event.key === null || [ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, SESSION_ID_KEY].includes(event.key) ||
-      event.key.startsWith('pp_session_tokens:') || event.key.startsWith('pp_session_revoked:')) {
+    if (
+      event.key === null ||
+      [ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, SESSION_ID_KEY].includes(
+        event.key,
+      ) ||
+      event.key.startsWith("pp_session_tokens:") ||
+      event.key.startsWith("pp_session_revoked:")
+    ) {
       reconcileSession();
     }
   });
@@ -150,38 +181,58 @@ export function clearTokens() {
 
 function revokeSession(previous) {
   if (!previous.sessionId) return;
-  const tombstone = previous.sessionId === 'legacy'
-    ? { sourceAccess: previous.sourceAccess, sourceRefresh: previous.sourceRefresh }
-    : true;
-  localStorage.setItem(revokedKey(previous.sessionId), JSON.stringify(tombstone));
+  const tombstone =
+    previous.sessionId === "legacy"
+      ? {
+          sourceAccess: previous.sourceAccess,
+          sourceRefresh: previous.sourceRefresh,
+        }
+      : true;
+  localStorage.setItem(
+    revokedKey(previous.sessionId),
+    JSON.stringify(tombstone),
+  );
   localStorage.removeItem(tokensKey(previous.sessionId));
 }
 
-api.interceptors.request.use((config) => {
-  if (!reconcileSession()) throw sessionChanged(config);
-  config._sessionVersion ??= sessionVersion;
-  if (config._sessionVersion !== sessionVersion) throw sessionChanged(config);
-  const accessToken = localTokens.access;
+api.interceptors.request.use(
+  (config) => {
+    if (!reconcileSession()) throw sessionChanged(config);
+    config._sessionVersion ??= sessionVersion;
+    if (config._sessionVersion !== sessionVersion) throw sessionChanged(config);
+    const accessToken = localTokens.access;
 
-  if (accessToken && !config.skipAuthHeader) {
-    config.headers = config.headers ?? {};
-    config.headers.Authorization = `Bearer ${accessToken}`;
-  }
+    if (accessToken && !config.skipAuthHeader) {
+      config.headers = config.headers ?? {};
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
 
-  return config;
-}, error => { throw error; }, { synchronous: true });
+    return config;
+  },
+  (error) => {
+    throw error;
+  },
+  { synchronous: true },
+);
 
 let refreshPromise = null;
 
 api.interceptors.response.use(
   (response) => {
-    if (!reconcileSession() || response.config._sessionVersion !== sessionVersion) throw sessionChanged(response.config);
+    if (
+      !reconcileSession() ||
+      response.config._sessionVersion !== sessionVersion
+    )
+      throw sessionChanged(response.config);
     return response;
   },
 
   async (error) => {
     const originalRequest = error.config;
-    if (!reconcileSession() || (originalRequest && originalRequest._sessionVersion !== sessionVersion)) {
+    if (
+      !reconcileSession() ||
+      (originalRequest && originalRequest._sessionVersion !== sessionVersion)
+    ) {
       return Promise.reject(sessionChanged(originalRequest));
     }
     const refreshToken = localTokens.refresh;
@@ -220,22 +271,26 @@ api.interceptors.response.use(
       flight = refreshPromise;
 
       const { data } = await flight.promise;
-      if (!reconcileSession() || version !== sessionVersion) throw sessionChanged(originalRequest);
+      if (!reconcileSession() || version !== sessionVersion)
+        throw sessionChanged(originalRequest);
       if (sameTokens(localTokens, flight.tokens)) {
         saveTokens({
           access: data.access,
           refresh: data.refresh || refreshToken,
         });
       }
-      if (!reconcileSession() || version !== sessionVersion) throw sessionChanged(originalRequest);
+      if (!reconcileSession() || version !== sessionVersion)
+        throw sessionChanged(originalRequest);
 
       originalRequest.headers = originalRequest.headers ?? {};
       originalRequest.headers.Authorization = `Bearer ${localTokens.access}`;
 
       return api(originalRequest);
     } catch (refreshError) {
-      if (!reconcileSession() || version !== sessionVersion) return Promise.reject(sessionChanged(originalRequest));
-      if (flight && !sameTokens(localTokens, flight.tokens)) return api(originalRequest);
+      if (!reconcileSession() || version !== sessionVersion)
+        return Promise.reject(sessionChanged(originalRequest));
+      if (flight && !sameTokens(localTokens, flight.tokens))
+        return api(originalRequest);
       if (refreshError?.response) {
         clearTokens();
         redirectToLoginAfterExpiredSession();
@@ -249,7 +304,10 @@ api.interceptors.response.use(
 );
 
 function sessionChanged(config) {
-  return new axios.CanceledError("A sessão mudou durante a requisição.", config);
+  return new axios.CanceledError(
+    "A sessão mudou durante a requisição.",
+    config,
+  );
 }
 
 function redirectToLoginAfterExpiredSession() {

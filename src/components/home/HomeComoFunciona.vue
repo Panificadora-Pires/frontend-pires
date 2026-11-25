@@ -5,9 +5,18 @@ import CardActionContent from "@/components/ui/CardActionContent.vue";
 import fotoCombo from "@/assets/images/home/combo-balcao-runway.webp";
 
 const PASSOS = [
-  { titulo: "Escolha", texto: "Monte o pedido pelo cardápio antes do intervalo." },
-  { titulo: "Pague", texto: "Pix ou cartão pelo app, ou dinheiro na retirada." },
-  { titulo: "Mostre o QR Code", texto: "Quando ficar pronto, você recebe o aviso e retira no balcão." },
+  {
+    titulo: "Escolha",
+    texto: "Monte o pedido pelo cardápio antes do intervalo.",
+  },
+  {
+    titulo: "Pague",
+    texto: "Pix ou cartão pelo app, ou dinheiro na retirada.",
+  },
+  {
+    titulo: "Mostre o QR Code",
+    texto: "Quando ficar pronto, você recebe o aviso e retira no balcão.",
+  },
 ];
 </script>
 
@@ -29,16 +38,27 @@ const PASSOS = [
       decoding="async"
     />
     <ol class="como-funciona__passos">
-      <li v-for="(passo, indice) in PASSOS" :key="passo.titulo" class="como-funciona__passo">
-        <span class="como-funciona__numero" aria-hidden="true">{{ indice + 1 }}</span>
+      <li
+        v-for="(passo, indice) in PASSOS"
+        :key="passo.titulo"
+        class="como-funciona__passo"
+      >
+        <span class="como-funciona__numero" aria-hidden="true">{{
+          indice + 1
+        }}</span>
         <div>
           <h3>{{ passo.titulo }}</h3>
           <p>{{ passo.texto }}</p>
         </div>
       </li>
     </ol>
-    <RouterLink :to="{ name: 'cardapio' }" class="como-funciona__acao pp-card-action">
-      <CardActionContent>Ver cardápio <ArrowUpRight :size="18" aria-hidden="true" /></CardActionContent>
+    <RouterLink
+      :to="{ name: 'cardapio' }"
+      class="como-funciona__acao pp-card-action"
+    >
+      <CardActionContent
+        >Ver cardápio <ArrowUpRight :size="18" aria-hidden="true"
+      /></CardActionContent>
     </RouterLink>
   </section>
 </template>
@@ -51,7 +71,10 @@ const PASSOS = [
   grid-template-rows: 1fr auto 1fr;
   column-gap: clamp(32px, 5vw, 72px);
 }
-.como-funciona__cabecalho { grid-area: heading; align-self: end; }
+.como-funciona__cabecalho {
+  grid-area: heading;
+  align-self: end;
+}
 .como-funciona__foto {
   grid-area: photo;
   display: block;
@@ -120,13 +143,19 @@ const PASSOS = [
     grid-template-rows: auto;
     gap: var(--pp-space-3);
   }
-  .como-funciona__cabecalho { margin-bottom: 0; }
+  .como-funciona__cabecalho {
+    margin-bottom: 0;
+  }
   .como-funciona__foto {
     aspect-ratio: 3 / 2;
     object-fit: cover;
     object-position: center 80%;
   }
-  .como-funciona__passos { gap: var(--pp-space-3); }
-  .como-funciona__acao { margin-top: 0; }
+  .como-funciona__passos {
+    gap: var(--pp-space-3);
+  }
+  .como-funciona__acao {
+    margin-top: 0;
+  }
 }
 </style>

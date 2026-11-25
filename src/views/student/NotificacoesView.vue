@@ -110,8 +110,7 @@ function limparFiltros() {
 async function atualizar() {
   try {
     await notifications.atualizarAgora();
-  } catch {
-  }
+  } catch {}
 }
 
 async function recuperarFoco(origem, id) {
@@ -228,10 +227,16 @@ async function marcarTodas() {
         nesta lista.
       </p>
       <RouterLink :to="{ name: 'pedidos' }"
-        >Ir para Meus Pedidos
-        <ArrowUpRight :size="18" aria-hidden="true" /></RouterLink
+        >Ir para Meus Pedidos <ArrowUpRight :size="18" aria-hidden="true"
+      /></RouterLink>
+      <button
+        v-if="notifications.erroAtualizacao"
+        type="button"
+        class="notifications-page__retry"
+        @click="atualizar"
       >
-      <button v-if="notifications.erroAtualizacao" type="button" class="notifications-page__retry" @click="atualizar">Tentar novamente</button>
+        Tentar novamente
+      </button>
     </section>
     <template v-else>
       <div class="notifications-page__summary">
@@ -311,7 +316,14 @@ async function marcarTodas() {
             Limpar filtros
           </button></span
         >
-        <button v-if="notifications.erroAtualizacao" type="button" class="notifications-page__retry" @click="atualizar">Tentar novamente</button>
+        <button
+          v-if="notifications.erroAtualizacao"
+          type="button"
+          class="notifications-page__retry"
+          @click="atualizar"
+        >
+          Tentar novamente
+        </button>
       </div>
       <p v-if="erroAcao" class="notifications-page__error" role="alert">
         {{ erroAcao }}
@@ -382,8 +394,20 @@ async function marcarTodas() {
 </template>
 
 <style scoped>
-.notifications-page__retry{border:1px solid var(--pp-dourado-profundo);border-radius:8px;background:transparent;color:var(--pp-marrom);min-height:40px;padding:8px 12px;font-size:12px;font-weight:650;cursor:pointer}
-.notifications-page__retry:hover{background:var(--pp-dourado-suave)}
+.notifications-page__retry {
+  border: 1px solid var(--pp-dourado-profundo);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--pp-marrom);
+  min-height: 40px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.notifications-page__retry:hover {
+  background: var(--pp-dourado-suave);
+}
 
 .notifications-page {
   width: min(100%, 1040px);

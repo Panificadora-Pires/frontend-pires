@@ -13,11 +13,13 @@ export const useNavigationCatalogStore = defineStore("navigationCatalog", {
     erroPromocoes: null,
   }),
   getters: {
-    promocoesAtivas: (state) => state.promocoes.filter((item) => promocaoEstaAtiva(item)),
+    promocoesAtivas: (state) =>
+      state.promocoes.filter((item) => promocaoEstaAtiva(item)),
   },
   actions: {
     async carregarCategorias({ force = false } = {}) {
-      if (this.carregandoCategorias || (this.categoriasInicializadas && !force)) return;
+      if (this.carregandoCategorias || (this.categoriasInicializadas && !force))
+        return;
       this.carregandoCategorias = true;
       this.erroCategorias = null;
       try {
@@ -30,7 +32,8 @@ export const useNavigationCatalogStore = defineStore("navigationCatalog", {
       }
     },
     async carregarPromocoes({ force = false } = {}) {
-      if (this.carregandoPromocoes || (this.promocoesInicializadas && !force)) return;
+      if (this.carregandoPromocoes || (this.promocoesInicializadas && !force))
+        return;
       this.carregandoPromocoes = true;
       this.erroPromocoes = null;
       try {

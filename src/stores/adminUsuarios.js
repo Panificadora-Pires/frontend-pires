@@ -4,7 +4,12 @@ import adminService from "@/services/admin.service";
 import { getSessionVersion } from "@/services/api";
 
 const paginaInicial = () => ({
-  count: 0, page: 1, page_size: 18, total_pages: 1, next: null, previous: null,
+  count: 0,
+  page: 1,
+  page_size: 18,
+  total_pages: 1,
+  next: null,
+  previous: null,
   results: [],
 });
 
@@ -22,7 +27,8 @@ export const useAdminUsuariosStore = defineStore("adminUsuarios", {
     async carregar(filtros = {}) {
       const chamada = ++this.geracao;
       const sessao = getSessionVersion();
-      const atual = () => chamada === this.geracao && sessao === getSessionVersion();
+      const atual = () =>
+        chamada === this.geracao && sessao === getSessionVersion();
       this.carregando = true;
       this.erro = null;
       try {
@@ -37,11 +43,12 @@ export const useAdminUsuariosStore = defineStore("adminUsuarios", {
         this.inicializado = true;
       } catch (error) {
         if (!atual()) return;
-        this.erro = error?.response?.status === 404 && !this.inicializado
-          ? "O backend de desenvolvimento ainda não tem a listagem de usuários. Atualize-o para o PR4B.1."
-          : this.inicializado
-            ? "Não foi possível consultar os usuários. A última lista válida foi preservada."
-            : "Não foi possível carregar os usuários.";
+        this.erro =
+          error?.response?.status === 404 && !this.inicializado
+            ? "O backend de desenvolvimento ainda não tem a listagem de usuários. Atualize-o para o PR4B.1."
+            : this.inicializado
+              ? "Não foi possível consultar os usuários. A última lista válida foi preservada."
+              : "Não foi possível carregar os usuários.";
         throw error;
       } finally {
         if (atual()) this.carregando = false;

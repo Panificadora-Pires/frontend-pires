@@ -50,7 +50,9 @@
           <span class="order-chat__author">{{ item.autor }}</span>
           <p class="order-chat__text">{{ item.texto }}</p>
           <span class="order-chat__meta">
-            <time :datetime="item.criada_em">{{ formatarHora(item.criada_em) }}</time>
+            <time :datetime="item.criada_em">{{
+              formatarHora(item.criada_em)
+            }}</time>
             <template v-if="item.estado === 'enviando'">
               <Clock3 :size="12" aria-hidden="true" /> Enviando...
             </template>
@@ -112,7 +114,9 @@
             rows="1"
             :maxlength="LIMITE_CARACTERES"
             :placeholder="placeholder"
-            :aria-describedby="restantes <= AVISO_LIMITE ? idContador : undefined"
+            :aria-describedby="
+              restantes <= AVISO_LIMITE ? idContador : undefined
+            "
             @keydown.enter.exact.prevent="enviar"
           />
           <button
@@ -137,7 +141,14 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from "vue";
 import {
   Check,
   CheckCheck,
@@ -181,16 +192,22 @@ const idCampo = `chat-campo-${props.pedidoId}`;
 const idContador = `chat-contador-${props.pedidoId}`;
 
 const conversa = computed(() => chat.conversa(props.pedidoId));
-const carregando = computed(() => Boolean(chat.carregando[String(props.pedidoId)]));
+const carregando = computed(() =>
+  Boolean(chat.carregando[String(props.pedidoId)]),
+);
 const erro = computed(() => chat.erros[String(props.pedidoId)]);
 const textoValido = computed(() => texto.value.trim().length > 0);
 const restantes = computed(() => LIMITE_CARACTERES - texto.value.length);
 
 const nomeOutroLado = computed(() =>
-  props.variante === "admin" ? props.nomeCliente || "Cliente" : "Pires Panificadora",
+  props.variante === "admin"
+    ? props.nomeCliente || "Cliente"
+    : "Pires Panificadora",
 );
 const placeholder = computed(() =>
-  props.variante === "admin" ? "Responder ao cliente" : "Escreva para a padaria",
+  props.variante === "admin"
+    ? "Responder ao cliente"
+    : "Escreva para a padaria",
 );
 const textoVazio = computed(() => {
   if (conversa.value?.somente_leitura) {
@@ -242,10 +259,12 @@ function recarregar() {
 
 onMounted(() => {
   if (!REALTIME_ENABLED) return;
-  desinscreverRealtime = realtimeClient.inscrever(evento => {
+  desinscreverRealtime = realtimeClient.inscrever((evento) => {
     if (evento) {
-      const tipoRelevante = evento.tipo.startsWith("chat.") || evento.tipo.startsWith("pedido.");
-      if (!tipoRelevante || Number(evento.pedido_id) !== Number(props.pedidoId)) return;
+      const tipoRelevante =
+        evento.tipo.startsWith("chat.") || evento.tipo.startsWith("pedido.");
+      if (!tipoRelevante || Number(evento.pedido_id) !== Number(props.pedidoId))
+        return;
     }
     if (timerRealtime !== null) return;
     timerRealtime = setTimeout(() => {
@@ -264,7 +283,8 @@ onBeforeUnmount(() => {
 function registrarRolagem() {
   const el = lista.value;
   if (!el) return;
-  noFim.value = el.scrollHeight - el.scrollTop - el.clientHeight < MARGEM_FIM_DA_LISTA;
+  noFim.value =
+    el.scrollHeight - el.scrollTop - el.clientHeight < MARGEM_FIM_DA_LISTA;
 }
 
 function rolarParaOFim() {
@@ -290,10 +310,11 @@ watch(
     try {
       const marcadas = await chat.marcarLidas(props.pedidoId);
       if (marcadas && props.variante === "cliente") {
-        notifications.carregar({ force: true, silencioso: true }).catch(() => {});
+        notifications
+          .carregar({ force: true, silencioso: true })
+          .catch(() => {});
       }
-    } catch {
-    }
+    } catch {}
   },
   { immediate: true },
 );

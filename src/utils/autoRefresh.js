@@ -1,4 +1,3 @@
-
 const INTERVALO_PADRAO_MS = 30_000;
 const INTERVALO_MAXIMO_ERRO_MS = 5 * 60_000;
 const INTERVALO_MINIMO_ENTRE_EXECUCOES_MS = 2_000;
@@ -9,7 +8,9 @@ function comJitter(ms) {
 }
 
 function abaVisivel() {
-  return typeof document === "undefined" || document.visibilityState !== "hidden";
+  return (
+    typeof document === "undefined" || document.visibilityState !== "hidden"
+  );
 }
 
 export function createAutoRefresh(
@@ -39,12 +40,18 @@ export function createAutoRefresh(
   }
 
   function intervaloAtual() {
-    const base = Number(typeof intervalo === "function" ? intervalo() : intervalo);
-    const seguro = Number.isFinite(base) && base > 0 ? base : INTERVALO_PADRAO_MS;
+    const base = Number(
+      typeof intervalo === "function" ? intervalo() : intervalo,
+    );
+    const seguro =
+      Number.isFinite(base) && base > 0 ? base : INTERVALO_PADRAO_MS;
 
     if (!falhasSeguidas) return comJitter(seguro);
 
-    const comBackoff = Math.min(seguro * 2 ** falhasSeguidas, intervaloMaximoErro);
+    const comBackoff = Math.min(
+      seguro * 2 ** falhasSeguidas,
+      intervaloMaximoErro,
+    );
     return comJitter(Math.max(seguro, comBackoff));
   }
 
@@ -88,7 +95,8 @@ export function createAutoRefresh(
 
   function aoRetomar() {
     if (!ativo || !abaVisivel()) return;
-    if (Date.now() - ultimaExecucao < INTERVALO_MINIMO_ENTRE_EXECUCOES_MS) return;
+    if (Date.now() - ultimaExecucao < INTERVALO_MINIMO_ENTRE_EXECUCOES_MS)
+      return;
     executar();
   }
 

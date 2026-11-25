@@ -1,8 +1,8 @@
-
 let observador = null;
 
 function obterObservador() {
-  if (observador || typeof IntersectionObserver === "undefined") return observador;
+  if (observador || typeof IntersectionObserver === "undefined")
+    return observador;
   observador = new IntersectionObserver(
     (entradas) => {
       entradas.forEach((entrada) => {

@@ -1,6 +1,9 @@
 import api from "./api";
 
-export function mensagemErroApi(error, fallback = "Não foi possível concluir a operação.") {
+export function mensagemErroApi(
+  error,
+  fallback = "Não foi possível concluir a operação.",
+) {
   const data = error?.response?.data;
 
   function primeiraMensagem(valor) {
@@ -79,7 +82,13 @@ const adminService = {
   async listarPedidosPagina({ page = 1, page_size = 30, ...filtros } = {}) {
     const pagina = Number(page);
     const tamanho = Number(page_size);
-    if (!Number.isInteger(pagina) || pagina < 1 || !Number.isInteger(tamanho) || tamanho < 1 || tamanho > 100) {
+    if (
+      !Number.isInteger(pagina) ||
+      pagina < 1 ||
+      !Number.isInteger(tamanho) ||
+      tamanho < 1 ||
+      tamanho > 100
+    ) {
       const error = new Error("Parâmetros de paginação inválidos.");
       error.code = "ADMIN_PAGE_INVALID";
       throw error;
@@ -89,8 +98,10 @@ const adminService = {
       params: { ...filtros, page: pagina, page_size: tamanho },
     });
     if (
-      !data || !Array.isArray(data.results) ||
-      !Number.isInteger(data.count) || data.count < 0 ||
+      !data ||
+      !Array.isArray(data.results) ||
+      !Number.isInteger(data.count) ||
+      data.count < 0 ||
       !Number.isInteger(data.page) ||
       !Number.isInteger(data.page_size) ||
       !Number.isInteger(data.total_pages)
@@ -105,10 +116,19 @@ const adminService = {
   async resumoPedidosAdmin() {
     const { data } = await api.get("/pedidos/resumo_admin/");
     const campos = [
-      "total", "pedidos_hoje", "pendentes", "confirmados", "prontos",
-      "retirados", "cancelados", "pagamentos_pendentes",
+      "total",
+      "pedidos_hoje",
+      "pendentes",
+      "confirmados",
+      "prontos",
+      "retirados",
+      "cancelados",
+      "pagamentos_pendentes",
     ];
-    if (!data?.data_referencia || campos.some((campo) => !Number.isInteger(data[campo]) || data[campo] < 0)) {
+    if (
+      !data?.data_referencia ||
+      campos.some((campo) => !Number.isInteger(data[campo]) || data[campo] < 0)
+    ) {
       const error = new Error("Resposta de resumo administrativo inválida.");
       error.code = "ADMIN_SUMMARY_INVALID";
       throw error;
@@ -146,31 +166,54 @@ const adminService = {
   },
 
   relatorioAnaliticoAdmin({ dataInicio, dataFim }) {
-    return api.get("/pedidos/relatorio_analitico_admin/", {
-      params: { data_inicio: dataInicio, data_fim: dataFim },
-    }).then(({ data }) => data);
+    return api
+      .get("/pedidos/relatorio_analitico_admin/", {
+        params: { data_inicio: dataInicio, data_fim: dataFim },
+      })
+      .then(({ data }) => data);
   },
 
-  async listarProdutosAdminPagina({ page = 1, page_size = 18, busca = "", categoria = "", situacao = "" } = {}) {
+  async listarProdutosAdminPagina({
+    page = 1,
+    page_size = 18,
+    busca = "",
+    categoria = "",
+    situacao = "",
+  } = {}) {
     const numeroPagina = Number(page);
     const tamanhoPagina = Number(page_size);
     if (
-      !Number.isInteger(numeroPagina) || numeroPagina < 1 ||
-      !Number.isInteger(tamanhoPagina) || tamanhoPagina < 1 || tamanhoPagina > 100
+      !Number.isInteger(numeroPagina) ||
+      numeroPagina < 1 ||
+      !Number.isInteger(tamanhoPagina) ||
+      tamanhoPagina < 1 ||
+      tamanhoPagina > 100
     ) {
       const error = new Error("Página inválida para consulta de produtos.");
       error.code = "ADMIN_CATALOG_PAGE_INVALID";
       throw error;
     }
     const { data } = await api.get("/produtos/admin_catalogo/", {
-      params: { page: numeroPagina, page_size: tamanhoPagina, busca, categoria, situacao },
+      params: {
+        page: numeroPagina,
+        page_size: tamanhoPagina,
+        busca,
+        categoria,
+        situacao,
+      },
     });
     if (
-      !data || !Array.isArray(data.results) || !Number.isInteger(data.count) ||
-      data.count < 0 || !Number.isInteger(data.page) ||
-      !Number.isInteger(data.page_size) || !Number.isInteger(data.total_pages)
+      !data ||
+      !Array.isArray(data.results) ||
+      !Number.isInteger(data.count) ||
+      data.count < 0 ||
+      !Number.isInteger(data.page) ||
+      !Number.isInteger(data.page_size) ||
+      !Number.isInteger(data.total_pages)
     ) {
-      const error = new Error("A API não retornou uma página válida de produtos.");
+      const error = new Error(
+        "A API não retornou uma página válida de produtos.",
+      );
       error.code = "ADMIN_CATALOG_PAGE_INVALID";
       throw error;
     }
@@ -179,8 +222,17 @@ const adminService = {
 
   async resumoProdutosAdmin() {
     const { data } = await api.get("/produtos/resumo_admin/");
-    const campos = ["total", "ativos", "sem_estoque", "reposicao", "em_promocao"];
-    if (!data || campos.some(campo => !Number.isInteger(data[campo]) || data[campo] < 0)) {
+    const campos = [
+      "total",
+      "ativos",
+      "sem_estoque",
+      "reposicao",
+      "em_promocao",
+    ];
+    if (
+      !data ||
+      campos.some((campo) => !Number.isInteger(data[campo]) || data[campo] < 0)
+    ) {
       const error = new Error("Os indicadores do catálogo estão incompletos.");
       error.code = "ADMIN_CATALOG_SUMMARY_INVALID";
       throw error;
@@ -188,15 +240,12 @@ const adminService = {
     return data;
   },
 
-
-
   obterProduto(id) {
     return api.get(`/produtos/${id}/`).then(({ data }) => data);
   },
   obterProdutoAdmin(id) {
     return api.get(`/produtos/${id}/admin_detalhe/`).then(({ data }) => data);
   },
-
 
   criarProduto(payload) {
     return api
@@ -222,12 +271,22 @@ const adminService = {
       .then(({ data }) => data);
   },
 
-  async listarCategoriasAdminPagina({ page = 1, page_size = 18, busca = "", situacao = "" } = {}) {
-    const numero = Number(page), tamanho = Number(page_size);
+  async listarCategoriasAdminPagina({
+    page = 1,
+    page_size = 18,
+    busca = "",
+    situacao = "",
+  } = {}) {
+    const numero = Number(page),
+      tamanho = Number(page_size);
     if (
-      !Number.isInteger(numero) || numero < 1 ||
-      !Number.isInteger(tamanho) || tamanho < 1 || tamanho > 100 ||
-      typeof busca !== "string" || busca.trim().length > 100 ||
+      !Number.isInteger(numero) ||
+      numero < 1 ||
+      !Number.isInteger(tamanho) ||
+      tamanho < 1 ||
+      tamanho > 100 ||
+      typeof busca !== "string" ||
+      busca.trim().length > 100 ||
       !["", "ativa", "inativa"].includes(situacao)
     ) {
       const error = new Error("Filtros ou página inválidos para categorias.");
@@ -235,17 +294,29 @@ const adminService = {
       throw error;
     }
     const { data } = await api.get("/categorias/admin_listagem/", {
-      params: { page: numero, page_size: tamanho, busca: busca.trim(), situacao },
+      params: {
+        page: numero,
+        page_size: tamanho,
+        busca: busca.trim(),
+        situacao,
+      },
     });
     if (
-      !data || !Array.isArray(data.results) ||
-      !Number.isInteger(data.count) || data.count < 0 ||
-      !Number.isInteger(data.page) || data.page < 1 ||
-      !Number.isInteger(data.page_size) || data.page_size < 1 ||
-      !Number.isInteger(data.total_pages) || data.total_pages < 1 ||
+      !data ||
+      !Array.isArray(data.results) ||
+      !Number.isInteger(data.count) ||
+      data.count < 0 ||
+      !Number.isInteger(data.page) ||
+      data.page < 1 ||
+      !Number.isInteger(data.page_size) ||
+      data.page_size < 1 ||
+      !Number.isInteger(data.total_pages) ||
+      data.total_pages < 1 ||
       data.results.length > data.page_size
     ) {
-      const error = new Error("A API retornou uma página inválida de categorias.");
+      const error = new Error(
+        "A API retornou uma página inválida de categorias.",
+      );
       error.code = "ADMIN_CATEGORIES_PAGE_INVALID";
       throw error;
     }
@@ -263,17 +334,20 @@ const adminService = {
   async resumoCategoriasAdmin() {
     const { data } = await api.get("/categorias/resumo_admin/");
     if (
-      !data || ["total", "ativas", "inativas"].some(
-        campo => !Number.isInteger(data[campo]) || data[campo] < 0
-      ) || data.ativas + data.inativas !== data.total
+      !data ||
+      ["total", "ativas", "inativas"].some(
+        (campo) => !Number.isInteger(data[campo]) || data[campo] < 0,
+      ) ||
+      data.ativas + data.inativas !== data.total
     ) {
-      const error = new Error("Os indicadores de categorias estão incompletos.");
+      const error = new Error(
+        "Os indicadores de categorias estão incompletos.",
+      );
       error.code = "ADMIN_CATEGORIES_SUMMARY_INVALID";
       throw error;
     }
     return data;
   },
-
 
   criarCategoria(payload) {
     return api.post("/categorias/", payload).then(({ data }) => data);
@@ -283,13 +357,22 @@ const adminService = {
     return api.patch(`/categorias/${id}/`, payload).then(({ data }) => data);
   },
 
-  async listarPromocoesAdminPagina({ page = 1, page_size = 12, busca = "", situacao = "" } = {}) {
+  async listarPromocoesAdminPagina({
+    page = 1,
+    page_size = 12,
+    busca = "",
+    situacao = "",
+  } = {}) {
     const numeroPagina = Number(page);
     const tamanho = Number(page_size);
     if (
-      !Number.isInteger(numeroPagina) || numeroPagina < 1 ||
-      !Number.isInteger(tamanho) || tamanho < 1 || tamanho > 100 ||
-      typeof busca !== "string" || busca.trim().length > 100 ||
+      !Number.isInteger(numeroPagina) ||
+      numeroPagina < 1 ||
+      !Number.isInteger(tamanho) ||
+      tamanho < 1 ||
+      tamanho > 100 ||
+      typeof busca !== "string" ||
+      busca.trim().length > 100 ||
       !["", "ativa", "agendada", "encerrada"].includes(situacao)
     ) {
       const error = new Error("Filtros ou página inválidos para promoções.");
@@ -297,17 +380,29 @@ const adminService = {
       throw error;
     }
     const { data } = await api.get("/promocoes/admin_listagem/", {
-      params: { page: numeroPagina, page_size: tamanho, busca: busca.trim(), situacao },
+      params: {
+        page: numeroPagina,
+        page_size: tamanho,
+        busca: busca.trim(),
+        situacao,
+      },
     });
     if (
-      !data || !Array.isArray(data.results) ||
-      !Number.isInteger(data.count) || data.count < 0 ||
-      !Number.isInteger(data.page) || data.page < 1 ||
-      !Number.isInteger(data.page_size) || data.page_size < 1 ||
-      !Number.isInteger(data.total_pages) || data.total_pages < 1 ||
+      !data ||
+      !Array.isArray(data.results) ||
+      !Number.isInteger(data.count) ||
+      data.count < 0 ||
+      !Number.isInteger(data.page) ||
+      data.page < 1 ||
+      !Number.isInteger(data.page_size) ||
+      data.page_size < 1 ||
+      !Number.isInteger(data.total_pages) ||
+      data.total_pages < 1 ||
       data.results.length > data.page_size
     ) {
-      const error = new Error("O Django retornou uma página incompleta de promoções.");
+      const error = new Error(
+        "O Django retornou uma página incompleta de promoções.",
+      );
       error.code = "ADMIN_PROMOTIONS_PAGE_INVALID";
       throw error;
     }
@@ -318,7 +413,10 @@ const adminService = {
     const { data } = await api.get("/promocoes/resumo_admin/");
     const campos = ["total", "ativas", "agendadas", "encerradas"];
     if (
-      !data || campos.some(campo => !Number.isInteger(data[campo]) || data[campo] < 0) ||
+      !data ||
+      campos.some(
+        (campo) => !Number.isInteger(data[campo]) || data[campo] < 0,
+      ) ||
       data.ativas + data.agendadas + data.encerradas !== data.total
     ) {
       const error = new Error("Os totais de promoções estão incompletos.");
@@ -328,12 +426,15 @@ const adminService = {
     return data;
   },
 
-
   async resumoPromocoesAdmin() {
     const { data } = await api.get("/promocoes/resumo_admin/");
     if (
-      !data || !Number.isInteger(data.total) || data.total < 0 ||
-      !Number.isInteger(data.ativas) || data.ativas < 0 || data.ativas > data.total
+      !data ||
+      !Number.isInteger(data.total) ||
+      data.total < 0 ||
+      !Number.isInteger(data.ativas) ||
+      data.ativas < 0 ||
+      data.ativas > data.total
     ) {
       const error = new Error("Os indicadores de promoções estão incompletos.");
       error.code = "ADMIN_PROMOTIONS_SUMMARY_INVALID";
@@ -355,29 +456,45 @@ const adminService = {
   },
 
   async listarUsuariosAdminPagina({
-    page = 1, page_size = 18, busca = "",
-    perfil = "", situacao = "", verificacao = "",
+    page = 1,
+    page_size = 18,
+    busca = "",
+    perfil = "",
+    situacao = "",
+    verificacao = "",
   } = {}) {
     const numeroPagina = Number(page);
     const tamanhoPagina = Number(page_size);
     if (
-      !Number.isInteger(numeroPagina) || numeroPagina < 1 ||
-      !Number.isInteger(tamanhoPagina) || tamanhoPagina < 1 || tamanhoPagina > 100
+      !Number.isInteger(numeroPagina) ||
+      numeroPagina < 1 ||
+      !Number.isInteger(tamanhoPagina) ||
+      tamanhoPagina < 1 ||
+      tamanhoPagina > 100
     ) {
       throw new Error("Página inválida para consulta de usuários.");
     }
     const { data } = await api.get("/usuarios/admin_listagem/", {
       params: {
-        page: numeroPagina, page_size: tamanhoPagina,
-        busca, perfil, situacao, verificacao,
+        page: numeroPagina,
+        page_size: tamanhoPagina,
+        busca,
+        perfil,
+        situacao,
+        verificacao,
       },
     });
     if (
-      !data || !Array.isArray(data.results) ||
-      !Number.isInteger(data.count) || data.count < 0 ||
-      !Number.isInteger(data.page) || data.page < 1 ||
-      !Number.isInteger(data.page_size) || data.page_size < 1 ||
-      !Number.isInteger(data.total_pages) || data.total_pages < 1
+      !data ||
+      !Array.isArray(data.results) ||
+      !Number.isInteger(data.count) ||
+      data.count < 0 ||
+      !Number.isInteger(data.page) ||
+      data.page < 1 ||
+      !Number.isInteger(data.page_size) ||
+      data.page_size < 1 ||
+      !Number.isInteger(data.total_pages) ||
+      data.total_pages < 1
     ) {
       throw new Error("A listagem de usuários retornou dados inválidos.");
     }
@@ -386,11 +503,21 @@ const adminService = {
 
   async resumoUsuariosAdmin() {
     const { data } = await api.get("/usuarios/resumo_admin/");
-    const campos = ["total", "administradores", "clientes", "ativas", "emails_verificados"];
+    const campos = [
+      "total",
+      "administradores",
+      "clientes",
+      "ativas",
+      "emails_verificados",
+    ];
     if (
-      !data || campos.some(campo => !Number.isInteger(data[campo]) || data[campo] < 0) ||
+      !data ||
+      campos.some(
+        (campo) => !Number.isInteger(data[campo]) || data[campo] < 0,
+      ) ||
       data.administradores + data.clientes !== data.total ||
-      data.ativas > data.total || data.emails_verificados > data.total
+      data.ativas > data.total ||
+      data.emails_verificados > data.total
     ) {
       throw new Error("Os indicadores de usuários estão incompletos.");
     }

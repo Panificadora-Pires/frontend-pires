@@ -5,7 +5,9 @@ import { movimentoReduzido } from "@/utils/vooAoCarrinho";
 export function useCatalogTransitions() {
   const router = useRouter();
   let atual;
-  const trocaDeRota = (to, from) => (from.name === "home" && to.name === "cardapio") || (from.name === "cardapio" && to.name === "home");
+  const trocaDeRota = (to, from) =>
+    (from.name === "home" && to.name === "cardapio") ||
+    (from.name === "cardapio" && to.name === "home");
   function encerrar() {
     if (!atual) return;
     atual.confirmar();
@@ -16,22 +18,44 @@ export function useCatalogTransitions() {
   }
   const pararAntes = router.beforeResolve((to, from) => {
     encerrar();
-    if (!document.startViewTransition || movimentoReduzido() || document.hidden) return;
+    if (!document.startViewTransition || movimentoReduzido() || document.hidden)
+      return;
     const trocaRota = trocaDeRota(to, from);
-    const mesmasSelecoes = [...new Set([...Object.keys(to.query), ...Object.keys(from.query)])]
-      .every(chave => chave === "pagina" || JSON.stringify(to.query[chave]) === JSON.stringify(from.query[chave]));
-    const pagina = query => Number(query.pagina || 1);
-    const trocaPagina = to.name === "cardapio" && from.name === "cardapio" && mesmasSelecoes
-      && pagina(to.query) !== pagina(from.query) && Number.isSafeInteger(pagina(to.query)) && pagina(to.query) > 0;
+    const mesmasSelecoes = [
+      ...new Set([...Object.keys(to.query), ...Object.keys(from.query)]),
+    ].every(
+      (chave) =>
+        chave === "pagina" ||
+        JSON.stringify(to.query[chave]) === JSON.stringify(from.query[chave]),
+    );
+    const pagina = (query) => Number(query.pagina || 1);
+    const trocaPagina =
+      to.name === "cardapio" &&
+      from.name === "cardapio" &&
+      mesmasSelecoes &&
+      pagina(to.query) !== pagina(from.query) &&
+      Number.isSafeInteger(pagina(to.query)) &&
+      pagina(to.query) > 0;
     if (!trocaRota && !trocaPagina) return;
 
     const raiz = document.documentElement;
     raiz.dataset.ppTransition = trocaRota ? "route" : "grid";
-    raiz.style.setProperty("--pp-nav-direction", trocaRota ? (to.name === "home" ? "-1" : "1") : String(Math.sign(pagina(to.query) - pagina(from.query))));
+    raiz.style.setProperty(
+      "--pp-nav-direction",
+      trocaRota
+        ? to.name === "home"
+          ? "-1"
+          : "1"
+        : String(Math.sign(pagina(to.query) - pagina(from.query))),
+    );
     let liberar;
-    const capturaPronta = new Promise(resolve => { liberar = resolve; });
+    const capturaPronta = new Promise((resolve) => {
+      liberar = resolve;
+    });
     let confirmar;
-    const navegacaoConfirmada = new Promise(resolve => { confirmar = resolve; });
+    const navegacaoConfirmada = new Promise((resolve) => {
+      confirmar = resolve;
+    });
     try {
       const transicao = document.startViewTransition(async () => {
         liberar();
@@ -41,7 +65,11 @@ export function useCatalogTransitions() {
       const registro = { to, transicao, confirmar };
       atual = registro;
       transicao.ready.catch(() => {});
-      transicao.finished.finally(() => { if (atual === registro) encerrar(); }).catch(() => {});
+      transicao.finished
+        .finally(() => {
+          if (atual === registro) encerrar();
+        })
+        .catch(() => {});
     } catch {
       delete raiz.dataset.ppTransition;
       raiz.style.removeProperty("--pp-nav-direction");
@@ -62,5 +90,9 @@ export function useCatalogTransitions() {
       titulo?.focus({ preventScroll: true });
     }
   });
-  onBeforeUnmount(() => { pararAntes(); pararDepois(); encerrar(); });
+  onBeforeUnmount(() => {
+    pararAntes();
+    pararDepois();
+    encerrar();
+  });
 }

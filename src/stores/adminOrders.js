@@ -19,7 +19,7 @@ export const useAdminOrdersStore = defineStore("adminOrders", {
     substituirPedido(pedido) {
       if (!pedido?.id) return;
       const indice = this.itens.findIndex(
-        item => Number(item.id) === Number(pedido.id),
+        (item) => Number(item.id) === Number(pedido.id),
       );
       if (indice === -1) {
         this.itens = ordenarPorDataDesc([pedido, ...this.itens]);

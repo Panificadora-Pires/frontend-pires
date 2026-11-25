@@ -33,12 +33,14 @@ export const useAdminQueueSummaryStore = defineStore("adminQueueSummary", {
       const promessa = (async () => {
         try {
           const resposta = await adminService.resumoPedidosAdmin();
-          if (this.geracao !== geracao || getSessionVersion() !== sessao) return;
+          if (this.geracao !== geracao || getSessionVersion() !== sessao)
+            return;
           this.resumo = resposta;
           this.inicializado = true;
           this.ultimaAtualizacao = new Date();
         } catch (error) {
-          if (this.geracao !== geracao || getSessionVersion() !== sessao) return;
+          if (this.geracao !== geracao || getSessionVersion() !== sessao)
+            return;
           this.erro = "Não foi possível sincronizar os totais de pedidos.";
           throw error;
         } finally {
