@@ -57,7 +57,6 @@ async function alternarFavorito(produto, confirmar) {
       destinoModal = { id: proximo }; fecharModal();
     } else { await nextTick(); focarColecao(proximo); }
   }
-  // Feedback e foco dependem da mutação confirmada, antes do efeito visual.
   confirmar?.();
 }
 function detalheExibivel(detalhe) {
@@ -74,7 +73,7 @@ async function abrirProduto(produto) {
     if (!contextoAtual(g, conta) || requisicao !== requisicaoDetalhe || !modalAberto.value) return;
     if (Number(detalhe?.id) !== Number(produto.id)) return;
     favorites.atualizarProduto(detalhe); produtoDetalhado.value = detalheExibivel(detalhe);
-  } catch { /* O modal compartilhado apresenta o erro e permite fechar/reabrir. */ }
+  } catch {}
   finally { if (contextoAtual(g, conta) && requisicao === requisicaoDetalhe) carregandoDetalhe.value = false; }
 }
 async function fecharModal() {
@@ -110,7 +109,6 @@ async function adicionar(produto, quantidade = 1, origem = 'direta', elementoOri
     }
     if (existente) existente.produto = detalhe;
     if (origem === 'direta') registrarOrigemVoo(elementoOrigem);
-    // O layout existente observa esta ação e executa o voo uma única vez.
     if (!cart.adicionar(detalhe, quantidade, contexto)) return;
     mostrarToast(`${detalhe.nome} adicionado ao carrinho.`);
     if (origem === 'modal') fecharModal();
@@ -120,8 +118,6 @@ async function adicionar(produto, quantidade = 1, origem = 'direta', elementoOri
 function adicionarRapido(produto, origem) { return adicionar(produto, 1, 'direta', origem); }
 function adicionarDoModal({ produto, quantidade }) { return adicionar(produto, quantidade, 'modal'); }
 watch(categorias, lista => { if (categoria.value && !lista.includes(categoria.value)) categoria.value = ''; });
-// O logout limpa o store antes de aguardar HTTP. Invalidar a View no mesmo
-// instante também cancela detalhes e compras que ainda aguardam a API.
 watch(() => favorites.geracao, () => {
   geracao++; requisicaoDetalhe++; modalAberto.value = false; produtoDetalhado.value = null; carregandoDetalhe.value = false;
   produtoAdicionando.value = null; origemAdicao.value = null; destinoModal = null; produtoModalId = null; toast.value = '';

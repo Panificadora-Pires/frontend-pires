@@ -4,7 +4,6 @@ import { getSessionVersion } from '@/services/api';
 import { diaEmSaoPaulo, normalizarRanking } from '@/utils/adminDashboard';
 import { somarDias, validarRelatorioAnalitico } from '@/utils/adminRelatorios';
 
-// Cada instância possui sua carga: reset permite nova busca sem aguardar a anterior.
 const carregamentos = new WeakMap();
 
 export const useAdminDashboardStore = defineStore('adminDashboard', {
@@ -50,8 +49,6 @@ export const useAdminDashboardStore = defineStore('adminDashboard', {
           if (!relatorioHoje || [relatorioHoje.total_vendido, relatorioHoje.total_pedidos].some(valor => valor == null || valor === '' || !Number.isFinite(Number(valor)))) {
             throw new Error('Resposta de faturamento inválida.');
           }
-          // A série é calculada no Django, a partir dos preços históricos de itens
-          // retirados; jamais depender do histórico completo de pedidos.
           const semanaValidada = validarRelatorioAnalitico(relatorioSemana, { inicio: inicioSemana, fim: dia });
           this.resumoProdutos = resumoProdutos;
           this.resumoPromocoes = resumoPromocoes;

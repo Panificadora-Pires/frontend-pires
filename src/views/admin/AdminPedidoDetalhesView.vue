@@ -288,15 +288,12 @@ import { useAutoRefresh } from "@/composables/useAutoRefresh";
 import { mensagemErroApi } from "@/services/admin.service";
 import { useAdminOrdersStore } from "@/stores/adminOrders";
 
-// O detalhe é aberto para agir no pedido (pagamento aprovado, retirada): atualiza com frequência.
 const INTERVALO_DETALHE_MS = 15_000;
 
 const route = useRoute();
 const adminOrders = useAdminOrdersStore();
-// Mostra na hora o que já está na fila e completa com a busca do detalhe.
 const pedido = ref(adminOrders.porId(route.params.id));
 const erro = ref("");
-// Incrementa a cada mudança feita nesta tela, para descartar buscas que começaram antes dela.
 let versaoLocal = 0;
 const acao = ref(false);
 const scannerAberto = ref(false);
@@ -363,7 +360,6 @@ async function carregar() {
     }
     erro.value = "";
   } catch (error) {
-    // Falha em segundo plano não apaga o pedido já exibido.
     if (!pedido.value) erro.value = "Não foi possível carregar este pedido.";
     throw error;
   }
@@ -374,7 +370,6 @@ const {
   atualizarAgora,
 } = useAutoRefresh(carregar, { intervalo: INTERVALO_DETALHE_MS });
 
-// Navegar de um pedido para outro reaproveita o componente.
 watch(
   () => route.params.id,
   (id, anterior) => {
@@ -650,7 +645,6 @@ function onRetirado(p) {
 }
 
 
-/* O resumo dos itens não deve ocupar toda a altura do chat lateral. */
 .order-items-card {
   align-self: start;
 }

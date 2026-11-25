@@ -125,9 +125,7 @@ import {
 import ChatbotMensagem from "@/components/chatbot/ChatbotMensagem.vue";
 import { useChatbotStore } from "@/stores/chatbot";
 
-// Igual ao limite do backend (TAMANHO_MAXIMO_PERGUNTA).
 const TAMANHO_MAXIMO = 300;
-// Rotas para as quais o assistente pode levar o cliente.
 const ROTAS_PERMITIDAS = new Set(["cardapio", "pedidos"]);
 
 const chatbot = useChatbotStore();
@@ -145,7 +143,6 @@ const podeEnviar = computed(
 
 async function abrir() {
   aberto.value = true;
-  // O campo fica desabilitado até a saudação chegar; o foco vai para ele depois disso.
   await chatbot.iniciar();
   await nextTick();
   campo.value?.focus();
@@ -195,7 +192,6 @@ function rolarParaOFim() {
   if (el) el.scrollTop = el.scrollHeight;
 }
 
-// Toda mensagem nova (e o "digitando") leva a conversa para o fim.
 watch(
   () => [chatbot.mensagens.length, chatbot.respondendo],
   () => nextTick(rolarParaOFim),
@@ -425,7 +421,6 @@ watch(
   white-space: nowrap;
 }
 
-/* Celular: o botão fica acima da navegação inferior e o painel ocupa a tela toda. */
 @media (max-width: 980px) {
   .chatbot {
     right: 14px;

@@ -1,4 +1,3 @@
-/* Tema administrativo isolado: aliases da identidade existente, sem alterar aluno/auth. */
 .admin-layout {
   --pp-admin-bg: var(--pp-creme);
   --pp-admin-surface: var(--pp-surface-card);
@@ -18,7 +17,6 @@
   --pp-admin-sidebar-border: var(--pp-marrom-2);
   --pp-admin-sidebar-accent: var(--pp-gold);
   --pp-admin-backdrop: color-mix(in srgb, var(--pp-marrom) 45%, transparent);
-  /* Consumidores administrativos anteriores continuam usando seus nomes atuais. */
   --admin-bg: var(--pp-admin-bg);
   --admin-surface: var(--pp-admin-surface);
   --admin-surface-subtle: var(--pp-creme-2);
@@ -47,8 +45,6 @@
 .admin-layout .admin-drawer :focus-visible { outline-color: var(--pp-admin-sidebar-accent); }
 .admin-layout ::selection { background: var(--pp-gold); color: var(--pp-marrom); }
 
-/* Variantes opt-in: CardActionContent continua dono do círculo e da cópia acessível.
-   Escopo administrativo preserva as ações existentes do aluno. */
 .admin-layout .pp-card-action {
   --pp-home-action-duration: 370ms;
   --pp-admin-action-fill: var(--pp-gold);
@@ -72,7 +68,6 @@
 .admin-layout .pp-card-action:is(.pp-admin-action--danger, .pp-admin-action--cancel):focus-visible {
   outline-color: var(--pp-admin-danger);
 }
-/* Botões das telas anteriores: preservar dimensões, sem troca de fundo sob o círculo. */
 .admin-layout .admin-btn.pp-card-action {
   --pp-admin-action-base: var(--pp-admin-surface);
   --pp-admin-action-base-ink: var(--pp-admin-text);

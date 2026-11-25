@@ -1,7 +1,3 @@
-/**
- * Escolhe a ilustração própria de um produto (usada quando ele não tem foto).
- * Procura primeiro no nome e depois na categoria, sem diferença de acento ou maiúscula.
- */
 
 const POR_NOME = [
   ["coxinha", "coxinha"],

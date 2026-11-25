@@ -1,7 +1,6 @@
 import { defineStore } from "pinia";
 import catalogService, { promocaoEstaAtiva } from "@/services/catalog.service";
 
-// Dados públicos do catálogo, carregados pela navegação sem criar outro polling.
 export const useNavigationCatalogStore = defineStore("navigationCatalog", {
   state: () => ({
     categorias: [],

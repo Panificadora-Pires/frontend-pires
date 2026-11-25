@@ -1,4 +1,3 @@
-// Vite local e Playwright já instalado; não acessa API nem dados reais.
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);

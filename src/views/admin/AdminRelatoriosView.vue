@@ -251,7 +251,7 @@ async function gerar() {
   erroPeriodo.value = validarPeriodo(inicio.value, fim.value);
   if (erroPeriodo.value) return;
   aplicado.value = { inicio: inicio.value, fim: fim.value };
-  try { await store.carregar(aplicado.value); } catch { /* erro tratado pela store */ }
+  try { await store.carregar(aplicado.value); } catch {}
 }
 function aplicarAtalho(dias) {
   atalho.value = dias;

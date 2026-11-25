@@ -1,6 +1,5 @@
 import api from "./api";
 
-// Chat por pedido (cliente dono do pedido ↔ administração). O id é o do pedido.
 async function obter(pedidoId) {
   return api.get(`/chat/${pedidoId}/`);
 }

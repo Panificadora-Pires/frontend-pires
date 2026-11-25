@@ -1,4 +1,3 @@
-// Filtros e indicadores puramente visuais: o Django continua sendo a fonte dos dados.
 function normalizar(texto) {
   return String(texto ?? "")
     .normalize("NFD")

@@ -1,5 +1,3 @@
-// API inteiramente fictícia. Duas páginas do MESMO contexto compartilham localStorage.
-// Requer Vite em 127.0.0.1:5173 e o Playwright já disponível no ambiente de QA.
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
@@ -17,7 +15,6 @@ async function fixture({ blockStorage = false } = {}) {
   context.setDefaultNavigationTimeout(15_000);
   await context.addInitScript(() => {
     window.importAppApi = () => {
-      // A URL pode conter ?t=... após HMR. Importar outra URL cria outro singleton.
       const resource = performance.getEntriesByType('resource').find(entry => new URL(entry.name).pathname === '/src/services/api.js');
       if (!resource) throw new Error('Instância HTTP da aplicação ainda não carregada.');
       return import(resource.name);
@@ -61,8 +58,6 @@ async function fixture({ blockStorage = false } = {}) {
   const original = await a.evaluate(() => window.originalDocument);
   const b = await context.newPage(); await b.goto(`${base}/favoritos`);
   await b.waitForFunction(() => document.querySelector('#app')?.__vue_app__?.config.globalProperties.$pinia._s.get('auth')?.usuario?.id === 1);
-  // O perfil já pode estar pronto antes dos GETs disparados pelo layout.
-  // A prova deve começar sem respostas iniciais em voo que detectariam B antes da ação.
   await Promise.all([a.waitForLoadState('networkidle'), b.waitForLoadState('networkidle')]);
   a.on('pageerror', error => state.errors.push(error.message)); b.on('pageerror', error => state.errors.push(error.message));
   return { context, a, b, state, original };
@@ -130,7 +125,6 @@ try {
       let release, started; const ready = new Promise(resolve => { started = resolve; });
       state.hold = route => { started(); return new Promise(resolve => { release = async () => { await route.fulfill({ json: { ficticio: true } }); resolve(); }; }); };
       await a.evaluate(() => { window.pending = window.importAppApi().then(({ default: api }) => api.post('/pedidos/checkout_dinheiro/', {})).then(() => 'ok', () => 'cancelado'); }); await ready;
-      // Renovação HTTP real da instância B, sem login ou persistTokens.
       await b.evaluate(async () => { const { default: api } = await window.importAppApi(); await api.get('/probe401/').catch(() => {}); });
       await release(); assert.equal(await a.evaluate(() => window.pending), 'ok');
       assert.equal(await a.evaluate(() => window.originalDocument), original);

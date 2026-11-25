@@ -1,7 +1,5 @@
 import { onBeforeUnmount, onMounted, shallowRef, watch } from "vue";
 
-// O painel só ganha distância de rolagem quando todo o conteúdo cabe na tela.
-// A compra continua independente da mídia e da posição do scroll.
 export function useScrollVideo(container, panel, video) {
   const active = shallowRef(false);
   const distance = shallowRef(0);
@@ -40,10 +38,7 @@ export function useScrollVideo(container, panel, video) {
     if (!active.value) { progress.value = 0; return; }
 
     progress.value = Math.min(1, Math.max(0, (top - section.getBoundingClientRect().top) / distance.value));
-    // O clipe local tem 24fps. O último quadro começa antes do fim da duração.
     const target = progress.value * Math.max(0, element.duration - 1 / 24);
-    // Enquanto há um seek pendente, preservar apenas a posição mais recente do scroll.
-    // seeked agenda uma nova leitura, inclusive quando o usuário já parou de rolar.
     if (!element.seeking && Math.abs(element.currentTime - target) > 1 / 96) {
       try {
         element.currentTime = target;
@@ -86,7 +81,6 @@ export function useScrollVideo(container, panel, video) {
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule);
     window.addEventListener("pageshow", schedule);
-    // Inclui fontes, descrição longa, mudança de zoom e conteúdo anterior à faixa.
     observer = new ResizeObserver(schedule);
     observer.observe(panel.value);
     observer.observe(document.body);

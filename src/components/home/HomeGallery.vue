@@ -5,7 +5,6 @@ import HomeSectionHeader from "@/components/home/HomeSectionHeader.vue";
 import { movimentoReduzido } from "@/utils/vooAoCarrinho";
 
 const props = defineProps({
-  // Imagens ilustrativas autorizadas, identificadas na seção; nunca como registro documental da loja.
   fotos: { type: Array, default: () => [] },
 });
 const fotosVisiveis = computed(() => props.fotos.slice(0, 3));
@@ -21,7 +20,6 @@ function selecionar(novoIndice, imediato = false) {
   indice.value = Math.max(0, Math.min(fotosVisiveis.value.length - 1, novoIndice));
   const alvo = trilha.value?.children[indice.value];
   if (alvo && trilha.value.clientWidth < trilha.value.scrollWidth) {
-    // Preservar o destino durante o smooth scroll, inclusive em cliques consecutivos.
     destino = indice.value;
     trilha.value.scrollTo({ left: alvo.offsetLeft, behavior: imediato || movimentoReduzido() ? "instant" : "smooth" });
   } else {

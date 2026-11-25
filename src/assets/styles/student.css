@@ -1,5 +1,4 @@
 :root {
-  /* Apontam para a paleta "Balcão creme" de tokens.css: as telas que usam estes nomes mudam juntas. */
   --student-bg: var(--pp-creme);
   --student-surface: #ffffff;
   --student-surface-soft: var(--pp-creme-2);
@@ -97,7 +96,6 @@
   }
 }
 
-/* Seções que aparecem suavemente na rolagem (diretiva v-revelar). */
 .pp-revelar {
   opacity: 0;
   transform: translateY(24px);
@@ -116,7 +114,6 @@
   }
 }
 
-/* Clone do produto voando até o carrinho (utils/vooAoCarrinho.js). */
 .pp-voo-carrinho {
   position: fixed;
   top: 0;
@@ -141,7 +138,6 @@
   border-radius: 50%;
 }
 
-/* Contador do carrinho "pula" quando um item entra. */
 @keyframes pp-pulo {
   30% {
     transform: scale(1.14);
@@ -154,7 +150,6 @@
   animation: pp-pulo 0.45s var(--pp-ease);
 }
 
-/* O menu fixo não cobre âncoras nem o foco por teclado. */
 html {
   scroll-padding-top: calc(var(--pp-altura-topo) + 16px);
 }

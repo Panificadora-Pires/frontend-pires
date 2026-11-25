@@ -1,8 +1,6 @@
 import { defineStore } from "pinia";
 import adminService from "@/services/admin.service";
 
-// Esta store mantém somente os pedidos consultados individualmente ou alterados.
-// A fila usa páginas do Django; os badges usam o resumo agregado.
 function ordenarPorDataDesc(lista) {
   return [...lista].sort(
     (a, b) => new Date(b.data || 0).getTime() - new Date(a.data || 0).getTime(),

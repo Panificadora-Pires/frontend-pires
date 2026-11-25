@@ -70,7 +70,6 @@ async function handleLogout() {
   if (auth.usuario) return;
   await router.replace({ name: "login" });
 }
-// A autenticação pode ser restaurada depois do mount; não conectar anônimos.
 watch(() => auth.usuario?.id ?? null, id => {
   if (!REALTIME_ENABLED || !montado) return;
   if (id && auth.autenticado) realtimeClient.iniciar();

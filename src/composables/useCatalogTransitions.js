@@ -2,7 +2,6 @@ import { nextTick, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
 import { movimentoReduzido } from "@/utils/vooAoCarrinho";
 
-// O Router continua dono da navegação. A captura só aguarda a confirmação e o DOM do Vue.
 export function useCatalogTransitions() {
   const router = useRouter();
   let atual;
@@ -41,7 +40,6 @@ export function useCatalogTransitions() {
       });
       const registro = { to, transicao, confirmar };
       atual = registro;
-      // ready rejeita quando uma navegação nova interrompe a captura; não é erro da aplicação.
       transicao.ready.catch(() => {});
       transicao.finished.finally(() => { if (atual === registro) encerrar(); }).catch(() => {});
     } catch {
@@ -58,7 +56,6 @@ export function useCatalogTransitions() {
     }
     if (falha || !trocaDeRota(to, from)) return;
     await nextTick();
-    // Links persistentes do header conservam foco. Um gatilho desmontado leva ao novo título.
     if (document.activeElement === document.body) {
       const titulo = document.querySelector(".student-layout__main h1");
       titulo?.setAttribute("tabindex", "-1");

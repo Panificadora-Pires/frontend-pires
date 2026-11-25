@@ -1,8 +1,5 @@
 import { acceptHMRUpdate, defineStore } from "pinia";
 
-// Rascunho local e separado por conta. Logout oculta itens da interface,
-// mas nao apaga a selecao desse usuario neste navegador. Precos e estoque
-// armazenados nunca sao fonte de verdade para confirmar o pedido.
 const CART_DRAFT_PREFIX = "pp_cart_draft_v2_";
 const CART_DRAFT_LEGACY_KEY = "pp_cart_draft_v1";
 const PRODUCT_FIELDS = [
@@ -18,7 +15,6 @@ function readDraft(accountId) {
   let serialized = null;
   let version = 2;
   try { serialized = localStorage.getItem(draftKey(accountId)); } catch {}
-  // Migra um rascunho antigo salvo em sessionStorage apos F5, sem misturar contas.
   if (serialized === null) {
     try { serialized = sessionStorage.getItem(CART_DRAFT_LEGACY_KEY); version = 1; } catch {}
   }
@@ -50,7 +46,6 @@ function limparRascunhoLegado(accountId) {
       sessionStorage.removeItem(CART_DRAFT_LEGACY_KEY);
     }
   } catch {
-    // Rascunho legado indisponivel ou invalido nao impede o carrinho.
   }
 }
 
@@ -75,7 +70,6 @@ function saveDraft(store) {
     }
     limparRascunhoLegado(store.contaId);
   } catch {
-    // Storage bloqueado/cheio: carrinho permanece funcional em memoria.
   }
 }
 
@@ -107,8 +101,6 @@ export const useCartStore = defineStore("cart", {
       const contaId = id == null ? null : String(id);
       if (contaId === this.contaId) return;
 
-      // Sempre isolar os itens na troca de conta; o rascunho de cada usuario
-      // permanece local, mas so e carregado apos identificar o novo perfil.
       const restaurado = contaId !== null ? readDraft(contaId) : [];
       this.contaId = contaId;
       this.geracao += 1;
@@ -117,8 +109,6 @@ export const useCartStore = defineStore("cart", {
     },
 
     suspenderConta() {
-      // Se a rede falhou ao restaurar o perfil, nunca mostrar dados privados
-      // sem autenticação, mas guardar o rascunho por aba para nova tentativa.
       this.contaId = null;
       this.geracao += 1;
       this.itens = [];
@@ -172,7 +162,6 @@ export const useCartStore = defineStore("cart", {
     },
 
     atualizarRascunho() {
-      // Chamado depois que o backend revalidou detalhes dos produtos.
       saveDraft(this);
     },
   },

@@ -71,14 +71,11 @@ const {
   () => orders.carregar({ force: true, silencioso: orders.inicializado }),
   { intervalo: () => (orders.emAndamento.length ? 10_000 : 60_000) },
 );
-// Um pedido novo ou finalizado muda o ritmo das atualizações.
 watch(
   () => orders.emAndamento.length,
   () => reagendar(),
 );
 
-// Entrada da central de avisos: consultar o estado atual antes de localizar o pedido.
-// Não abrir QR nem presumir que o evento antigo ainda representa uma retirada disponível.
 watch(
   () => route.query.pedido,
   () => {
@@ -132,8 +129,6 @@ watch(
   },
   { immediate: true },
 );
-// Quando o balcão confirma a retirada, o QR deixa de valer: fecha o modal sozinho.
-// A ausência na lista atualizada também encerra a exibição e invalida respostas em voo.
 watch(pedidoQRCode, (pedido) => {
   if (!pedido) pedidoQRCodeId.value = null;
 });
@@ -152,7 +147,6 @@ function abrirChat(pedido) {
   pedidoChat.value = pedido;
 }
 
-// O assistente (chatbot) leva para /pedidos?chat=ID: abre a conversa desse pedido e limpa a URL.
 watch(
   [() => route.query.chat, () => orders.inicializado],
   ([chatId, carregado]) => {

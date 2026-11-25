@@ -1,4 +1,3 @@
-// Fronteira de HTTP isolada: os testes exercitam o store Pinia real.
 const service = {
   listar: async () => [],
   marcarLida: async () => {

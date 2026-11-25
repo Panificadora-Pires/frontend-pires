@@ -3,7 +3,6 @@ import { defineStore } from "pinia";
 import { mensagemErroApi } from "@/services/admin.service";
 import chatbotService from "@/services/chatbot.service";
 
-// Guarda só o fim da conversa: é ajuda rápida, não histórico permanente.
 const MAXIMO_MENSAGENS = 50;
 
 let sequencia = 0;
@@ -27,7 +26,6 @@ function mensagemDoBot(resposta) {
 
 export const useChatbotStore = defineStore("chatbot", {
   state: () => ({
-    // { id, autor: "usuario" | "bot", texto, acoes, pedidos, produtos, erro?, pergunta? }
     mensagens: [],
     iniciado: false,
     iniciando: false,
@@ -36,7 +34,6 @@ export const useChatbotStore = defineStore("chatbot", {
   }),
 
   getters: {
-    // Só a última resposta mostra botões de próximo passo.
     ultimaMensagemId: (state) => state.mensagens.at(-1)?.id || null,
   },
 
@@ -60,7 +57,6 @@ export const useChatbotStore = defineStore("chatbot", {
       }
     },
 
-    // `rotulo` é o que aparece como fala do cliente quando ele toca em um botão.
     async perguntar({ texto = "", intencao = "", rotulo = "" } = {}) {
       const pergunta = intencao ? { intencao } : { texto: texto.trim() };
       if (!pergunta.intencao && !pergunta.texto) return;

@@ -9,7 +9,6 @@ const emit = defineEmits(["close"]);
 const dialogo = ref(null);
 const { fechar, fecharNoFundo } = useOrderDialog(dialogo, () => emit("close"));
 const idTitulo = `chat-drawer-titulo-${props.pedido.id}`;
-// O teclado pode reduzir apenas o viewport visual, sem alterar 100dvh.
 function ajustarViewport() {
   const viewport = window.visualViewport;
   dialogo.value?.style.setProperty(

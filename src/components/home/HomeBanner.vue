@@ -6,7 +6,6 @@
     aria-roledescription="carrossel"
     aria-label="Destaques da Pires"
   >
-    <!-- Cena em camadas: "morros de massa" que sobem em velocidades diferentes na rolagem. -->
     <div class="home-banner__cena" aria-hidden="true">
       <svg class="home-banner__camada home-banner__camada--fundo" viewBox="0 0 1200 380" preserveAspectRatio="none">
         <path d="M0 250 C160 200 330 235 520 205 C720 172 900 228 1200 190 L1200 380 L0 380 Z" />
@@ -78,7 +77,6 @@
               <path d="M64 32 L76 33 L72 21" />
             </svg>
           </span>
-          <!-- Comercial com cenário: cores originais e poster independente do vídeo. -->
           <img
             v-if="slide.poster && !fotosComErro.has(slide.poster)"
             :src="slide.poster"
@@ -163,14 +161,10 @@ import ProductIllustration from "@/components/catalog/ProductIllustration.vue";
 import CardActionContent from "@/components/ui/CardActionContent.vue";
 import { registrarOrigemVoo } from "@/utils/vooAoCarrinho";
 
-// Tempo de cada destaque e trecho de rolagem em que a cena termina de "subir".
 const DURACAO_SLIDE_MS = 6000;
 const ROLAGEM_PARALLAX_PX = 320;
 
 const props = defineProps({
-  // { id, etiqueta, titulo: string[], destaque, texto, nota?, ilustracao, imagem?,
-  //   video?, poster?, videoMobile?, posterMobile?, duracao?,
-  //   acao: { tipo: 'adicionar' | 'rota', rotulo, produto?, rota? } }
   slides: { type: Array, default: () => [] },
   carregando: { type: Boolean, default: false },
   adicionandoId: { type: [Number, String], default: null },
@@ -189,13 +183,11 @@ const slidesVisuais = computed(() => props.slides.map((slide) => ({
   video: telaMobile.value && slide.videoMobile ? slide.videoMobile : slide.video,
   poster: telaMobile.value && slide.posterMobile ? slide.posterMobile : slide.poster,
 })));
-// Foto que não carregou (ex.: 404 no Cloudinary) volta para a ilustração.
 const fotosComErro = shallowRef(new Set());
 let timer = null;
 let consultaMovimento = null;
 let quadroAgendado = false;
 
-// Falha ou bloqueio de reprodução mantém o poster; depois, foto/ilustração.
 const videosComErro = shallowRef(new Set());
 const videos = new Map();
 
@@ -215,7 +207,6 @@ function registrarVideo(id, el) {
   else videos.delete(id);
 }
 
-// Só o destaque ativo toca. Movimento reduzido renderiza apenas o poster.
 function sincronizarVideos() {
   props.slides.forEach((slide, indice) => {
     const video = videos.get(slide.id);
@@ -262,7 +253,6 @@ function agendar() {
   window.clearTimeout(timer);
   if (movimentoReduzido.value || abaEscondida.value || props.slides.length < 2) return;
   const slide = props.slides[atual.value];
-  // O comercial toca até o fim; sair do slide reinicia a mídia para a próxima visita.
   if (slide?.video && !videosComErro.value.has(slide.id)) return;
   timer = window.setTimeout(() => irPara(atual.value + 1), slide?.duracao || DURACAO_SLIDE_MS);
 }
@@ -275,7 +265,6 @@ function adicionar(slide, event) {
   emit("adicionar", slide.acao.produto);
 }
 
-// Parallax: 0 no topo da página, 1 depois de ROLAGEM_PARALLAX_PX de rolagem.
 function atualizarCena() {
   quadroAgendado = false;
   const progresso = movimentoReduzido.value
@@ -296,7 +285,6 @@ function aoMudarMovimento() {
   agendar();
 }
 
-// Lista nova (promoções ou destaques carregados): volta ao primeiro slide.
 watch(
   () => props.slides.map((slide) => slide.id).join(","),
   () => {
@@ -387,7 +375,6 @@ onBeforeUnmount(() => {
   pointer-events: auto;
 }
 .home-banner__texto {
-  /* Todos os slides medem as mesmas linhas, inclusive os inativos. */
   display: grid;
   grid-column: 1;
   grid-row: 1 / -1;
@@ -609,7 +596,6 @@ onBeforeUnmount(() => {
   background: transparent;
   cursor: pointer;
 }
-/* Área de toque maior que a barrinha visível. */
 .home-banner__indicador::before {
   content: "";
   position: absolute;
@@ -672,7 +658,6 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 760px) {
-  /* Celular: mídia acima e chamadas na mesma posição em todos os slides. */
   .home-banner {
     --altura-midia: max(260px, calc((100vw - 26px) * 7 / 9));
     grid-template-columns: minmax(0, 1fr);

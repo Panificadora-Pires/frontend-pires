@@ -7,7 +7,6 @@ import { registrarOrigemVoo } from "@/utils/vooAoCarrinho";
 import { validadeDaOferta } from "@/utils/promocoes";
 import posterCoxinha from "@/assets/images/home/coxinha-promocao-poster.webp";
 
-// ID confirmado no catálogo; o nome de outro produto nunca habilita este clipe.
 const MIDIAS_POR_PRODUTO = {
   1: { poster: posterCoxinha, video: new URL("../../assets/videos/coxinha-promocao-escura.mp4", import.meta.url).href },
 };

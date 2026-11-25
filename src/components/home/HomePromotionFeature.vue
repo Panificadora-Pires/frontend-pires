@@ -8,7 +8,6 @@ import { registrarOrigemVoo } from "@/utils/vooAoCarrinho";
 import { useScrollVideo } from "@/composables/useScrollVideo";
 import posterCoxinha from "@/assets/images/home/coxinha-promocao-poster.webp";
 
-// URL estática sem importar o MP4 como módulo: no celular nenhuma requisição é feita.
 const clipeCoxinha = new URL("../../assets/videos/coxinha-promocao-escura.mp4", import.meta.url).href;
 
 const props = defineProps({
@@ -22,7 +21,6 @@ const midia = useTemplateRef("midia");
 const container = useTemplateRef("container");
 const panel = useTemplateRef("panel");
 const video = useTemplateRef("video");
-// Identificador confirmado no catálogo local; não associar mídia pelo nome/categoria.
 const temClipe = computed(() => Number(props.produto.id) === 1);
 const { active: rolagemAtiva, distance: distancia, panelHeight: alturaPainel, canLoad: carregarVideo, progress: progresso } = useScrollVideo(container, panel, video);
 const preco = computed(() => Number(props.produto.preco_atual ?? props.produto.preco));
@@ -113,13 +111,11 @@ function adicionar() {
 .home-promotion {
   color: var(--pp-creme);
   background: var(--pp-promotion-stage);
-  /* Faixa contínua sem usar 100vw (que inclui a barra de rolagem). */
   box-shadow: 0 0 0 100vmax var(--pp-promotion-stage);
   clip-path: inset(0 -100vmax);
 }
 .home-promotion.is-scrubbing {
   height: calc(var(--pp-promotion-panel-height) + var(--pp-promotion-distance));
-  /* Permite alcançar e liberar o último quadro mesmo com rodapé curto. */
   padding-bottom: max(0px, calc(100vh - var(--pp-altura-topo) - var(--pp-space-3) - var(--pp-promotion-panel-height)));
   box-sizing: content-box;
 }
@@ -289,7 +285,6 @@ function adicionar() {
   .home-promotion__conteudo { padding: var(--pp-space-2) 0 0; }
   .home-promotion__descricao { margin-top: var(--pp-space-2); }
   .home-promotion__precos { margin-block: var(--pp-space-3); }
-  /* Corredor livre para o botão flutuante de dúvidas, inclusive em telas de 320px. */
   .home-promotion__acoes { flex-wrap: nowrap; padding-right: 64px; }
   .home-promotion__adicionar { flex: 1; min-width: 0; padding-inline: var(--pp-space-2); }
   .home-promotion__favorito { flex-shrink: 0; }

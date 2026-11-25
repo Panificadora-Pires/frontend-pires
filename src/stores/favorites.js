@@ -34,7 +34,6 @@ export const useFavoritesStore = defineStore("favorites", {
       try {
         let itens = unicos(await favoriteService.listar());
         if (!this._sessaoAtual(geracao)) return;
-        // Só sobrepor mutações confirmadas depois do início deste GET.
         for (const [id, alteracao] of Object.entries(this.alteracoes)) {
           if (alteracao.revisao <= revisao) continue;
           itens = itens.filter(item => idProduto(item) !== Number(id));
@@ -84,8 +83,6 @@ export const useFavoritesStore = defineStore("favorites", {
       const pendentes = [];
       for (const produtoId of ids) {
         if (!this._sessaoAtual(geracao)) return;
-        // Uma remoção confirmada nesta sessão prevalece sobre o legado,
-        // inclusive enquanto a migração aguarda o POST de outro produto.
         if (this.tem(produtoId) || this.alteracoes[produtoId]?.item === null) continue;
         try {
           const resultado = await this.alternar({ id: produtoId });

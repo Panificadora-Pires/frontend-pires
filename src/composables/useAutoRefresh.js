@@ -2,10 +2,6 @@ import { onBeforeUnmount, onMounted, ref } from "vue";
 
 import { createAutoRefresh } from "@/utils/autoRefresh";
 
-/**
- * Liga `createAutoRefresh` ao ciclo de vida do componente: começa no `onMounted`
- * e para no `onBeforeUnmount`. Expõe o estado como refs para a interface.
- */
 export function useAutoRefresh(tarefa, opcoes = {}) {
   const atualizando = ref(false);
   const ultimaAtualizacao = ref(null);
