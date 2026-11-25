@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { ATUALIZADO_EM, CONTATO, VERSAO_DOCUMENTOS, documentosLegais } from '../src/content/documentosLegais.js';
 
+const lerNormalizado = async caminho => (await readFile(new URL(caminho, import.meta.url), 'utf8')).replace(/\s+/g, ' ').replace(/\s*>/g, '>').replace(/\(\s+/g, '(').replace(/,\s*\)/g, ')');
+
 test('os três documentos têm título, resumo acadêmico e seções com conteúdo', () => {
   assert.deepEqual(Object.keys(documentosLegais), ['termos', 'privacidade', 'cookies']);
   for (const doc of Object.values(documentosLegais)) {
@@ -17,10 +19,10 @@ test('os três documentos têm título, resumo acadêmico e seções com conteú
 });
 
 test('rotas legais são públicas e o cadastro aponta para os documentos', async () => {
-  const router = await readFile(new URL('../src/router/index.js', import.meta.url), 'utf8');
-  assert.match(router, /\["termos", "privacidade", "cookies"\]/);
+  const router = await lerNormalizado('../src/router/index.js');
+  assert.match(router, /\[\s?"termos", "privacidade", "cookies",?\s?\]/);
   assert.match(router, /meta: \{ publica: true, documento \}/);
-  const cadastro = await readFile(new URL('../src/views/auth/RegisterView.vue', import.meta.url), 'utf8');
+  const cadastro = await lerNormalizado('../src/views/auth/RegisterView.vue');
   assert.match(cadastro, /Li e aceito os <a href="\/termos" target="_blank" rel="noopener">/);
   assert.match(cadastro, /<a href="\/privacidade" target="_blank" rel="noopener">/);
   assert.doesNotMatch(cadastro, /indisponibilidade/);
