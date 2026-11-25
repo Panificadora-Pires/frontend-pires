@@ -1,660 +1,101 @@
-# Pires Panificadora — Frontend
+# Panificadora Pires - Frontend
 
-Frontend do sistema de pedidos da Pires Panificadora, desenvolvido em Vue 3 + Vite e publicado como PWA.
+Aplicação web (PWA) do sistema de pedidos antecipados da Panificadora Pires, Projeto Integrador do Curso Técnico em Informática do IFC — Campus Araquari. O cliente escolhe o lanche, paga por Pix, cartão ou em dinheiro na retirada e retira o pedido no balcão mostrando um QR Code. A equipe da padaria acompanha a fila de pedidos, confirma a retirada pela câmera e consulta os relatórios.
 
-O sistema possui área de cliente e área administrativa, integradas ao backend Django/DRF e aos serviços de autenticação Google e pagamento do Mercado Pago.
-
-## Curadoria da Home (prévia local)
-
-Curadoria A–F: dúvidas rápidas nativas, rodapé editorial com PIRES pontilhado e retorno ao topo,
-indicador da rota no header, confirmação breve no ícone/contador do carrinho, galeria manual e
-progresso do vídeo promocional ligado à rolagem existente. Sem biblioteca nova ou mudança de API.
-
-`HomeGallery` recebe até três imagens autorizadas por `fotos` (`id`, `src`, `alt`, `legenda`,
-`width`, `height`). A Home importa via Vite os WebP fornecidos pelo Arthur: preparo, vitrine e
-retirada, todos com 1200×896. A seção informa uma vez “Imagens ilustrativas geradas com IA”.
-As cenas não são apresentadas como registros documentais da loja. Vazia, a seção mostra a
-lacuna somente em desenvolvimento e fica oculta no build; falhas de imagem preservam legenda e controles.
-Seleção manual mantém seu destino durante a rolagem suave, inclusive em avanços e retornos rápidos.
-
-Plano, capturas, roteiro de validação e limites estão na pasta pai:
-`docs/planos/home-curadoria-aprovada.md` e `docs/prints/home-curadoria-final-2026-11-05/README.md`.
-Prévia com dados fictícios/API simulada: `http://127.0.0.1:5173/curadoria-preview.html`, enquanto
-`npm run dev` estiver ativo na porta 5173. Esse HTML é um artefato local não versionado, fora do build.
-Para testar o fluxo normal com backend local, use a raiz do servidor e uma conta local fictícia.
-
-## Detalhe compartilhado e Cardápio
-
-Home, Cardápio, Promoções e Favoritos compartilham o detalhe com foto, conteúdo creme,
-favorito separado, quantidade limitada ao estoque e subtotal. No celular, o miolo rola e a
-compra permanece na base do diálogo. Foco, Escape, retorno ao gatilho e restauração da
-rolagem acompanham o diálogo nativo; avisos de favorito/estoque aparecem dentro dele.
-O CTA reutiliza o preenchimento circular de 450ms e respeita movimento reduzido.
-
-O Cardápio editorial de 05/11 estende o Balcão creme: título Anton, anotação Caveat, busca
-sublinhada junto à introdução e categorias com linha dourada. Filtro rápido e ordenação usam
-selects compactos no desktop e no celular. Fotos retangulares, nomes/preços em Inter e compra
-com contorno compõem uma grade de quatro/duas colunas; os cards transparentes são locais à tela.
-Favoritos, ofertas, detalhes e compra continuam nos fluxos existentes. A busca do header fica
-oculta somente em `/cardapio`; o carrinho permanece na navegação.
-
-Busca, categoria, filtro rápido e ordenação precedem a paginação de oito produtos;
-`busca`, `categoria`, `filtro`, `ordenacao` e `pagina` ficam na URL. Mudar os controles reinicia
-a página; recarga e histórico preservam a seleção. Páginas inválidas são normalizadas após
-carregar o catálogo; o paginador desaparece quando basta uma página. A página ativa usa
-sublinhado dourado, com o grupo centralizado no desktop e alinhado à esquerda no celular.
-
-A View Transitions API captura o conteúdo somente entre Home/Cardápio e a grade quando muda
-apenas `pagina`. Header e controles permanecem estáveis. A navegação segue após confirmação
-do Router e atualização do DOM; não espera o fim da animação. Busca e filtros são imediatos e
-cancelam uma captura em andamento. Movimento reduzido, página oculta ou ausência da API usam
-navegação direta. Histórico restaura a rolagem; foco acompanha os resultados e o título quando
-o gatilho da troca de tela deixa de existir.
-
-Com `npm run dev` na 5173, backend local na 8000 e uma conta fictícia, abra
-[Cardápio](http://localhost:5173/cardapio) ou [página 2](http://localhost:5173/cardapio?pagina=2).
-[Capturas, gravação e verificações](../docs/prints/cardapio-editorial-2026-11-05/README.md)
-registram a aplicação normal com 13 produtos da API local; as 13 fotos carregaram no Chrome MCP.
-O relatório distingue testes com API simulada, API local e limites do ambiente. Isso não valida
-checkout, pagamentos ou produção.
-
-[Plano](../docs/planos/detalhe-e-cardapio.md) e
-[histórico do detalhe compartilhado](../docs/prints/detalhe-cardapio-2026-11-05/README.md) ficam na pasta pai.
-A [revisão anterior do Cardápio](../docs/prints/cardapio-revisao-2026-11-05/README.md) preserva
-as evidências da composição anterior; seus HTMLs locais de prévia ficam fora do build.
-
-## Promoções editoriais — 06/11/2026
-
-`/promocoes` estende o Balcão creme com título Anton, anotação Caveat, fotografia do produto,
-campanha escura e ações em creme/dourado. Busca por produto/categoria, categorias reais com linha
-dourada e quatro ordens (maior desconto, menor preço, validade e nome) definem todo o conjunto,
-inclusive o destaque. Sem ofertas, há acesso ao Cardápio; uma ocupa a campanha ampla; duas formam
-uma composição assimétrica; três ou mais usam destaque seguido da grade, sem repetir produtos.
-A grade passa de três para duas e uma coluna conforme a largura; exatamente quatro ofertas secundárias
-usam 2×2 no desktop. Carregamento, falha inicial,
-nenhuma oferta e nenhum resultado são distintos; falha de atualização silenciosa preserva as ofertas.
-
-`PromocoesView.vue` coordena os serviços e os stores existentes; `PromotionCampaign.vue` apresenta
-a oferta e emite as ações; `utils/promocoes.js` seleciona ofertas vigentes no calendário
-`America/Sao_Paulo`, com datas inclusivas, e elimina duplicatas compatíveis com a flag e o preço
-escolhidos pela API. A validade aparece como data real. O detalhe é consultado ao abrir e novamente
-antes de cada adição, inclusive pelo modal. A soma com a quantidade já no carrinho não pode superar
-o estoque recebido; mudança de oferta/preço interrompe a tentativa e atualiza a listagem.
-O backend continua sendo a fonte de verdade e valida o checkout.
-
-Somente o produto id 1 confirmado no catálogo, quando ocupa o destaque, recebe o clipe existente
-`coxinha-promocao-escura.mp4` (600×720, 4 s, aproximadamente 2,41 MB). A partir de 768px, sem
-movimento reduzido ou economia de dados, o vídeo é solicitado ao entrar em vista e reproduz em loop,
-mudo e inline. Pausa manual, saída da tela e aba oculta interrompem a reprodução; erro mantém o
-pôster. No celular ou com movimento reduzido, fica apenas o pôster, sem solicitar o MP4. Outros
-produtos usam `ProductImage` com foto da API e fallback. Essa reprodução pertence a Promoções;
-a sincronização por rolagem da Home mantém seu contrato próprio. Nenhuma mídia foi criada nesta etapa.
-
-Compra reutiliza `CardActionContent`, preenchimento circular de 450ms com raio medido, foco visível
-e contraste preservado. Favorito e detalhes têm controles separados. CSS, `Transition` do Vue e
-`v-revelar` existente dão os movimentos, suprimidos quando reduzidos. A faixa final explica escolher,
-concluir o pedido e acompanhar/retirar pelo QR Code real. Sem dependências ou mudanças em backend,
-stores, Home, Cardápio, `ProductCard` ou `ProductDetailsModal`.
-
-Com Vite na 5173, backend local na 8000 e conta fictícia, abra
-[Promoções](http://localhost:5173/promocoes). [Plano](../docs/planos/promocoes-editoriais.md) e
-[relatório, capturas e gravações](../docs/prints/promocoes-editoriais-2026-11-06/README.md)
-separam verificações de domínio, comportamento e mídia/responsividade com API simulada da integração
-com API local. Build e verificações de interface foram executados; o relatório registra os resultados
-e limites. Isso não comprova checkout, pagamentos ou produção. A entrega permanece local para revisão.
-
-## Meus pedidos editorial — 06/11/2026
-
-`/pedidos` estende o Balcão creme para acompanhar e retirar o lanche: introdução compacta,
-pedido ativo em destaque e coleção com produtos expansíveis. Anton conduz as chamadas,
-Inter mantém dados e controles legíveis e Caveat aparece apenas na anotação inicial.
-A extensão reutiliza os tokens e a identidade existentes, sem mudanças globais de direção.
-
-Prontos lideram, seguidos de confirmados e pendentes; dentro de cada estado ativo, o mais
-antigo vem primeiro, com ID como desempate. O histórico segue do mais recente ao mais antigo.
-Busca e filtros incluem o destaque, que não se repete na coleção. Ativos incluem prontos:
-o resumo explicita quantos desse total aguardam retirada. O progresso representa somente
-os estados reais, sem estimativas ou percentuais de preparo.
-
-`PedidosView.vue` coordena seleção, filtros, URL e atualização; `utils/orders.js` concentra
-ordenação, busca e apresentação dos estados. `OrderCard`, `OrderActions` e `OrderProgress`
-apresentam pedido, próxima ação e etapas. `useAutoRefresh` conserva bases de 10s com ativos
-e 60s sem ativos, jitter e recuperação existentes; atualizações silenciosas preservam os dados.
-Backend, stores, serviços e layouts mantêm seus contratos.
-
-No celular, o destaque tem um único controle de QR Code, logo após a mensagem de estado e
-antes das etapas. Ele só aparece para pedido pronto. `OrderQRCodeModal` usa o serviço existente
-e invalida consultas em andamento ao fechar, trocar o pedido ou sair de pronto; ausência do
-pedido na lista atualizada também fecha o diálogo. `OrderChatDrawer` mantém `OrderChatPanel`
-e o acesso por `/pedidos?chat=ID`, removendo apenas esse parâmetro após tratar o link.
-QR e conversa usam `<dialog>` nativo e `useOrderDialog`: foco inicial, contenção de Tab/Shift+Tab,
-Escape, bloqueio/restauração da rolagem e retorno de foco. Serviços e fluxo de mensagens permanecem.
-
-Motion for Vue (`motion-v` 2.11.1, MIT) anima entrada do destaque, filtros, expansão e mudança
-de estado; chaves estáveis evitam reanimar a cada polling. O lock inclui o peer `@vueuse/core`
-15.0.0; React e Tailwind não foram instalados. QR usa apenas opacidade, preservando sua geometria.
-Com movimento reduzido, as mudanças são imediatas e os diálogos não têm entrada/saída animada.
-
-Testes de domínio: `node --test tests/orders.test.mjs` (sem script `npm test`).
-[Plano](../docs/planos/pedidos-editoriais.md) e
-[capturas, gravação e resultados locais](../docs/prints/pedidos-editoriais-2026-11-06/)
-separam fixtures da leitura da API local. Revisão posterior focou a prioridade mobile e teve
-o ajuste P2 resolvido. Essas evidências não comprovam checkout, pagamentos ou produção.
-Para visualizar, inicie frontend e backend locais e abra `/pedidos` com uma conta fictícia.
-
-## Central de Notificações editorial — 06/11/2026
-
-`/notificacoes` estende o Balcão creme com título Anton, leitura em Inter, filtros Todas/Não lidas,
-busca local e lista dividida por datas. Rótulos Nova/Lida acompanham o contraste; controles têm
-foco visível e alvo mínimo de 44px. A composição atende listas de 0/1/5/50 avisos, empilha ações
-no celular e reserva o corredor do chatbot, sem preencher artificialmente listas curtas.
-
-`utils/notifications.js` só reconhece dois textos integrais, com ID válido igual ao campo `pedido`:
-
-- `Seu pedido #{id} está pronto para retirada! Mostre seu QR Code no balcão.`
-- `Nova mensagem da padaria sobre o pedido #{id}.`
-
-Mensagens divergentes, desconhecidas ou sem pedido válido ficam genéricas, preservando o texto
-original e sem destino inferido. `NotificationItem` apresenta o aviso; a View coordena filtros,
-feedback e foco. Abrir pedido/conversa e marcar leitura são ações separadas. O chat mantém sua
-regra existente de leitura ao abrir efetivamente a conversa. Erros de leitura aparecem com nova
-tentativa disponível; falha de sincronização conserva os dados, e carga, erro inicial e vazio
-têm estados distintos.
-
-O store confirma leitura somente após resposta válida, impede requisições duplicadas e elimina
-IDs repetidos. Leitura confirmada não regride por GET antigo. A marcação global confirma localmente
-apenas o conjunto capturado no início; avisos concorrentes aguardam sincronização. `StudentLayout`
-mantém o único polling de notificações, com base de 30s, jitter/backoff existentes; sair da área
-autenticada limpa o cache e invalida respostas da sessão anterior.
-
-`/pedidos?pedido=ID` aguarda um GET real bem-sucedido, compartilhado pelo store entre chamadas
-concorrentes, antes de localizar e focar o alvo; não abre QR automaticamente nem presume o estado
-atual pelo aviso antigo. Atualizações seguintes preservam a navegação. `/pedidos?chat=ID` reutiliza
-o fluxo existente. Hoje/Ontem seguem o calendário local, incluindo viradas e horário de verão;
-o relógio de meia-noite e a retomada da aba reagrupam datas sem HTTP.
-
-JavaScript, CSS e tokens existentes compõem a tela; Motion for Vue já instalado anima entrada
-breve, indicador de filtro e IDs novos com chaves estáveis. Polling e mudança de leitura não
-reanimam a lista; filtros respondem à ação do usuário e movimento reduzido torna as mudanças
-imediatas. Nenhum código Vue Bits foi copiado; sem React, Tailwind, GSAP ou dependência nova.
-`DESIGN.md` e `.impeccable/design.json` preservam a direção existente.
-
-Testes de domínio e stores, sem script `npm test`:
-
-```bash
-node --test tests/notifications.test.mjs tests/notifications-store.test.mjs tests/orders-store.test.mjs tests/orders.test.mjs
-```
-
-Os testes de stores usam `node:module.registerHooks` (Node 22.15+; ambiente desta etapa: Node 26).
-Esse requisito é dos testes. [Plano](../docs/planos/notificacoes-editoriais.md) e
-[relatório, capturas e limites](../docs/prints/notificacoes-editoriais-2026-11-06/README.md)
-registram as verificações: integração com dados reais somente por GET; marcação e chat usam fixtures.
-Para visualizar, inicie frontend/backend locais e abra `/notificacoes` com uma conta fictícia.
-
-## Stack
-
-- Vue 3
-- Vite
-- Pinia
-- Vue Router
-- Axios
-- Lucide
-- PWA
-- CSS puro com design tokens
-- Vercel
-
-## URL de produção
-
-Frontend:
-
-```text
-https://frontend-pires.vercel.app
-```
-
-API utilizada em produção:
-
-```text
-https://backend-pires.class.fabricadesoftware.ifc.edu.br/api
-```
+- Documentação do projeto: [Panificadora-Pires](https://github.com/Panificadora-Pires/.github)
+- Backend: [backend-pires](https://github.com/Panificadora-Pires/backend-pires)
+- Publicação: https://panificadora-pires.vercel.app
 
 ## Funcionalidades
 
-### Cliente
+**Área do cliente**
+- Cadastro com confirmação de e-mail, login com e-mail ou Google e redefinição de senha.
+- Home com banner de ofertas, categorias e destaques.
+- Cardápio com busca, categorias, filtros e ordenação; página de promoções.
+- Carrinho e pagamento por Pix ou cartão (Mercado Pago) ou em dinheiro na retirada.
+- Meus pedidos com as etapas em tempo real, o QR Code de retirada e o chat com a padaria.
+- Notificações, favoritos, perfil e assistente de dúvidas.
+- Termos de Uso, Política de Privacidade e Política de Cookies.
 
-- início;
-- cardápio;
-- promoções;
-- carrinho;
-- checkout;
-- pedidos;
-- favoritos;
-- notificações;
-- perfil;
-- autenticação por e-mail;
-- autenticação Google;
-- recuperação de senha;
-- verificação de conta;
-- pagamento por dinheiro na retirada;
-- pagamento por Pix;
-- pagamento por cartão;
-- acompanhamento do status do pedido;
-- QR Code de retirada;
-- chat com a padaria em cada pedido;
-- assistente de dúvidas (chatbot por regras e FAQ).
+**Área da administração**
+- Painel com os indicadores do dia e os produtos mais vendidos.
+- Fila de pedidos por etapa, detalhe do pedido e retirada por QR Code com a câmera.
+- Cadastro de categorias, produtos e promoções.
+- Relatórios de vendas e consulta de usuários.
 
-### Administração
+## Instalação e Configuração
 
-- dashboard;
-- pedidos;
-- detalhes de pedidos;
-- produtos;
-- categorias;
-- promoções;
-- relatórios;
-- usuários;
-- alteração do status dos pedidos;
-- confirmação de retirada;
-- leitura de QR Code por câmera ou código manual;
-- chat com o cliente no detalhe do pedido e aviso de mensagens não lidas na fila.
+1. Tenha o [Node.js 22](https://nodejs.org/) instalado e o [backend](https://github.com/Panificadora-Pires/backend-pires) rodando em http://127.0.0.1:8000.
 
-## Estrutura principal
+2. Clone o repositório e instale as dependências:
 
-```text
+   ```
+   git clone https://github.com/Panificadora-Pires/frontend-pires.git
+   cd frontend-pires
+   npm install
+   ```
+
+3. Crie o arquivo `.env` a partir do `.env.example`:
+
+   ```
+   cp .env.example .env
+   ```
+
+   | Variável | Descrição |
+   |---|---|
+   | `VITE_API_URL` | Endereço da API, terminando em `/api` (ex.: `http://127.0.0.1:8000/api`). |
+   | `VITE_GOOGLE_CLIENT_ID` | ID do cliente OAuth do Google, para o login com o Google. |
+   | `VITE_MERCADO_PAGO_PUBLIC_KEY` | Chave pública do Mercado Pago, para o pagamento com cartão e Pix. |
+   | `VITE_REALTIME_ENABLED` | `true` para usar a atualização em tempo real; `false` usa consultas periódicas. |
+
+   As variáveis `VITE_*` vão para o código publicado. Nunca coloque senhas ou tokens secretos nelas.
+
+4. Execute o servidor de desenvolvimento:
+
+   ```
+   npm run dev
+   ```
+
+5. Acesse http://localhost:5173. Com os dados de exemplo do backend (`pdm run seed_dados`), dá para entrar como cliente ou como administrador.
+
+## Comandos Úteis
+
+- `npm run dev`: servidor de desenvolvimento com recarga automática.
+- `npm run build`: gera a versão de produção em `dist/`, com o service worker do PWA.
+- `npm run preview`: serve localmente a versão gerada pelo `build`.
+- `node --test tests/*.test.mjs`: executa os testes (é o mesmo comando da integração contínua).
+
+## Estrutura
+
+```
 src/
-├── assets/
-│   └── styles/
-│       ├── admin.css
-│       ├── auth-forms.css
-│       ├── student.css
-│       └── tokens.css
-├── components/
-│   ├── admin/
-│   ├── auth/
-│   ├── cart/
-│   ├── catalog/
-│   ├── layout/
-│   ├── orders/
-│   ├── payment/
-│   └── ui/
-├── router/
-├── services/
-├── stores/
-├── views/
-│   ├── admin/
-│   ├── auth/
-│   └── student/
-├── App.vue
-└── main.js
+  views/         telas (student, admin, auth e páginas legais)
+  components/    componentes por domínio (catalog, cart, checkout, orders, admin, ...)
+  composables/   lógica das telas e comportamentos reutilizáveis
+  stores/        estado global com Pinia
+  services/      chamadas à API (todas passam por services/api.js)
+  router/        rotas e regras de acesso
+  utils/         funções puras (formatação, filtros, regras de exibição)
+  assets/styles/ tokens de cor, tipografia e espaçamento e estilos compartilhados
 ```
 
-### Responsabilidades
+O fluxo de toda tela com dados é **View → Store → Service**. A instância do Axios em `services/api.js` envia o token, renova a sessão quando ele expira e lê o endereço da API do `VITE_API_URL`. Preço, estoque e situação do pagamento sempre vêm do backend.
 
-- `views/`: telas da aplicação;
-- `components/`: componentes reutilizáveis;
-- `services/`: comunicação com a API;
-- `stores/`: estado global com Pinia;
-- `router/`: rotas e guards;
-- `assets/styles/`: estilos globais e tokens visuais.
+## Publicação
 
-## Desenvolvimento local
+O frontend é publicado na Vercel a partir da branch `main`. As variáveis de produção estão descritas em `.env.production.example`; os valores reais ficam no painel da Vercel, e mudar uma variável exige uma nova publicação. Os cabeçalhos de segurança estão em `vercel.json`.
 
-### Pré-requisitos
+## Detalhes do Projeto
 
-- Node.js compatível com a versão definida no projeto;
-- npm;
-- backend executando localmente ou acessível remotamente.
+Esse projeto utiliza os seguintes pacotes e tecnologias:
 
-### Instalação
-
-```bash
-npm install
-```
-
-Crie o arquivo `.env` a partir de `.env.example` e ajuste as variáveis necessárias.
-
-Depois:
-
-```bash
-npm run dev
-```
-
-## Build
-
-```bash
-npm run build
-```
-
-Para testar o build localmente:
-
-```bash
-npm run preview
-```
-
-## Variáveis de ambiente
-
-As principais variáveis são:
-
-```env
-VITE_API_URL=
-VITE_GOOGLE_CLIENT_ID=
-VITE_MERCADO_PAGO_PUBLIC_KEY=
-```
-
-Exemplo de produção:
-
-```env
-VITE_API_URL=https://backend-pires.class.fabricadesoftware.ifc.edu.br/api
-VITE_GOOGLE_CLIENT_ID=<CLIENT_ID_WEB>
-VITE_MERCADO_PAGO_PUBLIC_KEY=<PUBLIC_KEY_PRODUCAO>
-```
-
-As variáveis `VITE_*` são incorporadas ao bundle durante o build. Depois de alterar uma delas na Vercel, é necessário realizar um novo deploy.
-
-## Comunicação com a API
-
-A comunicação HTTP é centralizada em `src/services/api.js`, utilizando Axios.
-
-Os demais arquivos em `src/services/` separam chamadas por domínio, por exemplo:
-
-```text
-admin.service.js
-auth.service.js
-catalog.service.js
-favorite.service.js
-notification.service.js
-order.service.js
-payment.service.js
-```
-
-A autenticação utiliza JWT e o cliente HTTP é responsável por enviar o token nas requisições autenticadas. Falha de rede (sem resposta do servidor) preserva as credenciais para nova tentativa; a recusa do refresh pelo backend encerra a sessão.
-
-Login e logout em outra aba invalidam a sessão local, inclusive antes da entrega do evento `storage`: o cliente compara o snapshot e o marcador `pp_session_id` antes de enviar/entregar HTTP ou alterar credenciais. A aba anterior suspende requests, desmonta a interface, limpa os stores e abre um novo documento no login; o guard pode então restaurar a nova conta. O marcador muda em cada login, inclusive A→B→A. Uma renovação HTTP da mesma conta mantém marcador, versão e carrinho. O `user_id` do JWT apenas reconhece continuidade local; validação e permissões continuam no servidor.
-
-Cada sessão grava access/refresh juntos em `pp_session_tokens:<UUID>`; `pp_session_id` aponta a sessão ativa. Refresh escreve somente no bundle capturado; logout marca `pp_session_revoked:<UUID>` e remove somente aquele bundle, sem remover o ponteiro que outra aba pode ter trocado. A revogação prevalece sobre refresh tardio. Isso preserva B mesmo se login B intercalar as operações de storage de A. Credenciais antigas em `pp_access_token`/`pp_refresh_token` têm compatibilidade de leitura: um bundle/revogação `legacy` só vale para o par original exato. As chaves brutas legadas não são regravadas ou removidas por operações tardias. Eventos atrasados consultam o snapshot atual; um refresh antigo não substitui a renovação já concluída em outra aba.
-
-Regressões: `node --test tests/*.test.mjs`. A prova Chrome com duas abas reais no mesmo contexto usa API fictícia e uma instalação existente do Playwright: com Vite em `127.0.0.1:5173`, executar `node tests/session-tabs.browser.mjs`. Se o módulo não estiver no caminho de resolução do Node, definir `PLAYWRIGHT_MODULE` com seu caminho absoluto antes do comando (PowerShell: `$env:PLAYWRIGHT_MODULE = '<caminho do módulo playwright>'`). O roteiro é independente dos arquivos de evidências e cobre checkout pendente, refresh tardio e logout de A após login B, sem pedidos/pagamentos reais. Ele usa a URL da instância HTTP já carregada pela aplicação, incluindo a query de HMR do Vite.
-
-## Atualização automática
-
-As telas se atualizam sozinhas por polling, sem recarregar a página. A lógica fica em `src/utils/autoRefresh.js` (`createAutoRefresh`) e no composable `src/composables/useAutoRefresh.js`:
-
-- não faz requisições com a aba escondida; ao voltar para a aba, ganhar foco ou reconectar, atualiza na hora;
-- nunca executa duas buscas ao mesmo tempo e, em erro, espera cada vez mais (até 5 min) antes de tentar de novo;
-- falha em segundo plano mantém os dados já exibidos e mostra "Sem conexão, tentando de novo".
-
-| Tela | Intervalo |
-|---|---|
-| Fila, dashboard (pedidos) e detalhe do pedido no admin | 15 s |
-| Meus pedidos (cliente) | 10 s com pedido em andamento, 60 s sem |
-| Notificações (badge do menu) | 30 s |
-| Chat aberto (gaveta do cliente ou detalhe do admin) | 5 s |
-| Mensagens não lidas do chat | 30 s no cliente, 15 s no admin |
-| Cardápio, produtos do admin e números do dashboard | 60 s |
-| Pagamento Pix/cartão no checkout | 5 s |
-
-No admin, a store `adminOrders` é a única fonte da fila: o `AdminLayout` a mantém atualizada, e o badge do menu, o dashboard e a tela de pedidos leem dela. Mudar o status atualiza a lista local na hora. SSE/WebSocket não foi adotado porque o Gunicorn síncrono do Fabroku prenderia um worker por conexão.
-
-## Chat por pedido
-
-Cada pedido tem uma conversa entre o cliente e a padaria (`/api/chat/`, veja o README do backend).
-
-- Cliente: botão **Mensagens** no card de "Meus pedidos", com contador de mensagens novas; abre uma gaveta (`components/chat/OrderChatDrawer.vue`), em tela cheia no celular.
-- Admin: card **Conversa com o cliente** no detalhe do pedido; a fila mostra quantas mensagens não lidas há e permite filtrar só esses pedidos.
-- O painel (`components/chat/OrderChatPanel.vue`) é o mesmo nos dois lados. Fluxo: `OrderChatPanel` → `stores/chat.js` → `services/chat.service.js`.
-- Envio otimista: a mensagem aparece na hora como "Enviando..."; se falhar, fica marcada como "Não enviada", com **Tentar de novo** e **Descartar**.
-- Enter envia, Shift+Enter quebra a linha. As mensagens são exibidas sempre como texto (sem `v-html`).
-- Abrir a conversa marca como lidas as mensagens do outro lado; no cliente, também some a notificação "Nova mensagem da padaria".
-- Depois de retirado ou cancelado, o pedido aceita mensagens por mais 24 h (configurável no backend) e então a conversa fica só para leitura.
-
-## Identidade visual da área do cliente
-
-Direção "Balcão creme" (Fase 5): fundo creme, marrom nos textos, dourado nos detalhes. A área admin mantém o visual próprio.
-
-- **Tokens** em `src/assets/styles/tokens.css`: paleta (`--pp-creme`, `--pp-marrom`, `--pp-dourado-escuro`…), fontes e cores das ilustrações (`--ilu-*`).
-  - Os `--student-*` de `student.css` apontam para esses tokens.
-  - **Anton** em chamadas do banner, da vitrine de categorias e nos produtos da Home, **Caveat** em anotações "à mão" e **Inter** no corpo e nas ações.
-- **Header flutuante:** barra de vidro neutro translúcido com margens externas, sempre visível na rolagem. Início, Cardápio, Promoções e Meus pedidos, favoritos, notificações, conta e Carrinho com contador permanecem disponíveis. Busca (`/cardapio?busca=`) aparece nas outras rotas; no Cardápio, a busca fica na própria página.
-  - `components/layout/StudentHeader.vue` cuida das interações; `StudentHeaderPanel.vue` apresenta os painéis. Categorias e promoções vêm de `stores/navigationCatalog.js` pelos serviços existentes, sem outro polling.
-  - Cardápio abre categorias reais com filtro por `/cardapio?categoria=id`. Promoções lista apenas ofertas vigentes; quando não há ofertas, mantém o acesso ao cardápio. Pedidos aponta para acompanhamento/QR e notificações existentes.
-  - Mouse, clique, ArrowDown e Escape; fechamento ao navegar, clicar fora ou sair com o foco. No tablet/celular (abaixo de 1180 px), painel com busca e grupos expansíveis por toque; navegação inferior preservada.
-  - Tokens `--pp-header-*`, `backdrop-filter` nativo, fallback sólido sem suporte e movimento reduzido. Os offsets existentes de foco e resumos sticky acompanham a altura e a margem da barra.
-  - Fotos de perfil têm recorte circular com `object-fit: cover`, inclusive em imagens verticais/horizontais. O campo `avatar` da API também fornece a foto Google quando não há upload próprio; esse fallback depende da atualização do backend com a migration `core.0010`.
-- **Ilustrações próprias:** o cardápio é fictício, então produto sem foto ganha um SVG próprio.
-  - Componente `components/catalog/ProductIllustration.vue`; o tipo vem de `utils/ilustracaoProduto.js` (nome do produto e depois categoria).
-  - Foto cadastrada no admin tem prioridade.
-- **Home:** saudação → banner (`components/home/HomeBanner.vue`) → categorias (`components/home/HomeCategories.vue`) → quatro Destaques (`ProductCard`) → Do pedido ao balcão (`HomeComoFunciona`) → oferta disponível (`HomePromotionFeature`, se houver) → fechamento (`HomeFooter`).
-
-### Home após os destaques
-
-`HomeComoFunciona.vue` apresenta os três passos e CTA à esquerda e a foto editorial `src/assets/images/home/combo-balcao-runway.webp` à direita. No celular, a ordem é título, foto 3:2 com enquadramento do copo/coxinha, passos e CTA. Pix/cartão, dinheiro na retirada, aviso e QR Code permanecem. O asset do card Combos é preservado. `HomePromotionFeature.vue` apresenta uma única oferta em faixa escura até as bordas da tela, com miolo alinhado à Home. Como a listagem não contém estoque, a Home consulta os detalhes dos candidatos vigentes na ordem atual até encontrar um produto ativo, em promoção e com estoque positivo. Falha ou ausência de disponibilidade não produz oferta. A compra consulta novamente os detalhes pelo handler existente; o backend continua validando preço e estoque no checkout.
-
-Para a Coxinha de frango (id 1 confirmado na API local), o clipe `src/assets/videos/coxinha-promocao-escura.mp4` acompanha a rolagem nativa no desktop: avanço, reversão e liberação do painel sticky abaixo do header. `useScrollVideo` agenda por RAF e agrupa seeks; metadados, resize e pageshow sincronizam o quadro. O clipe não tem áudio, autoplay, loop ou controles. Até 760px, o vídeo não é montado nem solicitado: título/link, pôster de 180–220px, nome, preço e compra ficam no fluxo normal, sem distância extra. Movimento reduzido também impede montagem; erro, metadados inválidos ou altura insuficiente desativam sticky. Outras ofertas mantêm `ProductImage`. Preços, vigência, favorito, detalhes e compra continuam nos fluxos existentes.
-
-As transições visuais de ações da Home usam `--pp-home-action-duration: 450ms` e `--pp-ease`, sem atrasar clique, teclado ou loading. `CardActionContent` mede o raio até a borda arredondada real e acompanha mudanças de tamanho com `ResizeObserver`, evitando terminar visualmente antes do tempo em botões largos. A medição é restrita à Home e ao opt-in explícito `data-card-action-radius`, usado no detalhe compartilhado e na compra de Promoções, com hover condicionado ao dispositivo e transições removidas em movimento reduzido.
-
-`HomeFooter.vue` fecha apenas esta rota com marca e links para Cardápio, Promoções e Meus pedidos. Os quatro destaques mantêm prioridade/ordem e seleção separada do hero. Fotos abaixo da grade usam carregamento lazy. Não há dependência ou endpoint novo. Provas atuais em `../docs/prints/home-responsiva-2026-11-04/`; histórico em `../docs/prints/home-ajustes-2026-11-04/` e `../docs/prints/home-pos-destaques-2026-11-04/`.
-
-### Cabeçalhos de seção da Home
-
-`HomeSectionHeader.vue` é o padrão compartilhado por categorias, destaques, como funciona e promoções. A referência é “Seu intervalo, do seu jeito.” / “Ver cardápio”: Anton 400, `clamp(30px, 3.4vw, 48px)`, marrom, entrelinha 1.18 e tracking −.025em. Apoio Inter e notas Caveat mantêm papéis distintos; ações usam Inter 14/700, ArrowUpRight 18, gap 8, área mínima de 44px e hover sublinhado. No celular, as ações ficam abaixo e à direita.
-
-Os tokens `--pp-home-section-*` em `tokens.css` controlam a tipografia e o ritmo: seções após 48px/32px e cabeçalhos até conteúdo com 24px/16px (desktop/mobile). Usar esse componente em novos cabeçalhos da Home; não duplicar CSS nem aplicar o padrão aos títulos dos produtos. Sistema visual documentado em [DESIGN.md](DESIGN.md), com sidecar em `.impeccable/design.json`. Provas locais: `../docs/prints/cabecalhos-home-2026-11-02/`; dados fictícios e API simulada, sem infraestrutura npm test adicional.
-
-### Vitrine de categorias V1
-
-Salgados, Doces, Bebidas e Combos usam as quatro fotografias estáticas fornecidas no protótipo aprovado, otimizadas em `src/assets/images/categories/` (WebP 800×800, aproximadamente 129 KB no total). Os produtos aparecem inteiros, com `object-fit: contain`: quatro colunas no desktop e duas até 980 px. Cada card é um único RouterLink; mouse e foco realçam borda/sombra e ampliam a foto em 6% com a mesma transição suave dos cards de produtos (0,45 s). A imagem fica contida na sua área, sem alterar o tamanho do card. Movimento reduzido desativa o zoom; navegação por teclado e toque permanece independente do efeito.
-
-`HomeCategories.vue` reutiliza `useNavigationCatalogStore.carregarCategorias()`, compartilhado com o header. A apresentação encontra categorias ativas por slug ou nome normalizado e navega para `{ name: 'cardapio', query: { categoria: String(id) } }`, com o id retornado pela API. O filtro existente do cardápio mantém a seleção ao navegar e recarregar. Categorias ausentes/inativas não geram links; há estados de carregamento, erro com nova tentativa e vazio. Nenhum endpoint, filtro, dependência, header ou banner foi alterado.
-
-Validação e capturas locais: `../docs/prints/categorias-v1-2026-10-30/`. Não há script `npm test` neste projeto; foram usados build e verificações no Chrome DevTools MCP com dados fictícios/API local. A aprovação visual final cabe ao Arthur.
-
-### Cards de produtos da Home
-
-`ProductCard` recebe `variant="home"` nos destaques da página inicial. Essa variante acompanha as categorias: superfície branca, borda creme, nome em Anton, mídia até as bordas superiores e controles independentes de detalhes, favorito e adição ao carrinho. A grade, a largura dos cards e a altura da mídia são preservadas; nomes longos continuam sem truncamento. A oferta da Home usa a composição própria `HomePromotionFeature`; Cardápio e Favoritos mantêm a variante padrão. Promoções usa `PromotionCampaign`, descrito acima.
-
-Foto cadastrada e ilustração de fallback continuam no `ProductImage`. Hover e foco ampliam somente a imagem em 6%, sem giro ou mudança no tamanho do card; movimento reduzido desativa o efeito. Preços, estados de carregamento, eventos e voo ao carrinho usam o fluxo existente.
-
-Provas locais em `../docs/prints/produtos-home-2026-10-30/`: verificações Playwright com Chrome, dados fictícios e API simulada no navegador, além de capturas pelo Chrome DevTools MCP. Isso não valida autenticação, checkout ou pagamento contra o backend real. O projeto continua sem script `npm test` e sem dependência nova de testes.
-
-### Ações dos cards: preenchimento circular
-
-As ações dos cards da área do cliente compartilham `assets/styles/card-actions.css` e `components/ui/CardActionContent.vue`. A classe opt-in `pp-card-action` recorta uma camada dourada por `clip-path: circle()`, expandindo do centro inferior em 450 ms com `--pp-ease` e retraindo na saída. A camada revela simultaneamente uma cópia visual do conteúdo em marrom, marcada com `aria-hidden`, mantendo o contraste durante a passagem do círculo. O nome acessível, os eventos e o estado continuam no botão original. Não há animação JavaScript nem dependência nova.
-
-Aplicação: adicionar/favorito do `ProductCard` (Home, Cardápio e Favoritos), setas visuais do `HomeCategories`, adicionar nas recomendações do carrinho, Mensagens/QR do `OrderCard` e quantidade/remoção dos itens do carrinho. Promoções reutiliza o preenchimento na compra de `PromotionCampaign`; seu favorito mantém botão próprio. Nas categorias, `pp-card-action-trigger` acompanha hover/foco do RouterLink original, sem botão aninhado. A remoção usa fundo de alerta suave e ícone vermelho; favorito selecionado mantém coração preenchido e `aria-pressed`. QR conserva seu estado de sucesso original.
-
-Disabled/loading ocultam imediatamente o preenchimento e preservam o spinner; toque independe de hover, foco permanece visível e movimento reduzido troca o estado sem expansão/contração perceptível. O foco de quantidade fica dentro do grupo que recorta seu conteúdo. Zoom das fotos, bordas/sombras, voo ao carrinho, header e banner mantêm seus fluxos.
-
-Provas e gravação local: `../docs/prints/hover-cards-2026-11-01/`; plano: `../docs/planos/hover-circular-cards.md`. Testes de interface usam dados fictícios e API simulada no navegador; não validam checkout ou pagamento real. Fora dos cards, as extensões explícitas são o banner descrito abaixo e o CTA do detalhe compartilhado descrito acima. Admin e notificações preservam seus estilos.
-
-Extensão solicitada ao banner: os CTAs de compra e navegação de `HomeBanner.vue` usam o mesmo componente/efeito. No comercial, o botão dourado recebe o círculo marrom com conteúdo creme; nos demais slides, o botão marrom recebe dourado. A variável local `--pp-card-action-radius: 75%` ajusta o recorte ao botão largo para a expansão permanecer perceptível (o padrão de 120% continua nos cards). Conteúdo, dimensões, vídeo, navegação e adição/voo ao carrinho são preservados.
-
-Correção de alinhamento do banner: etiqueta, título, descrição e CTA compartilham linhas de CSS Grid/subgrid entre todos os slides. A altura mínima é comum ao comercial, promoções e QR; conteúdos maiores ampliam o conjunto sem recorte. A troca mantém apenas o fade do slide, sem subida das chamadas. O hover circular continua independente. Evidências locais: `../docs/prints/banner-alinhamento-2026-11-02/` (73 verificações de layout/mídia e 21 de hover/ações, Chromium, dados fictícios).
-
-### Comercial da coxinha no banner
-
-O banner usa o comercial aprovado da coxinha, sem áudio, com versão horizontal no desktop e vertical no celular. Os demais produtos mantêm suas fotos ou ilustrações; novos vídeos serão adicionados posteriormente. As mídias e os respectivos posters ficam em `public/videos/`.
-
-O vídeo toca somente no slide ativo, avança ao terminar e reinicia ao retornar. A aba escondida pausa a reprodução; movimento reduzido, erro ou bloqueio de reprodução usam o poster. Os indicadores permitem escolher o destaque por toque ou teclado. O header usa vidro neutro no desktop e no celular.
-
-Os destaques continuam vindo dos produtos e promoções cadastrados, com preço, estoque e ações de compra existentes. A mídia não altera a seleção dos produtos.
-
-### Animações
-
-| Onde | O quê |
-|---|---|
-| Banner | Carrossel de 6 s com pausa no mouse ou foco, setas e indicadores com progresso. Conteúdo: promoções vigentes; sem promoção, destaques; e sempre o slide "Como funciona" |
-| Banner | Parallax: 3 camadas de "morros de massa" sobem em velocidades diferentes nos primeiros 320 px de rolagem |
-| Como funciona | Foto editorial, 3 passos estáticos e CTA com preenchimento circular |
-| Oferta da Home | Clipe escuro da coxinha acompanha scroll nativo em painel sticky; pôster sem espaço extra em fallback |
-| Cards | Zoom só na imagem ao passar o mouse (sem mudar o tamanho do card) |
-| Carrinho | O produto "voa" até o carrinho e o contador pula, **só depois** de `cart.adicionar` (`utils/vooAoCarrinho.js` + `StudentLayout`) |
-| Seções | Aparecem suavemente ao entrar na tela (diretiva `v-revelar`) |
-
-Com `prefers-reduced-motion: reduce`:
-
-- não há voo nem parallax;
-- o banner não troca sozinho;
-- passos e seções aparecem completos.
-
-## Assistente de dúvidas (chatbot)
-
-Botão **Dúvidas?** no canto inferior direito da área do cliente (`components/chatbot/ChatbotWidget.vue`); as respostas vêm de `/api/chatbot/` (regras + FAQ editável no admin do backend).
-
-- **Posição:** no celular, o botão fica acima da navegação inferior e o painel ocupa a tela toda. Fica oculto no checkout para não disputar espaço com o pagamento.
-- **Conversa:** o cliente escreve ou toca nos botões de assunto; só a última resposta mostra os botões de próximo passo. O histórico fica na store `chatbot` durante a sessão e é apagado no logout.
-- **Respostas com dados:** status dos pedidos do próprio cliente e disponibilidade do produto citado ("tem coxinha?").
-- **Falar com a padaria:** leva a `/pedidos?chat=ID`, que abre a gaveta de chat do pedido.
-- **Estados:** abrindo, assistente respondendo, erro com **Tentar de novo** (e mensagem própria para limite de perguntas).
-- **Acessibilidade:** Esc fecha e devolve o foco ao botão; lista com `role="log"`; campo com rótulo.
-
-## Pagamentos
-
-O checkout suporta:
-
-- dinheiro na retirada;
-- Pix;
-- cartão.
-
-O navegador usa a **Public Key** do Mercado Pago para inicializar os componentes de pagamento.
-
-A Public Key pode ficar no frontend.
-
-Nunca devem ser colocados no frontend:
-
-```text
-MERCADO_PAGO_ACCESS_TOKEN
-MERCADO_PAGO_WEBHOOK_SECRET
-```
-
-Esses segredos pertencem exclusivamente ao backend.
-
-Em produção, a Public Key deve ser a credencial produtiva da mesma aplicação Mercado Pago utilizada pelo backend.
-
-## Pix
-
-O Pix é criado pelo backend através da integração com o Mercado Pago.
-
-Em ambiente produtivo, a conta Mercado Pago responsável pela aplicação precisa possuir uma chave Pix cadastrada e ativa. Sem isso, a transação Pix pode falhar mesmo com credenciais e webhook configurados corretamente.
-
-## Cartão
-
-O formulário de cartão é renderizado pelo Mercado Pago Payment Brick.
-
-Os dados sensíveis do cartão são tratados pelo Mercado Pago. A Pires não deve armazenar número completo do cartão nem CVV.
-
-## Google
-
-O frontend utiliza Google Identity Services.
-
-No Google Cloud, o OAuth Client ID do tipo Web deve possuir como origem JavaScript autorizada:
-
-```text
-https://frontend-pires.vercel.app
-```
-
-Localhost pode ser mantido apenas para desenvolvimento.
-
-Se o domínio de produção mudar, a nova origem deve ser adicionada ao Google Cloud antes da migração.
-
-## PWA e câmera
-
-A aplicação funciona como PWA.
-
-A leitura do QR Code pelo painel administrativo utiliza a câmera do dispositivo.
-
-A câmera exige contexto seguro. Em produção:
-
-- mantenha o frontend em HTTPS;
-- permita acesso à câmera no navegador;
-- no celular, dê preferência à câmera traseira quando disponível.
-
-O scanner também mantém entrada manual como alternativa.
-
-## Deploy na Vercel
-
-Configure as variáveis no ambiente **Production**:
-
-```env
-VITE_API_URL=https://backend-pires.class.fabricadesoftware.ifc.edu.br/api
-VITE_GOOGLE_CLIENT_ID=<CLIENT_ID_WEB>
-VITE_MERCADO_PAGO_PUBLIC_KEY=<PUBLIC_KEY_PRODUCAO>
-```
-
-Depois faça um novo deploy.
-
-O arquivo `vercel.json` contém a configuração usada pelo projeto na Vercel.
-
-## Smoke test de produção
-
-Depois de cada deploy relevante, valide:
-
-1. login comum;
-2. login Google;
-3. cardápio;
-4. promoções;
-5. adicionar item ao carrinho;
-6. checkout;
-7. dinheiro na retirada;
-8. Pix;
-9. cartão;
-10. listagem de pedidos;
-11. área administrativa;
-12. mudança de status de pedido;
-13. QR Code de retirada;
-14. câmera do QR em HTTPS;
-15. logout.
-
-## Fluxo principal
-
-```text
-Cliente
-  ↓
-Cardápio
-  ↓
-Carrinho
-  ↓
-Checkout
-  ↓
-Pagamento
-  ├── Dinheiro
-  ├── Pix
-  └── Cartão
-  ↓
-Pedido confirmado
-  ↓
-Pronto
-  ↓
-QR Code
-  ↓
-Retirada
-```
-
-## Segurança
-
-O frontend nunca deve ser considerado fonte de verdade para:
-
-- preço;
-- estoque;
-- permissões;
-- status financeiro;
-- aprovação de pagamento.
-
-Essas validações pertencem ao backend.
-
-Segredos de integração nunca devem ser colocados em variáveis `VITE_*`, pois essas variáveis ficam disponíveis no bundle entregue ao navegador.
-
-## Favoritos editoriais
-
-`/favoritos` apresenta a seleção pessoal com composição para um, dois ou muitos produtos, busca por nome/categoria, ordenação e compra com consulta atualizada de preço e estoque. Reutiliza o modal e o carrinho existentes. O store protege remoções confirmadas, migração legada e isolamento de conta; logout invalida operações pendentes.
-
-Validação original do redesign: `node --test tests/*.test.mjs` (27 testes), build e auditoria de produção. [Plano](../docs/planos/favoritos-editoriais.md) e [evidências sintéticas](../docs/prints/favoritos-editoriais-2026-11-12/README.md) incluem 66 verificações de navegador, teclado, capturas e gravação. Não representam validação de produção ou pagamentos.
-
-Na correção de release, a listagem mantém disponibilidade desconhecida até a consulta por interação. O carrinho pertence à sessão: logout/troca de conta invalidam operações pendentes, inclusive refresh HTTP e retornos de checkout. A renovação normal da mesma sessão preserva o carrinho. [Provas da correção](../docs/prints/favoritos-release-review-2026-11-12/README.md).
-
-## Admin — Shell e Dashboard V2
-
-Implementação local do PR1, preservando a área do aluno. Contratos, provas e limites em [docs/entregas/admin-shell-dashboard.md](docs/entregas/admin-shell-dashboard.md). Kanban fica no PR2; publicação depende de revisão.
-
-## Carrinho V2 — Balcão Editorial
-
-Linhas editoriais, resumo assimétrico, vazio ilustrado e composição mobile seguindo o Cardápio. [Relatório e capturas nas cinco larguras](docs/carrinho-v2/README.md). Lógica de negócio e pagamento preservados; aprovação visual pendente.
+- [Vue 3](https://vuejs.org/) com Composition API e `<script setup>`.
+- [Vite](https://vite.dev/) e [vite-plugin-pwa](https://vite-pwa-org.netlify.app/): build e PWA.
+- [Pinia](https://pinia.vuejs.org/) e [Vue Router](https://router.vuejs.org/).
+- [Axios](https://axios-http.com/): comunicação com a API.
+- [Lucide](https://lucide.dev/): ícones.
+- [Motion for Vue](https://motion.dev/docs/vue): animações, respeitando a preferência de movimento reduzido.
+- [ZXing](https://github.com/zxing-js/browser): leitura do QR Code pela câmera.
+- [Mercado Pago Bricks](https://www.mercadopago.com.br/developers/pt/docs/checkout-bricks/landing): formulário de pagamento.
+- [Google Identity Services](https://developers.google.com/identity/gsi/web): login com o Google.
+- CSS próprio, sem framework, com tokens em `src/assets/styles/tokens.css`.
